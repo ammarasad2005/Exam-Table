@@ -1,8 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import type { ExamEntry } from '@/lib/types';
 
-// eslint-disable-next-line @typescript-eslint/no-require-imports
-const schedule = require('../../../../../public/data/schedule.json');
+// eslint-disable-next-line
+const schedule = require('../../../../public/data/schedule.json');
 
 export const runtime = 'edge';
 

@@ -11,7 +11,7 @@ import { groupByDay } from '@/lib/filter';
 import { DEPARTMENTS, DEPARTMENT_LABELS } from '@/lib/types';
 import type { ExamEntry, Department } from '@/lib/types';
 
-// eslint-disable-next-line @typescript-eslint/no-require-imports
+// eslint-disable-next-line
 const scheduleData = require('../../../public/data/schedule.json');
 const allExams = scheduleData as ExamEntry[];
 

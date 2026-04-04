@@ -74,4 +74,4 @@ The website's "Source of Truth" is `exam_schedule.xlsx`.
 ---
 
 ## 📝 License
-Built for the students of FSC. Use it, share it, and ace those exams! 🎓
+Built for the students of FAST-NUCES. Use it, share it, and ace those exams! 🎓

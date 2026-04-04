@@ -6,7 +6,7 @@ import { ThemeToggle } from '@/components/ThemeToggle';
 import { DEPARTMENTS, DEPARTMENT_LABELS } from '@/lib/types';
 import type { Department } from '@/lib/types';
 
-// eslint-disable-next-line @typescript-eslint/no-require-imports
+// eslint-disable-next-line
 const scheduleRaw = require('../../public/data/schedule.json');
 const batches: string[] = [...new Set<string>(scheduleRaw.map((e: { batch: string }) => e.batch))]
   .sort()
