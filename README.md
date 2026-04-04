@@ -30,13 +30,15 @@ A premium, glassmorphism-inspired design that's easy on the eyes, whether you're
 
 ---
 
-## 📸 Screenshots
+## 📸 Responsive UI Screenshots
 
-### Schedule View
-![Schedule View](https://github.com/user-attachments/assets/70939b91-8279-4338-a1c0-ee59c5eea7a5)
+The interface is fully responsive across desktop and mobile layouts.
 
-### Configuration Page
-![Alternate Schedule View](https://github.com/user-attachments/assets/b3c5e8fe-0c0e-422f-9f1d-771b2ae5ec62)
+### Desktop View
+![Desktop Responsive View](./public/screenshots/desktop-responsive.png)
+
+### Mobile View
+![Mobile Responsive View](./public/screenshots/mobile-responsive.png)
 
 ---
 
