@@ -23,10 +23,10 @@ const instrumentSerif = Instrument_Serif({
 });
 
 export const metadata: Metadata = {
-  title: 'FSC Exam Schedule',
+  title: 'FAST Exam Schedule',
   description: 'Find your exam timetable — School of Computing, FAST-NUCES',
   openGraph: {
-    title: 'FSC Exam Schedule',
+    title: 'FAST Exam Schedule',
     description: 'Find your exam timetable instantly',
     type: 'website',
   },

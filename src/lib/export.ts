@@ -28,7 +28,7 @@ export async function downloadXLSX(entries: ExamEntry[]): Promise<void> {
     const { saveAs } = (await import('file-saver')).default;
 
     const wb = new Workbook();
-    wb.creator = 'FSC Exams Engine';
+    wb.creator = 'FAST Exams Engine';
     const sheet = wb.addWorksheet('Exam Timetable');
 
     // Define columns as per the original content, but styled like the screenshot
@@ -134,7 +134,7 @@ export function downloadFullICS(entries: ExamEntry[]): void {
     const ics = [
       'BEGIN:VCALENDAR',
       'VERSION:2.0',
-      'PRODID:-//FSC Exams//EN',
+      'PRODID:-//FAST Exams//EN',
       events,
       'END:VCALENDAR',
     ].join('\r\n');
@@ -167,7 +167,7 @@ export function generateICS(exam: ExamEntry): void {
     const ics = [
       'BEGIN:VCALENDAR',
       'VERSION:2.0',
-      'PRODID:-//FSC Exams//EN',
+      'PRODID:-//FAST Exams//EN',
       'BEGIN:VEVENT',
       `DTSTART;VALUE=DATE:${startDT}`,
       `DTEND;VALUE=DATE:${endDT}`,

@@ -1,4 +1,4 @@
-# 🗓️ FSC Exam Schedule Engine
+# 🗓️ FAST Exam Schedule Engine
 
 A modern, fast, and elegant web application designed to help students at FSC (Fast School of Computing) navigate their exam schedules with ease. Say goodbye to messy Excel sheets and hello to a clean, searchable, and exportable timeline.
 

@@ -152,7 +152,7 @@ export default function SetupPage() {
 
         <header className="flex items-center justify-between h-14 flex-shrink-0">
           <span className="font-mono text-sm font-medium tracking-widest text-[var(--color-text-secondary)] uppercase">
-            FSC
+            FAST
           </span>
           <div className="flex items-center gap-4">
             <a href="https://github.com/ammarasad2005" target="_blank" rel="noopener noreferrer" className="text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)] transition-colors" aria-label="GitHub">
@@ -195,7 +195,7 @@ export default function SetupPage() {
         {/* Full-width header */}
         <header className="flex items-center justify-between px-10 h-14 flex-shrink-0 border-b border-[var(--color-border)]">
           <span className="font-mono text-sm font-medium tracking-widest text-[var(--color-text-secondary)] uppercase">
-            FSC
+            FAST
           </span>
           <ThemeToggle />
         </header>
