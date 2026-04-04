@@ -104,29 +104,76 @@ export async function downloadXLSX(entries: ExamEntry[]): Promise<void> {
   }
 }
 
+// Generate .ics for all exams in the schedule
+export function downloadFullICS(entries: ExamEntry[]): void {
+  try {
+    const dtStamp = new Date().toISOString().replace(/[-:]/g, '').split('.')[0] + 'Z';
+
+    const events = entries.map(exam => {
+      const [dStr, mStr, yStr] = exam.date.split('/');
+      
+      // Calculate start and end dates for a true "All Day Event" (End Date is exclusive in ICS)
+      const startDate = new Date(parseInt(yStr), parseInt(mStr) - 1, parseInt(dStr));
+      const endDate = new Date(startDate.getTime());
+      endDate.setDate(endDate.getDate() + 1);
+
+      const startDT = `${startDate.getFullYear()}${String(startDate.getMonth() + 1).padStart(2,'0')}${String(startDate.getDate()).padStart(2,'0')}`;
+      const endDT = `${endDate.getFullYear()}${String(endDate.getMonth() + 1).padStart(2,'0')}${String(endDate.getDate()).padStart(2,'0')}`;
+
+      return [
+        'BEGIN:VEVENT',
+        `DTSTART;VALUE=DATE:${startDT}`,
+        `DTEND;VALUE=DATE:${endDT}`,
+        `DTSTAMP:${dtStamp}`,
+        `SUMMARY:${exam.courseCode} – ${exam.courseName}`,
+        `DESCRIPTION:Exact Time: ${exam.time}\\nBatch: ${exam.batch}\\nStream: ${exam.department}`,
+        'END:VEVENT'
+      ].join('\r\n');
+    }).join('\r\n');
+
+    const ics = [
+      'BEGIN:VCALENDAR',
+      'VERSION:2.0',
+      'PRODID:-//FSC Exams//EN',
+      events,
+      'END:VCALENDAR',
+    ].join('\r\n');
+
+    const blob = new Blob([ics], { type: 'text/calendar' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `fsc-exams-schedule-${Date.now()}.ics`;
+    a.click();
+    URL.revokeObjectURL(url);
+  } catch (err) {
+    console.error('ICS full export failed:', err);
+  }
+}
+
 // Generate .ics for a single exam and trigger download
 export function generateICS(exam: ExamEntry): void {
   try {
-    const [d, m, y] = exam.date.split('/');
+    const [dStr, mStr, yStr] = exam.date.split('/');
     const dtStamp = new Date().toISOString().replace(/[-:]/g, '').split('.')[0] + 'Z';
 
-    // Parse start/end from time string "09:00 AM – 11:00 AM"
-    const parts = exam.time.split('–').map(s => s.trim());
-    const startStr = parts[0] ?? '';
-    const endStr = parts[1] ?? parts[0] ?? '';
-    const startDT = toICSDateTime(y, m, d, startStr);
-    const endDT   = toICSDateTime(y, m, d, endStr);
+    const startDate = new Date(parseInt(yStr), parseInt(mStr) - 1, parseInt(dStr));
+    const endDate = new Date(startDate.getTime());
+    endDate.setDate(endDate.getDate() + 1);
+
+    const startDT = `${startDate.getFullYear()}${String(startDate.getMonth() + 1).padStart(2,'0')}${String(startDate.getDate()).padStart(2,'0')}`;
+    const endDT = `${endDate.getFullYear()}${String(endDate.getMonth() + 1).padStart(2,'0')}${String(endDate.getDate()).padStart(2,'0')}`;
 
     const ics = [
       'BEGIN:VCALENDAR',
       'VERSION:2.0',
       'PRODID:-//FSC Exams//EN',
       'BEGIN:VEVENT',
-      `DTSTART:${startDT}`,
-      `DTEND:${endDT}`,
+      `DTSTART;VALUE=DATE:${startDT}`,
+      `DTEND;VALUE=DATE:${endDT}`,
       `DTSTAMP:${dtStamp}`,
       `SUMMARY:${exam.courseCode} – ${exam.courseName}`,
-      `DESCRIPTION:Batch ${exam.batch}\\nDepartment: ${exam.department}`,
+      `DESCRIPTION:Exact Time: ${exam.time}\\nBatch: ${exam.batch}\\nStream: ${exam.department}`,
       'END:VEVENT',
       'END:VCALENDAR',
     ].join('\r\n');
@@ -141,16 +188,4 @@ export function generateICS(exam: ExamEntry): void {
   } catch (err) {
     console.error('ICS export failed:', err);
   }
-}
-
-function toICSDateTime(y: string, m: string, d: string, timeStr: string): string {
-  // "09:00 AM" or "11:00 PM" → YYYYMMDDTHHMMSS
-  const match = timeStr.match(/(\d{1,2}):(\d{2})\s*(AM|PM)/i);
-  if (!match) return `${y}${m.padStart(2,'0')}${d.padStart(2,'0')}T090000`;
-  let h = parseInt(match[1]);
-  const min = match[2];
-  const ampm = match[3].toUpperCase();
-  if (ampm === 'PM' && h !== 12) h += 12;
-  if (ampm === 'AM' && h === 12) h = 0;
-  return `${y}${m.padStart(2,'0')}${d.padStart(2,'0')}T${String(h).padStart(2,'0')}${min}00`;
 }

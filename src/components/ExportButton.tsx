@@ -1,6 +1,6 @@
 'use client';
 import { useState, useRef, useEffect } from 'react';
-import { downloadCSV, downloadXLSX } from '@/lib/export';
+import { downloadCSV, downloadXLSX, downloadFullICS } from '@/lib/export';
 import type { ExamEntry } from '@/lib/types';
 
 interface Props {
@@ -55,9 +55,15 @@ export function ExportButton({ entries, variant = 'header' }: Props) {
       </button>
 
       {open && (
-        <div className={`absolute z-50 bg-[var(--color-bg-raised)] border border-[var(--color-border)] shadow-md rounded-md p-1 min-w-[120px] ${
+        <div className={`absolute z-50 bg-[var(--color-bg-raised)] border border-[var(--color-border)] shadow-md rounded-md p-1 min-w-[140px] ${
           variant === 'header' ? 'top-full right-0 mt-1' : 'bottom-full left-0 mb-1 w-full'
         }`}>
+          <button
+            onClick={() => { downloadFullICS(entries); setOpen(false); }}
+            className="w-full text-left font-mono text-xs text-[var(--color-text-primary)] px-3 py-2 rounded-sm hover:bg-[var(--color-bg-subtle)] focus-visible:outline-none focus-visible:ring-2"
+          >
+            as Calendar (.ics)
+          </button>
           <button
             onClick={() => { downloadXLSX(entries); setOpen(false); }}
             className="w-full text-left font-mono text-xs text-[var(--color-text-primary)] px-3 py-2 rounded-sm hover:bg-[var(--color-bg-subtle)] focus-visible:outline-none focus-visible:ring-2"
