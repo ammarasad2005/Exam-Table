@@ -5,7 +5,7 @@ A modern, fast, and elegant web application designed to help students at FSC (Fa
 ---
 
 ## 🚀 Quick Start
-1. **Visit the website** (or run locally using `npm run dev`).
+1. **Visit the website** at [fast-nuces-exams.vercel.app](https://fast-nuces-exams.vercel.app).
 2. **Select your Batch** (e.g., 2023) and **Department** (e.g., CS).
 3. **Browse your exams** in a beautiful, chronological list.
 
