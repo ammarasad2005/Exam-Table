@@ -151,9 +151,13 @@ export default function SetupPage() {
       <main className="md:hidden min-h-dvh flex flex-col px-5 pt-safe-top pb-safe-bottom max-w-lg mx-auto">
 
         <header className="flex items-center justify-between h-14 flex-shrink-0">
-          <span className="font-mono text-sm font-medium tracking-widest text-[var(--color-text-secondary)] uppercase">
-            FAST
-          </span>
+          <div className="flex items-center">
+            <img 
+              src="/logo/logo.png" 
+              alt="FAST Logo" 
+              className="h-6 w-auto object-contain brightness-0 dark:invert transition-opacity" 
+            />
+          </div>
           <div className="flex items-center gap-4">
             <a href="https://github.com/ammarasad2005" target="_blank" rel="noopener noreferrer" className="text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)] transition-colors" aria-label="GitHub">
               <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
@@ -194,9 +198,13 @@ export default function SetupPage() {
 
         {/* Full-width header */}
         <header className="flex items-center justify-between px-10 h-14 flex-shrink-0 border-b border-[var(--color-border)]">
-          <span className="font-mono text-sm font-medium tracking-widest text-[var(--color-text-secondary)] uppercase">
-            FAST
-          </span>
+          <div className="flex items-center">
+            <img 
+              src="/logo/logo.png" 
+              alt="FAST Logo" 
+              className="h-6 w-auto object-contain brightness-0 dark:invert transition-opacity" 
+            />
+          </div>
           <ThemeToggle />
         </header>
 
