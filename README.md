@@ -30,6 +30,16 @@ A premium, glassmorphism-inspired design that's easy on the eyes, whether you're
 
 ---
 
+## 📸 Screenshots
+
+### Schedule View
+![Schedule View](https://github.com/user-attachments/assets/70939b91-8279-4338-a1c0-ee59c5eea7a5)
+
+### Alternate Schedule View
+![Alternate Schedule View](https://github.com/user-attachments/assets/b3c5e8fe-0c0e-422f-9f1d-771b2ae5ec62)
+
+---
+
 ## 🛠️ How it Works (For Developers)
 
 ### 📊 Data Pipeline
