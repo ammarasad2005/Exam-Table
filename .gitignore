@@ -38,3 +38,7 @@ next-env.d.ts
 # 🔴 Custom Ignored Files for Exams App 🔴
 # Do not track the generated JSON payload. It's built on-the-fly via npm run prebuild.
 /public/data/*.json
+
+# Ignore the project generation plan and any other internal plans
+FSC_ExamSchedule_GenerationPlan.md
+*_GenerationPlan.md
