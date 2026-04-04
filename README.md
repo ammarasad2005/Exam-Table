@@ -32,11 +32,19 @@ A premium, glassmorphism-inspired design that's easy on the eyes, whether you're
 
 ## 📸 Screenshots
 
-### Schedule View
-![Schedule View](https://github.com/user-attachments/assets/70939b91-8279-4338-a1c0-ee59c5eea7a5)
+### Home / Configuration Page
+<p align="left">
+  <img src="Screenshots/configuration_page_desktop.png" alt="Configuration Page Desktop" width="65%" style="border-radius: 8px;">
+  &nbsp;
+  <img src="Screenshots/configuration_page_mobile.png" alt="Configuration Page Mobile" width="22%" style="border-radius: 8px;">
+</p>
 
-### Configuration Page
-![Alternate Schedule View](https://github.com/user-attachments/assets/b3c5e8fe-0c0e-422f-9f1d-771b2ae5ec62)
+### Schedule Results Page
+<p align="left">
+  <img src="Screenshots/schedule_page_desktop.png" alt="Schedule Page Desktop" width="65%" style="border-radius: 8px;">
+  &nbsp;
+  <img src="Screenshots/schedule_page_mobile.png" alt="Schedule Page Mobile" width="22%" style="border-radius: 8px;">
+</p>
 
 ---
 
