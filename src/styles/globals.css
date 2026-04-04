@@ -1,0 +1,172 @@
+@import url('https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Instrument+Serif:ital@0;1&family=DM+Sans:wght@400;500;600&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ───────────────── Light mode (default) ───────────────── */
+:root {
+  /* Base */
+  --color-bg:           #FAFAF8;
+  --color-bg-raised:    #FFFFFF;
+  --color-bg-subtle:    #F2F1EE;
+  --color-border:       rgba(0, 0, 0, 0.08);
+  --color-border-strong:rgba(0, 0, 0, 0.14);
+
+  /* Text */
+  --color-text-primary:   #1A1A18;
+  --color-text-secondary: #6B6B66;
+  --color-text-tertiary:  #A0A09A;
+
+  /* Department accent colors */
+  --accent-cs: #1D4ED8;
+  --accent-ai: #7C3AED;
+  --accent-ds: #0F766E;
+  --accent-cy: #B45309;
+  --accent-se: #BE185D;
+
+  /* Derived accent surfaces */
+  --accent-cs-bg: #EFF6FF;
+  --accent-ai-bg: #F5F3FF;
+  --accent-ds-bg: #F0FDFA;
+  --accent-cy-bg: #FFFBEB;
+  --accent-se-bg: #FDF2F8;
+
+  /* Semantic */
+  --color-success: #166534;
+  --color-success-bg: #F0FDF4;
+
+  /* Spacing scale */
+  --space-1: 4px; --space-2: 8px; --space-3: 12px; --space-4: 16px;
+  --space-5: 20px; --space-6: 24px; --space-8: 32px; --space-10: 40px;
+
+  /* Radii */
+  --radius-sm: 6px; --radius-md: 10px; --radius-lg: 16px;
+  --radius-xl: 24px; --radius-full: 9999px;
+
+  /* Fonts */
+  --font-display: 'Instrument Serif', serif;
+  --font-body:    'DM Sans', sans-serif;
+  --font-mono:    'DM Mono', monospace;
+}
+
+/* ───────────────── Dark mode via data attribute (JS toggle) ───────────────── */
+[data-theme="dark"] {
+  --color-bg:           #111110;
+  --color-bg-raised:    #1C1C1A;
+  --color-bg-subtle:    #242422;
+  --color-border:       rgba(255, 255, 255, 0.08);
+  --color-border-strong:rgba(255, 255, 255, 0.14);
+  --color-text-primary:   #F0EFEB;
+  --color-text-secondary: #8C8C86;
+  --color-text-tertiary:  #5C5C58;
+  --accent-cs-bg: #1e2d57;
+  --accent-ai-bg: #2d1f57;
+  --accent-ds-bg: #0f2d2a;
+  --accent-cy-bg: #2d1f0a;
+  --accent-se-bg: #2d0f1f;
+}
+
+/* ───────────────── Dark mode via system preference (no JS toggle set) ───────────────── */
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --color-bg:           #111110;
+    --color-bg-raised:    #1C1C1A;
+    --color-bg-subtle:    #242422;
+    --color-border:       rgba(255, 255, 255, 0.08);
+    --color-border-strong:rgba(255, 255, 255, 0.14);
+    --color-text-primary:   #F0EFEB;
+    --color-text-secondary: #8C8C86;
+    --color-text-tertiary:  #5C5C58;
+    --accent-cs-bg: #1e2d57;
+    --accent-ai-bg: #2d1f57;
+    --accent-ds-bg: #0f2d2a;
+    --accent-cy-bg: #2d1f0a;
+    --accent-se-bg: #2d0f1f;
+  }
+}
+
+/* ───────────────── Base reset ───────────────── */
+*, *::before, *::after { box-sizing: border-box; }
+
+html {
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
+  /* Smooth theme transitions */
+  transition: background-color 200ms ease, color 200ms ease;
+}
+
+body {
+  margin: 0;
+  font-family: var(--font-body);
+  background-color: var(--color-bg);
+  color: var(--color-text-primary);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Safe area insets for notched phones */
+.pt-safe-top  { padding-top:    env(safe-area-inset-top, 0px); }
+.pb-safe-bottom { padding-bottom: env(safe-area-inset-bottom, 0px); }
+
+/* ───────────────── Animations ───────────────── */
+@keyframes page-enter {
+  from { opacity: 0; transform: translateY(8px); }
+  to   { opacity: 1; transform: translateY(0);   }
+}
+.page-enter { animation: page-enter 200ms ease-out both; }
+
+@keyframes slide-in-from-bottom {
+  from { transform: translateY(100%); opacity: 0; }
+  to   { transform: translateY(0);    opacity: 1; }
+}
+@keyframes slide-in-from-right {
+  from { transform: translateX(100%); opacity: 0; }
+  to   { transform: translateX(0);    opacity: 1; }
+}
+@keyframes fade-in {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+.animate-in { animation-fill-mode: both; }
+.fade-in { animation-name: fade-in; }
+.slide-in-from-bottom-4 { animation-name: slide-in-from-bottom; }
+.slide-in-from-right-4  { animation-name: slide-in-from-right; }
+.duration-200 { animation-duration: 200ms; }
+.duration-250 { animation-duration: 250ms; }
+
+/* Card stagger on list render */
+.exam-card { animation: page-enter 160ms ease-out both; }
+.exam-card:nth-child(1)  { animation-delay: 0ms; }
+.exam-card:nth-child(2)  { animation-delay: 30ms; }
+.exam-card:nth-child(3)  { animation-delay: 60ms; }
+.exam-card:nth-child(4)  { animation-delay: 90ms; }
+.exam-card:nth-child(5)  { animation-delay: 120ms; }
+.exam-card:nth-child(6)  { animation-delay: 150ms; }
+.exam-card:nth-child(7)  { animation-delay: 180ms; }
+.exam-card:nth-child(8)  { animation-delay: 210ms; }
+.exam-card:nth-child(9)  { animation-delay: 240ms; }
+.exam-card:nth-child(10) { animation-delay: 270ms; }
+
+/* Respect prefers-reduced-motion */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+/* ───────────────── Theme toggle button ───────────────── */
+.theme-toggle {
+  width: 32px; height: 32px;
+  border-radius: 50%;
+  border: 1px solid var(--color-border);
+  display: flex; align-items: center; justify-content: center;
+  color: var(--color-text-secondary);
+  background: transparent;
+  cursor: pointer;
+  transition: background-color 150ms ease, border-color 150ms ease;
+}
+.theme-toggle:hover { background: var(--color-bg-subtle); }
+.theme-toggle:focus-visible { outline: 2px solid var(--accent-cs); outline-offset: 2px; }
