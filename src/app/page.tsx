@@ -132,14 +132,14 @@ export default function SetupPage() {
       <div>
         {school === '-' ? (
           <div className="h-12 flex items-center justify-center text-sm font-medium text-[var(--color-text-secondary)] italic">
-            Good Luck for Exams 🍀
+            Good Luck for Exams 😊
           </div>
         ) : (
           <>
             <p id="department-label" className="block font-mono text-[11px] uppercase tracking-widest text-[var(--color-text-tertiary)] mb-2">
               Department
             </p>
-            <div role="group" aria-labelledby="department-label" className="flex flex-wrap gap-2">
+            <div role="group" aria-labelledby="department-label" className="grid grid-cols-3 gap-2 sm:grid-cols-5">
               {SCHOOL_DEPARTMENTS[school]?.map(d => (
                 <DepartmentPill
                   key={d}
