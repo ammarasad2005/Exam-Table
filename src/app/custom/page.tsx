@@ -85,7 +85,7 @@ function CustomPageInner() {
   function handleSave() {
     let hasError = false;
     const validated = rows.map(r => {
-      const codeOk = /^[A-Za-z]{2,4}\d{3,5}$/.test(r.code.trim());
+      const codeOk = /^[A-Za-z\d\- ]+$/.test(r.code.trim());
       const eb = !r.batch;
       const es = !r.stream;
       const ec = !codeOk;
