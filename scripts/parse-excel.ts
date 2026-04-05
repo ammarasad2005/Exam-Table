@@ -293,11 +293,22 @@ function parseDate(dateStr: string): number {
   return new Date(parts[2], parts[1] - 1, parts[0]).getTime();
 }
 
+function parseTime(timeStr: string): number {
+  const match = timeStr.match(/(\d{1,2}):(\d{2})\s*(AM|PM)/i);
+  if (!match) return 0;
+  let hours = parseInt(match[1], 10);
+  const minutes = parseInt(match[2], 10);
+  const period = match[3].toUpperCase();
+  if (period === 'PM' && hours < 12) hours += 12;
+  if (period === 'AM' && hours === 12) hours = 0;
+  return hours * 60 + minutes;
+}
+
 function sortEntries(entries: ExamEntry[]): ExamEntry[] {
-  return entries.sort((a: ExamEntry, b: ExamEntry) => {
+  return entries.sort((a, b) => {
     const dateDiff = parseDate(a.date) - parseDate(b.date);
     if (dateDiff !== 0) return dateDiff;
-    return a.time.localeCompare(b.time);
+    return parseTime(a.time) - parseTime(b.time);
   });
 }
 
