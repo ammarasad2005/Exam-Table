@@ -8,6 +8,7 @@ import { ExportButton } from '@/components/ExportButton';
 import { EmptyState } from '@/components/EmptyState';
 import { ThemeToggle } from '@/components/ThemeToggle';
 import { groupByDay } from '@/lib/filter';
+import { sortByChronological } from '@/lib/dates';
 import { DEPARTMENTS, DEPARTMENT_LABELS } from '@/lib/types';
 import type { ExamEntry } from '@/lib/types';
 
@@ -106,13 +107,7 @@ function CustomPageInner() {
         if (!seen.has(key)) { seen.add(key); result.push(exam); }
       }
     }
-    return result.sort((a, b) => {
-      const [ad, am, ay] = a.date.split('/').map(Number);
-      const [bd, bm, by] = b.date.split('/').map(Number);
-      const da = new Date(ay, am - 1, ad).getTime();
-      const db = new Date(by, bm - 1, bd).getTime();
-      return da !== db ? da - db : a.time.localeCompare(b.time);
-    });
+    return result.sort(sortByChronological);
   }, [saved, rows]);
 
   const filtered = useMemo(() => {

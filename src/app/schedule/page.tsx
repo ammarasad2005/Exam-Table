@@ -2,6 +2,7 @@
 import { useSearchParams, useRouter } from 'next/navigation';
 import { useMemo, useState, Suspense } from 'react';
 import { filterExams, groupByDay } from '@/lib/filter';
+import { sortByChronological } from '@/lib/dates';
 import { ExamCard } from '@/components/ExamCard';
 import { ExamDetail } from '@/components/ExamDetail';
 import { SearchBar } from '@/components/SearchBar';
@@ -25,7 +26,10 @@ function SchedulePageInner() {
   const [selected, setSelected] = useState<ExamEntry | null>(null);
 
   const filtered = useMemo(
-    () => filterExams(allExams, { batch, school, department: dept, query }),
+    () => {
+      const filtered = filterExams(allExams, { batch, school, department: dept, query });
+      return filtered.sort(sortByChronological);
+    },
     [batch, school, dept, query]
   );
 
