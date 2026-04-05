@@ -24,6 +24,12 @@
   --accent-ds: #0F766E;
   --accent-cy: #B45309;
   --accent-se: #BE185D;
+  --accent-bba:#1D4ED8;
+  --accent-af: #047857;
+  --accent-ba: #D97706;
+  --accent-ft: #9333EA;
+  --accent-ee: #E11D48;
+  --accent-ce: #0284C7;
 
   /* Derived accent surfaces */
   --accent-cs-bg: #EFF6FF;
@@ -31,6 +37,12 @@
   --accent-ds-bg: #F0FDFA;
   --accent-cy-bg: #FFFBEB;
   --accent-se-bg: #FDF2F8;
+  --accent-bba-bg:#EFF6FF;
+  --accent-af-bg: #ECFDF5;
+  --accent-ba-bg: #FFFBEB;
+  --accent-ft-bg: #FAF5FF;
+  --accent-ee-bg: #FFF1F2;
+  --accent-ce-bg: #F0F9FF;
 
   /* Semantic */
   --color-success: #166534;
@@ -65,6 +77,12 @@
   --accent-ds-bg: #0f2d2a;
   --accent-cy-bg: #2d1f0a;
   --accent-se-bg: #2d0f1f;
+  --accent-bba-bg:#1e2d57;
+  --accent-af-bg: #0f3d2a;
+  --accent-ba-bg: #3d1f0a;
+  --accent-ft-bg: #2d0f3d;
+  --accent-ee-bg: #3d0f1f;
+  --accent-ce-bg: #0f2d4a;
 }
 
 /* ───────────────── Dark mode via system preference (no JS toggle set) ───────────────── */
@@ -83,6 +101,12 @@
     --accent-ds-bg: #0f2d2a;
     --accent-cy-bg: #2d1f0a;
     --accent-se-bg: #2d0f1f;
+    --accent-bba-bg:#1e2d57;
+    --accent-af-bg: #0f3d2a;
+    --accent-ba-bg: #3d1f0a;
+    --accent-ft-bg: #2d0f3d;
+    --accent-ee-bg: #3d0f1f;
+    --accent-ce-bg: #0f2d4a;
   }
 }
 

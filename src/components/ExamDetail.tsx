@@ -2,11 +2,11 @@
 import { useEffect } from 'react';
 import { generateICS } from '@/lib/export';
 import { getDaysUntil, formatDate } from '@/lib/dates';
-import type { ExamEntry, Department } from '@/lib/types';
+import type { ExamEntry } from '@/lib/types';
 
 interface Props {
   exam: ExamEntry;
-  dept: Department;
+  dept: string;
   onClose: () => void;
 }
 

@@ -11,22 +11,15 @@ interface ExamEntry {
   courseCode: string;  // "CS1004"
   courseName: string;  // "Programming Fundamentals"
   batch: string;       // "2023"
-  department: string;  // "CS"
+  department: string;  // "CS" or "BBA"
+  school: string;      // "FSC", "FSM", or "FSE"
 }
 
-const DEPARTMENTS = ['cs', 'ai', 'ds', 'cy', 'se'];
+const DEPARTMENTS = ['cs', 'ai', 'ds', 'cy', 'se', 'bba', 'af', 'ft', 'ba', 'ee', 'ce'];
 
 // 1. Load workbook — do NOT use cellDates:true to avoid UTC timezone shift.
 //    Instead we'll use the formatted 'w' text or the numeric serial.
 const wb = XLSX.readFile('exam_schedule.xlsx', { cellDates: false, cellNF: true });
-const ws = wb.Sheets['FSC'];
-
-if (!ws) {
-  console.error('❌ Sheet "FSC" not found in exam_schedule.xlsx');
-  process.exit(1);
-}
-
-const range = XLSX.utils.decode_range(ws['!ref']);
 
 // 2. Expand merged cells
 function expandMerges(sheet: any): void {
@@ -46,8 +39,6 @@ function expandMerges(sheet: any): void {
   }
 }
 
-expandMerges(ws);
-
 // Helper to get cell as raw object
 function getCell(sheet: any, r: number, c: number): any {
   const addr = XLSX.utils.encode_cell({ r, c });
@@ -63,7 +54,7 @@ function getCellStr(sheet: any, r: number, c: number): string {
 
 // 3. Build time_row: col_index → "HH:MM AM – HH:MM AM"
 // Row index 3 (0-based) = row 4 in Excel
-function buildTimeRow(sheet: any): Map<number, string> {
+function buildTimeRow(sheet: any, range: any): Map<number, string> {
   const timeMap = new Map<number, string>();
   for (let c = 1; c <= range.e.c; c++) {
     const cell = getCell(sheet, 3, c);
@@ -77,7 +68,7 @@ function buildTimeRow(sheet: any): Map<number, string> {
 // 4. Build date_col: row_index → { date: string, day: string }
 // KEY FIX: Use the Excel formatted 'w' string or parse the serial with SSF,
 // NOT JavaScript Date objects (which apply UTC and cause timezone off-by-one).
-function buildDateCol(sheet: any): Map<number, { date: string; day: string }> {
+function buildDateCol(sheet: any, range: any): Map<number, { date: string; day: string }> {
   const dateMap = new Map<number, { date: string; day: string }>();
 
   const DAY_NAMES = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
@@ -235,10 +226,10 @@ function parseCell(rawValue: string): Array<{
   const results: Array<{ courseCode: string; courseName: string; department: string; batch: string }> = [];
 
   for (const line of lines.slice(1)) {
-    // Match BS(CS), BS(AI) etc. at the start of the line (after optional whitespace)
-    const bsMatch = line.match(/^BS\s*\(\s*(CS|AI|DS|CY|SE)\s*\)/i);
+    // Match BS(CS), BBA, BS(AF), BS(EE) etc. at the start of the line (after optional whitespace)
+    const bsMatch = line.match(/^(?:BS\s*\(\s*(CS|AI|DS|CY|SE|AF|FT|BA|EE|CE)\s*\)|(BBA))(?:[^\w]|$)/i);
     if (!bsMatch) continue;
-    const department = bsMatch[1].toUpperCase();
+    const department = (bsMatch[1] || bsMatch[2]).toUpperCase();
 
     results.push({ courseCode, courseName, department, batch });
   }
@@ -250,7 +241,9 @@ function parseCell(rawValue: string): Array<{
 function buildEntries(
   sheet: any,
   timeRow: Map<number, string>,
-  dateCol: Map<number, { date: string; day: string }>
+  dateCol: Map<number, { date: string; day: string }>,
+  range: any,
+  school: string
 ): ExamEntry[] {
   const entries: ExamEntry[] = [];
   const seen = new Set<string>();
@@ -285,6 +278,7 @@ function buildEntries(
           courseName: p.courseName,
           batch: p.batch,
           department: p.department,
+          school,
         });
       }
     }
@@ -308,10 +302,19 @@ function sortEntries(entries: ExamEntry[]): ExamEntry[] {
 }
 
 // Main
-const timeRow = buildTimeRow(ws);
-const dateCol = buildDateCol(ws);
-const rawEntries = buildEntries(ws, timeRow, dateCol);
-const output = sortEntries(rawEntries);
+const allRawEntries: ExamEntry[] = [];
+for (const sheetName of ['FSC', 'FSM', 'FSE']) {
+  const sheet = wb.Sheets[sheetName];
+  if (!sheet) continue;
+  const sheetRange = XLSX.utils.decode_range(sheet['!ref']);
+  expandMerges(sheet);
+  const timeRow = buildTimeRow(sheet, sheetRange);
+  const dateCol = buildDateCol(sheet, sheetRange);
+  const sheetEntries = buildEntries(sheet, timeRow, dateCol, sheetRange, sheetName);
+  allRawEntries.push(...sheetEntries);
+}
+
+const output = sortEntries(allRawEntries);
 
 // Ensure output directory exists
 const outDir = path.join('public', 'data');

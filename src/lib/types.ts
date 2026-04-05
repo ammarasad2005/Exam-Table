@@ -5,25 +5,39 @@ export interface ExamEntry {
   courseCode: string;  // "CS1004"
   courseName: string;
   batch: string;       // "2023"
-  department: Department;
+  department: string;
+  school: string;
 }
 
-export type Department = 'CS' | 'AI' | 'DS' | 'CY' | 'SE';
+export const SCHOOLS = ['FSC', 'FSM', 'FSE'];
+
+export const SCHOOL_DEPARTMENTS: Record<string, string[]> = {
+  FSC: ['CS', 'AI', 'DS', 'CY', 'SE'],
+  FSM: ['BBA', 'AF', 'BA', 'FT'],
+  FSE: ['EE', 'CE']
+};
 
 export interface FilterState {
   batch: string;
-  department: Department;
+  department: string;
+  school: string;
   query: string;       // live search string
 }
 
-export const DEPARTMENTS: Department[] = ['CS', 'AI', 'DS', 'CY', 'SE'];
+export const DEPARTMENTS: string[] = ['CS', 'AI', 'DS', 'CY', 'SE', 'BBA', 'AF', 'BA', 'FT', 'EE', 'CE'];
 
-export const DEPARTMENT_LABELS: Record<Department, string> = {
+export const DEPARTMENT_LABELS: Record<string, string> = {
   CS: 'Computer Science',
   AI: 'Artificial Intelligence',
   DS: 'Data Science',
   CY: 'Cyber Security',
   SE: 'Software Engineering',
+  BBA: 'Bachelor of Business Admin',
+  AF: 'Accounting and Finance',
+  BA: 'Business Analytics',
+  FT: 'FinTech',
+  EE: 'Electrical Engineering',
+  CE: 'Computer Engineering'
 };
 
 // Derive available batches from loaded data at runtime

@@ -3,8 +3,7 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { DepartmentPill } from '@/components/DepartmentPill';
 import { ThemeToggle } from '@/components/ThemeToggle';
-import { DEPARTMENTS, DEPARTMENT_LABELS } from '@/lib/types';
-import type { Department } from '@/lib/types';
+import { SCHOOLS, SCHOOL_DEPARTMENTS, DEPARTMENT_LABELS } from '@/lib/types';
 
 // eslint-disable-next-line
 const scheduleRaw = require('../../public/data/schedule.json');
@@ -23,12 +22,14 @@ type Mode = 'default' | 'custom';
 export default function SetupPage() {
   const router = useRouter();
   const [mode, setMode] = useState<Mode>('default');
-  const [batch, setBatch] = useState<string>(batches[0] ?? '2023');
-  const [dept, setDept] = useState<Department>('CS');
+  const [batch, setBatch] = useState<string>('-');
+  const [school, setSchool] = useState<string>('-');
+  const [dept, setDept] = useState<string>('');
 
   function handleSubmit() {
     if (mode === 'default') {
-      router.push(`/schedule?batch=${batch}&dept=${dept}`);
+      if (batch === '-' || school === '-' || !dept) return;
+      router.push(`/schedule?batch=${batch}&school=${school}&dept=${dept}`);
     } else {
       router.push('/custom');
     }
@@ -78,10 +79,7 @@ export default function SetupPage() {
     <>
       {/* Batch */}
       <div>
-        <label
-          htmlFor="batch-select"
-          className="block font-mono text-[11px] uppercase tracking-widest text-[var(--color-text-tertiary)] mb-2"
-        >
+        <label htmlFor="batch-select" className="block font-mono text-[11px] uppercase tracking-widest text-[var(--color-text-tertiary)] mb-2">
           Batch year
         </label>
         <div className="relative">
@@ -91,44 +89,73 @@ export default function SetupPage() {
             onChange={e => setBatch(e.target.value)}
             className="w-full h-12 pl-4 pr-10 bg-[var(--color-bg-raised)] border border-[var(--color-border-strong)] rounded-md font-mono text-sm appearance-none focus:outline-none focus:ring-2 focus:ring-[var(--accent-cs)] cursor-pointer"
           >
-            {batches.length > 0
-              ? batches.map(b => <option key={b} value={b}>{b}</option>)
-              : <option value="2023">2023</option>
-            }
+            {batch === '-' && <option value="-">-</option>}
+            {batches.map(b => <option key={b} value={b}>{b}</option>)}
           </select>
           <div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none text-[var(--color-text-tertiary)]">
-            <svg width="12" height="7" viewBox="0 0 12 7" fill="none" aria-hidden="true">
-              <path d="M1 1l5 5 5-5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
-            </svg>
+            <svg width="12" height="7" viewBox="0 0 12 7" fill="none" aria-hidden="true"><path d="M1 1l5 5 5-5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>
           </div>
         </div>
       </div>
 
-      {/* Department */}
+      {/* School */}
       <div>
-        <p
-          id="department-label"
-          className="block font-mono text-[11px] uppercase tracking-widest text-[var(--color-text-tertiary)] mb-2"
-        >
-          Department
-        </p>
-        <div
-          role="group"
-          aria-labelledby="department-label"
-          className="grid grid-cols-3 gap-2 sm:grid-cols-5"
-        >
-          {DEPARTMENTS.map(d => (
-            <DepartmentPill
-              key={d}
-              dept={d}
-              selected={dept === d}
-              onClick={() => setDept(d)}
-            />
-          ))}
+        <label htmlFor="school-select" className="block font-mono text-[11px] uppercase tracking-widest text-[var(--color-text-tertiary)] mb-2">
+          School
+        </label>
+        <div className="relative">
+          <select
+            id="school-select"
+            value={school}
+            onChange={e => {
+              const selectedSchool = e.target.value;
+              setSchool(selectedSchool);
+              // Pick the first department of the new school automatically to prevent empty state internally
+              if (selectedSchool !== '-' && SCHOOL_DEPARTMENTS[selectedSchool]) {
+                setDept(SCHOOL_DEPARTMENTS[selectedSchool][0]);
+              } else {
+                setDept('');
+              }
+            }}
+            className="w-full h-12 pl-4 pr-10 bg-[var(--color-bg-raised)] border border-[var(--color-border-strong)] rounded-md font-mono text-sm appearance-none focus:outline-none focus:ring-2 focus:ring-[var(--accent-cs)] cursor-pointer"
+          >
+            {school === '-' && <option value="-">-</option>}
+            {SCHOOLS.map(s => <option key={s} value={s}>{s}</option>)}
+          </select>
+          <div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none text-[var(--color-text-tertiary)]">
+            <svg width="12" height="7" viewBox="0 0 12 7" fill="none" aria-hidden="true"><path d="M1 1l5 5 5-5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>
+          </div>
         </div>
-        <p className="mt-2 text-xs text-[var(--color-text-secondary)]">
-          {DEPARTMENT_LABELS[dept]}
-        </p>
+      </div>
+
+      {/* Department OR Good Luck */}
+      <div>
+        {school === '-' ? (
+          <div className="h-12 flex items-center justify-center text-sm font-medium text-[var(--color-text-secondary)] italic">
+            Good Luck for Exams 🍀
+          </div>
+        ) : (
+          <>
+            <p id="department-label" className="block font-mono text-[11px] uppercase tracking-widest text-[var(--color-text-tertiary)] mb-2">
+              Department
+            </p>
+            <div role="group" aria-labelledby="department-label" className="flex flex-wrap gap-2">
+              {SCHOOL_DEPARTMENTS[school]?.map(d => (
+                <DepartmentPill
+                  key={d}
+                  dept={d}
+                  selected={dept === d}
+                  onClick={() => setDept(d)}
+                />
+              ))}
+            </div>
+            {dept && (
+              <p className="mt-2 text-xs text-[var(--color-text-secondary)]">
+                {DEPARTMENT_LABELS[dept]}
+              </p>
+            )}
+          </>
+        )}
       </div>
     </>
   ) : null;
@@ -136,8 +163,13 @@ export default function SetupPage() {
   const ctaButton = (
     <button
       onClick={handleSubmit}
+      disabled={mode === 'default' && (batch === '-' || school === '-' || !dept)}
       style={{ height: '52px' }}
-      className="w-full bg-[var(--color-text-primary)] text-[var(--color-bg)] rounded-md font-body font-medium text-base active:scale-[0.98] transition-transform hover:opacity-90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2"
+      className={`w-full rounded-md font-body font-medium text-base transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 ${
+        mode === 'default' && (batch === '-' || school === '-' || !dept)
+          ? 'bg-[var(--color-bg-subtle)] text-[var(--color-text-tertiary)] cursor-not-allowed'
+          : 'bg-[var(--color-text-primary)] text-[var(--color-bg)] active:scale-[0.98] hover:opacity-90'
+      }`}
     >
       {mode === 'default' ? 'View my exams →' : 'Enter course codes →'}
     </button>

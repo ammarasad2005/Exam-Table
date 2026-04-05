@@ -9,7 +9,7 @@ import { EmptyState } from '@/components/EmptyState';
 import { ThemeToggle } from '@/components/ThemeToggle';
 import { groupByDay } from '@/lib/filter';
 import { DEPARTMENTS, DEPARTMENT_LABELS } from '@/lib/types';
-import type { ExamEntry, Department } from '@/lib/types';
+import type { ExamEntry } from '@/lib/types';
 
 // eslint-disable-next-line
 const scheduleData = require('../../../public/data/schedule.json');
@@ -23,7 +23,7 @@ const availableBatches: string[] = [...new Set<string>(allExams.map(e => e.batch
 interface CourseRow {
   id: string;
   batch: string;
-  stream: Department | '';
+  stream: string;
   code: string;
   // validation state
   errorBatch: boolean;
@@ -295,7 +295,7 @@ function CustomPageInner() {
                       <ExamCard
                         key={`${exam.date}-${exam.courseCode}-${exam.time}-${exam.department}-${exam.batch}`}
                         exam={exam}
-                        dept={exam.department as Department}
+                        dept={exam.department}
                         onClick={() => setSelected(exam)}
                       />
                     ))}
@@ -310,7 +310,7 @@ function CustomPageInner() {
       {selected && (
         <ExamDetail
           exam={selected}
-          dept={selected.department as Department}
+          dept={selected.department}
           onClose={() => setSelected(null)}
         />
       )}
@@ -392,7 +392,7 @@ function RowEditor({ row, index, matchCount, showMatchHint, onUpdate, onRemove, 
           </label>
           <select
             value={row.stream}
-            onChange={e => onUpdate({ stream: e.target.value as Department, errorStream: false })}
+            onChange={e => onUpdate({ stream: e.target.value, errorStream: false })}
             className={`h-9 px-2 rounded-md border text-xs font-mono bg-[var(--color-bg)] appearance-none focus:outline-none focus:ring-2 focus:ring-[var(--accent-cs)] cursor-pointer ${row.errorStream ? errorBase : normalBase}`}
             aria-invalid={row.errorStream}
           >

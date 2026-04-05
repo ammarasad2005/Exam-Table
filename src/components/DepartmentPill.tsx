@@ -1,6 +1,4 @@
-import type { Department } from '@/lib/types';
-
-const ACCENT: Record<Department, { bg: string; text: string; ring: string }> = {
+const ACCENT: Record<string, { bg: string; text: string; ring: string }> = {
   CS: { bg: 'var(--accent-cs-bg)', text: 'var(--accent-cs)', ring: 'var(--accent-cs)' },
   AI: { bg: 'var(--accent-ai-bg)', text: 'var(--accent-ai)', ring: 'var(--accent-ai)' },
   DS: { bg: 'var(--accent-ds-bg)', text: 'var(--accent-ds)', ring: 'var(--accent-ds)' },
@@ -9,7 +7,7 @@ const ACCENT: Record<Department, { bg: string; text: string; ring: string }> = {
 };
 
 interface Props {
-  dept: Department;
+  dept: string;
   selected: boolean;
   onClick: () => void;
 }

@@ -4,6 +4,7 @@ export function filterExams(entries: ExamEntry[], filter: FilterState): ExamEntr
   const q = filter.query.toLowerCase().trim();
   return entries.filter(e => {
     if (e.batch !== filter.batch) return false;
+    if (e.school !== filter.school) return false;
     if (e.department !== filter.department) return false;
     if (q && !e.courseCode.toLowerCase().includes(q) && !e.courseName.toLowerCase().includes(q)) return false;
     return true;

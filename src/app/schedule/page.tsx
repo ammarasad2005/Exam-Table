@@ -8,7 +8,7 @@ import { SearchBar } from '@/components/SearchBar';
 import { ExportButton } from '@/components/ExportButton';
 import { EmptyState } from '@/components/EmptyState';
 import { ThemeToggle } from '@/components/ThemeToggle';
-import type { ExamEntry, Department } from '@/lib/types';
+import type { ExamEntry } from '@/lib/types';
 
 // eslint-disable-next-line
 const scheduleData = require('../../../public/data/schedule.json');
@@ -18,14 +18,15 @@ function SchedulePageInner() {
   const params = useSearchParams();
   const router = useRouter();
   const batch = params.get('batch') ?? '';
-  const dept = (params.get('dept') ?? 'CS') as Department;
+  const school = params.get('school') ?? '';
+  const dept = params.get('dept') ?? 'CS';
 
   const [query, setQuery] = useState('');
   const [selected, setSelected] = useState<ExamEntry | null>(null);
 
   const filtered = useMemo(
-    () => filterExams(allExams, { batch, department: dept, query }),
-    [batch, dept, query]
+    () => filterExams(allExams, { batch, school, department: dept, query }),
+    [batch, school, dept, query]
   );
 
   const grouped = useMemo(() => groupByDay(filtered), [filtered]);

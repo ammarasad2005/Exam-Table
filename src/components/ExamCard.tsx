@@ -1,11 +1,11 @@
 'use client';
-import type { ExamEntry, Department } from '@/lib/types';
+import type { ExamEntry } from '@/lib/types';
 import { getDaysUntil } from '@/lib/dates';
 import { CountdownBadge } from './CountdownBadge';
 
 interface Props {
   exam: ExamEntry;
-  dept: Department;
+  dept: string;
   onClick: () => void;
 }
 
