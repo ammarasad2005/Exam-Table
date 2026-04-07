@@ -1,5 +1,5 @@
 'use client';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { DepartmentPill } from '@/components/DepartmentPill';
 import { ThemeToggle } from '@/components/ThemeToggle';
@@ -25,6 +25,25 @@ export default function SetupPage() {
   const [batch, setBatch] = useState<string>('-');
   const [school, setSchool] = useState<string>('-');
   const [dept, setDept] = useState<string>('');
+  const [selected, setSelected] = useState<any>(null); // dummy for now or previous bits 
+
+  // ── Typing Animation Logic ────────────────────────────────────────────────
+  const fullText = "Select your batch and department. Your full timetable — every date, time, and course — in one place.";
+  const [displayText, setDisplayText] = useState("");
+  const [isTypingComplete, setIsTypingComplete] = useState(false);
+
+  useEffect(() => {
+    let index = 0;
+    const interval = setInterval(() => {
+      setDisplayText(fullText.slice(0, index));
+      index++;
+      if (index > fullText.length) {
+        clearInterval(interval);
+        setIsTypingComplete(true);
+      }
+    }, 25); // Speedy, premium feel
+    return () => clearInterval(interval);
+  }, []);
 
   function handleSubmit() {
     if (mode === 'default') {
@@ -268,9 +287,13 @@ export default function SetupPage() {
                 Find your<br />
                 <span className="italic">exam schedule.</span>
               </h1>
-              <p className="mt-6 font-body text-base text-[var(--color-text-secondary)] max-w-sm leading-relaxed">
-                Select your batch and department. Your full timetable — every
-                date, time, and course — in one place.
+              <p className="mt-6 font-body text-base text-[var(--color-text-secondary)] max-w-sm leading-relaxed min-h-[4.5rem]">
+                {displayText}
+                {!isTypingComplete && (
+                  <span className="inline-block w-[2px] h-[1em] bg-[var(--color-text-tertiary)] animate-pulse ml-1 align-middle" />
+                )}
+                {/* Invisible text for SEO robots and to preserve page height layout during typing */}
+                <span className="sr-only">{fullText}</span>
               </p>
             </div>
 
