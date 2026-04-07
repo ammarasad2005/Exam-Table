@@ -259,7 +259,7 @@ export default function SetupPage() {
             {/* Headline block */}
             <div className="relative z-10">
               <p className="font-mono text-xs uppercase tracking-widest text-[var(--color-text-tertiary)] mb-6">
-                FAST School of Computing — Exam Portal
+                FAST NUCES, Isb — Exam Portal
               </p>
               <h1
                 className="font-display leading-[1.1] text-[var(--color-text-primary)]"
@@ -303,7 +303,7 @@ export default function SetupPage() {
                   </svg>
                   <span className="font-mono text-sm font-medium">LinkedIn</span>
                 </div>
-                <span className="font-mono text-[10px] text-[var(--color-text-tertiary)] uppercase tracking-widest pl-[28px]">Connect</span>
+                <span className="font-mono text-[10px] text-[var(--color-text-tertiary)] uppercase tracking-widest pl-[28px] h-3 block"></span>
               </a>
             </div>
           </div>

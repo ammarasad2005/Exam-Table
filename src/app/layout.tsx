@@ -25,7 +25,7 @@ const instrumentSerif = Instrument_Serif({
 
 export const metadata: Metadata = {
   title: 'FAST Exam Schedule',
-  description: 'Find your exam timetable — School of Computing, FAST-NUCES',
+  description: 'Find your exam timetable — FAST NUCES, Islamabad',
   openGraph: {
     title: 'FAST Exam Schedule',
     description: 'Find your exam timetable instantly',
