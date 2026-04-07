@@ -85,7 +85,7 @@ function CustomPageInner() {
   function handleSave() {
     let hasError = false;
     const validated = rows.map(r => {
-      const codeOk = /^[A-Za-z\d\- ]+$/.test(r.code.trim());
+      const codeOk = !!r.code.trim();
       const eb = !r.batch;
       const es = !r.stream;
       const ec = !codeOk;
@@ -328,6 +328,20 @@ function RowEditor({ row, index, matchCount, showMatchHint, onUpdate, onRemove, 
   const errorBase = 'border-red-400 ring-1 ring-red-400';
   const normalBase = 'border-[var(--color-border-strong)]';
 
+  const availableCourses = useMemo(() => {
+    if (!row.batch || !row.stream) return [];
+    const coursesMap = new Map<string, string>();
+    for (const e of allExams) {
+      if (e.batch === row.batch && e.department === row.stream) {
+        if (!coursesMap.has(e.courseCode)) {
+          coursesMap.set(e.courseCode, e.courseName);
+        }
+      }
+    }
+    return Array.from(coursesMap.entries()).map(([code, name]) => ({ code, name }))
+      .sort((a, b) => a.name.localeCompare(b.name));
+  }, [row.batch, row.stream]);
+
   return (
     <div className="rounded-lg border border-[var(--color-border)] bg-[var(--color-bg-raised)] p-3 flex flex-col gap-2">
       {/* Row header */}
@@ -370,7 +384,7 @@ function RowEditor({ row, index, matchCount, showMatchHint, onUpdate, onRemove, 
           </label>
           <select
             value={row.batch}
-            onChange={e => onUpdate({ batch: e.target.value, errorBatch: false })}
+            onChange={e => onUpdate({ batch: e.target.value, code: '', errorBatch: false, errorCode: false })}
             className={`h-9 px-2 rounded-md border text-xs font-mono bg-[var(--color-bg)] appearance-none focus:outline-none focus:ring-2 focus:ring-[var(--accent-cs)] cursor-pointer ${row.errorBatch ? errorBase : normalBase}`}
             aria-invalid={row.errorBatch}
           >
@@ -387,7 +401,7 @@ function RowEditor({ row, index, matchCount, showMatchHint, onUpdate, onRemove, 
           </label>
           <select
             value={row.stream}
-            onChange={e => onUpdate({ stream: e.target.value, errorStream: false })}
+            onChange={e => onUpdate({ stream: e.target.value, code: '', errorStream: false, errorCode: false })}
             className={`h-9 px-2 rounded-md border text-xs font-mono bg-[var(--color-bg)] appearance-none focus:outline-none focus:ring-2 focus:ring-[var(--accent-cs)] cursor-pointer ${row.errorStream ? errorBase : normalBase}`}
             aria-invalid={row.errorStream}
           >
@@ -398,21 +412,30 @@ function RowEditor({ row, index, matchCount, showMatchHint, onUpdate, onRemove, 
           </select>
         </div>
 
-        {/* Code */}
+        {/* Course */}
         <div className="flex flex-col gap-1">
           <label className="font-mono text-[9px] uppercase tracking-widest text-[var(--color-text-tertiary)]">
-            Code
+            Course
           </label>
-          <input
-            type="text"
-            value={row.code}
-            placeholder="CS2005"
-            maxLength={10}
-            onChange={e => onUpdate({ code: e.target.value.toUpperCase(), errorCode: false })}
-            className={`h-9 px-2 rounded-md border text-xs font-mono bg-[var(--color-bg)] focus:outline-none focus:ring-2 focus:ring-[var(--accent-cs)] uppercase placeholder:normal-case placeholder:text-[var(--color-text-tertiary)] ${row.errorCode ? errorBase : normalBase}`}
-            aria-invalid={row.errorCode}
-            aria-label={`Course code for row ${index + 1}`}
-          />
+          <div className="relative">
+            <select
+              value={row.code}
+              onChange={e => onUpdate({ code: e.target.value, errorCode: false })}
+              className={`w-full h-9 pl-2 pr-6 rounded-md border text-xs font-mono bg-[var(--color-bg)] appearance-none focus:outline-none focus:ring-2 focus:ring-[var(--accent-cs)] cursor-pointer truncate ${row.errorCode ? errorBase : normalBase}`}
+              aria-invalid={row.errorCode}
+              disabled={!row.stream || availableCourses.length === 0}
+            >
+              <option value="" disabled>
+                {!row.stream ? 'Select Stream' : availableCourses.length === 0 ? 'No courses found' : 'Select Course'}
+              </option>
+              {availableCourses.map(c => (
+                <option key={c.code} value={c.code}>{c.name} ({c.code})</option>
+              ))}
+            </select>
+            <div className="absolute right-2 top-1/2 -translate-y-1/2 pointer-events-none text-[var(--color-text-tertiary)]">
+              <svg width="10" height="6" viewBox="0 0 12 7" fill="none" aria-hidden="true"><path d="M1 1l5 5 5-5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>
+            </div>
+          </div>
         </div>
       </div>
 
@@ -421,7 +444,7 @@ function RowEditor({ row, index, matchCount, showMatchHint, onUpdate, onRemove, 
         <p className="font-mono text-[10px] text-red-500">
           {[
             row.errorStream && 'Select a stream',
-            row.errorCode && 'Enter a valid code (e.g. CS2005)',
+            row.errorCode && 'Select a course',
           ].filter(Boolean).join(' · ')}
         </p>
       )}
