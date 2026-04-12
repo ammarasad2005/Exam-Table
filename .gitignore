@@ -42,4 +42,5 @@ next-env.d.ts
 # Ignore the project generation plan and any other internal plans
 FSC_ExamSchedule_GenerationPlan.md
 *_GenerationPlan.md
+time-table-extension-plan.md
 
