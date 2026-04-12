@@ -37,14 +37,15 @@ function TimetablePageInner() {
   const [query,    setQuery]    = useState('');
   const [selected, setSelected] = useState<TimetableEntry | null>(null);
   const [viewMode, setViewMode] = useState<ViewMode>('list');
+  const [includeRepeats, setIncludeRepeats] = useState(false);
 
   const filtered = useMemo(
-    () => filterTimetable(allEntries, { batch, department: dept, section, query }),
-    [batch, dept, section, query]
+    () => filterTimetable(allEntries, { batch, department: dept, section, query, includeRepeats }),
+    [batch, dept, section, query, includeRepeats]
   );
 
   const grouped  = useMemo(() => groupByDayTimetable(filtered), [filtered]);
-  const conflicts = useMemo(() => detectConflicts(filtered), [filtered]);
+  const conflicts = useMemo(() => detectConflicts(filtered, includeRepeats), [filtered, includeRepeats]);
 
   const accentColor = `var(--accent-${dept.toLowerCase()})`;
   const accentBg    = `var(--accent-${dept.toLowerCase()}-bg)`;
@@ -134,6 +135,30 @@ function TimetablePageInner() {
             </div>
           </div>
 
+          {/* Include Repeats toggle */}
+          <div className="h-px bg-[var(--color-border)]" />
+          <div>
+            <p className="font-mono text-[10px] uppercase tracking-widest text-[var(--color-text-tertiary)] mb-2">Repeat Courses</p>
+            <button
+              id="sidebar-repeats-toggle"
+              role="switch"
+              aria-checked={includeRepeats}
+              onClick={() => setIncludeRepeats(v => !v)}
+              className="flex items-center justify-between w-full h-8 px-3 rounded border font-mono text-xs font-medium transition-all duration-150 focus-visible:outline-none focus-visible:ring-2"
+              style={includeRepeats ? {
+                backgroundColor: 'var(--color-text-primary)',
+                color: 'var(--color-bg)',
+                borderColor: 'transparent',
+              } : {
+                borderColor: 'var(--color-border-strong)',
+                color: 'var(--color-text-secondary)',
+              }}
+            >
+              <span>{includeRepeats ? 'Included' : 'Excluded'}</span>
+              <span className="opacity-60 text-[10px]">{includeRepeats ? '●' : '○'}</span>
+            </button>
+          </div>
+
           <div className="mt-auto flex flex-col gap-2">
             <button
               onClick={() => router.push('/')}
@@ -154,6 +179,25 @@ function TimetablePageInner() {
               <div className="flex-1">
                 <SearchBar value={query} onChange={setQuery} />
               </div>
+              {/* Include Repeats — mobile inline toggle */}
+              <button
+                id="mobile-repeats-toggle"
+                role="switch"
+                aria-checked={includeRepeats}
+                onClick={() => setIncludeRepeats(v => !v)}
+                title={includeRepeats ? 'Exclude repeat courses' : 'Include repeat courses'}
+                className="h-9 px-2.5 rounded border font-mono text-[10px] font-medium transition-all shrink-0 focus-visible:outline-none"
+                style={includeRepeats ? {
+                  backgroundColor: 'var(--color-text-primary)',
+                  color: 'var(--color-bg)',
+                  borderColor: 'transparent',
+                } : {
+                  borderColor: 'var(--color-border-strong)',
+                  color: 'var(--color-text-secondary)',
+                }}
+              >
+                Repeats
+              </button>
               {/* View toggle — mobile only */}
               <div className="md:hidden flex gap-1">
                 {(['list', 'grid'] as ViewMode[]).map(v => (
@@ -257,6 +301,7 @@ function ListView({
                   entry={entry}
                   dept={dept}
                   conflicting={conflicts.has(key)}
+                  isRepeat={entry.category === 'repeat'}
                   onClick={() => onSelect(entry)}
                 />
               );
@@ -269,6 +314,15 @@ function ListView({
 }
 
 // ─── Grid View ────────────────────────────────────────────────────────────────
+
+import { parseTimeRange } from '@/lib/timetable-filter';
+
+// ─── Grid View ────────────────────────────────────────────────────────────────
+
+const GRID_START = 8 * 60; // 08:00
+const GRID_END   = 18.5 * 60; // 18:30 (last slot ends at 17:00 + 90min)
+const PX_PER_MIN = 1.35;
+const DAY_COL_WIDTH = 'minmax(120px, 1fr)';
 
 function GridView({
   entries,
@@ -284,84 +338,104 @@ function GridView({
   const accentColor = `var(--accent-${dept.toLowerCase()})`;
   const accentBg    = `var(--accent-${dept.toLowerCase()}-bg)`;
 
-  // Build a map: day → time-slot-start (minutes) → entries
-  const cellMap = useMemo(() => {
-    const m = new Map<string, Map<number, TimetableEntry[]>>();
-    for (const day of DAYS_ORDER) m.set(day, new Map());
-    for (const e of entries) {
-      const dayMap = m.get(e.day);
-      if (!dayMap) continue;
-      // Find the nearest grid slot ≤ entry start
-      const startMin = parseTimeToMinutes(e.time.split('-')[0]?.trim() ?? e.time);
-      const slotMin = GRID_SLOTS
-        .map(s => parseTimeToMinutes(s))
-        .filter(sm => sm <= startMin + 30)
-        .at(-1) ?? parseTimeToMinutes(GRID_SLOTS[0]);
-      if (!dayMap.has(slotMin)) dayMap.set(slotMin, []);
-      dayMap.get(slotMin)!.push(e);
-    }
-    return m;
-  }, [entries]);
+  const totalHeight = (GRID_END - GRID_START) * PX_PER_MIN;
+
+  // Generate hour marks
+  const hours = [];
+  for (let m = GRID_START; m <= GRID_END; m += 60) {
+    hours.push(m);
+  }
 
   return (
-    <div className="mt-4 overflow-x-auto">
-      <table className="w-full border-collapse text-xs" style={{ minWidth: '600px' }}>
-        <thead>
-          <tr>
-            <th className="text-left font-mono text-[10px] uppercase tracking-widest text-[var(--color-text-tertiary)] pb-3 w-16 pr-2">
-              Time
-            </th>
-            {DAYS_ORDER.map(day => (
-              <th
-                key={day}
-                className="text-center font-mono text-[10px] uppercase tracking-widest text-[var(--color-text-tertiary)] pb-3 px-1"
-              >
-                {day.slice(0, 3)}
-              </th>
-            ))}
-          </tr>
-        </thead>
-        <tbody>
-          {GRID_SLOTS.map(slot => {
-            const slotMin = parseTimeToMinutes(slot);
-            return (
-              <tr key={slot} className="border-t border-[var(--color-border)]">
-                <td className="pr-2 py-2 align-top">
-                  <span className="font-mono text-[10px] text-[var(--color-text-tertiary)] whitespace-nowrap">
-                    {formatTimeRange(slot)}
+    <div className="mt-8 overflow-x-auto select-none">
+      <div className="min-w-[800px] relative flex flex-col">
+        
+        {/* Day Headers */}
+        <div className="grid grid-cols-[60px_repeat(5,1fr)] mb-4">
+          <div className="h-8" /> {/* Spacer for time column */}
+          {DAYS_ORDER.map(day => (
+            <div key={day} className="text-center font-mono text-[10px] uppercase tracking-widest text-[var(--color-text-tertiary)] flex items-center justify-center">
+              {day}
+            </div>
+          ))}
+        </div>
+
+        {/* Grid Body */}
+        <div className="relative grid grid-cols-[60px_repeat(5,1fr)] bg-[var(--color-bg-raised)] rounded-xl border border-[var(--color-border)] overflow-hidden" 
+             style={{ height: `${totalHeight}px` }}>
+          
+          {/* Time Column & Grid Lines */}
+          <div className="absolute inset-0 pointer-events-none">
+            {hours.map(m => {
+              const top = (m - GRID_START) * PX_PER_MIN;
+              return (
+                <div key={m} className="absolute left-0 right-0 border-t border-[var(--color-border)] opacity-40 flex items-start" style={{ top: `${top}px` }}>
+                  <span className="font-mono text-[9px] -mt-2 ml-2 text-[var(--color-text-tertiary)] bg-[var(--color-bg-raised)] px-1">
+                    {Math.floor(m / 60)}:00
                   </span>
-                </td>
-                {DAYS_ORDER.map(day => {
-                  const cellEntries = cellMap.get(day)?.get(slotMin) ?? [];
-                  return (
-                    <td key={day} className="px-1 py-2 align-top">
-                      {cellEntries.map((e, idx) => {
-                        const key = `${e.day}|${e.time}|${e.courseName}|${e.section}`;
-                        const isConflict = conflicts.has(key);
-                        return (
-                          <button
-                            key={idx}
-                            onClick={() => onSelect(e)}
-                            className="w-full text-left rounded-md p-2 text-[11px] transition-all hover:opacity-80 active:scale-[0.97] focus-visible:outline-none focus-visible:ring-1 mb-1"
-                            style={{
-                              backgroundColor: isConflict ? '#fef2f2' : accentBg,
-                              color: isConflict ? '#dc2626' : accentColor,
-                              borderLeft: isConflict ? '2px solid #f87171' : `2px solid ${accentColor}`,
-                            }}
-                          >
-                            <p className="font-medium leading-tight line-clamp-2">{e.courseName}</p>
-                            <p className="mt-0.5 opacity-70">{e.room}</p>
-                          </button>
-                        );
-                      })}
-                    </td>
-                  );
-                })}
-              </tr>
-            );
-          })}
-        </tbody>
-      </table>
+                </div>
+              );
+            })}
+            
+            {/* Vertical lines */}
+            <div className="absolute inset-0 grid grid-cols-[60px_repeat(5,1fr)]">
+              <div className="border-r border-[var(--color-border)] bg-[var(--color-bg-subtle)]/30" />
+              {DAYS_ORDER.map(day => (
+                <div key={day} className="border-r border-[var(--color-border)] last:border-r-0" />
+              ))}
+            </div>
+          </div>
+
+          {/* Classes Layer */}
+          <div className="col-start-2 col-span-5 relative h-full">
+            <div className="absolute inset-0 grid grid-cols-5 h-full">
+              {DAYS_ORDER.map((day, dayIdx) => (
+                <div key={day} className="relative h-full px-1">
+                  {entries
+                    .filter(e => e.day === day)
+                    .map((e, idx) => {
+                      const [start, end] = parseTimeRange(e.time);
+                      const top = (start - GRID_START) * PX_PER_MIN;
+                      const height = (end - start) * PX_PER_MIN;
+                      const key = `${e.day}|${e.time}|${e.courseName}|${e.section}`;
+                      const isConflict = conflicts.has(key);
+                      const isRepeat = e.category === 'repeat';
+
+                      return (
+                        <button
+                          key={idx}
+                          onClick={() => onSelect(e)}
+                          className="absolute left-1 right-1 rounded-md p-2 text-[10px] transition-all hover:ring-1 hover:ring-[var(--color-text-tertiary)] active:scale-[0.98] focus-visible:outline-none overflow-hidden text-left"
+                          style={{
+                            top: `${top}px`,
+                            height: `${height}px`,
+                            background: isConflict 
+                              ? (isRepeat ? 'repeating-linear-gradient(45deg, #fef2f2, #fef2f2 10px, #fff1f2 10px, #fff1f2 20px)' : '#fef2f2')
+                              : (isRepeat 
+                                ? 'linear-gradient(135deg, var(--color-bg-raised) 50%, color-mix(in srgb, var(--color-bg-raised) 80%, #f59e0b 20%))'
+                                : accentBg),
+                            color: isConflict ? '#dc2626' : accentColor,
+                            borderLeft: isConflict ? '3px solid #f87171' : (isRepeat ? '3px solid #f59e0b' : `3px solid ${accentColor}`),
+                            boxShadow: 'var(--shadow-card)',
+                            zIndex: isConflict ? 10 : 1,
+                          }}
+                        >
+                          <div className="flex flex-col h-full justify-between">
+                            <div>
+                              <p className="font-bold leading-tight line-clamp-2 uppercase">{e.courseName}</p>
+                              <p className="mt-0.5 opacity-80 font-mono text-[9px]">{formatTimeRange(e.time)}</p>
+                            </div>
+                            <p className="font-medium opacity-80 self-end">{e.room}</p>
+                          </div>
+                        </button>
+                      );
+                    })}
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
   );
 }

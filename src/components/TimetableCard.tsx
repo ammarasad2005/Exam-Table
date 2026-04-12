@@ -6,10 +6,11 @@ interface Props {
   entry: TimetableEntry;
   dept: string;
   conflicting?: boolean;
+  isRepeat?: boolean;
   onClick: () => void;
 }
 
-export function TimetableCard({ entry, dept, conflicting = false, onClick }: Props) {
+export function TimetableCard({ entry, dept, conflicting = false, isRepeat = false, onClick }: Props) {
   const accentColor = `var(--accent-${dept.toLowerCase()})`;
   const accentBg    = `var(--accent-${dept.toLowerCase()}-bg)`;
 
@@ -18,8 +19,11 @@ export function TimetableCard({ entry, dept, conflicting = false, onClick }: Pro
   return (
     <button
       onClick={onClick}
-      className="timetable-card w-full text-left bg-[var(--color-bg-raised)] border border-[var(--color-border)] rounded-lg p-4 flex flex-col gap-2 active:scale-[0.98] transition-all duration-100 focus-visible:outline-none focus-visible:ring-2"
+      className="timetable-card w-full text-left border border-[var(--color-border)] rounded-lg p-4 flex flex-col gap-2 active:scale-[0.98] transition-all duration-100 focus-visible:outline-none focus-visible:ring-2"
       style={{
+        background: isRepeat
+          ? 'linear-gradient(135deg, var(--color-bg-raised) 50%, color-mix(in srgb, var(--color-bg-raised) 80%, #f59e0b 20%))'
+          : 'var(--color-bg-raised)',
         borderLeftWidth: conflicting ? '3px' : undefined,
         borderLeftColor: conflicting ? '#f87171' : undefined,
         boxShadow: 'var(--shadow-card), var(--border-inset)',
@@ -37,6 +41,11 @@ export function TimetableCard({ entry, dept, conflicting = false, onClick }: Pro
         </span>
 
         <div className="flex flex-wrap gap-1">
+          {isRepeat && (
+            <span className="font-mono text-[10px] font-medium px-1.5 py-0.5 rounded shrink-0" style={{ backgroundColor: 'color-mix(in srgb, transparent 80%, #f59e0b 20%)', color: '#b45309' }}>
+              Repeat
+            </span>
+          )}
           {conflicting && (
             <span className="font-mono text-[10px] font-medium px-1.5 py-0.5 rounded bg-red-100 text-red-600 dark:bg-red-900/40 dark:text-red-400 shrink-0">
               ⚠ Conflict

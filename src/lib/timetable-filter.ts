@@ -52,6 +52,7 @@ export interface TimetableFilter {
   department: string;
   section: string;
   query: string;
+  includeRepeats?: boolean;
 }
 
 export function filterTimetable(
@@ -59,10 +60,18 @@ export function filterTimetable(
   filter: TimetableFilter
 ): TimetableEntry[] {
   const q = filter.query.toLowerCase().trim();
+  const includeRepeats = filter.includeRepeats ?? false;
   return entries.filter(e => {
     if (e.batch !== filter.batch) return false;
     if (e.department !== filter.department) return false;
-    if (e.section !== filter.section) return false;
+    if (!includeRepeats && e.category === 'repeat') return false;
+    if (e.batch === filter.batch && e.batch === '2025') {
+      const normalizedSection = e.section.replace(/\d+$/, '');
+      if (normalizedSection !== filter.section) return false;
+    } else if (e.section !== filter.section) {
+      return false;
+    }
+    
     if (
       q &&
       !e.courseName.toLowerCase().includes(q) &&
@@ -105,7 +114,14 @@ export function getAvailableSections(
 ): string[] {
   const set = new Set<string>();
   for (const e of entries) {
-    if (e.batch === batch && e.department === department) set.add(e.section);
+    if (e.batch === batch && e.department === department) {
+      if (batch === '2025') {
+        const normalized = e.section.replace(/\d+$/, '');
+        set.add(normalized);
+      } else {
+        set.add(e.section);
+      }
+    }
   }
   // Return sorted: single-letter first (A, B, C…), then compound (BX, A1…)
   return [...set].sort((a, b) => {
@@ -117,7 +133,7 @@ export function getAvailableSections(
 // ─── Conflict detection ───────────────────────────────────────────────────────
 
 /** Returns a Set of entry keys that overlap in time on the same day. */
-export function detectConflicts(entries: TimetableEntry[]): Set<string> {
+export function detectConflicts(entries: TimetableEntry[], includeRepeats = true): Set<string> {
   const conflicting = new Set<string>();
   const byDay = new Map<string, TimetableEntry[]>();
 
@@ -134,6 +150,13 @@ export function detectConflicts(entries: TimetableEntry[]): Set<string> {
         
         // If either class is rescheduled or an exam, it's allowed to overlap
         if (a.rescheduled || b.rescheduled || a.exam || b.exam) continue;
+
+        // Skip conflicts involving repeat courses when repeats are excluded
+        if (!includeRepeats && (a.category === 'repeat' || b.category === 'repeat')) continue;
+
+        // 2025 Batch: A1 and A2 are sub-sections of the same logical section.
+        // Overlaps between DIFFERENT sub-sections don't cause a conflict.
+        if (a.batch === '2025' && b.batch === '2025' && a.section !== b.section) continue;
 
         if (overlaps(a, b)) {
           conflicting.add(makeKey(a));
@@ -152,7 +175,7 @@ function overlaps(a: TimetableEntry, b: TimetableEntry): boolean {
   return aStart < bEnd && bStart < aEnd;
 }
 
-function parseTimeRange(t: string): [number, number] {
+export function parseTimeRange(t: string): [number, number] {
   // Handles "08:30 - 10:00" and "08:00 AM - 09:30 AM" formats
   const parts = t.split('-').map(s => s.trim());
   if (parts.length >= 2) {
