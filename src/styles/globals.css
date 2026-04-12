@@ -173,6 +173,19 @@ body {
 .exam-card:nth-child(9)  { animation-delay: 240ms; }
 .exam-card:nth-child(10) { animation-delay: 270ms; }
 
+/* Timetable card — same stagger */
+.timetable-card { animation: page-enter 160ms ease-out both; }
+.timetable-card:nth-child(1)  { animation-delay: 0ms; }
+.timetable-card:nth-child(2)  { animation-delay: 30ms; }
+.timetable-card:nth-child(3)  { animation-delay: 60ms; }
+.timetable-card:nth-child(4)  { animation-delay: 90ms; }
+.timetable-card:nth-child(5)  { animation-delay: 120ms; }
+.timetable-card:nth-child(6)  { animation-delay: 150ms; }
+.timetable-card:nth-child(7)  { animation-delay: 180ms; }
+.timetable-card:nth-child(8)  { animation-delay: 210ms; }
+.timetable-card:nth-child(9)  { animation-delay: 240ms; }
+.timetable-card:nth-child(10) { animation-delay: 270ms; }
+
 /* Respect prefers-reduced-motion */
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after {

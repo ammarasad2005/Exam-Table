@@ -44,3 +44,44 @@ export const DEPARTMENT_LABELS: Record<string, string> = {
 export function getAvailableBatches(entries: ExamEntry[]): string[] {
   return [...new Set(entries.map(e => e.batch))].sort().reverse();
 }
+
+// ─── Timetable Types ──────────────────────────────────────────────────────────
+
+/**
+ * A single class slot extracted from the Python-generated timetable JSON.
+ * The Python script stores times as "HH:MM - HH:MM" (24-h), room as a string,
+ * and classifies courses as 'regular' | 'repeat'.
+ */
+export interface TimetableEntry {
+  courseName: string;                  // "Programming Fundamentals"
+  batch: string;                       // "2024"
+  department: string;                  // "CS"
+  section: string;                     // "A", "BX", "A1" etc.
+  day: string;                         // "Monday"
+  time: string;                        // "08:30 - 10:00" (from Python)
+  room: string;                        // "CR-01", "TBA"
+  type: 'lecture' | 'lab';             // inferred: 'lab' if name ends with 'Lab'
+  category: 'regular' | 'repeat';      // from Python hierarchy key
+}
+
+export const DAYS_ORDER: string[] = [
+  'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday',
+];
+
+// Fixed section set shown on the home-page pill selector.
+// Dynamically available sections are filtered from loaded data
+// after batch+dept are chosen.
+export const TIMETABLE_SECTIONS: string[] = ['A', 'B', 'C', 'BX'];
+
+// ─── Timetable raw JSON shape (from Python script) ───────────────────────────
+// batch → dept → ("regular"|"repeat") → courseName → section → day → [{room,time}]
+export type RawTimetableJSON = Record<
+  string,
+  Record<
+    string,
+    {
+      regular: Record<string, Record<string, Record<string, Array<{ room: string; time: string }>>>>;
+      repeat:  Record<string, Record<string, Record<string, Array<{ room: string; time: string }>>>>;
+    }
+  >
+>;

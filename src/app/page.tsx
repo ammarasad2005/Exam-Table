@@ -1,9 +1,11 @@
 'use client';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 import { DepartmentPill } from '@/components/DepartmentPill';
 import { ThemeToggle } from '@/components/ThemeToggle';
 import { SCHOOLS, SCHOOL_DEPARTMENTS, DEPARTMENT_LABELS } from '@/lib/types';
+import { flattenTimetable, getAvailableSections } from '@/lib/timetable-filter';
+import type { RawTimetableJSON } from '@/lib/types';
 
 // eslint-disable-next-line
 const scheduleRaw = require('../../public/data/schedule.json');
@@ -11,54 +13,141 @@ const batches: string[] = [...new Set<string>(scheduleRaw.map((e: { batch: strin
   .sort()
   .reverse();
 
-const STATS = [
+// eslint-disable-next-line
+const timetableRaw: RawTimetableJSON = require('../../public/data/timetable.json');
+const allTimetableEntries = flattenTimetable(timetableRaw);
+const timetableBatches: string[] = [...new Set<string>(allTimetableEntries.map(e => e.batch))].sort().reverse();
+
+const EXAM_STATS = [
   { value: String(scheduleRaw.length), label: 'exam slots' },
   { value: String(new Set<string>(scheduleRaw.map((e: { courseCode: string }) => e.courseCode)).size), label: 'courses' },
   { value: '5', label: 'departments' },
 ];
 
-type Mode = 'default' | 'custom';
+const TIMETABLE_STATS = [
+  { value: String(allTimetableEntries.length), label: 'class slots' },
+  { value: String(new Set<string>(allTimetableEntries.map(e => e.courseName)).size), label: 'courses' },
+  { value: String(new Set<string>(allTimetableEntries.map(e => e.department)).size), label: 'departments' },
+];
+
+type Mode    = 'default' | 'custom';
+type Feature = 'exams'   | 'timetable';
+
+// FSC-only departments for the timetable (from the Python data)
+const TIMETABLE_DEPTS = ['CS', 'AI', 'DS', 'CY', 'SE'];
+
+// Typing animation strings — one per feature
+const HERO_TEXTS: Record<Feature, string> = {
+  exams:
+    'Select your batch and department. Your full exam schedule — every date, time, and course — in one place.',
+  timetable:
+    'Select your batch, department and section. Your weekly class timetable — every slot, room, and timing — instantly.',
+};
 
 export default function SetupPage() {
   const router = useRouter();
-  const [mode, setMode] = useState<Mode>('default');
-  const [batch, setBatch] = useState<string>('-');
-  const [school, setSchool] = useState<string>('-');
-  const [dept, setDept] = useState<string>('');
-  const [selected, setSelected] = useState<any>(null); // dummy for now or previous bits 
 
-  // ── Typing Animation Logic ────────────────────────────────────────────────
-  const fullText = "Select your batch and department. Your full timetable — every date, time, and course — in one place.";
-  const [displayText, setDisplayText] = useState("");
+  const [feature, setFeature] = useState<Feature>('exams');
+  const [mode, setMode]       = useState<Mode>('default');
+
+  // Shared form state
+  const [batch,    setBatch]   = useState<string>('-');
+  const [school,   setSchool]  = useState<string>('-');
+  const [dept,     setDept]    = useState<string>('');
+  const [section,  setSection] = useState<string>('');
+
+  // Typing animation
+  const fullText = HERO_TEXTS[feature];
+  const [displayText, setDisplayText]         = useState('');
   const [isTypingComplete, setIsTypingComplete] = useState(false);
 
+  // Reset typing animation whenever feature changes
   useEffect(() => {
-    let index = 0;
-    const interval = setInterval(() => {
-      setDisplayText(fullText.slice(0, index));
-      index++;
-      if (index > fullText.length) {
-        clearInterval(interval);
-        setIsTypingComplete(true);
-      }
-    }, 25); // Speedy, premium feel
-    return () => clearInterval(interval);
-  }, []);
+    setDisplayText('');
+    setIsTypingComplete(false);
+    let i = 0;
+    const iv = setInterval(() => {
+      setDisplayText(fullText.slice(0, i));
+      i++;
+      if (i > fullText.length) { clearInterval(iv); setIsTypingComplete(true); }
+    }, 22);
+    return () => clearInterval(iv);
+  }, [feature, fullText]);
+
+  // Dynamically derive available sections from loaded timetable data
+  const availableSections = useMemo(
+    () => (feature === 'timetable' && batch !== '-' && dept)
+      ? getAvailableSections(allTimetableEntries, batch, dept)
+      : [],
+    [feature, batch, dept]
+  );
+
+  // Reset section when dept/batch changes
+  useEffect(() => {
+    setSection('');
+  }, [batch, dept, feature]);
+
+  // When feature changes to exams, re-validate batch against exam batches
+  useEffect(() => {
+    if (feature === 'exams' && batch !== '-' && !batches.includes(batch)) setBatch('-');
+    if (feature === 'timetable' && batch !== '-' && !timetableBatches.includes(batch)) setBatch('-');
+  }, [feature, batch]);
 
   function handleSubmit() {
-    if (mode === 'default') {
-      if (batch === '-' || school === '-' || !dept) return;
-      router.push(`/schedule?batch=${batch}&school=${school}&dept=${dept}`);
+    if (feature === 'exams') {
+      if (mode === 'default') {
+        if (batch === '-' || school === '-' || !dept) return;
+        router.push(`/schedule?batch=${batch}&school=${school}&dept=${dept}`);
+      } else {
+        router.push('/custom');
+      }
     } else {
-      router.push('/custom');
+      // Timetable mode — always uses dept selection (FSC only)
+      if (batch === '-' || !dept || !section) return;
+      router.push(`/timetable?batch=${batch}&dept=${dept}&section=${section}`);
     }
   }
 
-  // ─── Shared form pieces ───────────────────────────────────────────────────
-  // Defined once, reused in both mobile and desktop JSX trees so
-  // state, handlers, and markup stay perfectly in sync.
+  const activeBatches = feature === 'timetable' ? timetableBatches : batches;
+  const examCtaDisabled = mode === 'default' && (batch === '-' || school === '-' || !dept);
+  const timetableCtaDisabled = batch === '-' || !dept || !section;
+  const ctaDisabled = feature === 'exams' ? examCtaDisabled : timetableCtaDisabled;
 
-  const modeSelector = (
+  // ─── Shared UI pieces ──────────────────────────────────────────────────────
+
+  const featureSelector = (
+    <div>
+      <p
+        id="feature-label"
+        className="block font-mono text-[11px] uppercase tracking-widest text-[var(--color-text-tertiary)] mb-2"
+      >
+        Feature
+      </p>
+      <div role="group" aria-labelledby="feature-label" className="grid grid-cols-2 gap-2">
+        {(['exams', 'timetable'] as Feature[]).map(f => (
+          <button
+            key={f}
+            id={`feature-${f}`}
+            onClick={() => { setFeature(f); setMode('default'); }}
+            aria-pressed={feature === f}
+            className="h-11 rounded-md border font-body text-sm font-medium transition-all duration-150 active:scale-95 focus-visible:outline-none focus-visible:ring-2"
+            style={feature === f ? {
+              backgroundColor: 'var(--color-text-primary)',
+              color: 'var(--color-bg)',
+              borderColor: 'transparent',
+            } : {
+              borderColor: 'var(--color-border-strong)',
+              color: 'var(--color-text-secondary)',
+            }}
+          >
+            {f === 'exams' ? 'Exam Finder' : 'Timetable'}
+          </button>
+        ))}
+      </div>
+    </div>
+  );
+
+  const modeSelector = feature === 'exams' ? (
     <div>
       <p
         id="mode-label"
@@ -67,7 +156,7 @@ export default function SetupPage() {
         Mode
       </p>
       <div role="group" aria-labelledby="mode-label" className="grid grid-cols-2 gap-2">
-        {(['default', 'custom'] as Mode[]).map((m) => (
+        {(['default', 'custom'] as Mode[]).map(m => (
           <button
             key={m}
             onClick={() => setMode(m)}
@@ -92,121 +181,182 @@ export default function SetupPage() {
           : 'Enter specific course codes — for irregular credit loads.'}
       </p>
     </div>
-  );
+  ) : null;
 
-  const batchAndDept = mode === 'default' ? (
-    <>
-      {/* Batch */}
-      <div>
-        <label htmlFor="batch-select" className="block font-mono text-[11px] uppercase tracking-widest text-[var(--color-text-tertiary)] mb-2">
-          Batch year
-        </label>
-        <div className="relative">
-          <select
-            id="batch-select"
-            value={batch}
-            onChange={e => setBatch(e.target.value)}
-            className="w-full h-12 pl-4 pr-10 bg-[var(--color-bg-raised)] border border-[var(--color-border-strong)] rounded-md font-mono text-sm appearance-none focus:outline-none focus:ring-2 focus:ring-[var(--accent-cs)] cursor-pointer"
-          >
-            {batch === '-' && <option value="-">-</option>}
-            {batches.map(b => <option key={b} value={b}>{b}</option>)}
-          </select>
-          <div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none text-[var(--color-text-tertiary)]">
-            <svg width="12" height="7" viewBox="0 0 12 7" fill="none" aria-hidden="true"><path d="M1 1l5 5 5-5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>
-          </div>
+  // Batch selector — shared between both features
+  const batchSelector = (feature === 'timetable' || (feature === 'exams' && mode === 'default')) ? (
+    <div>
+      <label
+        htmlFor="batch-select"
+        className="block font-mono text-[11px] uppercase tracking-widest text-[var(--color-text-tertiary)] mb-2"
+      >
+        Batch year
+      </label>
+      <div className="relative">
+        <select
+          id="batch-select"
+          value={batch}
+          onChange={e => { setBatch(e.target.value); setDept(''); setSection(''); }}
+          className="w-full h-12 pl-4 pr-10 bg-[var(--color-bg-raised)] border border-[var(--color-border-strong)] rounded-md font-mono text-sm appearance-none focus:outline-none focus:ring-2 focus:ring-[var(--accent-cs)] cursor-pointer"
+        >
+          {batch === '-' && <option value="-">-</option>}
+          {activeBatches.map(b => <option key={b} value={b}>{b}</option>)}
+        </select>
+        <div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none text-[var(--color-text-tertiary)]">
+          <svg width="12" height="7" viewBox="0 0 12 7" fill="none" aria-hidden="true">
+            <path d="M1 1l5 5 5-5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+          </svg>
         </div>
       </div>
+    </div>
+  ) : null;
 
-      {/* School */}
-      <div>
-        <label htmlFor="school-select" className="block font-mono text-[11px] uppercase tracking-widest text-[var(--color-text-tertiary)] mb-2">
-          School
-        </label>
-        <div className="relative">
-          <select
-            id="school-select"
-            value={school}
-            onChange={e => {
-              const selectedSchool = e.target.value;
-              setSchool(selectedSchool);
-              // Pick the first department of the new school automatically to prevent empty state internally
-              if (selectedSchool !== '-' && SCHOOL_DEPARTMENTS[selectedSchool]) {
-                setDept(SCHOOL_DEPARTMENTS[selectedSchool][0]);
-              } else {
-                setDept('');
-              }
-            }}
-            className="w-full h-12 pl-4 pr-10 bg-[var(--color-bg-raised)] border border-[var(--color-border-strong)] rounded-md font-mono text-sm appearance-none focus:outline-none focus:ring-2 focus:ring-[var(--accent-cs)] cursor-pointer"
-          >
-            {school === '-' && <option value="-">-</option>}
-            {SCHOOLS.map(s => <option key={s} value={s}>{s}</option>)}
-          </select>
-          <div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none text-[var(--color-text-tertiary)]">
-            <svg width="12" height="7" viewBox="0 0 12 7" fill="none" aria-hidden="true"><path d="M1 1l5 5 5-5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>
-          </div>
+  // School selector — only for exam feature
+  const schoolSelector = feature === 'exams' && mode === 'default' ? (
+    <div>
+      <label
+        htmlFor="school-select"
+        className="block font-mono text-[11px] uppercase tracking-widest text-[var(--color-text-tertiary)] mb-2"
+      >
+        School
+      </label>
+      <div className="relative">
+        <select
+          id="school-select"
+          value={school}
+          onChange={e => {
+            const s = e.target.value;
+            setSchool(s);
+            if (s !== '-' && SCHOOL_DEPARTMENTS[s]) setDept(SCHOOL_DEPARTMENTS[s][0]);
+            else setDept('');
+          }}
+          className="w-full h-12 pl-4 pr-10 bg-[var(--color-bg-raised)] border border-[var(--color-border-strong)] rounded-md font-mono text-sm appearance-none focus:outline-none focus:ring-2 focus:ring-[var(--accent-cs)] cursor-pointer"
+        >
+          {school === '-' && <option value="-">-</option>}
+          {SCHOOLS.map(s => <option key={s} value={s}>{s}</option>)}
+        </select>
+        <div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none text-[var(--color-text-tertiary)]">
+          <svg width="12" height="7" viewBox="0 0 12 7" fill="none" aria-hidden="true">
+            <path d="M1 1l5 5 5-5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+          </svg>
         </div>
       </div>
+    </div>
+  ) : null;
 
-      {/* Department OR Good Luck */}
-      <div>
-        {school === '-' ? (
-          <div className="h-12 flex items-center justify-center text-sm font-medium text-[var(--color-text-secondary)] italic">
-            Good Luck for Exams 😊
+  // Department pills — for exams (school-gated) or timetable (FSC only)
+  const deptPills = (feature === 'exams' && mode === 'default') ? (
+    <div>
+      {school === '-' ? (
+        <div className="h-12 flex items-center justify-center text-sm font-medium text-[var(--color-text-secondary)] italic">
+          Good Luck for Exams 😊
+        </div>
+      ) : (
+        <>
+          <p id="department-label" className="block font-mono text-[11px] uppercase tracking-widest text-[var(--color-text-tertiary)] mb-2">
+            Department
+          </p>
+          <div role="group" aria-labelledby="department-label" className="grid grid-cols-3 gap-2 sm:grid-cols-5">
+            {SCHOOL_DEPARTMENTS[school]?.map(d => (
+              <DepartmentPill key={d} dept={d} selected={dept === d} onClick={() => setDept(d)} />
+            ))}
           </div>
-        ) : (
-          <>
-            <p id="department-label" className="block font-mono text-[11px] uppercase tracking-widest text-[var(--color-text-tertiary)] mb-2">
-              Department
-            </p>
-            <div role="group" aria-labelledby="department-label" className="grid grid-cols-3 gap-2 sm:grid-cols-5">
-              {SCHOOL_DEPARTMENTS[school]?.map(d => (
-                <DepartmentPill
-                  key={d}
-                  dept={d}
-                  selected={dept === d}
-                  onClick={() => setDept(d)}
-                />
-              ))}
-            </div>
-            {dept && (
-              <p className="mt-2 text-xs text-[var(--color-text-secondary)]">
-                {DEPARTMENT_LABELS[dept]}
-              </p>
-            )}
-          </>
-        )}
+          {dept && (
+            <p className="mt-2 text-xs text-[var(--color-text-secondary)]">{DEPARTMENT_LABELS[dept]}</p>
+          )}
+        </>
+      )}
+    </div>
+  ) : feature === 'timetable' ? (
+    <div>
+      <p id="tt-department-label" className="block font-mono text-[11px] uppercase tracking-widest text-[var(--color-text-tertiary)] mb-2">
+        Department
+      </p>
+      <div role="group" aria-labelledby="tt-department-label" className="grid grid-cols-3 gap-2 sm:grid-cols-5">
+        {TIMETABLE_DEPTS.map(d => (
+          <DepartmentPill key={d} dept={d} selected={dept === d} onClick={() => setDept(d)} />
+        ))}
       </div>
-    </>
+      {dept && (
+        <p className="mt-2 text-xs text-[var(--color-text-secondary)]">{DEPARTMENT_LABELS[dept]}</p>
+      )}
+    </div>
+  ) : null;
+
+  // Section pills — only for timetable
+  const sectionPills = feature === 'timetable' && dept && batch !== '-' ? (
+    <div>
+      <p id="section-label" className="block font-mono text-[11px] uppercase tracking-widest text-[var(--color-text-tertiary)] mb-2">
+        Section
+      </p>
+      {availableSections.length === 0 ? (
+        <p className="text-xs text-[var(--color-text-tertiary)] italic h-11 flex items-center">
+          {allTimetableEntries.length === 0
+            ? 'No timetable data yet — run the Python script first.'
+            : 'No sections found for this batch & department.'}
+        </p>
+      ) : (
+        <div role="group" aria-labelledby="section-label" className="flex flex-wrap gap-2">
+          {availableSections.map(s => (
+            <button
+              key={s}
+              id={`section-${s}`}
+              onClick={() => setSection(s)}
+              aria-pressed={section === s}
+              className="h-11 min-w-[3.5rem] px-3 rounded-md border font-mono text-sm font-medium transition-all duration-150 active:scale-95 focus-visible:outline-none focus-visible:ring-2"
+              style={section === s ? {
+                backgroundColor: `var(--accent-${dept.toLowerCase()}-bg)`,
+                color: `var(--accent-${dept.toLowerCase()})`,
+                boxShadow: `0 0 0 2px var(--accent-${dept.toLowerCase()})`,
+                borderColor: 'transparent',
+              } : {
+                borderColor: 'var(--color-border-strong)',
+                color: 'var(--color-text-secondary)',
+              }}
+            >
+              {s}
+            </button>
+          ))}
+        </div>
+      )}
+    </div>
   ) : null;
 
   const ctaButton = (
     <button
+      id="cta-button"
       onClick={handleSubmit}
-      disabled={mode === 'default' && (batch === '-' || school === '-' || !dept)}
+      disabled={ctaDisabled}
       style={{ height: '52px' }}
       className={`w-full rounded-md font-body font-medium text-base transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 ${
-        mode === 'default' && (batch === '-' || school === '-' || !dept)
+        ctaDisabled
           ? 'bg-[var(--color-bg-subtle)] text-[var(--color-text-tertiary)] cursor-not-allowed'
           : 'bg-[var(--color-text-primary)] text-[var(--color-bg)] active:scale-[0.98] hover:opacity-90'
       }`}
     >
-      {mode === 'default' ? 'View my exams →' : 'Enter course codes →'}
+      {feature === 'timetable'
+        ? 'View my timetable →'
+        : mode === 'default'
+          ? 'View my exams →'
+          : 'Enter course codes →'}
     </button>
   );
+
+  const STATS = feature === 'timetable' ? TIMETABLE_STATS : EXAM_STATS;
 
   return (
     <>
       {/* ================================================================
-          MOBILE  (< 768px) — pixel-perfect original, nothing changed
+          MOBILE  (< 768px)
       ================================================================ */}
       <main className="md:hidden min-h-dvh flex flex-col px-5 pt-safe-top pb-safe-bottom max-w-lg mx-auto">
 
         <header className="flex items-center justify-between h-14 flex-shrink-0">
           <div className="flex items-center">
-            <img 
-              src="/logo/logo.png" 
-              alt="FAST Logo" 
-              className="h-6 w-auto object-contain brightness-0 dark:invert transition-opacity" 
+            <img
+              src="/logo/logo.png"
+              alt="FAST Logo"
+              className="h-6 w-auto object-contain brightness-0 dark:invert transition-opacity"
             />
           </div>
           <div className="flex items-center gap-4">
@@ -226,15 +376,22 @@ export default function SetupPage() {
 
         <div className="mt-10 mb-8">
           <h1 className="font-display text-4xl leading-tight text-[var(--color-text-primary)]">
-            Find your<br />
-            <span className="italic">exam schedule.</span>
+            {feature === 'exams' ? (
+              <>Find your<br /><span className="italic">exam schedule.</span></>
+            ) : (
+              <>Find your<br /><span className="italic">class timetable.</span></>
+            )}
           </h1>
           <div className="mt-6 h-px bg-[var(--color-border)]" />
         </div>
 
         <div className="flex flex-col gap-6 flex-1">
+          {featureSelector}
           {modeSelector}
-          {batchAndDept}
+          {batchSelector}
+          {schoolSelector}
+          {deptPills}
+          {sectionPills}
         </div>
 
         <div className="pb-8 pt-6 flex flex-col gap-8">
@@ -243,17 +400,17 @@ export default function SetupPage() {
       </main>
 
       {/* ================================================================
-          DESKTOP  (≥ 768px) — new two-column layout
+          DESKTOP  (≥ 768px) — two-column layout
       ================================================================ */}
       <div className="hidden md:flex min-h-dvh flex-col">
 
         {/* Full-width header */}
         <header className="flex items-center justify-between px-10 h-14 flex-shrink-0 border-b border-[var(--color-border)]">
           <div className="flex items-center">
-            <img 
-              src="/logo/logo.png" 
-              alt="FAST Logo" 
-              className="h-6 w-auto object-contain brightness-0 dark:invert transition-opacity" 
+            <img
+              src="/logo/logo.png"
+              alt="FAST Logo"
+              className="h-6 w-auto object-contain brightness-0 dark:invert transition-opacity"
             />
           </div>
           <ThemeToggle />
@@ -278,23 +435,35 @@ export default function SetupPage() {
             {/* Headline block */}
             <div className="relative z-10">
               <p className="font-mono text-xs uppercase tracking-widest text-[var(--color-text-tertiary)] mb-6">
-                FAST NUCES, Isb — Exam Portal
+                FAST NUCES, Isb — {feature === 'exams' ? 'Exam Portal' : 'Timetable Portal'}
               </p>
               <h1
                 className="font-display leading-[1.1] text-[var(--color-text-primary)]"
                 style={{ fontSize: 'clamp(2.4rem, 3.5vw, 3.6rem)' }}
               >
-                Find your<br />
-                <span className="italic">exam schedule.</span>
+                {feature === 'exams' ? (
+                  <>Find your<br /><span className="italic">exam schedule.</span></>
+                ) : (
+                  <>Find your<br /><span className="italic">class timetable.</span></>
+                )}
               </h1>
               <p className="mt-6 font-body text-base text-[var(--color-text-secondary)] max-w-sm leading-relaxed min-h-[4.5rem]">
                 {displayText}
                 {!isTypingComplete && (
                   <span className="inline-block w-[2px] h-[1em] bg-[var(--color-text-tertiary)] animate-pulse ml-1 align-middle" />
                 )}
-                {/* Invisible text for SEO robots and to preserve page height layout during typing */}
                 <span className="sr-only">{fullText}</span>
               </p>
+
+              {/* Stats row */}
+              <div className="mt-8 flex gap-8">
+                {STATS.map(({ value, label }) => (
+                  <div key={label}>
+                    <p className="font-mono text-2xl font-medium text-[var(--color-text-primary)]">{value}</p>
+                    <p className="font-mono text-[10px] uppercase tracking-widest text-[var(--color-text-tertiary)]">{label}</p>
+                  </div>
+                ))}
+              </div>
             </div>
 
             {/* Social / Developer Links */}
@@ -331,20 +500,25 @@ export default function SetupPage() {
             </div>
           </div>
 
-          {/* RIGHT — form card, vertically centered */}
+          {/* RIGHT — form card */}
           <div className="flex-1 flex items-center justify-center px-10 lg:px-16 xl:px-24 py-14">
             <div className="w-full max-w-sm">
 
               <div className="bg-[var(--color-bg-raised)] border border-[var(--color-border)] rounded-2xl p-8 lg:p-10 flex flex-col gap-6">
-                {modeSelector}
-                {/* Full-bleed divider inside card */}
+                {featureSelector}
                 <div className="h-px bg-[var(--color-border)] -mx-8 lg:-mx-10" />
-                {batchAndDept}
+                {modeSelector}
+                {batchSelector}
+                {schoolSelector}
+                {deptPills}
+                {sectionPills}
                 {ctaButton}
               </div>
 
               <p className="mt-5 font-mono text-[11px] text-[var(--color-text-tertiary)] text-center leading-relaxed">
-                Data updates for all examinations.{' '}
+                {feature === 'exams'
+                  ? 'Data updates for all examinations.'
+                  : 'Timetable data via the Python schedule script.'}
               </p>
 
             </div>

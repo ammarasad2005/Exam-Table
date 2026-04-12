@@ -1,4 +1,5 @@
-import type { ExamEntry } from './types';
+import type { ExamEntry, TimetableEntry } from './types';
+
 
 // Download as CSV
 export function downloadCSV(entries: ExamEntry[]): void {
@@ -187,5 +188,159 @@ export function generateICS(exam: ExamEntry): void {
     URL.revokeObjectURL(url);
   } catch (err) {
     console.error('ICS export failed:', err);
+  }
+}
+
+// ─── Timetable Exports ────────────────────────────────────────────────────────
+
+export function downloadTimetableCSV(entries: TimetableEntry[]): void {
+  try {
+    const header = 'Course,Batch,Department,Section,Day,Time,Room,Type,Category';
+    const rows = entries.map(e =>
+      [
+        `"${e.courseName}"`,
+        e.batch,
+        e.department,
+        e.section,
+        e.day,
+        `"${e.time}"`,
+        e.room,
+        e.type,
+        e.category,
+      ].join(',')
+    );
+    const blob = new Blob([[header, ...rows].join('\n')], { type: 'text/csv' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `timetable-${Date.now()}.csv`;
+    a.click();
+    URL.revokeObjectURL(url);
+  } catch (err) {
+    console.error('Timetable CSV export failed:', err);
+  }
+}
+
+export async function downloadTimetableXLSX(entries: TimetableEntry[]): Promise<void> {
+  try {
+    const { Workbook } = await import('exceljs');
+    const { saveAs } = (await import('file-saver')).default;
+
+    const wb = new Workbook();
+    wb.creator = 'FAST Timetable Engine';
+    const sheet = wb.addWorksheet('Class Timetable');
+
+    sheet.columns = [
+      { header: 'Course',     key: 'courseName', width: 45 },
+      { header: 'Batch',      key: 'batch',      width: 10 },
+      { header: 'Department', key: 'department', width: 14 },
+      { header: 'Section',    key: 'section',    width: 10 },
+      { header: 'Day',        key: 'day',        width: 12 },
+      { header: 'Time',       key: 'time',       width: 20 },
+      { header: 'Room',       key: 'room',       width: 14 },
+      { header: 'Type',       key: 'type',       width: 10 },
+      { header: 'Category',   key: 'category',   width: 12 },
+    ];
+
+    sheet.addRows(entries);
+
+    const headerRow = sheet.getRow(1);
+    headerRow.height = 20;
+    headerRow.eachCell(cell => {
+      cell.fill   = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF1F3864' } };
+      cell.font   = { bold: true, color: { argb: 'FFFFFFFF' } };
+      cell.alignment = { vertical: 'middle', horizontal: 'center' };
+      cell.border = {
+        top: { style: 'thin' }, left: { style: 'thin' },
+        bottom: { style: 'thin' }, right: { style: 'thin' },
+      };
+    });
+
+    entries.forEach((_, idx) => {
+      const row = sheet.getRow(idx + 2);
+      row.height = 18;
+      row.eachCell((cell, col) => {
+        cell.alignment = col === 1
+          ? { vertical: 'middle', horizontal: 'left', wrapText: true }
+          : { vertical: 'middle', horizontal: 'center' };
+        cell.fill   = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFFFFFFF' } };
+        cell.border = {
+          top:    { style: 'thin', color: { argb: 'FFD9D9D9' } },
+          left:   { style: 'thin', color: { argb: 'FFD9D9D9' } },
+          bottom: { style: 'thin', color: { argb: 'FFD9D9D9' } },
+          right:  { style: 'thin', color: { argb: 'FFD9D9D9' } },
+        };
+      });
+    });
+
+    const buffer = await wb.xlsx.writeBuffer();
+    saveAs(new Blob([buffer]), `Timetable_${Date.now()}.xlsx`);
+  } catch (err) {
+    console.error('Timetable XLSX export failed:', err);
+  }
+}
+
+/**
+ * Generates a recurring weekly .ics for a set of timetable entries.
+ * Events repeat RRULE:FREQ=WEEKLY for ~16 weeks from the current date.
+ */
+export function downloadTimetableICS(entries: TimetableEntry[]): void {
+  try {
+    const DAY_MAP: Record<string, string> = {
+      Monday: 'MO', Tuesday: 'TU', Wednesday: 'WE', Thursday: 'TH', Friday: 'FR',
+    };
+    const dayIndex: Record<string, number> = {
+      Sunday: 0, Monday: 1, Tuesday: 2, Wednesday: 3, Thursday: 4, Friday: 5, Saturday: 6,
+    };
+
+    const dtStamp = new Date().toISOString().replace(/[-:]/g, '').split('.')[0] + 'Z';
+    const semStart = new Date(); semStart.setHours(0, 0, 0, 0);
+    const semEnd = new Date(semStart); semEnd.setDate(semEnd.getDate() + 16 * 7);
+    const untilDT = semEnd.toISOString().replace(/[-:]/g, '').split('.')[0] + 'Z';
+
+    function nextWeekday(targetDay: string): Date {
+      const d = new Date(semStart);
+      const diff = (dayIndex[targetDay] ?? 1 - d.getDay() + 7) % 7;
+      d.setDate(d.getDate() + diff);
+      return d;
+    }
+
+    function parseParts(t: string): [number, number] {
+      const m = t.match(/(\d{1,2}):(\d{2})/);
+      if (!m) return [8, 0];
+      return [parseInt(m[1]), parseInt(m[2])];
+    }
+
+    function toICSDateTime(date: Date, h: number, min: number): string {
+      const d = new Date(date); d.setHours(h, min, 0, 0);
+      return `${d.getFullYear()}${String(d.getMonth()+1).padStart(2,'0')}${String(d.getDate()).padStart(2,'0')}T${String(d.getHours()).padStart(2,'0')}${String(d.getMinutes()).padStart(2,'0')}00`;
+    }
+
+    const events = entries.map(e => {
+      const parts = e.time.split('-').map(s => s.trim());
+      const [sh, sm] = parseParts(parts[0] ?? '');
+      const [eh, em] = parseParts(parts[1] ?? parts[0] ?? '');
+      const firstOcc = nextWeekday(e.day);
+      return [
+        'BEGIN:VEVENT',
+        `DTSTART:${toICSDateTime(firstOcc, sh, sm)}`,
+        `DTEND:${toICSDateTime(firstOcc, eh || sh + 1, em || sm)}`,
+        `RRULE:FREQ=WEEKLY;BYDAY=${DAY_MAP[e.day] ?? 'MO'};UNTIL=${untilDT}`,
+        `DTSTAMP:${dtStamp}`,
+        `SUMMARY:${e.courseName} (${e.section})`,
+        `DESCRIPTION:Dept: ${e.department}\\nBatch: ${e.batch}\\nRoom: ${e.room}\\nType: ${e.type}`,
+        `LOCATION:${e.room}`,
+        'END:VEVENT',
+      ].join('\r\n');
+    }).join('\r\n');
+
+    const ics = ['BEGIN:VCALENDAR','VERSION:2.0','PRODID:-//FAST Timetable//EN', events,'END:VCALENDAR'].join('\r\n');
+    const blob = new Blob([ics], { type: 'text/calendar' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url; a.download = `timetable-${Date.now()}.ics`; a.click();
+    URL.revokeObjectURL(url);
+  } catch (err) {
+    console.error('Timetable ICS export failed:', err);
   }
 }
