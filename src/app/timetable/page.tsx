@@ -188,13 +188,10 @@ function TimetablePageInner() {
                 <span>Showing {grouped.length} of 5 days. Some classes may not yet be scheduled.</span>
               </div>
             </div>
-          )}
-
-          {/* Result count (mobile) */}
+          )}          {/* Result count (mobile) */}
           <p className="md:hidden px-4 pt-3 pb-1 font-mono text-xs text-[var(--color-text-tertiary)]">
             {filtered.length} class slot{filtered.length !== 1 ? 's' : ''} found
           </p>
-
           {/* Content area */}
           <div id="print-area" className="flex-1 px-4 pb-24 md:pb-8 bg-[var(--color-bg)]">
             {filtered.length === 0 ? (

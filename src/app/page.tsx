@@ -18,20 +18,10 @@ const timetableRaw: RawTimetableJSON = require('../../public/data/timetable.json
 const allTimetableEntries = flattenTimetable(timetableRaw);
 const timetableBatches: string[] = [...new Set<string>(allTimetableEntries.map(e => e.batch))].sort().reverse();
 
-const EXAM_STATS = [
-  { value: String(scheduleRaw.length), label: 'exam slots' },
-  { value: String(new Set<string>(scheduleRaw.map((e: { courseCode: string }) => e.courseCode)).size), label: 'courses' },
-  { value: '5', label: 'departments' },
-];
 
-const TIMETABLE_STATS = [
-  { value: String(allTimetableEntries.length), label: 'class slots' },
-  { value: String(new Set<string>(allTimetableEntries.map(e => e.courseName)).size), label: 'courses' },
-  { value: String(new Set<string>(allTimetableEntries.map(e => e.department)).size), label: 'departments' },
-];
 
-type Mode    = 'default' | 'custom';
-type Feature = 'exams'   | 'timetable';
+type Mode = 'default' | 'custom';
+type Feature = 'exams' | 'timetable';
 
 // FSC-only departments for the timetable (from the Python data)
 const TIMETABLE_DEPTS = ['CS', 'AI', 'DS', 'CY', 'SE'];
@@ -48,17 +38,17 @@ export default function SetupPage() {
   const router = useRouter();
 
   const [feature, setFeature] = useState<Feature>('exams');
-  const [mode, setMode]       = useState<Mode>('default');
+  const [mode, setMode] = useState<Mode>('default');
 
   // Shared form state
-  const [batch,    setBatch]   = useState<string>('-');
-  const [school,   setSchool]  = useState<string>('-');
-  const [dept,     setDept]    = useState<string>('');
-  const [section,  setSection] = useState<string>('');
+  const [batch, setBatch] = useState<string>('-');
+  const [school, setSchool] = useState<string>('-');
+  const [dept, setDept] = useState<string>('');
+  const [section, setSection] = useState<string>('');
 
   // Typing animation
   const fullText = HERO_TEXTS[feature];
-  const [displayText, setDisplayText]         = useState('');
+  const [displayText, setDisplayText] = useState('');
   const [isTypingComplete, setIsTypingComplete] = useState(false);
 
   // Reset typing animation whenever feature changes
@@ -211,7 +201,7 @@ export default function SetupPage() {
         </select>
         <div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none text-[var(--color-text-tertiary)]">
           <svg width="12" height="7" viewBox="0 0 12 7" fill="none" aria-hidden="true">
-            <path d="M1 1l5 5 5-5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+            <path d="M1 1l5 5 5-5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
           </svg>
         </div>
       </div>
@@ -244,7 +234,7 @@ export default function SetupPage() {
         </select>
         <div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none text-[var(--color-text-tertiary)]">
           <svg width="12" height="7" viewBox="0 0 12 7" fill="none" aria-hidden="true">
-            <path d="M1 1l5 5 5-5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+            <path d="M1 1l5 5 5-5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
           </svg>
         </div>
       </div>
@@ -335,11 +325,10 @@ export default function SetupPage() {
       onClick={handleSubmit}
       disabled={ctaDisabled}
       style={{ height: '52px' }}
-      className={`w-full rounded-md font-body font-medium text-base transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 ${
-        ctaDisabled
+      className={`w-full rounded-md font-body font-medium text-base transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 ${ctaDisabled
           ? 'bg-[var(--color-bg-subtle)] text-[var(--color-text-tertiary)] cursor-not-allowed'
           : 'bg-[var(--color-text-primary)] text-[var(--color-bg)] active:scale-[0.98] hover:opacity-90'
-      }`}
+        }`}
     >
       {feature === 'timetable'
         ? 'View my timetable →'
@@ -349,7 +338,7 @@ export default function SetupPage() {
     </button>
   );
 
-  const STATS = feature === 'timetable' ? TIMETABLE_STATS : EXAM_STATS;
+
 
   return (
     <>
@@ -374,7 +363,7 @@ export default function SetupPage() {
             </a>
             <a href="https://linkedin.com/in/ammar-asad-563047289" target="_blank" rel="noopener noreferrer" className="text-[var(--color-text-secondary)] hover:text-[#0a66c2] transition-colors dark:hover:text-[#3b82f6]" aria-label="LinkedIn">
               <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
-                <path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433c-1.144 0-2.063-.926-2.063-2.065 0-1.138.92-2.063 2.063-2.063 1.14 0 2.064.925 2.064 2.063 0 1.139-.925 2.065-2.064 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/>
+                <path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433c-1.144 0-2.063-.926-2.063-2.065 0-1.138.92-2.063 2.063-2.063 1.14 0 2.064.925 2.064 2.063 0 1.139-.925 2.065-2.064 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z" />
               </svg>
             </a>
             <ThemeToggle />
@@ -462,15 +451,7 @@ export default function SetupPage() {
                 <span className="sr-only">{fullText}</span>
               </p>
 
-              {/* Stats row */}
-              <div className="mt-8 flex gap-8">
-                {STATS.map(({ value, label }) => (
-                  <div key={label}>
-                    <p className="font-mono text-2xl font-medium text-[var(--color-text-primary)]">{value}</p>
-                    <p className="font-mono text-[10px] uppercase tracking-widest text-[var(--color-text-tertiary)]">{label}</p>
-                  </div>
-                ))}
-              </div>
+              {/* Stats row removed */}
             </div>
 
             {/* Social / Developer Links */}
@@ -498,7 +479,7 @@ export default function SetupPage() {
               >
                 <div className="flex items-center gap-2">
                   <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
-                    <path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433c-1.144 0-2.063-.926-2.063-2.065 0-1.138.92-2.063 2.063-2.063 1.14 0 2.064.925 2.064 2.063 0 1.139-.925 2.065-2.064 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/>
+                    <path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433c-1.144 0-2.063-.926-2.063-2.065 0-1.138.92-2.063 2.063-2.063 1.14 0 2.064.925 2.064 2.063 0 1.139-.925 2.065-2.064 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z" />
                   </svg>
                   <span className="font-mono text-sm font-medium">LinkedIn</span>
                 </div>
@@ -525,7 +506,7 @@ export default function SetupPage() {
               <p className="mt-5 font-mono text-[11px] text-[var(--color-text-tertiary)] text-center leading-relaxed">
                 {feature === 'exams'
                   ? 'Data updates for all examinations.'
-                  : 'Timetable data via the Python schedule script.'}
+                  : 'Time-Table for Spring 2026.'}
               </p>
 
             </div>

@@ -105,12 +105,10 @@ function SchedulePageInner() {
           <div className="sticky top-14 z-10 bg-[var(--color-bg)] px-4 py-3 border-b border-[var(--color-border)]">
             <SearchBar value={query} onChange={setQuery} />
           </div>
-
           {/* Result count (mobile) */}
           <p className="md:hidden px-4 pt-4 pb-1 font-mono text-xs text-[var(--color-text-tertiary)]">
             {filtered.length} exam{filtered.length !== 1 ? 's' : ''} found
           </p>
-
           {/* Grouped list */}
           <div id="print-area" className="flex-1 px-4 pb-24 md:pb-8 bg-[var(--color-bg)]">
             {filtered.length === 0 ? (
