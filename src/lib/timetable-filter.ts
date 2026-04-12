@@ -55,6 +55,13 @@ export interface TimetableFilter {
   includeRepeats?: boolean;
 }
 
+function isDepartmentMatch(entryDept: string, filterDept: string): boolean {
+  if (entryDept === filterDept) return true;
+  // Handle shared departments like "AI/DS"
+  const depts = entryDept.split('/').map(d => d.trim());
+  return depts.includes(filterDept);
+}
+
 export function filterTimetable(
   entries: TimetableEntry[],
   filter: TimetableFilter
@@ -63,7 +70,7 @@ export function filterTimetable(
   const includeRepeats = filter.includeRepeats ?? false;
   return entries.filter(e => {
     if (e.batch !== filter.batch) return false;
-    if (e.department !== filter.department) return false;
+    if (!isDepartmentMatch(e.department, filter.department)) return false;
     if (!includeRepeats && e.category === 'repeat') return false;
     if (e.batch === filter.batch && e.batch === '2025') {
       const normalizedSection = e.section.replace(/\d+$/, '');
@@ -114,7 +121,7 @@ export function getAvailableSections(
 ): string[] {
   const set = new Set<string>();
   for (const e of entries) {
-    if (e.batch === batch && e.department === department) {
+    if (e.batch === batch && isDepartmentMatch(e.department, department)) {
       if (batch === '2025') {
         const normalized = e.section.replace(/\d+$/, '');
         set.add(normalized);

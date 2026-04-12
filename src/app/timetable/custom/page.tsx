@@ -19,7 +19,7 @@ const availableBatches: string[] = [...new Set<string>(allTimetableEntries.map(e
   .sort()
   .reverse();
 
-const TIMETABLE_DEPTS = ['CS', 'AI', 'DS', 'CY', 'SE'];
+const TIMETABLE_DEPTS = ['CS', 'AI', 'DS', 'CY', 'SE', 'AI/DS'];
 const CATEGORIES = ['regular', 'repeat'];
 
 interface CourseRow {
