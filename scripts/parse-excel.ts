@@ -337,6 +337,13 @@ fs.writeFileSync(
   'utf-8'
 );
 
+// Fallback for timetable so the Next.js build doesn't fail on Vercel if it's missing
+const timetablePath = path.join(outDir, 'timetable.json');
+if (!fs.existsSync(timetablePath)) {
+  fs.writeFileSync(timetablePath, '{}', 'utf-8');
+  console.log('✅ Created empty fallback public/data/timetable.json');
+}
+
 console.log(`✅ Wrote ${output.length} exam entries to public/data/schedule.json`);
 if (output.length > 0) {
   console.log(`   First entry date: ${output[0].date} (${output[0].day})`);
@@ -345,3 +352,4 @@ if (output.length > 0) {
 if (output.length === 0) {
   console.warn('⚠️  Zero entries written — check Excel sheet structure and data format');
 }
+
