@@ -34,12 +34,14 @@ export function TimetableCard({ entry, dept, conflicting = false, isRepeat = fal
       {/* Top row: course name truncated + type badge */}
       <div className="flex items-center justify-between gap-2 overflow-hidden">
         <div className="flex gap-1.5 overflow-hidden shrink-0">
-          <span
-            className="font-mono text-[10px] uppercase font-bold px-2 py-0.5 rounded shrink-0 border border-[var(--color-border-strong)]"
-            style={{ backgroundColor: 'var(--color-bg-subtle)', color: 'var(--color-text-primary)' }}
-          >
-            {entry.department}
-          </span>
+          {entry.department.includes('/') && (
+            <span
+              className="font-mono text-[10px] uppercase font-bold px-2 py-0.5 rounded shrink-0 border border-[var(--color-border-strong)]"
+              style={{ backgroundColor: 'var(--color-bg-subtle)', color: 'var(--color-text-primary)' }}
+            >
+              {entry.department}
+            </span>
+          )}
           <span
             className="font-mono text-[10px] font-bold px-2 py-0.5 rounded shrink-0"
             style={{ backgroundColor: accentBg, color: accentColor }}
