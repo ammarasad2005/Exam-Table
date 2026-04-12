@@ -62,6 +62,8 @@ export interface TimetableEntry {
   room: string;                        // "CR-01", "TBA"
   type: 'lecture' | 'lab';             // inferred: 'lab' if name ends with 'Lab'
   category: 'regular' | 'repeat';      // from Python hierarchy key
+  rescheduled?: boolean;               // flags special manual slots
+  exam?: boolean;                      // flags "Mid", "Exam", or "Sessional" slots
 }
 
 export const DAYS_ORDER: string[] = [
@@ -80,8 +82,8 @@ export type RawTimetableJSON = Record<
   Record<
     string,
     {
-      regular: Record<string, Record<string, Record<string, Array<{ room: string; time: string }>>>>;
-      repeat:  Record<string, Record<string, Record<string, Array<{ room: string; time: string }>>>>;
+      regular: Record<string, Record<string, Record<string, Array<{ room: string; time: string; rescheduled?: boolean; exam?: boolean }>>>>;
+      repeat:  Record<string, Record<string, Record<string, Array<{ room: string; time: string; rescheduled?: boolean; exam?: boolean }>>>>;
     }
   >
 >;

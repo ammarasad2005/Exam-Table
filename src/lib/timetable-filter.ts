@@ -31,6 +31,8 @@ export function flattenTimetable(raw: RawTimetableJSON): TimetableEntry[] {
                   room: slot.room ?? 'TBA',
                   type: courseName.toLowerCase().endsWith('lab') ? 'lab' : 'lecture',
                   category,
+                  rescheduled: slot.rescheduled ?? false,
+                  exam: slot.exam ?? false,
                 });
               }
             }
@@ -127,9 +129,15 @@ export function detectConflicts(entries: TimetableEntry[]): Set<string> {
   for (const dayEntries of byDay.values()) {
     for (let i = 0; i < dayEntries.length; i++) {
       for (let j = i + 1; j < dayEntries.length; j++) {
-        if (overlaps(dayEntries[i], dayEntries[j])) {
-          conflicting.add(makeKey(dayEntries[i]));
-          conflicting.add(makeKey(dayEntries[j]));
+        const a = dayEntries[i];
+        const b = dayEntries[j];
+        
+        // If either class is rescheduled or an exam, it's allowed to overlap
+        if (a.rescheduled || b.rescheduled || a.exam || b.exam) continue;
+
+        if (overlaps(a, b)) {
+          conflicting.add(makeKey(a));
+          conflicting.add(makeKey(b));
         }
       }
     }

@@ -33,22 +33,35 @@ export function TimetableCard({ entry, dept, conflicting = false, onClick }: Pro
           {entry.section}
         </span>
 
-        {conflicting ? (
-          <span className="font-mono text-[10px] font-medium px-1.5 py-0.5 rounded bg-red-100 text-red-600 dark:bg-red-900/40 dark:text-red-400 shrink-0">
-            ⚠ Conflict
-          </span>
-        ) : (
-          <span
-            className="font-mono text-[10px] font-medium px-1.5 py-0.5 rounded shrink-0"
-            style={
-              isLab
-                ? { backgroundColor: 'var(--accent-ds-bg)', color: 'var(--accent-ds)' }
-                : { backgroundColor: 'var(--color-bg-subtle)', color: 'var(--color-text-secondary)' }
-            }
-          >
-            {isLab ? 'Lab' : 'Lecture'}
-          </span>
-        )}
+        <div className="flex flex-wrap gap-1">
+          {conflicting && (
+            <span className="font-mono text-[10px] font-medium px-1.5 py-0.5 rounded bg-red-100 text-red-600 dark:bg-red-900/40 dark:text-red-400 shrink-0">
+              ⚠ Conflict
+            </span>
+          )}
+          {entry.exam && (
+            <span className="font-mono text-[10px] font-medium px-1.5 py-0.5 rounded bg-red-100 text-red-600 dark:bg-rose-900/40 dark:text-rose-400 shrink-0">
+              📅 Exam
+            </span>
+          )}
+          {entry.rescheduled && (
+            <span className="font-mono text-[10px] font-medium px-1.5 py-0.5 rounded bg-amber-100 text-amber-700 dark:bg-amber-900/40 dark:text-amber-400 shrink-0">
+              ✨ Rescheduled
+            </span>
+          )}
+          {!conflicting && !entry.rescheduled && !entry.exam && (
+            <span
+              className="font-mono text-[10px] font-medium px-1.5 py-0.5 rounded shrink-0"
+              style={
+                isLab
+                  ? { backgroundColor: 'var(--accent-ds-bg)', color: 'var(--accent-ds)' }
+                  : { backgroundColor: 'var(--color-bg-subtle)', color: 'var(--color-text-secondary)' }
+              }
+            >
+              {isLab ? 'Lab' : 'Lecture'}
+            </span>
+          )}
+        </div>
       </div>
 
       {/* Course name */}
