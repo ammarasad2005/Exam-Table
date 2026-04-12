@@ -17,8 +17,10 @@ export function ExamCard({ exam, dept, onClick }: Props) {
   return (
     <button
       onClick={onClick}
-      className="exam-card w-full text-left bg-[var(--color-bg-raised)] border border-[var(--color-border)] rounded-lg p-4 flex flex-col gap-2 active:scale-[0.98] transition-all duration-100 hover:border-[var(--color-border-strong)] hover:shadow-sm focus-visible:outline-none focus-visible:ring-2"
-      style={{ '--ring-color': accentColor } as React.CSSProperties}
+      className="exam-card w-full text-left bg-[var(--color-bg-raised)] border border-[var(--color-border)] rounded-lg p-4 flex flex-col gap-2 active:scale-[0.98] transition-all duration-100 focus-visible:outline-none focus-visible:ring-2"
+      style={{ '--ring-color': accentColor, boxShadow: 'var(--shadow-card), var(--border-inset)' } as React.CSSProperties}
+    onMouseOver={e => (e.currentTarget.style.boxShadow = 'var(--shadow-raised), var(--border-inset)')}
+    onMouseOut={e => (e.currentTarget.style.boxShadow = 'var(--shadow-card), var(--border-inset)')}
     >
       {/* Top row: course code + countdown */}
       <div className="flex items-center justify-between">

@@ -52,7 +52,11 @@ export function TimetableDetail({ entry, dept, onClose }: Props) {
         role="dialog"
         aria-modal="true"
         aria-label={`${entry.courseName} timetable details`}
-        className="fixed z-40 bg-[var(--color-bg-raised)] shadow-xl bottom-0 left-0 right-0 rounded-t-2xl max-h-[85dvh] overflow-y-auto md:bottom-0 md:top-14 md:left-auto md:right-0 md:w-96 md:rounded-none md:rounded-l-2xl md:max-h-[calc(100dvh-56px)] animate-in slide-in-from-bottom-4 md:slide-in-from-right-4 duration-250"
+        className="fixed z-40 bottom-0 left-0 right-0 rounded-t-2xl max-h-[85dvh] overflow-y-auto md:bottom-0 md:top-14 md:left-auto md:right-0 md:w-96 md:rounded-none md:rounded-l-2xl md:max-h-[calc(100dvh-56px)] animate-in slide-in-from-bottom-4 md:slide-in-from-right-4 duration-250"
+        style={{
+          backgroundColor: 'var(--color-bg-raised)',
+          boxShadow: 'var(--shadow-float)',
+        }}
       >
         {/* Drag handle (mobile only) */}
         <div className="md:hidden flex justify-center pt-3 pb-1">

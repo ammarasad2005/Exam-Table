@@ -37,7 +37,7 @@ const HERO_TEXTS: Record<Feature, string> = {
 export default function SetupPage() {
   const router = useRouter();
 
-  const [feature, setFeature] = useState<Feature>('exams');
+  const [feature, setFeature] = useState<Feature>('timetable');
   const [mode, setMode] = useState<Mode>('default');
 
   // Shared form state
@@ -117,7 +117,7 @@ export default function SetupPage() {
         Feature
       </p>
       <div role="group" aria-labelledby="feature-label" className="grid grid-cols-2 gap-2">
-        {(['exams', 'timetable'] as Feature[]).map(f => (
+        {(['timetable', 'exams'] as Feature[]).map(f => (
           <button
             key={f}
             id={`feature-${f}`}
@@ -401,7 +401,11 @@ export default function SetupPage() {
       <div className="hidden md:flex min-h-dvh flex-col">
 
         {/* Full-width header */}
-        <header className="flex items-center justify-between px-10 h-14 flex-shrink-0 border-b border-[var(--color-border)]">
+        <header
+          className="flex items-center justify-between px-10 h-14 flex-shrink-0 border-b border-[var(--color-border)]"
+          style={{ boxShadow: 'var(--shadow-header)', position: 'relative', zIndex: 1 }}
+        >
+          {/* Logo */}
           <div className="flex items-center">
             <img
               src="/logo/logo.png"
@@ -409,6 +413,28 @@ export default function SetupPage() {
               className="h-6 w-auto object-contain brightness-0 dark:invert transition-opacity"
             />
           </div>
+
+          {/* Feature toggle — prominent centre nav */}
+          <div role="group" aria-label="Select feature" className="flex items-center gap-1 bg-[var(--color-bg-subtle)] rounded-lg p-1">
+            {(['timetable', 'exams'] as Feature[]).map(f => (
+              <button
+                key={f}
+                id={`desktop-feature-${f}`}
+                onClick={() => { setFeature(f); setMode('default'); }}
+                aria-pressed={feature === f}
+                className="h-8 px-5 rounded-md font-body text-sm font-medium transition-all duration-150 active:scale-95 focus-visible:outline-none focus-visible:ring-2"
+                style={feature === f ? {
+                  backgroundColor: 'var(--color-text-primary)',
+                  color: 'var(--color-bg)',
+                } : {
+                  color: 'var(--color-text-secondary)',
+                }}
+              >
+                {f === 'exams' ? 'Exam Finder' : 'Timetable'}
+              </button>
+            ))}
+          </div>
+
           <ThemeToggle />
         </header>
 
@@ -416,7 +442,9 @@ export default function SetupPage() {
         <div className="flex flex-1 overflow-hidden">
 
           {/* LEFT — hero + stats */}
-          <div className="w-1/2 lg:w-[55%] flex flex-col justify-between px-10 lg:px-16 xl:px-24 py-14 border-r border-[var(--color-border)] relative overflow-hidden">
+          <div
+            className="w-1/2 lg:w-[55%] flex flex-col justify-between px-10 lg:px-16 xl:px-24 py-14 border-r border-[var(--color-border)] relative overflow-hidden"
+          >
 
             {/* Dot-grid texture */}
             <div
@@ -489,12 +517,13 @@ export default function SetupPage() {
           </div>
 
           {/* RIGHT — form card */}
-          <div className="flex-1 flex items-center justify-center px-10 lg:px-16 xl:px-24 py-14">
+          <div className="flex-1 relative flex items-center justify-center px-10 lg:px-16 xl:px-24 py-14">
             <div className="w-full max-w-sm">
 
-              <div className="bg-[var(--color-bg-raised)] border border-[var(--color-border)] rounded-2xl p-8 lg:p-10 flex flex-col gap-6">
-                {featureSelector}
-                <div className="h-px bg-[var(--color-border)] -mx-8 lg:-mx-10" />
+              <div
+                className="bg-[var(--color-bg-raised)] border border-[var(--color-border)] rounded-2xl p-8 lg:p-10 flex flex-col gap-6"
+                style={{ boxShadow: 'var(--shadow-raised), var(--border-inset)' }}
+              >
                 {modeSelector}
                 {batchSelector}
                 {schoolSelector}

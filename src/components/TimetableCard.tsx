@@ -18,11 +18,14 @@ export function TimetableCard({ entry, dept, conflicting = false, onClick }: Pro
   return (
     <button
       onClick={onClick}
-      className="timetable-card w-full text-left bg-[var(--color-bg-raised)] border border-[var(--color-border)] rounded-lg p-4 flex flex-col gap-2 active:scale-[0.98] transition-all duration-100 hover:border-[var(--color-border-strong)] hover:shadow-sm focus-visible:outline-none focus-visible:ring-2"
+      className="timetable-card w-full text-left bg-[var(--color-bg-raised)] border border-[var(--color-border)] rounded-lg p-4 flex flex-col gap-2 active:scale-[0.98] transition-all duration-100 focus-visible:outline-none focus-visible:ring-2"
       style={{
         borderLeftWidth: conflicting ? '3px' : undefined,
         borderLeftColor: conflicting ? '#f87171' : undefined,
+        boxShadow: 'var(--shadow-card), var(--border-inset)',
       }}
+      onMouseOver={e => (e.currentTarget.style.boxShadow = 'var(--shadow-raised), var(--border-inset)')}
+      onMouseOut={e => (e.currentTarget.style.boxShadow = 'var(--shadow-card), var(--border-inset)')}
     >
       {/* Top row: course name truncated + type badge */}
       <div className="flex items-center justify-between gap-2">
