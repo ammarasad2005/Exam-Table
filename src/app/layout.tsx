@@ -24,10 +24,10 @@ const instrumentSerif = Instrument_Serif({
 });
 
 export const metadata: Metadata = {
-  title: 'FAST Exam Schedule',
+  title: 'FAST Isb Schedule',
   description: 'Find your exam timetable — FAST NUCES, Islamabad',
   openGraph: {
-    title: 'FAST Exam Schedule',
+    title: 'FAST Isb Schedule',
     description: 'Find your exam timetable instantly',
     type: 'website',
   },
