@@ -102,15 +102,18 @@ export default function SetupPage() {
         router.push('/custom');
       }
     } else {
-      // Timetable mode — always uses dept selection (FSC only)
-      if (batch === '-' || !dept || !section) return;
-      router.push(`/timetable?batch=${batch}&dept=${dept}&section=${section}`);
+      if (mode === 'default') {
+        if (batch === '-' || !dept || !section) return;
+        router.push(`/timetable?batch=${batch}&dept=${dept}&section=${section}`);
+      } else {
+        router.push('/timetable/custom');
+      }
     }
   }
 
   const activeBatches = feature === 'timetable' ? timetableBatches : batches;
   const examCtaDisabled = mode === 'default' && (batch === '-' || school === '-' || !dept);
-  const timetableCtaDisabled = batch === '-' || !dept || !section;
+  const timetableCtaDisabled = mode === 'default' && (batch === '-' || !dept || !section);
   const ctaDisabled = feature === 'exams' ? examCtaDisabled : timetableCtaDisabled;
 
   // ─── Shared UI pieces ──────────────────────────────────────────────────────
@@ -147,7 +150,7 @@ export default function SetupPage() {
     </div>
   );
 
-  const modeSelector = feature === 'exams' ? (
+  const modeSelector = (
     <div>
       <p
         id="mode-label"
@@ -176,15 +179,19 @@ export default function SetupPage() {
         ))}
       </div>
       <p className="mt-2 text-xs text-[var(--color-text-secondary)]">
-        {mode === 'default'
-          ? 'All exams for your batch and department automatically.'
-          : 'Enter specific course codes — for irregular credit loads.'}
+        {feature === 'exams'
+          ? (mode === 'default'
+            ? 'All exams for your batch and department automatically.'
+            : 'Enter specific course codes — for irregular credit loads.')
+          : (mode === 'default'
+            ? 'All classes for your batch and department automatically.'
+            : 'Select specific classes — for cross-section or repeat courses.')}
       </p>
     </div>
-  ) : null;
+  );
 
-  // Batch selector — shared between both features
-  const batchSelector = (feature === 'timetable' || (feature === 'exams' && mode === 'default')) ? (
+  // Batch selector — shared between both features but only shown in 'default' mode
+  const batchSelector = mode === 'default' ? (
     <div>
       <label
         htmlFor="batch-select"
@@ -267,7 +274,7 @@ export default function SetupPage() {
         </>
       )}
     </div>
-  ) : feature === 'timetable' ? (
+  ) : (feature === 'timetable' && mode === 'default') ? (
     <div>
       <p id="tt-department-label" className="block font-mono text-[11px] uppercase tracking-widest text-[var(--color-text-tertiary)] mb-2">
         Department
@@ -284,7 +291,7 @@ export default function SetupPage() {
   ) : null;
 
   // Section pills — only for timetable
-  const sectionPills = feature === 'timetable' && dept && batch !== '-' ? (
+  const sectionPills = (feature === 'timetable' && mode === 'default') && dept && batch !== '-' ? (
     <div>
       <p id="section-label" className="block font-mono text-[11px] uppercase tracking-widest text-[var(--color-text-tertiary)] mb-2">
         Section

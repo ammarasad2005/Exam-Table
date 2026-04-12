@@ -180,10 +180,15 @@ export function parseTimeToMinutes(t: string): number {
     return h * 60 + min;
   }
 
-  // 24-h format: "08:30"
+  // 24-h format: "08:30" or ambiguous "01:00"
   const h24Match = t.match(/(\d{1,2}):(\d{2})/);
   if (h24Match) {
-    return parseInt(h24Match[1]) * 60 + parseInt(h24Match[2]);
+    let h = parseInt(h24Match[1]);
+    const min = parseInt(h24Match[2]);
+    // FAST University classes are 8:30 AM to 5:15 PM.
+    // If the hour is 1 through 7, it definitively means PM (13:00 - 19:00).
+    if (h >= 1 && h <= 7) h += 12;
+    return h * 60 + min;
   }
 
   return 0;
@@ -201,6 +206,11 @@ export function formatTime(t: string): string {
 
   let h = parseInt(match[1]);
   const min = match[2];
+  
+  // FAST University classes are 8:30 AM to 5:15 PM.
+  // If the hour is 1 through 7, it definitively means PM (13:00 - 19:00).
+  if (h >= 1 && h <= 7) h += 12;
+
   const period = h >= 12 ? 'PM' : 'AM';
   if (h > 12) h -= 12;
   if (h === 0) h = 12;
