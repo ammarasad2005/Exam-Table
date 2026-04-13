@@ -347,21 +347,22 @@ function GridView({
   }
 
   return (
-    <div className="mt-8 overflow-x-auto select-none">
-      <div className="min-w-[800px] relative flex flex-col">
+    <div className="mt-8 overflow-x-auto select-none rounded-xl border border-[var(--color-border)] shadow-sm bg-[var(--color-bg-raised)]">
+      <div className="min-w-[650px] md:min-w-[850px] relative flex flex-col">
         
-        {/* Day Headers */}
-        <div className="grid grid-cols-[60px_repeat(5,1fr)] mb-4">
-          <div className="h-8" /> {/* Spacer for time column */}
+        {/* Day Headers - Sticky */}
+        <div className="grid grid-cols-[45px_repeat(5,1fr)] md:grid-cols-[60px_repeat(5,1fr)] sticky top-0 z-20 bg-[var(--color-bg-raised)]/95 backdrop-blur-sm border-b border-[var(--color-border)]">
+          <div className="h-10 border-r border-[var(--color-border)]" /> {/* Spacer for time column */}
           {DAYS_ORDER.map(day => (
-            <div key={day} className="text-center font-mono text-[10px] uppercase tracking-widest text-[var(--color-text-tertiary)] flex items-center justify-center">
-              {day}
+            <div key={day} className="text-center font-mono text-[10px] uppercase tracking-widest text-[var(--color-text-tertiary)] flex items-center justify-center border-r border-[var(--color-border)] last:border-r-0">
+              {day.slice(0, 3)}
+              <span className="hidden md:inline ml-1">{day.slice(3)}</span>
             </div>
           ))}
         </div>
 
         {/* Grid Body */}
-        <div className="relative grid grid-cols-[60px_repeat(5,1fr)] bg-[var(--color-bg-raised)] rounded-xl border border-[var(--color-border)] overflow-hidden" 
+        <div className="relative grid grid-cols-[45px_repeat(5,1fr)] md:grid-cols-[60px_repeat(5,1fr)]" 
              style={{ height: `${totalHeight}px` }}>
           
           {/* Time Column & Grid Lines */}
@@ -369,8 +370,8 @@ function GridView({
             {hours.map(m => {
               const top = (m - GRID_START) * PX_PER_MIN;
               return (
-                <div key={m} className="absolute left-0 right-0 border-t border-[var(--color-border)] opacity-40 flex items-start" style={{ top: `${top}px` }}>
-                  <span className="font-mono text-[9px] -mt-2 ml-2 text-[var(--color-text-tertiary)] bg-[var(--color-bg-raised)] px-1">
+                <div key={m} className="absolute left-0 right-0 border-t border-[var(--color-border)] opacity-30 flex items-start" style={{ top: `${top}px` }}>
+                  <span className="font-mono text-[8px] md:text-[9px] -mt-2 ml-1 md:ml-2 text-[var(--color-text-tertiary)] bg-[var(--color-bg-raised)] px-1">
                     {Math.floor(m / 60)}:00
                   </span>
                 </div>
@@ -378,8 +379,8 @@ function GridView({
             })}
             
             {/* Vertical lines */}
-            <div className="absolute inset-0 grid grid-cols-[60px_repeat(5,1fr)]">
-              <div className="border-r border-[var(--color-border)] bg-[var(--color-bg-subtle)]/30" />
+            <div className="absolute inset-0 grid grid-cols-[45px_repeat(5,1fr)] md:grid-cols-[60px_repeat(5,1fr)]">
+              <div className="border-r border-[var(--color-border)] bg-[var(--color-bg-subtle)]/30 sticky left-0 z-10" />
               {DAYS_ORDER.map(day => (
                 <div key={day} className="border-r border-[var(--color-border)] last:border-r-0" />
               ))}
@@ -390,7 +391,7 @@ function GridView({
           <div className="col-start-2 col-span-5 relative h-full">
             <div className="absolute inset-0 grid grid-cols-5 h-full">
               {DAYS_ORDER.map((day, dayIdx) => (
-                <div key={day} className="relative h-full px-1">
+                <div key={day} className="relative h-full px-0.5 md:px-1">
                   {entries
                     .filter(e => e.day === day)
                     .map((e, idx) => {
@@ -405,7 +406,7 @@ function GridView({
                         <button
                           key={idx}
                           onClick={() => onSelect(e)}
-                          className="absolute left-1 right-1 rounded-md p-2 text-[10px] transition-all hover:ring-1 hover:ring-[var(--color-text-tertiary)] active:scale-[0.98] focus-visible:outline-none overflow-hidden text-left"
+                          className="absolute left-0.5 right-0.5 rounded-md p-1.5 md:p-2 text-[9px] md:text-[10px] transition-all hover:ring-1 hover:ring-[var(--color-text-tertiary)] active:scale-[0.98] focus-visible:outline-none overflow-hidden text-left"
                           style={{
                             top: `${top}px`,
                             height: `${height}px`,
@@ -415,17 +416,17 @@ function GridView({
                                 ? 'linear-gradient(135deg, var(--color-bg-raised) 50%, color-mix(in srgb, var(--color-bg-raised) 80%, #f59e0b 20%))'
                                 : accentBg),
                             color: isConflict ? '#dc2626' : accentColor,
-                            borderLeft: isConflict ? '3px solid #f87171' : (isRepeat ? '3px solid #f59e0b' : `3px solid ${accentColor}`),
+                            borderLeft: isConflict ? '2px md:border-l-[3px] solid #f87171' : (isRepeat ? '2px md:border-l-[3px] solid #f59e0b' : `2px md:border-l-[3px] solid ${accentColor}`),
                             boxShadow: 'var(--shadow-card)',
                             zIndex: isConflict ? 10 : 1,
                           }}
                         >
                           <div className="flex flex-col h-full justify-between">
-                            <div>
-                              <p className="font-bold leading-tight line-clamp-2 uppercase">{e.courseName}</p>
-                              <p className="mt-0.5 opacity-80 font-mono text-[9px]">{formatTimeRange(e.time)}</p>
+                            <div className="min-w-0">
+                              <p className="font-bold leading-tight line-clamp-2 uppercase break-all">{e.courseName}</p>
+                              <p className="mt-0.5 opacity-80 font-mono text-[8.5px] whitespace-nowrap overflow-hidden text-ellipsis">{formatTimeRange(e.time)}</p>
                             </div>
-                            <p className="font-medium opacity-80 self-end">{e.room}</p>
+                            <p className="font-medium opacity-80 self-end text-[8.5px] truncate max-w-full">{e.room}</p>
                           </div>
                         </button>
                       );
