@@ -4875,44 +4875,6 @@
         },
         "CY": {
             "regular": {
-                "Comp Net": {
-                    "A": {
-                        "Monday": [
-                            {
-                                "room": "D-501",
-                                "time": "08:30-09:50",
-                                "rescheduled": false,
-                                "exam": false
-                            }
-                        ],
-                        "Wednesday": [
-                            {
-                                "room": "D-502",
-                                "time": "08:30-09:50",
-                                "rescheduled": false,
-                                "exam": false
-                            }
-                        ]
-                    },
-                    "B": {
-                        "Tuesday": [
-                            {
-                                "room": "D-501",
-                                "time": "01:00-02:20",
-                                "rescheduled": false,
-                                "exam": false
-                            }
-                        ],
-                        "Thursday": [
-                            {
-                                "room": "D-503",
-                                "time": "01:00-02:20",
-                                "rescheduled": false,
-                                "exam": false
-                            }
-                        ]
-                    }
-                },
                 "Prob & Stats": {
                     "A": {
                         "Monday": [
@@ -5011,52 +4973,6 @@
                         ]
                     }
                 },
-                "Comp Net Lab": {
-                    "B": {
-                        "Monday": [
-                            {
-                                "room": "C-Margala 3",
-                                "time": "08:30-11:15",
-                                "rescheduled": false,
-                                "exam": false
-                            }
-                        ],
-                        "Wednesday": [
-                            {
-                                "room": "C-Margala 4",
-                                "time": "11:30-01:00",
-                                "rescheduled": false,
-                                "exam": true
-                            }
-                        ],
-                        "Friday": [
-                            {
-                                "room": "C-Rawal 1",
-                                "time": "02:30-04:00",
-                                "rescheduled": false,
-                                "exam": true
-                            }
-                        ]
-                    },
-                    "A": {
-                        "Wednesday": [
-                            {
-                                "room": "C-Rawal 4",
-                                "time": "11:30-01:00",
-                                "rescheduled": false,
-                                "exam": true
-                            }
-                        ],
-                        "Friday": [
-                            {
-                                "room": "C-Rawal 4",
-                                "time": "02:30-04:00",
-                                "rescheduled": false,
-                                "exam": true
-                            }
-                        ]
-                    }
-                },
                 "COAL Lab": {
                     "A": {
                         "Monday": [
@@ -5151,6 +5067,74 @@
                                 "time": "11:30-12:50",
                                 "rescheduled": false,
                                 "exam": false
+                            }
+                        ]
+                    }
+                },
+                "Comp Net": {
+                    "A": {
+                        "Monday": [
+                            {
+                                "room": "D-501",
+                                "time": "08:30-09:50",
+                                "rescheduled": false,
+                                "exam": false
+                            }
+                        ],
+                        "Wednesday": [
+                            {
+                                "room": "D-502",
+                                "time": "08:30-09:50",
+                                "rescheduled": false,
+                                "exam": false
+                            }
+                        ]
+                    },
+                    "B": {
+                        "Tuesday": [
+                            {
+                                "room": "D-501",
+                                "time": "01:00-02:20",
+                                "rescheduled": false,
+                                "exam": false
+                            }
+                        ],
+                        "Thursday": [
+                            {
+                                "room": "D-503",
+                                "time": "01:00-02:20",
+                                "rescheduled": false,
+                                "exam": false
+                            }
+                        ]
+                    }
+                },
+                "Comp Net Lab": {
+                    "B": {
+                        "Monday": [
+                            {
+                                "room": "C-Margala 3",
+                                "time": "08:30-11:15",
+                                "rescheduled": false,
+                                "exam": false
+                            }
+                        ]
+                    },
+                    "A": {
+                        "Wednesday": [
+                            {
+                                "room": "C-Rawal 4",
+                                "time": "11:30-01:00",
+                                "rescheduled": false,
+                                "exam": true
+                            }
+                        ],
+                        "Friday": [
+                            {
+                                "room": "C-Rawal 4",
+                                "time": "02:30-04:00",
+                                "rescheduled": false,
+                                "exam": true
                             }
                         ]
                     }
@@ -7127,6 +7111,26 @@
                             }
                         ]
                     }
+                },
+                "Comp Net Lab": {
+                    "B": {
+                        "Wednesday": [
+                            {
+                                "room": "C-Margala 4",
+                                "time": "11:30-01:00",
+                                "rescheduled": false,
+                                "exam": true
+                            }
+                        ],
+                        "Friday": [
+                            {
+                                "room": "C-Rawal 1",
+                                "time": "02:30-04:00",
+                                "rescheduled": false,
+                                "exam": true
+                            }
+                        ]
+                    }
                 }
             },
             "repeat": {}
@@ -7279,6 +7283,66 @@
                             {
                                 "room": "C-302",
                                 "time": "11:30-12:50",
+                                "rescheduled": false,
+                                "exam": false
+                            }
+                        ]
+                    }
+                },
+                "Comp Net": {
+                    "A": {
+                        "Wednesday": [
+                            {
+                                "room": "D-405",
+                                "time": "10:00-11:20",
+                                "rescheduled": false,
+                                "exam": false
+                            }
+                        ],
+                        "Friday": [
+                            {
+                                "room": "C-301",
+                                "time": "11:30-12:50",
+                                "rescheduled": false,
+                                "exam": false
+                            }
+                        ]
+                    },
+                    "B": {
+                        "Wednesday": [
+                            {
+                                "room": "D-406",
+                                "time": "08:30-09:50",
+                                "rescheduled": false,
+                                "exam": false
+                            }
+                        ],
+                        "Friday": [
+                            {
+                                "room": "C-302",
+                                "time": "10:00-11:20",
+                                "rescheduled": false,
+                                "exam": false
+                            }
+                        ]
+                    }
+                },
+                "Comp Net Lab": {
+                    "B": {
+                        "Wednesday": [
+                            {
+                                "room": "D-IT Lab 3",
+                                "time": "11:30-02:15",
+                                "rescheduled": false,
+                                "exam": false
+                            }
+                        ]
+                    },
+                    "A": {
+                        "Friday": [
+                            {
+                                "room": "D-IT Lab 1",
+                                "time": "02:30-05:15",
                                 "rescheduled": false,
                                 "exam": false
                             }
