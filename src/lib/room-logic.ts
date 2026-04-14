@@ -183,3 +183,31 @@ export function buildFullCalendar(calendar: RoomCalendar): CalendarCell[][] {
     })
   );
 }
+
+/**
+ * Groups room names by their block (A, B, C, D).
+ * Assumes format "A-123" or similar.
+ */
+export function groupRoomsByBlock(rooms: string[]): Record<string, string[]> {
+  const groups: Record<string, string[]> = {
+    'Block A': [],
+    'Block B': [],
+    'Block C': [],
+    'Block D': [],
+    'Other/Labs': [],
+  };
+
+  rooms.forEach(r => {
+    const firstUpper = r.split('-')[0].toUpperCase();
+    if (firstUpper === 'A') groups['Block A'].push(r);
+    else if (firstUpper === 'B') groups['Block B'].push(r);
+    else if (firstUpper === 'C') groups['Block C'].push(r);
+    else if (firstUpper === 'D') groups['Block D'].push(r);
+    else groups['Other/Labs'].push(r);
+  });
+
+  // Remove empty groups
+  return Object.fromEntries(
+    Object.entries(groups).filter(([_, list]) => list.length > 0)
+  );
+}

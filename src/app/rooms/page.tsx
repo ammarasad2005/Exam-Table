@@ -6,6 +6,7 @@ import {
   buildRoomCalendar,
   getAvailableRooms,
   buildFullCalendar,
+  groupRoomsByBlock,
   STANDARD_SLOTS,
   DAYS_OF_WEEK,
   type RoomAvailability,
@@ -86,39 +87,67 @@ function RoomDetail({
           </button>
         </div>
 
-        <div className="px-5 pb-10 flex flex-col gap-8">
+        <div className="px-5 pb-10 flex flex-col gap-10">
           {/* Fully Vacant */}
           <section>
-            <div className="flex items-center gap-2 mb-3">
-              <span className="w-2 h-2 rounded-full" style={{ backgroundColor: 'var(--color-success)' }} />
-              <h3 className="font-mono text-xs font-bold uppercase tracking-wider text-[var(--color-success)]">Fully Vacant ({cell.fullyVacant.length})</h3>
+            <div className="flex items-center gap-2 mb-4">
+              <span className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: 'var(--color-success)' }} />
+              <h3 className="font-mono text-xs font-bold uppercase tracking-wider text-[var(--color-success)]">
+                Fully Vacant ({cell.fullyVacant.length})
+              </h3>
             </div>
+            
             {cell.fullyVacant.length > 0 ? (
-              <div className="grid grid-cols-3 gap-2">
-                {cell.fullyVacant.map(r => (
-                  <div key={r} className="bg-[var(--color-success-bg)] text-[var(--color-success)] border border-[var(--color-success)]/10 px-3 py-2 rounded-lg text-center font-bold text-xs shadow-sm">
-                    {r}
+              <div className="flex flex-col gap-6">
+                {Object.entries(groupRoomsByBlock(cell.fullyVacant)).map(([block, rooms]) => (
+                  <div key={block}>
+                    <p className="font-mono text-[10px] uppercase tracking-widest text-[var(--color-text-tertiary)] mb-2 px-1 border-l-2 border-[var(--color-border)] ml-0.5">
+                      {block}
+                    </p>
+                    <div className="grid grid-cols-3 gap-2">
+                      {rooms.map(r => (
+                        <div key={r} className="bg-[var(--color-success-bg)] text-[var(--color-success)] border border-[var(--color-success)]/10 px-3 py-2 rounded-lg text-center font-bold text-xs shadow-sm">
+                          {r}
+                        </div>
+                      ))}
+                    </div>
                   </div>
                 ))}
               </div>
-            ) : <p className="text-xs text-[var(--color-text-tertiary)] italic">No fully empty rooms.</p>}
+            ) : (
+              <p className="text-xs text-[var(--color-text-tertiary)] italic">No fully empty rooms.</p>
+            )}
           </section>
 
           {/* Partially Vacant */}
           <section>
-            <div className="flex items-center gap-2 mb-3">
-              <span className="w-2 h-2 rounded-full bg-amber-500" />
-              <h3 className="font-mono text-xs font-bold uppercase tracking-wider text-amber-600">Partially Vacant ({cell.partiallyVacant.length})</h3>
+            <div className="flex items-center gap-2 mb-4">
+              <span className="w-2.5 h-2.5 rounded-full bg-amber-500" />
+              <h3 className="font-mono text-xs font-bold uppercase tracking-wider text-amber-600">
+                Partially Vacant ({cell.partiallyVacant.length})
+              </h3>
             </div>
+
             {cell.partiallyVacant.length > 0 ? (
-              <div className="grid grid-cols-3 gap-2">
-                {cell.partiallyVacant.map(r => (
-                  <div key={r} className="bg-amber-50 text-amber-700 border border-amber-200 px-3 py-2 rounded-lg text-center font-bold text-xs shadow-sm">
-                    {r}
+              <div className="flex flex-col gap-6">
+                {Object.entries(groupRoomsByBlock(cell.partiallyVacant)).map(([block, rooms]) => (
+                  <div key={block}>
+                    <p className="font-mono text-[10px] uppercase tracking-widest text-[var(--color-text-tertiary)] mb-2 px-1 border-l-2 border-[var(--color-border)] ml-0.5">
+                      {block}
+                    </p>
+                    <div className="grid grid-cols-3 gap-2">
+                      {rooms.map(r => (
+                        <div key={r} className="bg-amber-50 text-amber-700 border border-amber-200 px-3 py-2 rounded-lg text-center font-bold text-xs shadow-sm">
+                          {r}
+                        </div>
+                      ))}
+                    </div>
                   </div>
                 ))}
               </div>
-            ) : <p className="text-xs text-[var(--color-text-tertiary)] italic">No partially empty rooms.</p>}
+            ) : (
+              <p className="text-xs text-[var(--color-text-tertiary)] italic">No partially empty rooms.</p>
+            )}
           </section>
 
           <div className="bg-[var(--color-bg-subtle)] p-4 rounded-xl border border-[var(--color-border)]">
@@ -168,7 +197,7 @@ function SpecificResults({
           </p>
         </div>
       ) : (
-        <div className="flex flex-col gap-4">
+        <div className="flex flex-col gap-6">
           {/* Fully Vacant */}
           {fullyVacant.length > 0 && (
             <div
@@ -178,18 +207,28 @@ function SpecificResults({
                 backgroundColor: 'var(--color-success-bg)',
               }}
             >
-              <div className="flex items-center gap-2 mb-3">
+              <div className="flex items-center gap-2 mb-4">
                 <span
-                  className="w-2 h-2 rounded-full shrink-0"
+                  className="w-2.5 h-2.5 rounded-full shrink-0"
                   style={{ backgroundColor: 'var(--color-success)' }}
                 />
-                <p className="font-mono text-xs font-medium" style={{ color: 'var(--color-success)' }}>
-                  Fully Vacant — 100% Free ({fullyVacant.length})
+                <p className="font-mono text-xs font-bold" style={{ color: 'var(--color-success)' }}>
+                  Fully Vacant ({fullyVacant.length})
                 </p>
               </div>
-              <div className="flex flex-wrap gap-1.5">
-                {fullyVacant.map(r => (
-                  <RoomPill key={r} name={r} variant="green" />
+
+              <div className="flex flex-col gap-6">
+                {Object.entries(groupRoomsByBlock(fullyVacant)).map(([block, rooms]) => (
+                  <div key={block}>
+                    <p className="font-mono text-[10px] uppercase tracking-widest text-[var(--color-text-tertiary)] mb-2 px-1 border-l-2 border-[var(--color-success)]/30 ml-0.5">
+                      {block}
+                    </p>
+                    <div className="flex flex-wrap gap-1.5">
+                      {rooms.map(r => (
+                        <RoomPill key={r} name={r} variant="green" />
+                      ))}
+                    </div>
+                  </div>
                 ))}
               </div>
             </div>
@@ -204,15 +243,25 @@ function SpecificResults({
                 backgroundColor: '#FFFBEB',
               }}
             >
-              <div className="flex items-center gap-2 mb-3">
-                <span className="w-2 h-2 rounded-full shrink-0 bg-amber-500" />
-                <p className="font-mono text-xs font-medium text-amber-800">
-                  Partially Vacant — ≥ 30 min Free ({partiallyVacant.length})
+              <div className="flex items-center gap-2 mb-4">
+                <span className="w-2.5 h-2.5 rounded-full shrink-0 bg-amber-500" />
+                <p className="font-mono text-xs font-bold text-amber-800">
+                  Partially Vacant ({partiallyVacant.length})
                 </p>
               </div>
-              <div className="flex flex-wrap gap-1.5">
-                {partiallyVacant.map(r => (
-                  <RoomPill key={r} name={r} variant="yellow" />
+
+              <div className="flex flex-col gap-6">
+                {Object.entries(groupRoomsByBlock(partiallyVacant)).map(([block, rooms]) => (
+                  <div key={block}>
+                    <p className="font-mono text-[10px] uppercase tracking-widest text-[var(--color-text-tertiary)] mb-2 px-1 border-l-2 border-amber-300 ml-0.5">
+                      {block}
+                    </p>
+                    <div className="flex flex-wrap gap-1.5">
+                      {rooms.map(r => (
+                        <RoomPill key={r} name={r} variant="yellow" />
+                      ))}
+                    </div>
+                  </div>
                 ))}
               </div>
             </div>
@@ -353,12 +402,10 @@ export default function RoomsPage() {
         </button>
 
         <div className="flex-1 flex items-center gap-2 min-w-0">
-          {/* Door icon */}
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-            strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"
-            className="text-[var(--color-text-tertiary)] shrink-0" aria-hidden="true">
-            <path d="M3 21h18M9 21V5a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2v16" />
-            <path d="M10 10h.01" />
+          {/* Map Pin icon */}
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-[var(--color-text-tertiary)]">
+            <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z" />
+            <circle cx="12" cy="10" r="3" />
           </svg>
           <span className="font-mono text-sm font-medium text-[var(--color-text-primary)] truncate">
             Free Rooms Finder
