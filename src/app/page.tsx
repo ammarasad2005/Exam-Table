@@ -5,8 +5,10 @@ import { DepartmentPill } from '@/components/DepartmentPill';
 import { ThemeToggle } from '@/components/ThemeToggle';
 import { SCHOOLS, SCHOOL_DEPARTMENTS, DEPARTMENT_LABELS } from '@/lib/types';
 import { flattenTimetable, getAvailableSections } from '@/lib/timetable-filter';
-import type { RawTimetableJSON } from '@/lib/types';
+import type { RawTimetableJSON, TimetableEntry } from '@/lib/types';
 import { AlertCircle, Terminal, ShieldAlert } from 'lucide-react';
+import { DesktopTicker } from '@/components/DesktopTicker';
+
 
 
 // eslint-disable-next-line
@@ -65,6 +67,8 @@ export default function SetupPage() {
   const [userConfig, setUserConfig] = useState<UserConfig | null>(null);
   const [isConfigLoaded, setIsConfigLoaded] = useState(false);
   const [exclusivityError, setExclusivityError] = useState<string | null>(null);
+  const [bundles, setBundles] = useState<any[]>([]);
+
 
   // Load userConfig on mount
   useEffect(() => {
@@ -82,8 +86,19 @@ export default function SetupPage() {
         console.error('Failed to parse user config', e);
       }
     }
+    
+    const storedBundles = localStorage.getItem('fsc_custom_bundles');
+    if (storedBundles) {
+      try {
+        setBundles(JSON.parse(storedBundles));
+      } catch (e) {
+        console.error('Failed to parse bundles', e);
+      }
+    }
+
     setIsConfigLoaded(true);
   }, []);
+
 
 
   // Reset typing animation whenever feature changes
@@ -646,19 +661,14 @@ export default function SetupPage() {
         <div className="flex flex-1 overflow-hidden">
 
           {/* LEFT — hero + stats */}
+          {/* LEFT — hero + stats */}
           <div
             className="w-1/2 lg:w-[55%] flex flex-col justify-between px-10 lg:px-16 xl:px-24 py-14 border-r border-[var(--color-border)] relative overflow-hidden"
+            style={{ backgroundColor: 'var(--color-bg)' }}
           >
-
-            {/* Dot-grid texture */}
-            <div
-              aria-hidden="true"
-              className="absolute inset-0 pointer-events-none"
-              style={{
-                backgroundImage: 'radial-gradient(circle, var(--color-border-strong) 1px, transparent 1px)',
-                backgroundSize: '28px 28px',
-              }}
-            />
+            {/* Background elements */}
+            <div className="absolute top-0 right-0 w-64 h-64 bg-[var(--accent-cs)]/5 rounded-full -translate-y-1/2 translate-x-1/2 blur-3xl pointer-events-none" />
+            <div className="absolute bottom-10 left-10 w-48 h-48 bg-[var(--accent-ai)]/5 rounded-full translate-y-1/2 -translate-x-1/2 blur-2xl pointer-events-none" />
 
             {/* Headline block */}
             <div className="relative z-10">
@@ -686,6 +696,13 @@ export default function SetupPage() {
                 <span className="sr-only">{fullText}</span>
               </p>
             </div>
+
+            <DesktopTicker 
+                allTimetableEntries={allTimetableEntries} 
+                userConfig={userConfig} 
+                bundles={bundles} 
+            />
+
 
             {/* Social / Developer Links */}
             <div className="relative z-10 flex gap-8">

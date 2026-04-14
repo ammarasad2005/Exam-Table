@@ -9,7 +9,9 @@ export default {
         display: ['Instrument Serif', 'serif'],
         body:    ['DM Sans', 'sans-serif'],
         mono:    ['DM Mono', 'monospace'],
+        clock:   ['var(--font-clock)', 'monospace'],
       },
+
       colors: {
         bg:       'var(--color-bg)',
         raised:   'var(--color-bg-raised)',
