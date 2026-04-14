@@ -2,6 +2,7 @@ import type { Metadata } from 'next';
 import { DM_Sans, DM_Mono, Instrument_Serif } from 'next/font/google';
 import '../styles/globals.css';
 import { ThemeProvider } from '@/lib/theme';
+import { Navbar } from '@/components/Navbar';
 import { Analytics } from '@vercel/analytics/next';
 
 const dmSans = DM_Sans({
@@ -50,6 +51,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       <body className="bg-[var(--color-bg)] text-[var(--color-text-primary)] font-body antialiased">
         <ThemeProvider>
           {children}
+          <Navbar />
         </ThemeProvider>
         <Analytics />
       </body>

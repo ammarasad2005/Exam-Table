@@ -18,10 +18,8 @@ const timetableRaw: RawTimetableJSON = require('../../public/data/timetable.json
 const allTimetableEntries = flattenTimetable(timetableRaw);
 const timetableBatches: string[] = [...new Set<string>(allTimetableEntries.map(e => e.batch))].sort().reverse();
 
-
-
 type Mode = 'default' | 'custom';
-type Feature = 'exams' | 'timetable';
+type Feature = 'exams' | 'timetable' | 'rooms';
 
 // FSC-only departments for the timetable (from the Python data)
 const TIMETABLE_DEPTS = ['CS', 'AI', 'DS', 'CY', 'SE'];
@@ -32,6 +30,8 @@ const HERO_TEXTS: Record<Feature, string> = {
     'Select your batch and department. Your full exam schedule — every date, time, and course — in one place.',
   timetable:
     'Select your batch, department and section. Your weekly class timetable — every slot, room, and timing — instantly.',
+  rooms:
+    'Find empty classrooms and labs across campus — for any day and time slot — sourced from the live Spring 2026 timetable.',
 };
 
 export default function SetupPage() {
@@ -83,7 +83,16 @@ export default function SetupPage() {
     if (feature === 'timetable' && batch !== '-' && !timetableBatches.includes(batch)) setBatch('-');
   }, [feature, batch]);
 
+  // Rooms feature — navigate immediately
+  function handleRoomsClick() {
+    router.push('/rooms');
+  }
+
   function handleSubmit() {
+    if (feature === 'rooms') {
+      handleRoomsClick();
+      return;
+    }
     if (feature === 'exams') {
       if (mode === 'default') {
         if (batch === '-' || school === '-' || !dept) return;
@@ -104,7 +113,11 @@ export default function SetupPage() {
   const activeBatches = feature === 'timetable' ? timetableBatches : batches;
   const examCtaDisabled = mode === 'default' && (batch === '-' || school === '-' || !dept);
   const timetableCtaDisabled = mode === 'default' && (batch === '-' || !dept || !section);
-  const ctaDisabled = feature === 'exams' ? examCtaDisabled : timetableCtaDisabled;
+  const ctaDisabled = feature === 'rooms'
+    ? false
+    : feature === 'exams'
+      ? examCtaDisabled
+      : timetableCtaDisabled;
 
   // ─── Shared UI pieces ──────────────────────────────────────────────────────
 
@@ -116,8 +129,8 @@ export default function SetupPage() {
       >
         Feature
       </p>
-      <div role="group" aria-labelledby="feature-label" className="grid grid-cols-2 gap-2">
-        {(['timetable', 'exams'] as Feature[]).map(f => (
+      <div role="group" aria-labelledby="feature-label" className="grid grid-cols-3 gap-2">
+        {(['timetable', 'exams', 'rooms'] as Feature[]).map(f => (
           <button
             key={f}
             id={`feature-${f}`}
@@ -133,14 +146,14 @@ export default function SetupPage() {
               color: 'var(--color-text-secondary)',
             }}
           >
-            {f === 'exams' ? 'Exam Finder' : 'Timetable'}
+            {f === 'exams' ? 'Exams' : f === 'timetable' ? 'Timetable' : 'Free Rooms'}
           </button>
         ))}
       </div>
     </div>
   );
 
-  const modeSelector = (
+  const modeSelector = feature !== 'rooms' ? (
     <div>
       <p
         id="mode-label"
@@ -178,10 +191,32 @@ export default function SetupPage() {
             : 'Select specific classes — for cross-section or repeat courses.')}
       </p>
     </div>
-  );
+  ) : null;
+
+  // Rooms feature — show a simple info card instead of the normal form
+  const roomsCard = feature === 'rooms' ? (
+    <div
+      className="rounded-xl border border-[var(--color-border)] bg-[var(--color-bg-subtle)] p-5 flex flex-col gap-3"
+    >
+      <div className="flex-1 flex items-center gap-2 min-w-0">
+        {/* Map Pin icon */}
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-[var(--color-text-tertiary)]">
+          <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z" />
+          <circle cx="12" cy="10" r="3" />
+        </svg>
+        <span className="font-mono text-sm font-medium text-[var(--color-text-primary)] truncate">
+          Free Rooms Finder
+        </span>
+      </div>
+      <p className="text-xs text-[var(--color-text-secondary)] leading-relaxed">
+        The Free Rooms Finder works across all batches and departments.
+        Pick a day &amp; time slot — or generate a full weekly vacancy calendar.
+      </p>
+    </div>
+  ) : null;
 
   // Batch selector — shared between both features but only shown in 'default' mode
-  const batchSelector = mode === 'default' ? (
+  const batchSelector = (feature !== 'rooms' && mode === 'default') ? (
     <div>
       <label
         htmlFor="batch-select"
@@ -326,19 +361,19 @@ export default function SetupPage() {
       disabled={ctaDisabled}
       style={{ height: '52px' }}
       className={`w-full rounded-md font-body font-medium text-base transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 ${ctaDisabled
-          ? 'bg-[var(--color-bg-subtle)] text-[var(--color-text-tertiary)] cursor-not-allowed'
-          : 'bg-[var(--color-text-primary)] text-[var(--color-bg)] active:scale-[0.98] hover:opacity-90'
+        ? 'bg-[var(--color-bg-subtle)] text-[var(--color-text-tertiary)] cursor-not-allowed'
+        : 'bg-[var(--color-text-primary)] text-[var(--color-bg)] active:scale-[0.98] hover:opacity-90'
         }`}
     >
-      {feature === 'timetable'
-        ? 'View my timetable →'
-        : mode === 'default'
-          ? 'View my exams →'
-          : 'Enter course codes →'}
+      {feature === 'rooms'
+        ? 'Find Free Rooms →'
+        : feature === 'timetable'
+          ? 'View my timetable →'
+          : mode === 'default'
+            ? 'View my exams →'
+            : 'Enter course codes →'}
     </button>
   );
-
-
 
   return (
     <>
@@ -356,7 +391,6 @@ export default function SetupPage() {
             />
           </div>
           <div className="flex items-center gap-4">
-
             <a href="https://linkedin.com/in/ammar-asad-563047289" target="_blank" rel="noopener noreferrer" className="text-[var(--color-text-secondary)] hover:text-[#0a66c2] transition-colors dark:hover:text-[#3b82f6]" aria-label="LinkedIn">
               <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
                 <path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433c-1.144 0-2.063-.926-2.063-2.065 0-1.138.92-2.063 2.063-2.063 1.14 0 2.064.925 2.064 2.063 0 1.139-.925 2.065-2.064 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z" />
@@ -366,24 +400,54 @@ export default function SetupPage() {
           </div>
         </header>
 
-        <div className="mt-10 mb-8">
+        {/* Separator line */}
+        <div className="h-px bg-[var(--color-border)] mb-4" />
+
+        {/* Subheader: Feature Selector */}
+        <div className="flex flex-col gap-2 mb-8">
+          <div role="group" aria-label="Select feature" className="flex items-center gap-1 bg-[var(--color-bg-subtle)] rounded-lg p-1">
+            {(['timetable', 'exams', 'rooms'] as Feature[]).map(f => (
+              <button
+                key={f}
+                onClick={() => { setFeature(f); setMode('default'); }}
+                aria-pressed={feature === f}
+                className="flex-1 h-10 rounded-md font-body text-xs font-bold transition-all duration-150 active:scale-95"
+                style={feature === f ? {
+                  backgroundColor: 'var(--color-text-primary)',
+                  color: 'var(--color-bg)',
+                } : {
+                  color: 'var(--color-text-secondary)',
+                }}
+              >
+                {f === 'exams' ? 'Exams' : f === 'timetable' ? 'Timetable' : 'Rooms'}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        <div className="mb-8">
           <h1 className="font-display text-4xl leading-tight text-[var(--color-text-primary)]">
             {feature === 'exams' ? (
               <>Find your<br /><span className="italic">exam schedule.</span></>
-            ) : (
+            ) : feature === 'timetable' ? (
               <>Find your<br /><span className="italic">class timetable.</span></>
+            ) : (
+              <>Find a<br /><span className="italic">free room.</span></>
             )}
           </h1>
           <div className="mt-6 h-px bg-[var(--color-border)]" />
         </div>
 
         <div className="flex flex-col gap-6 flex-1">
-          {featureSelector}
-          {modeSelector}
-          {batchSelector}
-          {schoolSelector}
-          {deptPills}
-          {sectionPills}
+          {feature === 'rooms' ? roomsCard : (
+            <>
+              {modeSelector}
+              {batchSelector}
+              {schoolSelector}
+              {deptPills}
+              {sectionPills}
+            </>
+          )}
         </div>
 
         <div className="pb-8 pt-6 flex flex-col gap-8">
@@ -412,13 +476,13 @@ export default function SetupPage() {
 
           {/* Feature toggle — prominent centre nav */}
           <div role="group" aria-label="Select feature" className="flex items-center gap-1 bg-[var(--color-bg-subtle)] rounded-lg p-1">
-            {(['timetable', 'exams'] as Feature[]).map(f => (
+            {(['timetable', 'exams', 'rooms'] as Feature[]).map(f => (
               <button
                 key={f}
                 id={`desktop-feature-${f}`}
                 onClick={() => { setFeature(f); setMode('default'); }}
                 aria-pressed={feature === f}
-                className="h-8 px-5 rounded-md font-body text-sm font-medium transition-all duration-150 active:scale-95 focus-visible:outline-none focus-visible:ring-2"
+                className="h-8 px-4 rounded-md font-body text-sm font-medium transition-all duration-150 active:scale-95 focus-visible:outline-none focus-visible:ring-2"
                 style={feature === f ? {
                   backgroundColor: 'var(--color-text-primary)',
                   color: 'var(--color-bg)',
@@ -426,7 +490,7 @@ export default function SetupPage() {
                   color: 'var(--color-text-secondary)',
                 }}
               >
-                {f === 'exams' ? 'Exam Finder' : 'Timetable'}
+                {f === 'exams' ? 'Exam Finder' : f === 'timetable' ? 'Timetable' : 'Free Rooms'}
               </button>
             ))}
           </div>
@@ -455,7 +519,8 @@ export default function SetupPage() {
             {/* Headline block */}
             <div className="relative z-10">
               <p className="font-mono text-xs uppercase tracking-widest text-[var(--color-text-tertiary)] mb-6">
-                FAST Isb Schedule — {feature === 'exams' ? 'Exam Portal' : 'Timetable Portal'}
+                FAST Isb Schedule —{' '}
+                {feature === 'exams' ? 'Exam Portal' : feature === 'timetable' ? 'Timetable Portal' : 'Room Finder'}
               </p>
               <h1
                 className="font-display leading-[1.1] text-[var(--color-text-primary)]"
@@ -463,8 +528,10 @@ export default function SetupPage() {
               >
                 {feature === 'exams' ? (
                   <>Find your<br /><span className="italic">exam schedule.</span></>
-                ) : (
+                ) : feature === 'timetable' ? (
                   <>Find your<br /><span className="italic">class timetable.</span></>
+                ) : (
+                  <>Find a<br /><span className="italic">free room.</span></>
                 )}
               </h1>
               <p className="mt-6 font-body text-base text-[var(--color-text-secondary)] max-w-sm leading-relaxed min-h-[4.5rem]">
@@ -474,14 +541,10 @@ export default function SetupPage() {
                 )}
                 <span className="sr-only">{fullText}</span>
               </p>
-
-              {/* Stats row removed */}
             </div>
 
             {/* Social / Developer Links */}
             <div className="relative z-10 flex gap-8">
-
-
               <a
                 href="https://linkedin.com/in/ammar-asad-563047289"
                 target="_blank"
@@ -494,7 +557,7 @@ export default function SetupPage() {
                   </svg>
                   <span className="font-mono text-sm font-medium">LinkedIn</span>
                 </div>
-                <span className="font-mono text-[10px] text-[var(--color-text-tertiary)] uppercase tracking-widest pl-[28px] h-3 block"></span>
+                <span className="font-mono text-[10px] text-[var(--color-text-tertiary)] uppercase tracking-widest pl-[28px] h-3 block" />
               </a>
             </div>
           </div>
@@ -507,18 +570,27 @@ export default function SetupPage() {
                 className="bg-[var(--color-bg-raised)] border border-[var(--color-border)] rounded-2xl p-8 lg:p-10 flex flex-col gap-6"
                 style={{ boxShadow: 'var(--shadow-raised), var(--border-inset)' }}
               >
-                {modeSelector}
-                {batchSelector}
-                {schoolSelector}
-                {deptPills}
-                {sectionPills}
+                {feature === 'rooms' ? (
+                  roomsCard
+                ) : (
+                  <>
+                    {modeSelector}
+                    {batchSelector}
+                    {schoolSelector}
+                    {deptPills}
+                    {sectionPills}
+                  </>
+                )}
+
                 {ctaButton}
               </div>
 
               <p className="mt-5 font-mono text-[11px] text-[var(--color-text-tertiary)] text-center leading-relaxed">
                 {feature === 'exams'
                   ? 'Data updates for all examinations.'
-                  : 'Time-Table for Spring 2026.'}
+                  : feature === 'timetable'
+                    ? 'Time-Table for Spring 2026.'
+                    : 'Room availability from Spring 2026 timetable.'}
               </p>
 
             </div>
