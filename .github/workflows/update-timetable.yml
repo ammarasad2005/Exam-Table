@@ -11,7 +11,7 @@ on:
 # Grant the workflow permission to write commits back to the repo
 permissions:
   contents: write
-
+,
 jobs:
   update-timetable:
     if: github.ref == 'refs/heads/main'

@@ -106,11 +106,11 @@ def get_slot_quota(t_str):
     except:
         return 0, 999
 
-def is_batch_busy(batch, dept, section, day, actual_time, busy_calendar):
+def is_batch_busy(batch, dept, section, day, check_time, busy_calendar):
     key = f"{batch}-{dept}-{section}-{day}"
     occupied_times = busy_calendar.get(key, [])
     for busy_t in occupied_times:
-        if is_overlap(actual_time, busy_t):
+        if is_overlap(check_time, busy_t):
             return True
     return False
 
@@ -296,17 +296,27 @@ for day in days:
 
                 # Force specific durations based on cell type (per user request)
                 is_actually_lab = is_lab_section or course_name.lower().endswith("lab")
+                blocking_time = actual_time # Time slot used for conflict detection
+                
                 if actual_time != "Unknown Time":
                     try:
                         s_min, _ = parse_time_to_minutes(actual_time)
                         if is_exam:
-                            # Exams/Sessionals are strictly 90 mins
-                            e_min = s_min + 90
-                            actual_time = f"{minutes_to_time(s_min)}-{minutes_to_time(e_min)}"
+                            # Exams/Sessionals are strictly 90 mins for display
+                            e_min_disp = s_min + 90
+                            actual_time = f"{minutes_to_time(s_min)}-{minutes_to_time(e_min_disp)}"
+                            # But if it's a lab slot, it blocks the full 165 mins for other classes
+                            # because a section can't have a 10:00 class if they are in a lab until 11:15
+                            if is_actually_lab:
+                                e_min_block = s_min + 165
+                                blocking_time = f"{minutes_to_time(s_min)}-{minutes_to_time(e_min_block)}"
+                            else:
+                                blocking_time = actual_time
                         elif is_actually_lab:
                             # Regular labs are 165 mins
                             e_min = s_min + 165
                             actual_time = f"{minutes_to_time(s_min)}-{minutes_to_time(e_min)}"
+                            blocking_time = actual_time
                     except Exception as e:
                         pass
 
@@ -319,6 +329,7 @@ for day in days:
                     "section":     section,
                     "day":         day,
                     "time":        actual_time,
+                    "blocking_time": blocking_time,
                     "room":        current_room,
                     "category":    category,
                     "batch":       batch,        # None for regular until resolved
@@ -330,7 +341,7 @@ for day in days:
                 if category == "repeat":
                     # Batch encoded in cell — anchor immediately
                     cal_key = f"{batch}-{dept}-{section}-{day}"
-                    busy_calendar.setdefault(cal_key, []).append(actual_time)
+                    busy_calendar.setdefault(cal_key, []).append(blocking_time)
                     if not is_rescheduled:
                         q_key = f"{batch}-{dept}-{section}-{course_name}"
                         quota_calendar[q_key] = quota_calendar.get(q_key, 0) + 1
@@ -338,24 +349,18 @@ for day in days:
 
                 else:  # regular
                     possible = find_possible_batches(course_name, dept)
-
                     if not possible:
-                        # Completely unmapped — discard silently
                         continue
-
                     elif len(possible) == 1:
                         # Single candidate — anchor immediately
                         batch_val = possible[0]
-                        if "Comp Net Lab" in course_name or "AI Lab" in course_name:
-                            print(f"  [DEBUG] P1: Anchored {course_name} to {batch_val} {dept}-{section}")
                         record["batch"] = batch_val
                         cal_key = f"{batch_val}-{dept}-{section}-{day}"
-                        busy_calendar.setdefault(cal_key, []).append(actual_time)
+                        busy_calendar.setdefault(cal_key, []).append(blocking_time)
                         if not is_rescheduled:
                             q_key = f"{batch_val}-{dept}-{section}-{course_name}"
                             quota_calendar[q_key] = quota_calendar.get(q_key, 0) + 1
                         unambiguous_classes.append(record)
-
                     else:
                         # Multiple candidates — defer to Pass 2
                         record["possible_batches"] = possible
@@ -399,6 +404,7 @@ while changed:
         section        = record["section"]
         day            = record["day"]
         actual_time    = record["time"]
+        blocking_time  = record["blocking_time"]
         possible       = record["possible_batches"]
         course_name    = record["course_name"]
         quota          = record["quota"]
@@ -407,7 +413,7 @@ while changed:
         # Per-batch key: check if THAT batch is already busy or at its quota
         free_candidates = [
             b for b in possible
-            if not is_batch_busy(b, dept, section, day, actual_time, busy_calendar)
+            if not is_batch_busy(b, dept, section, day, blocking_time, busy_calendar)
             and (is_rescheduled or has_quota_room(b, dept, section, course_name, quota, quota_calendar))
         ]
 
@@ -416,7 +422,7 @@ while changed:
             assigned = free_candidates[0]
             record["batch"] = assigned
             cal_key = f"{assigned}-{dept}-{section}-{day}"
-            busy_calendar.setdefault(cal_key, []).append(actual_time)
+            busy_calendar.setdefault(cal_key, []).append(blocking_time)
             if not record["is_rescheduled"]:
                 q_key = f"{assigned}-{dept}-{section}-{record['course_name']}"
                 quota_calendar[q_key] = quota_calendar.get(q_key, 0) + 1
@@ -450,16 +456,16 @@ for record in still_ambiguous:
     section        = record["section"]
     day            = record["day"]
     actual_time    = record["time"]
+    blocking_time  = record["blocking_time"]
     possible       = record["possible_batches"]
     course_name    = record["course_name"]
     quota_val      = record["quota"]
     is_rescheduled = record["is_rescheduled"]
 
     # Re-calculate free candidates based on the MOST RECENT quota and busy state
-    # This is critical because previous assignments in this same loop update the state.
     free_candidates = [
         b for b in possible
-        if not is_batch_busy(b, dept, section, day, actual_time, busy_calendar)
+        if not is_batch_busy(b, dept, section, day, blocking_time, busy_calendar)
         and (is_rescheduled or has_quota_room(b, dept, section, course_name, quota_val, quota_calendar))
     ]
 
@@ -481,7 +487,7 @@ for record in still_ambiguous:
         new_record = record.copy()
         new_record["batch"] = assigned
         cal_key = f"{assigned}-{dept}-{section}-{day}"
-        busy_calendar.setdefault(cal_key, []).append(actual_time)
+        busy_calendar.setdefault(cal_key, []).append(blocking_time)
         if not is_rescheduled:
             q_key = f"{assigned}-{dept}-{section}-{course_name}"
             quota_calendar[q_key] = quota_calendar.get(q_key, 0) + 1
