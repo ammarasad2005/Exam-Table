@@ -23,13 +23,16 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
       setTheme(saved);
       document.documentElement.setAttribute('data-theme', saved);
     } else {
-      // Respect system preference
-      const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-      const initial = prefersDark ? 'dark' : 'light';
+      // Default based on time of day (Night: 6 PM – 6 AM)
+      const hour = new Date().getHours();
+      const isNight = hour >= 18 || hour < 6;
+      const initial = isNight ? 'dark' : 'light';
+      
       setTheme(initial);
       document.documentElement.setAttribute('data-theme', initial);
     }
   }, []);
+
 
   function toggleTheme() {
     const next = theme === 'dark' ? 'light' : 'dark';
