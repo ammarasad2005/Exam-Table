@@ -6,6 +6,8 @@ import { ThemeToggle } from '@/components/ThemeToggle';
 import { SCHOOLS, SCHOOL_DEPARTMENTS, DEPARTMENT_LABELS } from '@/lib/types';
 import { flattenTimetable, getAvailableSections } from '@/lib/timetable-filter';
 import type { RawTimetableJSON } from '@/lib/types';
+import { AlertCircle, Terminal, ShieldAlert } from 'lucide-react';
+
 
 // eslint-disable-next-line
 const scheduleRaw = require('../../public/data/schedule.json');
@@ -23,6 +25,14 @@ type Feature = 'exams' | 'timetable' | 'rooms';
 
 // FSC-only departments for the timetable (from the Python data)
 const TIMETABLE_DEPTS = ['CS', 'AI', 'DS', 'CY', 'SE'];
+
+interface UserConfig {
+  batch: string;
+  school: string;
+  dept: string;
+  section: string;
+}
+
 
 // Typing animation strings — one per feature
 const HERO_TEXTS: Record<Feature, string> = {
@@ -51,6 +61,31 @@ export default function SetupPage() {
   const [displayText, setDisplayText] = useState('');
   const [isTypingComplete, setIsTypingComplete] = useState(false);
 
+  // Persistence for default mode
+  const [userConfig, setUserConfig] = useState<UserConfig | null>(null);
+  const [isConfigLoaded, setIsConfigLoaded] = useState(false);
+  const [exclusivityError, setExclusivityError] = useState<string | null>(null);
+
+  // Load userConfig on mount
+  useEffect(() => {
+    const stored = localStorage.getItem('fsc_user_config');
+    if (stored) {
+      try {
+        const parsed = JSON.parse(stored);
+        setUserConfig(parsed);
+        // Sync current state to saved values
+        setBatch(parsed.batch);
+        setSchool(parsed.school);
+        setDept(parsed.dept);
+        setSection(parsed.section);
+      } catch (e) {
+        console.error('Failed to parse user config', e);
+      }
+    }
+    setIsConfigLoaded(true);
+  }, []);
+
+
   // Reset typing animation whenever feature changes
   useEffect(() => {
     setDisplayText('');
@@ -72,10 +107,15 @@ export default function SetupPage() {
     [feature, batch, dept]
   );
 
-  // Reset section when dept/batch changes
+  // Reset section when dept/batch changes — only if not currently loading from saved config
   useEffect(() => {
+    // If we have a saved config, we don't reset anything unless the user manually clears it
+    if (userConfig) return;
+    
     setSection('');
-  }, [batch, dept, feature]);
+  }, [batch, dept, feature, userConfig]);
+
+
 
   // When feature changes to exams, re-validate batch against exam batches
   useEffect(() => {
@@ -102,17 +142,63 @@ export default function SetupPage() {
       }
     } else {
       if (mode === 'default') {
-        if (batch === '-' || !dept || !section) return;
-        router.push(`/timetable?batch=${batch}&dept=${dept}&section=${section}`);
+        const targetBatch = userConfig?.batch || batch;
+        const targetDept = userConfig?.dept || dept;
+        const targetSection = userConfig?.section || section;
+        if (targetBatch === '-' || !targetDept || !targetSection) return;
+        router.push(`/timetable?batch=${targetBatch}&dept=${targetDept}&section=${targetSection}`);
       } else {
         router.push('/timetable/custom');
       }
     }
   }
 
+  function savePreferences() {
+    if (batch === '-' || !dept || !section) return;
+
+    // Check for Custom Bundles
+    const bundlesStr = localStorage.getItem('fsc_custom_bundles');
+    if (bundlesStr) {
+      try {
+        const bundles = JSON.parse(bundlesStr);
+        if (Array.isArray(bundles) && bundles.length > 0) {
+          setExclusivityError("Oops! You already have some Saved Bundles in the Custom Courses section. To save these default preferences, please go back and clear your custom bundles first—we want to keep your schedule simple and organized!");
+          return;
+        }
+      } catch (e) {
+        console.error("Failed to parse bundles", e);
+      }
+    }
+
+    const config: UserConfig = { batch, school, dept, section };
+    localStorage.setItem('fsc_user_config', JSON.stringify(config));
+    setUserConfig(config);
+  }
+
+  function clearPreferences() {
+    localStorage.removeItem('fsc_user_config');
+    setUserConfig(null);
+    setBatch('-');
+    setSchool('-');
+    setDept('');
+    setSection('');
+  }
+
+
   const activeBatches = feature === 'timetable' ? timetableBatches : batches;
-  const examCtaDisabled = mode === 'default' && (batch === '-' || school === '-' || !dept);
-  const timetableCtaDisabled = mode === 'default' && (batch === '-' || !dept || !section);
+  
+  const examCtaDisabled = mode === 'default' && (
+    userConfig 
+      ? (userConfig.batch === '-' || userConfig.school === '-' || !userConfig.dept)
+      : (batch === '-' || school === '-' || !dept)
+  );
+
+  const timetableCtaDisabled = mode === 'default' && (
+    userConfig
+      ? (userConfig.batch === '-' || !userConfig.dept || !userConfig.section)
+      : (batch === '-' || !dept || !section)
+  );
+
   const ctaDisabled = feature === 'rooms'
     ? false
     : feature === 'exams'
@@ -354,26 +440,79 @@ export default function SetupPage() {
     </div>
   ) : null;
 
-  const ctaButton = (
+  const prefButton = feature === 'timetable' && mode === 'default' && (userConfig || (batch !== '-' && dept && section)) && (
     <button
-      id="cta-button"
-      onClick={handleSubmit}
-      disabled={ctaDisabled}
+      onClick={userConfig ? clearPreferences : savePreferences}
       style={{ height: '52px' }}
-      className={`w-full rounded-md font-body font-medium text-base transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 ${ctaDisabled
-        ? 'bg-[var(--color-bg-subtle)] text-[var(--color-text-tertiary)] cursor-not-allowed'
-        : 'bg-[var(--color-text-primary)] text-[var(--color-bg)] active:scale-[0.98] hover:opacity-90'
+      className={`w-full rounded-md font-body font-medium text-sm transition-all focus-visible:outline-none focus-visible:ring-2 border-2 ${userConfig
+        ? 'border-red-500/20 text-red-500 hover:bg-red-500/5'
+        : 'border-[var(--color-border-strong)] text-[var(--color-text-primary)] hover:bg-[var(--color-bg-subtle)]'
         }`}
     >
-      {feature === 'rooms'
-        ? 'Find Free Rooms →'
-        : feature === 'timetable'
-          ? 'View my timetable →'
-          : mode === 'default'
-            ? 'View my exams →'
-            : 'Enter course codes →'}
+      {userConfig ? 'Clear Saved Preferences' : 'Save these Preferences'}
     </button>
   );
+
+
+  const userConfigView = userConfig && mode === 'default' && feature === 'timetable' ? (
+    <div className="flex flex-col gap-4">
+      <div>
+        <p className="block font-mono text-[11px] uppercase tracking-widest text-[var(--color-text-tertiary)] mb-2">
+          User Config
+        </p>
+        <div className="grid grid-cols-3 gap-2">
+          {[
+            { val: userConfig.batch, isAccent: false },
+            { val: userConfig.dept, isAccent: true },
+            { val: userConfig.section, isAccent: true }
+          ].map((item, i) => (
+            <div
+              key={i}
+              className="h-12 flex items-center justify-center rounded-md font-mono text-sm border transition-all"
+              style={item.isAccent ? {
+                backgroundColor: `var(--accent-${userConfig.dept.toLowerCase()}-bg)`,
+                color: `var(--accent-${userConfig.dept.toLowerCase()})`,
+                borderColor: `var(--accent-${userConfig.dept.toLowerCase()})`,
+                boxShadow: `inset 0 0 0 1px var(--accent-${userConfig.dept.toLowerCase()})`,
+              } : {
+                backgroundColor: 'var(--color-bg-raised)',
+                border: '1px solid var(--color-border-strong)',
+                color: 'var(--color-text-primary)'
+              }}
+            >
+              {item.val}
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  ) : null;
+
+
+  const ctaButton = (
+    <div className="flex flex-col gap-3 w-full">
+      {prefButton}
+      <button
+        id="cta-button"
+        onClick={handleSubmit}
+        disabled={ctaDisabled}
+        style={{ height: '52px' }}
+        className={`w-full rounded-md font-body font-medium text-base transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 ${ctaDisabled
+          ? 'bg-[var(--color-bg-subtle)] text-[var(--color-text-tertiary)] cursor-not-allowed'
+          : 'bg-[var(--color-text-primary)] text-[var(--color-bg)] active:scale-[0.98] hover:opacity-90'
+          }`}
+      >
+        {feature === 'rooms'
+          ? 'Find Free Rooms →'
+          : feature === 'timetable'
+            ? 'View my timetable →'
+            : mode === 'default'
+              ? 'View my exams →'
+              : 'Enter course codes →'}
+      </button>
+    </div>
+  );
+
 
   return (
     <>
@@ -442,13 +581,18 @@ export default function SetupPage() {
           {feature === 'rooms' ? roomsCard : (
             <>
               {modeSelector}
-              {batchSelector}
-              {schoolSelector}
-              {deptPills}
-              {sectionPills}
+              {userConfigView ? userConfigView : (
+                <>
+                  {batchSelector}
+                  {schoolSelector}
+                  {deptPills}
+                  {sectionPills}
+                </>
+              )}
             </>
           )}
         </div>
+
 
         <div className="pb-8 pt-6 flex flex-col gap-8">
           {ctaButton}
@@ -575,12 +719,17 @@ export default function SetupPage() {
                 ) : (
                   <>
                     {modeSelector}
-                    {batchSelector}
-                    {schoolSelector}
-                    {deptPills}
-                    {sectionPills}
+                    {userConfigView ? userConfigView : (
+                      <>
+                        {batchSelector}
+                        {schoolSelector}
+                        {deptPills}
+                        {sectionPills}
+                      </>
+                    )}
                   </>
                 )}
+
 
                 {ctaButton}
               </div>
@@ -598,6 +747,30 @@ export default function SetupPage() {
 
         </div>
       </div>
+      {exclusivityError && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-6 bg-black/40 backdrop-blur-md animate-in fade-in duration-300">
+          <div className="bg-[var(--color-bg-raised)]/90 border border-white/10 rounded-3xl p-8 w-full max-w-sm shadow-[0_32px_64px_-16px_rgba(0,0,0,0.4)] animate-in zoom-in-95 duration-500 text-center relative overflow-hidden">
+            <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-yellow-400 via-orange-500 to-yellow-600" />
+            
+            <div className="mx-auto w-16 h-16 rounded-2xl bg-yellow-500/10 flex items-center justify-center mb-6 ring-1 ring-yellow-500/20">
+              <ShieldAlert size={32} className="text-yellow-600 dark:text-yellow-400" />
+            </div>
+
+            <h3 className="font-display text-2xl mb-3 text-[var(--color-text-primary)]">Action Required</h3>
+            <p className="text-[13px] text-[var(--color-text-secondary)] mb-8 leading-relaxed opacity-90">
+              {exclusivityError}
+            </p>
+            
+            <button
+              onClick={() => setExclusivityError(null)}
+              className="group relative w-full h-12 rounded-xl bg-[var(--color-text-primary)] text-[var(--color-bg)] font-body font-bold overflow-hidden transition-all active:scale-[0.98]"
+            >
+              <span className="relative z-10">Got it</span>
+              <div className="absolute inset-0 bg-white/10 opacity-0 group-hover:opacity-100 transition-opacity" />
+            </button>
+          </div>
+        </div>
+      )}
     </>
   );
 }

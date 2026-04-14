@@ -7,6 +7,7 @@ import { SearchBar } from '@/components/SearchBar';
 import { TimetableExportButton } from '@/components/TimetableExportButton';
 import { EmptyState } from '@/components/EmptyState';
 import { ThemeToggle } from '@/components/ThemeToggle';
+import { ShieldAlert, AlertCircle, Info } from 'lucide-react';
 import { flattenTimetable, groupByDayTimetable, detectConflicts } from '@/lib/timetable-filter';
 import type { TimetableEntry, RawTimetableJSON } from '@/lib/types';
 
@@ -82,6 +83,7 @@ function CustomTimetableInner() {
   const [editingBundleId, setEditingBundleId] = useState<string|null>(null);
   const [isSaving, setIsSaving] = useState(false);
   const [newBundleName, setNewBundleName] = useState('');
+  const [exclusivityError, setExclusivityError] = useState<string | null>(null);
   const [renamingId, setRenamingId] = useState<string|null>(null);
   const [tempName, setTempName] = useState('');
   const [activeBundleId, setActiveBundleId] = useState<string|null>(null);
@@ -155,6 +157,13 @@ function CustomTimetableInner() {
 
   function handleCreateBundle() {
     if (!newBundleName.trim()) return;
+
+    // Check for Default Preferences
+    if (localStorage.getItem('fsc_user_config')) {
+      setExclusivityError("Wait! You have some Saved Preferences in the Default view. To start building custom bundles, you'll need to clear your default preferences first so we can maintain a clean dashboard for you.");
+      return;
+    }
+
     const newBundle: Bundle = {
       id: crypto.randomUUID(),
       name: newBundleName.trim(),
@@ -543,7 +552,32 @@ function CustomTimetableInner() {
           </div>
         </div>
       )}
+      {exclusivityError && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-6 bg-black/40 backdrop-blur-md animate-in fade-in duration-300">
+          <div className="bg-[var(--color-bg-raised)]/90 border border-white/10 rounded-3xl p-8 w-full max-w-sm shadow-[0_32px_64px_-16px_rgba(0,0,0,0.4)] animate-in zoom-in-95 duration-500 text-center relative overflow-hidden">
+            <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-yellow-400 via-orange-500 to-yellow-600" />
+            
+            <div className="mx-auto w-16 h-16 rounded-2xl bg-yellow-500/10 flex items-center justify-center mb-6 ring-1 ring-yellow-500/20">
+              <ShieldAlert size={32} className="text-yellow-600 dark:text-yellow-400" />
+            </div>
+
+            <h3 className="font-display text-2xl mb-3 text-[var(--color-text-primary)]">Action Required</h3>
+            <p className="text-[13px] text-[var(--color-text-secondary)] mb-8 leading-relaxed opacity-90">
+              {exclusivityError}
+            </p>
+            
+            <button
+              onClick={() => setExclusivityError(null)}
+              className="group relative w-full h-12 rounded-xl bg-[var(--color-text-primary)] text-[var(--color-bg)] font-body font-bold overflow-hidden transition-all active:scale-[0.98]"
+            >
+              <span className="relative z-10">Got it</span>
+              <div className="absolute inset-0 bg-white/10 opacity-0 group-hover:opacity-100 transition-opacity" />
+            </button>
+          </div>
+        </div>
+      )}
     </div>
+
   );
 }
 
