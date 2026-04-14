@@ -123,7 +123,7 @@ function RoomDetail({
 
           <div className="bg-[var(--color-bg-subtle)] p-4 rounded-xl border border-[var(--color-border)]">
              <p className="text-[10px] text-[var(--color-text-secondary)] leading-relaxed italic">
-               "Partially Vacant" indicates that the room is occupied for part of this slot but has at least 30 minutes of free time within it.
+               &quot;Partially Vacant&quot; indicates that the room is occupied for part of this slot but has at least 30 minutes of free time within it.
              </p>
           </div>
         </div>
@@ -387,9 +387,9 @@ export default function RoomsPage() {
           <div>
             <p className="font-mono text-[10px] uppercase tracking-widest text-[var(--color-text-tertiary)] mb-2">How it works</p>
             <ul className="text-xs text-[var(--color-text-secondary)] leading-relaxed space-y-2 list-disc list-inside">
-              <li>Pick a day & slot, or click any cell in the weekly grid to see details.</li>
-              <li>"Green" rooms are 100% free for the full 80-minute block.</li>
-              <li>"Yellow" rooms have at least 30 minutes of vacancy.</li>
+              <li>Pick a day &amp; slot, or click any cell in the weekly grid to see details.</li>
+              <li>&quot;Green&quot; rooms are 100% free for the full 80-minute block.</li>
+              <li>&quot;Yellow&quot; rooms have at least 30 minutes of vacancy.</li>
             </ul>
           </div>
         </aside>
