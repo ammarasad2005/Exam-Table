@@ -422,6 +422,130 @@
                         ]
                     }
                 },
+                "Civics": {
+                    "C": {
+                        "Monday": [
+                            {
+                                "room": "C-301",
+                                "time": "03:55-05:15",
+                                "rescheduled": true,
+                                "exam": false
+                            }
+                        ],
+                        "Tuesday": [
+                            {
+                                "room": "C-307",
+                                "time": "11:30-01:15",
+                                "rescheduled": false,
+                                "exam": false
+                            }
+                        ]
+                    },
+                    "H": {
+                        "Monday": [
+                            {
+                                "room": "C-305",
+                                "time": "09:00-10:45",
+                                "rescheduled": false,
+                                "exam": false
+                            }
+                        ]
+                    },
+                    "G": {
+                        "Monday": [
+                            {
+                                "room": "C-305",
+                                "time": "11:30-01:15",
+                                "rescheduled": false,
+                                "exam": false
+                            }
+                        ],
+                        "Tuesday": [
+                            {
+                                "room": "C-305",
+                                "time": "02:30-04:15",
+                                "rescheduled": true,
+                                "exam": false
+                            }
+                        ]
+                    },
+                    "J": {
+                        "Monday": [
+                            {
+                                "room": "C-307",
+                                "time": "08:30-10:15",
+                                "rescheduled": false,
+                                "exam": false
+                            }
+                        ],
+                        "Thursday": [
+                            {
+                                "room": "C-305",
+                                "time": "01:30-03:15",
+                                "rescheduled": true,
+                                "exam": false
+                            }
+                        ]
+                    },
+                    "D": {
+                        "Tuesday": [
+                            {
+                                "room": "C-307",
+                                "time": "09:00-10:45",
+                                "rescheduled": false,
+                                "exam": false
+                            }
+                        ],
+                        "Thursday": [
+                            {
+                                "room": "C-305",
+                                "time": "03:30-05:15",
+                                "rescheduled": true,
+                                "exam": false
+                            }
+                        ]
+                    },
+                    "F": {
+                        "Wednesday": [
+                            {
+                                "room": "C-305",
+                                "time": "09:00-10:45",
+                                "rescheduled": false,
+                                "exam": false
+                            }
+                        ]
+                    },
+                    "E": {
+                        "Wednesday": [
+                            {
+                                "room": "C-305",
+                                "time": "11:30-01:15",
+                                "rescheduled": false,
+                                "exam": false
+                            }
+                        ]
+                    },
+                    "A": {
+                        "Thursday": [
+                            {
+                                "room": "C-302",
+                                "time": "11:30-01:15",
+                                "rescheduled": false,
+                                "exam": false
+                            }
+                        ]
+                    },
+                    "B": {
+                        "Thursday": [
+                            {
+                                "room": "C-305",
+                                "time": "08:30-10:15",
+                                "rescheduled": false,
+                                "exam": false
+                            }
+                        ]
+                    }
+                },
                 "MV Calculus": {
                     "B": {
                         "Monday": [
@@ -672,98 +796,6 @@
                             {
                                 "room": "C-305",
                                 "time": "11:30-01:15",
-                                "rescheduled": false,
-                                "exam": false
-                            }
-                        ]
-                    }
-                },
-                "Civics": {
-                    "H": {
-                        "Monday": [
-                            {
-                                "room": "C-305",
-                                "time": "09:00-10:45",
-                                "rescheduled": false,
-                                "exam": false
-                            }
-                        ]
-                    },
-                    "G": {
-                        "Monday": [
-                            {
-                                "room": "C-305",
-                                "time": "11:30-01:15",
-                                "rescheduled": false,
-                                "exam": false
-                            }
-                        ]
-                    },
-                    "J": {
-                        "Monday": [
-                            {
-                                "room": "C-307",
-                                "time": "08:30-10:15",
-                                "rescheduled": false,
-                                "exam": false
-                            }
-                        ]
-                    },
-                    "D": {
-                        "Tuesday": [
-                            {
-                                "room": "C-307",
-                                "time": "09:00-10:45",
-                                "rescheduled": false,
-                                "exam": false
-                            }
-                        ]
-                    },
-                    "C": {
-                        "Tuesday": [
-                            {
-                                "room": "C-307",
-                                "time": "11:30-01:15",
-                                "rescheduled": false,
-                                "exam": false
-                            }
-                        ]
-                    },
-                    "F": {
-                        "Wednesday": [
-                            {
-                                "room": "C-305",
-                                "time": "09:00-10:45",
-                                "rescheduled": false,
-                                "exam": false
-                            }
-                        ]
-                    },
-                    "E": {
-                        "Wednesday": [
-                            {
-                                "room": "C-305",
-                                "time": "11:30-01:15",
-                                "rescheduled": false,
-                                "exam": false
-                            }
-                        ]
-                    },
-                    "A": {
-                        "Thursday": [
-                            {
-                                "room": "C-302",
-                                "time": "11:30-01:15",
-                                "rescheduled": false,
-                                "exam": false
-                            }
-                        ]
-                    },
-                    "B": {
-                        "Thursday": [
-                            {
-                                "room": "C-305",
-                                "time": "08:30-10:15",
                                 "rescheduled": false,
                                 "exam": false
                             }
@@ -2054,6 +2086,14 @@
                                 "rescheduled": false,
                                 "exam": false
                             }
+                        ],
+                        "Friday": [
+                            {
+                                "room": "C-311",
+                                "time": "08:30-11:15",
+                                "rescheduled": true,
+                                "exam": false
+                            }
                         ]
                     },
                     "A1": {
@@ -2580,6 +2620,14 @@
                                 "room": "C-Rawal 1",
                                 "time": "08:30-11:15",
                                 "rescheduled": false,
+                                "exam": false
+                            }
+                        ],
+                        "Friday": [
+                            {
+                                "room": "C-410",
+                                "time": "08:30-11:15",
+                                "rescheduled": true,
                                 "exam": false
                             }
                         ]
@@ -5485,6 +5533,14 @@
                                 "room": "C-407",
                                 "time": "02:30-04:15",
                                 "rescheduled": false,
+                                "exam": false
+                            }
+                        ],
+                        "Friday": [
+                            {
+                                "room": "C-302",
+                                "time": "02:30-04:15",
+                                "rescheduled": true,
                                 "exam": false
                             }
                         ]
