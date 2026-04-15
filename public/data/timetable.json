@@ -7056,12 +7056,6 @@
                                 "time": "08:30-11:15",
                                 "rescheduled": false,
                                 "exam": false
-                            },
-                            {
-                                "room": "C-Rawal 1",
-                                "time": "08:30-10:00",
-                                "rescheduled": false,
-                                "exam": true
                             }
                         ]
                     },
