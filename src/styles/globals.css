@@ -31,6 +31,19 @@
   --accent-ee: #E11D48;
   --accent-ce: #0284C7;
 
+  /* RGB channels for opacity control */
+  --accent-rgb-cs: 29, 78, 216;
+  --accent-rgb-ai: 124, 58, 237;
+  --accent-rgb-ds: 15, 118, 110;
+  --accent-rgb-cy: 180, 83, 9;
+  --accent-rgb-se: 190, 24, 93;
+  --accent-rgb-bba: 29, 78, 216;
+  --accent-rgb-af: 4, 120, 87;
+  --accent-rgb-ba: 217, 119, 6;
+  --accent-rgb-ft: 147, 51, 234;
+  --accent-rgb-ee: 225, 29, 72;
+  --accent-rgb-ce: 2, 132, 199;
+
   /* Derived accent surfaces */
   --accent-cs-bg: #EFF6FF;
   --accent-ai-bg: #F5F3FF;

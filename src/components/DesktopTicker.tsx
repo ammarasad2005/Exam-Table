@@ -200,44 +200,43 @@ export function DesktopTicker({ allTimetableEntries, userConfig, bundles }: Desk
       </div>
 
       {status && (
-        <div className="mt-6 flex flex-col gap-3">
+        <div className="mt-10 flex flex-col gap-4">
           <div className="flex items-center gap-3">
-            <span className="font-mono text-[10px] uppercase tracking-[0.12em] text-[var(--color-text-tertiary)] font-medium">
+            <span className="font-mono text-[11px] uppercase tracking-[0.2em] text-[var(--color-text-tertiary)] font-bold">
               {status.type === 'ongoing' ? 'Ongoing Class' : 'Next Up'}
             </span>
             {isConflict && (
-              <span className="flex items-center gap-1 px-2 py-0.5 rounded-full bg-red-500/5 text-red-500/70 border border-red-500/10 font-mono text-[9px] font-bold uppercase tracking-widest animate-pulse">
-                <ShieldAlert size={10} />
-                Conflict
+              <span className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-red-500/10 text-red-500 font-mono text-[10px] font-bold uppercase tracking-widest animate-pulse border border-red-500/20">
+                <ShieldAlert size={12} />
+                Critical Conflict
               </span>
             )}
           </div>
 
           <div className="flex flex-col gap-1.5">
-            {status.classes.map((cls: OngoingClass | UpcomingClass, idx: number) => {
+            {status.classes.map((cls, idx) => {
               const accentColor = `var(--accent-${cls.department.toLowerCase()})`;
               const label = status.type === 'ongoing' 
-                ? `${formatDuration((cls as OngoingClass).remaining)} rem.` 
-                : `in ${formatDuration((cls as UpcomingClass).until)}`;
+                ? `${formatDuration((cls as OngoingClass).remaining)} left` 
+                : `starts in ${formatDuration((cls as UpcomingClass).until)}`;
               
-              // Define common pill style based on department theme
               const pillStyle = {
-                borderColor: `rgba(var(--accent-rgb-${cls.department.toLowerCase()}), 0.3)`,
+                borderColor: `rgba(var(--accent-rgb-${cls.department.toLowerCase()}), 0.25)`,
                 color: accentColor,
-                backgroundColor: `rgba(var(--accent-rgb-${cls.department.toLowerCase()}), 0.05)`
+                backgroundColor: `rgba(var(--accent-rgb-${cls.department.toLowerCase()}), 0.08)`
               };
 
               return (
-                <div key={idx} className="flex flex-wrap gap-1">
-                  <div className="h-6 px-2.5 flex items-center justify-center rounded border text-[9px] font-bold shadow-sm" style={pillStyle}>
+                <div key={idx} className="grid grid-cols-3 gap-2 w-full max-w-xl">
+                  <div className="h-12 px-4 flex items-center justify-center rounded-md border font-mono text-sm font-bold shadow-sm whitespace-nowrap" style={pillStyle}>
                     {cls.room}
                   </div>
                   
-                  <div className="h-6 px-2.5 flex items-center justify-center rounded border text-[9px] font-bold shadow-sm" style={pillStyle}>
+                  <div className="h-12 px-4 flex items-center justify-center rounded-md border font-mono text-sm font-bold shadow-sm truncate text-center" style={pillStyle}>
                     {cls.courseName}
                   </div>
 
-                  <div className="h-6 px-2.5 flex items-center justify-center rounded border text-[9px] font-bold shadow-sm" style={pillStyle}>
+                  <div className="h-12 px-4 flex items-center justify-center rounded-md border font-mono text-sm font-bold shadow-sm whitespace-nowrap" style={pillStyle}>
                     {label}
                   </div>
                 </div>
