@@ -8620,9 +8620,9 @@
                         "Tuesday": [
                             {
                                 "room": "C-Margala 1",
-                                "time": "11:30-02:15",
+                                "time": "11:30-01:00",
                                 "rescheduled": false,
-                                "exam": false
+                                "exam": true
                             }
                         ]
                     }
