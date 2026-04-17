@@ -84,18 +84,18 @@ The app supports both regular cohort flows and custom mixed-course flows for irr
 
 ## Data Pipeline
 
-The primary data source is `exam_schedule.xlsx`.
+There are two primary data pipelines in this project:
 
-At runtime/build setup, the parser:
-- Reads and normalizes exam sheet structure.
-- Expands merged cells.
-- Parses course/date/time/department fields.
-- Writes normalized output to:
-   - `public/data/schedule.json`
-   - `public/data/timetable.json` (or fallback structure if missing)
+1. Exam Finder pipeline
+- Source: `exam_schedule.xlsx`
+- Purpose: powers the Exam Schedule / Exam Finder feature only.
+- Output: normalized exam data in `public/data/schedule.json`
+- Parser entrypoint: `scripts/parse-excel.ts`
 
-Parser entrypoint:
-- `scripts/parse-excel.ts`
+2. Timetable + Free Rooms pipeline
+- Source: semester schedule fetched from Google Sheets.
+- Purpose: powers both the Timetable and Free Rooms features.
+- Output: normalized timetable data in `public/data/timetable.json`
 
 ## Routes
 
