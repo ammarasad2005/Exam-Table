@@ -1,85 +1,139 @@
-# 🗓️ FAST Exam Schedule Engine
+# FAST ISB Schedule Platform
 
-A modern, fast, and elegant web application designed to help students at FSC (Fast School of Computing) navigate their exam schedules with ease. Say goodbye to messy Excel sheets and hello to a clean, searchable, and exportable timeline.
+A unified student scheduling platform for FAST ISB with three major tools in one website:
 
----
+- Exam schedule viewer
+- Weekly class timetable viewer
+- Free room finder
 
-## 🚀 Quick Start
-1. **Visit the website** at [fast-nuces-exams.vercel.app](https://fast-nuces-exams.vercel.app).
-2. **Select your Batch** (e.g., 2023) and **Department** (e.g., CS).
-3. **Browse your exams** in a beautiful, chronological list.
+The app supports both regular cohort flows and custom mixed-course flows for irregular students.
 
----
+## What Is Included
 
-## ✨ Key Features
+### 1. Exams
+- Filter by batch, school, and department.
+- Search by course code or course name.
+- Grouped timeline view by date.
+- Exam detail drawer (mobile + desktop optimized).
+- Export current results to `.ics`, `.xlsx`, and `.csv`.
 
-### 🔍 Smart Search & Filtering
-Instantly find your exams by course name or code. No more scrolling through giant grids.
+### 2. Timetable
+- Filter by batch, department, and section.
+- List view and visual grid view.
+- Detect overlapping class conflicts.
+- Toggle repeat courses on/off.
+- Export current timetable to `.ics`, `.xlsx`, and `.csv`.
 
-### 🛠️ Custom Course Builder (For Irregular Students)
-Fail a course? Taking an inter-batch elective? We've got you covered. Toggle **"Custom Courses"** to mix and match courses from different batches and departments into a single unified schedule.
+### 3. Free Rooms
+- Check empty rooms for a selected day + slot.
+- See full-week availability map.
+- Distinguishes:
+   - Fully vacant rooms
+   - Partially vacant rooms (at least 30 free minutes in a slot)
 
-### 📤 Powerful Exports
-Take your schedule with you:
-*   **Excel (.xlsx):** A beautifully formatted table (modeled after professional templates) with headers and gridlines.
-*   **Calendar (.ics):** Import your entire schedule into Google Calendar, Apple Calendar, or Outlook in one click. Exams appear as "All-Day" events with the exact time slot in the description.
-*   **CSV:** Standard raw data for personal use.
+### 4. Custom Workflows
+- Custom Exams: add mixed rows from different batches/departments and build a merged exam list.
+- Custom Timetable: build class sets from mixed rows and save reusable named bundles.
+- Local persistence using browser storage for saved preferences and custom bundles.
 
-### 🌓 Dark Mode
-A premium, glassmorphism-inspired design that's easy on the eyes, whether you're studying at noon or midnight.
+## Screenshots
 
----
-
-## 📸 Screenshots
-
-### Home / Configuration Page
-<p align="left">
-  <img src="Screenshots/configuration_page_desktop.png" alt="Configuration Page Desktop" width="65%" style="border-radius: 8px;">
-  &nbsp;
-  <img src="Screenshots/configuration_page_mobile.png" alt="Configuration Page Mobile" width="22%" style="border-radius: 8px;">
+### Home / Configuration
+<p>
+   <img src="Screenshots/configuration_page_desktop.png" alt="Configuration page on desktop" width="68%" />
+   <img src="Screenshots/configuration_page_mobile.png" alt="Configuration page on mobile" width="28%" />
 </p>
 
-### Schedule Results Page
-<p align="left">
-  <img src="Screenshots/schedule_page_desktop.png" alt="Schedule Page Desktop" width="65%" style="border-radius: 8px;">
-  &nbsp;
-  <img src="Screenshots/schedule_page_mobile.png" alt="Schedule Page Mobile" width="22%" style="border-radius: 8px;">
+### Exam Schedule
+<p>
+   <img src="Screenshots/schedule_detail_desktop.png" alt="Exam schedule detail mode on desktop" width="68%" />
+   <img src="Screenshots/schedule_detail_mobile.png" alt="Exam schedule detail mode on mobile" width="28%" />
 </p>
 
----
+### Timetable
+<p>
+   <img src="Screenshots/timetable_detail_desktop.png" alt="Timetable detail mode on desktop" width="68%" />
+   <img src="Screenshots/timetable_detail_mobile.png" alt="Timetable detail mode on mobile" width="28%" />
+</p>
 
-## 🛠️ How it Works (For Developers)
+### Custom Exams
+<p>
+   <img src="Screenshots/custom_exams_page_desktop.png" alt="Custom exams page on desktop" width="68%" />
+   <img src="Screenshots/custom_exams_page_mobile.png" alt="Custom exams page on mobile" width="28%" />
+</p>
 
-### 📊 Data Pipeline
-The website's "Source of Truth" is `exam_schedule.xlsx`. 
-- **Automatic Parsing:** We've built a custom Positional Parser (`scripts/parse-excel.ts`) that reads the complex Excel grid and converts it into a clean JSON format.
-- **Pre-build Sync:** Every time you run the site, the parser ensures the website's data matches the Excel file exactly.
+### Custom Timetable
+<p>
+   <img src="Screenshots/custom_timetable_page_desktop.png" alt="Custom timetable page on desktop" width="68%" />
+   <img src="Screenshots/custom_timetable_page_mobile.png" alt="Custom timetable page on mobile" width="28%" />
+</p>
 
-### 💻 Technology Stack
-*   **Frontend:** Next.js 14 (App Router), TypeScript, Tailwind CSS.
-*   **Logic:** Custom Date & Time parsing for high accuracy.
-*   **Exports:** `exceljs` for beautiful spreadsheets and custom `.ics` generation.
+### Free Rooms
+<p>
+   <img src="Screenshots/rooms_detail_desktop.png" alt="Free rooms detail mode on desktop" width="68%" />
+   <img src="Screenshots/rooms_detail_mobile.png" alt="Free rooms detail mode on mobile" width="28%" />
+</p>
 
----
+## Tech Stack
 
-## 📥 Local Installation
+- Next.js 14 (App Router)
+- React 18 + TypeScript
+- Tailwind CSS
+- `xlsx` for Excel parsing
+- `exceljs` for export generation
 
-1. **Clone the repository:**
-   ```bash
-   git clone https://github.com/ammarasad2005/Exam-Table.git
-   cd Exam-Table
-   ```
-2. **Install dependencies:**
-   ```bash
-   npm install
-   ```
-3. **Run the development server:**
-   ```bash
-   npm run dev
-   ```
-4. **Open [http://localhost:3000](http://localhost:3000)** in your browser.
+## Data Pipeline
 
----
+There are two primary data pipelines in this project:
 
-## 📝 License
-Built for the students of FAST-NUCES. Use it, share it, and ace those exams! 🎓
+1. Exam Finder pipeline
+- Source: `exam_schedule.xlsx`
+- Purpose: powers the Exam Schedule / Exam Finder feature only.
+- Output: normalized exam data in `public/data/schedule.json`
+- Parser entrypoint: `scripts/parse-excel.ts`
+
+2. Timetable + Free Rooms pipeline
+- Source: semester schedule fetched from Google Sheets.
+- Purpose: powers both the Timetable and Free Rooms features.
+- Output: normalized timetable data in `public/data/timetable.json`
+
+## Routes
+
+- `/` -> setup/configuration home
+- `/schedule` -> exam results
+- `/custom` -> custom exam builder
+- `/timetable` -> timetable results
+- `/timetable/custom` -> custom timetable builder + bundles
+- `/rooms` -> free room finder
+- `/api/schedule` -> filtered exam JSON API
+
+## Local Development
+
+1. Install dependencies:
+```bash
+npm install
+```
+
+2. Start development server:
+```bash
+npm run dev
+```
+
+3. Open:
+```text
+http://localhost:3000
+```
+
+## Available Scripts
+
+- `npm run dev` -> runs parser, then starts Next.js dev server
+- `npm run build` -> production build
+- `npm run start` -> start production server
+- `npm run type-check` -> TypeScript checks
+- `npm run lint` -> Next.js linting
+
+## Notes
+
+- This project is built for FAST ISB students and schedule planning workflows.
+- Screenshot files are stored in `Screenshots/` and can be re-captured any time from the running app.
+- Screenshot automation script: `scripts/capture-screenshots.js`
