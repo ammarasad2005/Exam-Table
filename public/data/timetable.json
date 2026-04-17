@@ -352,6 +352,14 @@
                         ]
                     },
                     "J": {
+                        "Monday": [
+                            {
+                                "room": "C-308",
+                                "time": "03:00-04:45",
+                                "rescheduled": true,
+                                "exam": false
+                            }
+                        ],
                         "Tuesday": [
                             {
                                 "room": "C-302",
