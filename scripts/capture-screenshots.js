@@ -13,22 +13,6 @@ async function openExamDetail(page) {
   await page.locator('.exam-card').first().click();
 }
 
-async function switchTimetableToGrid(page, mobile) {
-  if (mobile) {
-    await page.locator('#mobile-view-grid').click();
-  } else {
-    await page.locator('#view-grid').click();
-  }
-}
-
-async function switchTimetableToList(page, mobile) {
-  if (mobile) {
-    await page.locator('#mobile-view-list').click();
-  } else {
-    await page.locator('#view-list').click();
-  }
-}
-
 async function openTimetableDetail(page) {
   await page.locator('.timetable-card').first().click();
 }
@@ -37,10 +21,6 @@ async function showRoomSpecificResults(page) {
   await page.selectOption('#day-select', { index: 1 });
   await page.selectOption('#slot-select', { index: 1 });
   await page.getByRole('button', { name: 'Find Free Rooms' }).click();
-}
-
-async function showRoomCalendar(page) {
-  await page.getByRole('button', { name: 'Generate Full Calendar View' }).click();
 }
 
 async function openRoomDetail(page) {
@@ -71,17 +51,11 @@ async function runCaptureSet(mobile) {
 
   // Exams
   await page.goto(`${BASE_URL}/schedule?${EXAM_QUERY}`, { waitUntil: 'networkidle' });
-  await waitAndCapture(page, `schedule_page_${suffix}`);
-
   await openExamDetail(page);
   await waitAndCapture(page, `schedule_detail_${suffix}`);
 
   // Timetable (non-2022 only)
   await page.goto(`${BASE_URL}/timetable?${TIMETABLE_QUERY}`, { waitUntil: 'networkidle' });
-  await switchTimetableToGrid(page, mobile);
-  await waitAndCapture(page, `timetable_grid_${suffix}`);
-
-  await switchTimetableToList(page, mobile);
   await openTimetableDetail(page);
   await waitAndCapture(page, `timetable_detail_${suffix}`);
 
@@ -95,15 +69,8 @@ async function runCaptureSet(mobile) {
 
   // Rooms
   await page.goto(`${BASE_URL}/rooms`, { waitUntil: 'networkidle' });
-  // Rooms specific results
+  // Rooms configured + detail mode
   await showRoomSpecificResults(page);
-  await waitAndCapture(page, `rooms_specific_${suffix}`);
-
-  // Rooms calendar mode
-  await showRoomCalendar(page);
-  await waitAndCapture(page, `rooms_calendar_${suffix}`);
-
-  // Rooms detail mode
   await openRoomDetail(page);
   await waitAndCapture(page, `rooms_detail_${suffix}`);
 

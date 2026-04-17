@@ -36,78 +36,43 @@ The app supports both regular cohort flows and custom mixed-course flows for irr
 - Custom Timetable: build class sets from mixed rows and save reusable named bundles.
 - Local persistence using browser storage for saved preferences and custom bundles.
 
-## Latest Screenshots
-
-The following screenshots were freshly captured from the current UI.
-
-- Result screenshots avoid batch `2022`.
-- Screens are viewport-cropped (up to the bottom nav area), not full-page long captures.
+## Screenshots
 
 ### Home / Configuration
-Desktop:
-![Configuration page on desktop](Screenshots/configuration_page_desktop.png)
-
-Mobile:
-<img src="Screenshots/configuration_page_mobile.png" alt="Configuration page on mobile" width="280" />
+<p>
+   <img src="Screenshots/configuration_page_desktop.png" alt="Configuration page on desktop" width="68%" />
+   <img src="Screenshots/configuration_page_mobile.png" alt="Configuration page on mobile" width="28%" />
+</p>
 
 ### Exam Schedule
-Desktop:
-![Schedule results on desktop](Screenshots/schedule_page_desktop.png)
-
-Mobile:
-<img src="Screenshots/schedule_page_mobile.png" alt="Schedule results on mobile" width="280" />
-
-Detail Mode (Desktop):
-![Schedule detail panel on desktop](Screenshots/schedule_detail_desktop.png)
-
-Detail Mode (Mobile):
-<img src="Screenshots/schedule_detail_mobile.png" alt="Schedule detail sheet on mobile" width="280" />
+<p>
+   <img src="Screenshots/schedule_detail_desktop.png" alt="Exam schedule detail mode on desktop" width="68%" />
+   <img src="Screenshots/schedule_detail_mobile.png" alt="Exam schedule detail mode on mobile" width="28%" />
+</p>
 
 ### Timetable
-Grid Mode (Desktop):
-![Timetable grid mode on desktop](Screenshots/timetable_grid_desktop.png)
-
-Grid Mode (Mobile):
-<img src="Screenshots/timetable_grid_mobile.png" alt="Timetable grid mode on mobile" width="280" />
-
-Detail Mode (Desktop):
-![Timetable detail panel on desktop](Screenshots/timetable_detail_desktop.png)
-
-Detail Mode (Mobile):
-<img src="Screenshots/timetable_detail_mobile.png" alt="Timetable detail sheet on mobile" width="280" />
+<p>
+   <img src="Screenshots/timetable_detail_desktop.png" alt="Timetable detail mode on desktop" width="68%" />
+   <img src="Screenshots/timetable_detail_mobile.png" alt="Timetable detail mode on mobile" width="28%" />
+</p>
 
 ### Custom Exams
-Desktop:
-![Custom exams page on desktop](Screenshots/custom_exams_page_desktop.png)
-
-Mobile:
-<img src="Screenshots/custom_exams_page_mobile.png" alt="Custom exams page on mobile" width="280" />
+<p>
+   <img src="Screenshots/custom_exams_page_desktop.png" alt="Custom exams page on desktop" width="68%" />
+   <img src="Screenshots/custom_exams_page_mobile.png" alt="Custom exams page on mobile" width="28%" />
+</p>
 
 ### Custom Timetable
-Desktop:
-![Custom timetable page on desktop](Screenshots/custom_timetable_page_desktop.png)
-
-Mobile:
-<img src="Screenshots/custom_timetable_page_mobile.png" alt="Custom timetable page on mobile" width="280" />
+<p>
+   <img src="Screenshots/custom_timetable_page_desktop.png" alt="Custom timetable page on desktop" width="68%" />
+   <img src="Screenshots/custom_timetable_page_mobile.png" alt="Custom timetable page on mobile" width="28%" />
+</p>
 
 ### Free Rooms
-Specific Slot Results (Desktop):
-![Free rooms specific results on desktop](Screenshots/rooms_specific_desktop.png)
-
-Specific Slot Results (Mobile):
-<img src="Screenshots/rooms_specific_mobile.png" alt="Free rooms specific results on mobile" width="280" />
-
-Calendar Mode (Desktop):
-![Free rooms weekly calendar mode on desktop](Screenshots/rooms_calendar_desktop.png)
-
-Calendar Mode (Mobile):
-<img src="Screenshots/rooms_calendar_mobile.png" alt="Free rooms weekly calendar mode on mobile" width="280" />
-
-Detail Mode (Desktop):
-![Free rooms detail panel on desktop](Screenshots/rooms_detail_desktop.png)
-
-Detail Mode (Mobile):
-<img src="Screenshots/rooms_detail_mobile.png" alt="Free rooms detail sheet on mobile" width="280" />
+<p>
+   <img src="Screenshots/rooms_detail_desktop.png" alt="Free rooms detail mode on desktop" width="68%" />
+   <img src="Screenshots/rooms_detail_mobile.png" alt="Free rooms detail mode on mobile" width="28%" />
+</p>
 
 ## Tech Stack
 
