@@ -555,7 +555,7 @@ export default function SetupPage() {
         </header>
 
         {/* Subheader: Feature Selector */}
-        <div className="flex flex-col gap-2 mb-8 mt-2">
+        <div className="flex flex-col gap-2 mb-8 mt-3">
           <div role="group" aria-label="Select feature" className="flex items-center gap-1 bg-[var(--color-bg-subtle)] rounded-lg p-1">
             {(['timetable', 'exams', 'rooms'] as Feature[]).map(f => (
               <button
