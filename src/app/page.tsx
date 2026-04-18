@@ -536,7 +536,7 @@ export default function SetupPage() {
       ================================================================ */}
       <main className="md:hidden min-h-dvh flex flex-col px-5 pt-safe-top pb-safe-bottom max-w-lg mx-auto">
 
-        <header className="flex items-center justify-between h-14 flex-shrink-0">
+        <header className="flex items-center justify-between h-[3.75rem] flex-shrink-0 glass-header-laser px-5 -mx-5">
           <div className="flex items-center">
             <img
               src="/logo/logo.png"
@@ -554,11 +554,8 @@ export default function SetupPage() {
           </div>
         </header>
 
-        {/* Separator line */}
-        <div className="h-px bg-[var(--color-border)] mb-4" />
-
         {/* Subheader: Feature Selector */}
-        <div className="flex flex-col gap-2 mb-8">
+        <div className="flex flex-col gap-2 mb-8 mt-2">
           <div role="group" aria-label="Select feature" className="flex items-center gap-1 bg-[var(--color-bg-subtle)] rounded-lg p-1">
             {(['timetable', 'exams', 'rooms'] as Feature[]).map(f => (
               <button
@@ -621,8 +618,8 @@ export default function SetupPage() {
 
         {/* Full-width header */}
         <header
-          className="flex items-center justify-between px-10 h-14 flex-shrink-0 border-b border-[var(--color-border)]"
-          style={{ boxShadow: 'var(--shadow-header)', position: 'relative', zIndex: 1 }}
+          className="flex items-center justify-between px-10 h-[3.75rem] flex-shrink-0 glass-header-laser"
+          style={{ boxShadow: 'var(--shadow-header)', position: 'relative', zIndex: 50 }}
         >
           {/* Logo */}
           <div className="flex items-center">
