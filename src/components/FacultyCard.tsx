@@ -7,10 +7,11 @@ import { DEPT_LABELS, DEPT_ACCENT, getFacultyRank } from '@/lib/faculty';
 interface Props {
   member: FacultyMember & { deptKey: DeptFileKey };
   priority?: boolean;   // true → eager load (above fold); false → lazy
+  viewMode?: 'grid' | 'list';
   onClick: () => void;
 }
 
-export function FacultyCard({ member, priority = false, onClick }: Props) {
+export function FacultyCard({ member, priority = false, viewMode = 'grid', onClick }: Props) {
   const accent = DEPT_ACCENT[member.deptKey];
   const accentColor = `var(--accent-${accent})`;
   const accentBg = `var(--accent-${accent}-bg)`;
@@ -27,16 +28,69 @@ export function FacultyCard({ member, priority = false, onClick }: Props) {
 
   const isLeadership = getFacultyRank(member.status) <= 2;
 
+  const baseStyle = { 
+    boxShadow: isLeadership ? `0 0 0 1px ${accentColor}, var(--shadow-card), var(--border-inset)` : 'var(--shadow-card), var(--border-inset)',
+    borderColor: isLeadership ? accentColor : 'var(--color-border)'
+  };
+  const hoverBoxShadow = isLeadership ? `0 0 0 1px ${accentColor}, var(--shadow-raised), var(--border-inset)` : 'var(--shadow-raised), var(--border-inset)';
+  const outBoxShadow = isLeadership ? `0 0 0 1px ${accentColor}, var(--shadow-card), var(--border-inset)` : 'var(--shadow-card), var(--border-inset)';
+
+  if (viewMode === 'list') {
+    return (
+      <button
+        onClick={onClick}
+        className={`w-full text-left bg-[var(--color-bg-raised)] border rounded-xl overflow-hidden flex items-center p-3 gap-4 transition-all duration-150 focus-visible:outline-none focus-visible:ring-2 active:scale-[0.98] group`}
+        style={baseStyle}
+        onMouseOver={e => (e.currentTarget.style.boxShadow = hoverBoxShadow)}
+        onMouseOut={e => (e.currentTarget.style.boxShadow = outBoxShadow)}
+      >
+        <div className="relative w-14 h-14 rounded-full bg-[var(--color-bg-subtle)] overflow-hidden shrink-0 ring-2 ring-[var(--color-bg)]">
+          {!imgError ? (
+            <img
+              src={member.image_url}
+              alt={member.name}
+              className="w-full h-full object-cover object-top group-hover:scale-105 transition-transform duration-300"
+              loading={priority ? 'eager' : 'lazy'}
+              decoding="async"
+              onError={() => setImgError(true)}
+            />
+          ) : (
+            <div className="w-full h-full flex items-center justify-center font-display text-xl font-bold" style={{ backgroundColor: accentBg, color: accentColor }}>
+              {initials}
+            </div>
+          )}
+        </div>
+
+        <div className="flex flex-col flex-1 min-w-0 py-0.5">
+          <div className="flex items-start justify-between gap-2">
+            <h3 className="font-display text-[15px] leading-tight text-[var(--color-text-primary)] truncate flex items-center gap-1.5">
+              <span className="truncate">{member.name}</span>
+              {isLeadership && (
+                <span className="shrink-0 font-mono text-[8px] uppercase tracking-wider font-bold px-1.5 py-0.5 rounded-full" style={{ backgroundColor: accentBg, color: accentColor }}>
+                  HOD
+                </span>
+              )}
+            </h3>
+            <span className="shrink-0 font-mono text-[9px] font-bold px-1.5 py-0.5 rounded-md" style={{ backgroundColor: accentBg, color: accentColor }}>{member.deptKey}</span>
+          </div>
+          <p className="font-body text-[11px] text-[var(--color-text-secondary)] leading-snug truncate mt-0.5">{member.status}</p>
+          <div className="mt-1.5 flex items-center gap-1.5 min-w-0">
+            <MapPin size={10} className="text-[var(--color-text-tertiary)] shrink-0" />
+            <span className="font-mono text-[10px] text-[var(--color-text-tertiary)] truncate">{member.office_room || 'N/A'}</span>
+          </div>
+        </div>
+      </button>
+    );
+  }
+
+  // DEFAULT GRID MODE
   return (
     <button
       onClick={onClick}
       className={`w-full text-left bg-[var(--color-bg-raised)] border rounded-xl overflow-hidden flex flex-col transition-all duration-150 focus-visible:outline-none focus-visible:ring-2 active:scale-[0.98] group`}
-      style={{ 
-        boxShadow: isLeadership ? `0 0 0 1px ${accentColor}, var(--shadow-card), var(--border-inset)` : 'var(--shadow-card), var(--border-inset)',
-        borderColor: isLeadership ? accentColor : 'var(--color-border)'
-      }}
-      onMouseOver={e => (e.currentTarget.style.boxShadow = isLeadership ? `0 0 0 1px ${accentColor}, var(--shadow-raised), var(--border-inset)` : 'var(--shadow-raised), var(--border-inset)')}
-      onMouseOut={e => (e.currentTarget.style.boxShadow = isLeadership ? `0 0 0 1px ${accentColor}, var(--shadow-card), var(--border-inset)` : 'var(--shadow-card), var(--border-inset)')}
+      style={baseStyle}
+      onMouseOver={e => (e.currentTarget.style.boxShadow = hoverBoxShadow)}
+      onMouseOut={e => (e.currentTarget.style.boxShadow = outBoxShadow)}
     >
       {/* Photo area */}
       <div className="relative w-full aspect-[4/3] bg-[var(--color-bg-subtle)] overflow-hidden">
@@ -87,9 +141,9 @@ export function FacultyCard({ member, priority = false, onClick }: Props) {
         <h3 className="font-display text-lg leading-tight text-[var(--color-text-primary)] line-clamp-2 flex items-start gap-1.5">
           <span className="line-clamp-2">{member.name}</span>
           {isLeadership && (
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" className="shrink-0 translate-y-[2px]" style={{ color: accentColor }} aria-label="Head of Department">
-              <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
-            </svg>
+            <span className="shrink-0 font-mono text-[9px] uppercase tracking-wider font-bold px-1.5 py-0.5 rounded-full mt-0.5" style={{ backgroundColor: accentBg, color: accentColor }}>
+              HOD
+            </span>
           )}
         </h3>
 

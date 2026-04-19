@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { ThemeToggle } from '@/components/ThemeToggle';
+import { LayoutGrid, List } from 'lucide-react';
 import { FacultyCard } from '@/components/FacultyCard';
 import { FacultyDetail } from '@/components/FacultyDetail';
 import {
@@ -33,6 +34,7 @@ export default function FacultyPage() {
   const [activeDept, setActiveDept] = useState<ActiveDept>('ALL');
   const [page, setPage]             = useState(1);
   const [selected, setSelected]     = useState<(FacultyMember & { deptKey: DeptFileKey }) | null>(null);
+  const [viewMode, setViewMode]     = useState<'grid' | 'list'>('list');
 
   // ── Read URL parameter on mount ──────────────────────────────────────────
   useEffect(() => {
@@ -253,13 +255,34 @@ export default function FacultyPage() {
           {/* Results header — scroll anchor */}
           <div ref={gridRef} className="flex items-center gap-3 mb-5">
             <div className="h-px flex-1 bg-[var(--color-border)]" />
-            <span className="font-mono text-[10px] uppercase tracking-widest text-[var(--color-text-tertiary)]">
+            <span className="font-mono text-[10px] uppercase tracking-widest text-[var(--color-text-tertiary)] hidden sm:inline-block">
               {filtered.length} result{filtered.length !== 1 ? 's' : ''}
               {activeDept !== 'ALL' ? ` · ${activeDept}` : ''}
               {query ? ` · "${query}"` : ''}
               {totalPages > 1 ? ` · page ${page}/${totalPages}` : ''}
             </span>
+            <span className="font-mono text-[10px] uppercase tracking-widest text-[var(--color-text-tertiary)] sm:hidden">
+              {filtered.length} result{filtered.length !== 1 ? 's' : ''}
+            </span>
             <div className="h-px flex-1 bg-[var(--color-border)]" />
+            
+            {/* View Mode Toggle */}
+            <div className="flex bg-[var(--color-bg-raised)] rounded-lg p-1 border border-[var(--color-border)] shrink-0 md:hidden">
+               <button 
+                 onClick={() => setViewMode('grid')} 
+                 className={`p-1.5 rounded-md transition-colors ${viewMode === 'grid' ? 'bg-[var(--color-text-primary)] text-[var(--color-bg)]' : 'text-[var(--color-text-secondary)] hover:bg-[var(--color-bg-subtle)]'}`}
+                 aria-label="Grid view"
+               >
+                 <LayoutGrid size={14} strokeWidth={2.5} />
+               </button>
+               <button 
+                 onClick={() => setViewMode('list')} 
+                 className={`p-1.5 rounded-md transition-colors ${viewMode === 'list' ? 'bg-[var(--color-text-primary)] text-[var(--color-bg)]' : 'text-[var(--color-text-secondary)] hover:bg-[var(--color-bg-subtle)]'}`}
+                 aria-label="List view"
+               >
+                 <List size={14} strokeWidth={2.5} />
+               </button>
+            </div>
           </div>
 
           {/* Faculty grid */}
@@ -277,14 +300,20 @@ export default function FacultyPage() {
               </button>
             </div>
           ) : (
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+            <div className={
+              viewMode === 'grid' 
+                ? "flex overflow-x-auto snap-x snap-mandatory gap-4 pb-6 px-4 -mx-4 scrollbar-none md:grid md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 md:overflow-visible md:snap-none md:px-0 md:mx-0"
+                : "flex flex-col gap-3 md:grid md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4"
+            }>
               {pageMembers.map((member, i) => (
-                <FacultyCard
-                  key={`${member.deptKey}-${(page - 1) * PAGE_SIZE + i}`}
-                  member={member}
-                  priority={i < 8}          /* first 8 cards load eagerly */
-                  onClick={() => setSelected(member)}
-                />
+                <div key={`${member.deptKey}-${(page - 1) * PAGE_SIZE + i}`} className={viewMode === 'grid' ? "w-[85vw] shrink-0 snap-center md:w-auto md:shrink" : "w-full"}>
+                  <FacultyCard
+                    member={member}
+                    priority={i < 8}          /* first 8 cards load eagerly */
+                    viewMode={viewMode}
+                    onClick={() => setSelected(member)}
+                  />
+                </div>
               ))}
             </div>
           )}
