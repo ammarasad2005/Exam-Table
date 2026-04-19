@@ -13,10 +13,11 @@ import {
   DEPT_ACCENT,
   type FacultyMember,
   type DeptFileKey,
+  type RawFacultyDepartment,
 } from '@/lib/faculty';
 
 // eslint-disable-next-line
-const rawFacultyData: Record<string, FacultyMember[]> = require('../../../../public/data/faculty/faculty_data.json');
+const rawFacultyData: RawFacultyDepartment[] = require('../../../public/data/faculty/faculty_data.json');
 
 const ALL_MEMBERS = flattenFaculty(rawFacultyData);
 

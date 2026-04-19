@@ -61,7 +61,7 @@ export function FacultyCard({ member, onClick }: Props) {
         </div>
 
         {/* LinkedIn badge — top-left, only if available */}
-        {member.linkedin && (
+        {member.linkedin_profile && (
           <div className="absolute top-3 left-3">
             <span className="w-6 h-6 flex items-center justify-center rounded-md bg-[#0A66C2] text-white">
               <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor">
@@ -91,7 +91,7 @@ export function FacultyCard({ member, onClick }: Props) {
             <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" className="text-[var(--color-text-tertiary)] shrink-0">
               <path d="M3 21h18M9 21V5a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2v16"/><path d="M10 10h.01"/>
             </svg>
-            <span className="font-mono text-[10px] text-[var(--color-text-tertiary)] truncate">{member.office_number}</span>
+            <span className="font-mono text-[10px] text-[var(--color-text-tertiary)] truncate">{member.office_room || 'N/A'}</span>
           </div>
         </div>
       </div>

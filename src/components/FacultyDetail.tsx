@@ -124,7 +124,7 @@ export function FacultyDetail({ member, onClose }: Props) {
             </svg>
             <div className="min-w-0">
               <p className="font-mono text-[10px] uppercase tracking-widest text-[var(--color-text-tertiary)]">Office</p>
-              <p className="font-mono text-sm font-medium text-[var(--color-text-primary)]">{member.office_number}</p>
+              <p className="font-mono text-sm font-medium text-[var(--color-text-primary)]">{member.office_room || 'N/A'}</p>
             </div>
           </div>
 
@@ -143,9 +143,9 @@ export function FacultyDetail({ member, onClose }: Props) {
           </a>
 
           {/* LinkedIn — only if not null */}
-          {member.linkedin && (
+          {member.linkedin_profile && (
             <a
-              href={member.linkedin}
+              href={member.linkedin_profile}
               target="_blank"
               rel="noopener noreferrer"
               className="flex items-center gap-3 px-4 py-3 rounded-xl bg-[var(--color-bg-subtle)] hover:bg-[var(--color-bg)] transition-colors group"
