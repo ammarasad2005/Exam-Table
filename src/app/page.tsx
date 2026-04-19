@@ -23,7 +23,7 @@ const allTimetableEntries = flattenTimetable(timetableRaw);
 const timetableBatches: string[] = [...new Set<string>(allTimetableEntries.map(e => e.batch))].sort().reverse();
 
 type Mode = 'default' | 'custom';
-type Feature = 'exams' | 'timetable' | 'rooms';
+type Feature = 'exams' | 'timetable' | 'rooms' | 'faculty';
 
 // FSC-only departments for the timetable (from the Python data)
 const TIMETABLE_DEPTS = ['CS', 'AI', 'DS', 'CY', 'SE'];
@@ -44,6 +44,8 @@ const HERO_TEXTS: Record<Feature, string> = {
     'Select your batch, department and section. Your weekly class timetable — every slot, room, and timing — instantly.',
   rooms:
     'Find empty classrooms and labs across campus — for any day and time slot — sourced from the live Spring 2026 timetable.',
+  faculty:
+    'Browse all FAST Islamabad faculty members. Search by name, title, or office. Filter by department — AI & Data Science, CS, SE, and more.',
 };
 
 export default function SetupPage() {
@@ -143,9 +145,18 @@ export default function SetupPage() {
     router.push('/rooms');
   }
 
+  // Faculty feature — navigate immediately
+  function handleFacultyClick() {
+    router.push('/faculty');
+  }
+
   function handleSubmit() {
     if (feature === 'rooms') {
       handleRoomsClick();
+      return;
+    }
+    if (feature === 'faculty') {
+      handleFacultyClick();
       return;
     }
     if (feature === 'exams') {
@@ -519,11 +530,13 @@ export default function SetupPage() {
       >
         {feature === 'rooms'
           ? 'Find Free Rooms →'
-          : feature === 'timetable'
-            ? 'View my timetable →'
-            : mode === 'default'
-              ? 'View my exams →'
-              : 'Enter course codes →'}
+          : feature === 'faculty'
+            ? 'Browse Faculty →'
+            : feature === 'timetable'
+              ? 'View my timetable →'
+              : mode === 'default'
+                ? 'View my exams →'
+                : 'Enter course codes →'}
       </button>
     </div>
   );
@@ -557,12 +570,12 @@ export default function SetupPage() {
         {/* Subheader: Feature Selector */}
         <div className="flex flex-col gap-2 mb-8 mt-3">
           <div role="group" aria-label="Select feature" className="flex items-center gap-1 bg-[var(--color-bg-subtle)] rounded-lg p-1">
-            {(['timetable', 'exams', 'rooms'] as Feature[]).map(f => (
+            {(['timetable', 'exams', 'rooms', 'faculty'] as Feature[]).map(f => (
               <button
                 key={f}
                 onClick={() => { setFeature(f); setMode('default'); }}
                 aria-pressed={feature === f}
-                className="flex-1 h-10 rounded-md font-body text-xs font-bold transition-all duration-150 active:scale-95"
+                className="flex-1 h-10 rounded-md font-body text-[11px] font-bold transition-all duration-150 active:scale-95"
                 style={feature === f ? {
                   backgroundColor: 'var(--color-text-primary)',
                   color: 'var(--color-bg)',
@@ -570,7 +583,7 @@ export default function SetupPage() {
                   color: 'var(--color-text-secondary)',
                 }}
               >
-                {f === 'exams' ? 'Exams' : f === 'timetable' ? 'Timetable' : 'Rooms'}
+                {f === 'exams' ? 'Exams' : f === 'timetable' ? 'Timetable' : f === 'rooms' ? 'Rooms' : 'Faculty'}
               </button>
             ))}
           </div>
@@ -582,6 +595,8 @@ export default function SetupPage() {
               <>Find your<br /><span className="italic">exam schedule.</span></>
             ) : feature === 'timetable' ? (
               <>Find your<br /><span className="italic">class timetable.</span></>
+            ) : feature === 'faculty' ? (
+              <>Meet your<br /><span className="italic">faculty.</span></>
             ) : (
               <>Find a<br /><span className="italic">free room.</span></>
             )}
@@ -590,7 +605,14 @@ export default function SetupPage() {
         </div>
 
         <div className="flex flex-col gap-6 flex-1">
-          {feature === 'rooms' ? roomsCard : (
+          {feature === 'rooms' ? roomsCard
+          : feature === 'faculty' ? (
+            <div className="flex flex-col gap-3">
+              <p className="font-body text-sm text-[var(--color-text-secondary)] leading-relaxed">
+                213 faculty members across 9 departments. Search by name, filter by department, view office, email, and LinkedIn.
+              </p>
+            </div>
+          ) : (
             <>
               {modeSelector}
               {userConfigView ? userConfigView : (
@@ -632,7 +654,7 @@ export default function SetupPage() {
 
           {/* Feature toggle — prominent centre nav */}
           <div role="group" aria-label="Select feature" className="flex items-center gap-1 bg-[var(--color-bg-subtle)] rounded-lg p-1">
-            {(['timetable', 'exams', 'rooms'] as Feature[]).map(f => (
+            {(['timetable', 'exams', 'rooms', 'faculty'] as Feature[]).map(f => (
               <button
                 key={f}
                 id={`desktop-feature-${f}`}
@@ -646,7 +668,7 @@ export default function SetupPage() {
                   color: 'var(--color-text-secondary)',
                 }}
               >
-                {f === 'exams' ? 'Exam Finder' : f === 'timetable' ? 'Timetable' : 'Free Rooms'}
+                {f === 'exams' ? 'Exam Finder' : f === 'timetable' ? 'Timetable' : f === 'rooms' ? 'Free Rooms' : 'Faculty'}
               </button>
             ))}
           </div>
@@ -681,7 +703,7 @@ export default function SetupPage() {
             <div className="relative z-10">
               <p className="font-mono text-xs uppercase tracking-widest text-[var(--color-text-tertiary)] mb-6">
                 FAST Isb Schedule —{' '}
-                {feature === 'exams' ? 'Exam Portal' : feature === 'timetable' ? 'Timetable Portal' : 'Room Finder'}
+                {feature === 'exams' ? 'Exam Portal' : feature === 'timetable' ? 'Timetable Portal' : feature === 'faculty' ? 'Faculty Directory' : 'Room Finder'}
               </p>
               <h1
                 className="font-display leading-[1.1] text-[var(--color-text-primary)]"
@@ -691,6 +713,8 @@ export default function SetupPage() {
                   <>Find your<br /><span className="italic">exam schedule.</span></>
                 ) : feature === 'timetable' ? (
                   <>Find your<br /><span className="italic">class timetable.</span></>
+                ) : feature === 'faculty' ? (
+                  <>Meet your<br /><span className="italic">faculty.</span></>
                 ) : (
                   <>Find a<br /><span className="italic">free room.</span></>
                 )}
@@ -740,6 +764,17 @@ export default function SetupPage() {
               >
                 {feature === 'rooms' ? (
                   roomsCard
+                ) : feature === 'faculty' ? (
+                  <div className="flex flex-col gap-4">
+                    <p className="font-body text-sm text-[var(--color-text-secondary)] leading-relaxed">
+                      Browse all 213 FAST Islamabad faculty members. Search by name or title, filter by department, and view office, email, and LinkedIn details.
+                    </p>
+                    <div className="flex flex-wrap gap-2">
+                      {['AIDS', 'CS', 'SE', 'CY', 'MS', 'AF', 'SH', 'EE', 'CE'].map(d => (
+                        <span key={d} className="font-mono text-[10px] font-bold px-2 py-0.5 rounded bg-[var(--color-bg-subtle)] text-[var(--color-text-secondary)]">{d}</span>
+                      ))}
+                    </div>
+                  </div>
                 ) : (
                   <>
                     {modeSelector}
@@ -763,7 +798,9 @@ export default function SetupPage() {
                   ? 'Data updates for all examinations.'
                   : feature === 'timetable'
                     ? 'Time-Table for Spring 2026.'
-                    : 'Room availability from Spring 2026 timetable.'}
+                    : feature === 'faculty'
+                      ? '213 faculty members across 9 departments.'
+                      : 'Room availability from Spring 2026 timetable.'}
               </p>
 
             </div>

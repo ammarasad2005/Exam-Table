@@ -9,6 +9,7 @@ export function Navbar() {
   const links = [
     { name: 'Home', path: '/' },
     { name: 'Rooms', path: '/rooms' },
+    { name: 'Faculty', path: '/faculty' },
     { name: 'Custom', path: '/timetable/custom' },
   ];
 
