@@ -1,0 +1,83 @@
+[
+  {
+    "name": "Dr. Muhammad Tariq",
+    "status": "Professor, HoS (FSE) & HoD (Computer Engineering)",
+    "email": "tariq.khan@nu.edu.pk",
+    "office_number": null,
+    "linkedin": "https://www.linkedin.com/in/muhammad-tariq-9173931a",
+    "profile_url": "https://isb.nu.edu.pk/Profile.php?id=4848",
+    "image_url": "https://isb.nu.edu.pk/assets/img/person/4848_.webp"
+  },
+  {
+    "name": "Mr. Shehzad Ahmad",
+    "status": "Assistant Professor",
+    "email": "shehzad.ahmad@nu.edu.pk",
+    "office_number": null,
+    "linkedin": null,
+    "profile_url": "https://isb.nu.edu.pk/Profile.php?id=3844",
+    "image_url": "https://isb.nu.edu.pk/assets/img/person/3844_.webp"
+  },
+  {
+    "name": "Dr. Shahid Qureshi",
+    "status": "Assistant Professor",
+    "email": "shahid.qureshi@nu.edu.pk",
+    "office_number": null,
+    "linkedin": null,
+    "profile_url": "https://isb.nu.edu.pk/Profile.php?id=3730",
+    "image_url": "https://isb.nu.edu.pk/assets/img/person/3730_.webp"
+  },
+  {
+    "name": "Dr. M. Ibrar Khan",
+    "status": "Assistant Professor",
+    "email": "ibrar.khan@nu.edu.pk",
+    "office_number": null,
+    "linkedin": null,
+    "profile_url": "https://isb.nu.edu.pk/Profile.php?id=3990",
+    "image_url": "https://isb.nu.edu.pk/assets/img/person/3990_.webp"
+  },
+  {
+    "name": "Mr. Muhammad Hammad",
+    "status": "Lecturer",
+    "email": "muhammad.hammad@isb.nu.edu.pk",
+    "office_number": null,
+    "linkedin": null,
+    "profile_url": "https://isb.nu.edu.pk/Profile.php?id=7003",
+    "image_url": "https://isb.nu.edu.pk/assets/img/person/7003_.webp"
+  },
+  {
+    "name": "Ms. Sana Saleh",
+    "status": "Lecturer",
+    "email": "sana.saleh@nu.edu.pk",
+    "office_number": null,
+    "linkedin": null,
+    "profile_url": "https://isb.nu.edu.pk/Profile.php?id=5055",
+    "image_url": "https://isb.nu.edu.pk/assets/img/person/5055_.webp"
+  },
+  {
+    "name": "Ms. Maryam Zafar",
+    "status": "Lab Engineer",
+    "email": "maryam.zafar@isb.nu.edu.pk",
+    "office_number": null,
+    "linkedin": null,
+    "profile_url": "https://isb.nu.edu.pk/Profile.php?id=6911",
+    "image_url": "https://isb.nu.edu.pk/assets/img/person/6911_.webp"
+  },
+  {
+    "name": "Mr. Fasih Ahmad Janjua",
+    "status": "Lab Engineer",
+    "email": "fasih.ahmad@isb.nu.edu.pk",
+    "office_number": null,
+    "linkedin": null,
+    "profile_url": "https://isb.nu.edu.pk/Profile.php?id=6899",
+    "image_url": "https://isb.nu.edu.pk/assets/img/person/6899_.webp"
+  },
+  {
+    "name": "Ms. Tooba",
+    "status": "Lab Engineer",
+    "email": "N/A",
+    "office_number": null,
+    "linkedin": null,
+    "profile_url": "https://isb.nu.edu.pk/Profile.php?id=7088",
+    "image_url": "https://isb.nu.edu.pk/assets/img/person/7088_.webp"
+  }
+]
