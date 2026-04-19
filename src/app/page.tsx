@@ -14,7 +14,7 @@ const allTimetableEntries: TimetableEntry[] = flattenTimetable(timetableRaw);
 
 // ── Typing animation text ────────────────────────────────────────────────────
 const INTRO_TEXT =
-  'A unified utility layer for FAST Islamabad. Timetables, exam schedules, room availability, faculty, and the full semester calendar — all in one place.';
+  'A unified utility layer for FAST Isb students. Timetables, exam schedules, room availability, faculty info, and the full semester calendar — all in one place.';
 
 // ── Feature card definitions ─────────────────────────────────────────────────
 const FEATURES = [
@@ -67,7 +67,7 @@ const FEATURES = [
   },
   {
     id: 'faculty',
-    title: 'Faculty',
+    title: 'Faculty Info',
     description: 'Find emails, office numbers, and other details for all faculty members.',
     icon: (
       <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
@@ -165,7 +165,7 @@ export default function RootPage() {
           {/* Intro typing text */}
           <div className="mb-8">
             <p className="font-mono text-[10px] uppercase tracking-widest text-[var(--color-text-tertiary)] mb-3">
-              FAST ISB Schedule
+              FAST NUCES, ISB
             </p>
             <h1 className="font-display text-3xl leading-tight text-[var(--color-text-primary)] mb-4">
               Your campus,<br /><span className="italic">at a glance.</span>
@@ -271,7 +271,7 @@ export default function RootPage() {
             {/* Headline block */}
             <div className="relative z-10">
               <p className="font-mono text-xs uppercase tracking-widest text-[var(--color-text-tertiary)] mb-6">
-                FAST ISB Schedule — Unified Portal
+                FAST NUCES, ISB — Unified Portal
               </p>
               <h1
                 className="font-display leading-[1.1] text-[var(--color-text-primary)]"

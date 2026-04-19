@@ -682,7 +682,7 @@ export default function SetupPage() {
                   color: 'var(--color-text-secondary)',
                 }}
               >
-                {f === 'exams' ? 'Exam Finder' : f === 'timetable' ? 'Timetable' : f === 'rooms' ? 'Free Rooms' : 'Faculty'}
+                {f === 'exams' ? 'Exam Finder' : f === 'timetable' ? 'Timetable' : f === 'rooms' ? 'Free Rooms' : 'Faculty Info'}
               </button>
             ))}
           </div>
