@@ -683,10 +683,10 @@ export default function SetupPage() {
             {/* Dot-grid texture */}
             <div
               aria-hidden="true"
-              className="absolute inset-0 pointer-events-none opacity-[0.2]"
+              className="absolute inset-0 pointer-events-none opacity-[0.35]"
               style={{
-                backgroundImage: 'radial-gradient(circle, var(--color-text-secondary) 1.2px, transparent 1.2px)',
-                backgroundSize: '24px 24px',
+                backgroundImage: 'radial-gradient(circle, var(--color-text-secondary) 1.4px, transparent 1.4px)',
+                backgroundSize: '18px 18px',
               }}
             />
 
