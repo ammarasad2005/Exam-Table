@@ -1,6 +1,7 @@
 'use client';
 import { useMemo, useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
+import { Header } from '@/components/Header';
 import { ThemeToggle } from '@/components/ThemeToggle';
 import {
   buildRoomCalendar,
@@ -389,31 +390,32 @@ export default function RoomsPage() {
     <div className="min-h-dvh flex flex-col bg-[var(--color-bg)]">
 
       {/* ── Sticky Header ───────────────────────────────────────────────── */}
-      <header className="sticky top-0 z-20 bg-[var(--color-bg)]/90 backdrop-blur-sm border-b border-[var(--color-border)] h-14 flex items-center px-4 gap-3"
-        style={{ boxShadow: 'var(--shadow-header)' }}>
-        <button
-          onClick={() => router.push('/')}
-          aria-label="Back to home"
-          className="w-8 h-8 flex items-center justify-center text-[var(--color-text-secondary)] hover:bg-[var(--color-bg-subtle)] rounded-full transition-colors focus-visible:outline-none focus-visible:ring-2"
-        >
-          <svg width="18" height="18" viewBox="0 0 18 18" fill="none" aria-hidden="true">
-            <path d="M11 4l-5 5 5 5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-          </svg>
-        </button>
+      {/* ── Sticky Header ───────────────────────────────────────────────── */}
+      <Header>
+        <div className="flex flex-1 items-center gap-2 md:gap-3 w-full max-w-full min-w-0">
+          <button
+            onClick={() => router.push('/')}
+            aria-label="Back to home"
+            className="w-8 h-8 flex items-center justify-center text-[var(--color-text-secondary)] hover:bg-[var(--color-bg-subtle)] rounded-full transition-colors focus-visible:outline-none focus-visible:ring-2 shrink-0 -ml-2"
+          >
+            <svg width="18" height="18" viewBox="0 0 18 18" fill="none" aria-hidden="true">
+              <path d="M11 4l-5 5 5 5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+            </svg>
+          </button>
 
-        <div className="flex-1 flex items-center gap-2 min-w-0">
-          {/* Map Pin icon */}
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-[var(--color-text-tertiary)]">
-            <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z" />
-            <circle cx="12" cy="10" r="3" />
-          </svg>
-          <span className="font-mono text-sm font-medium text-[var(--color-text-primary)] truncate">
-            Free Rooms Finder
-          </span>
+          <div className="flex-1 flex items-center gap-2 min-w-0">
+            {/* Map Pin icon */}
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="hidden sm:block text-[var(--color-text-tertiary)] shrink-0">
+              <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z" />
+              <circle cx="12" cy="10" r="3" />
+            </svg>
+            <span className="font-mono text-sm font-medium text-[var(--color-text-primary)] truncate">
+              Free Rooms Finder
+            </span>
+          </div>
         </div>
+      </Header>
 
-        <ThemeToggle />
-      </header>
 
       {/* ── Body ────────────────────────────────────────────────────────── */}
       <div className="flex flex-1">

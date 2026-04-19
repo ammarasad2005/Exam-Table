@@ -145,14 +145,14 @@ export function FloatingMenu() {
               width: 52,
               height: 52,
               borderRadius: '50%',
-              border: isActive ? '2px solid rgba(255,255,255,0.9)' : '1.5px solid rgba(255,255,255,0.2)',
+              border: isActive ? '1px solid var(--color-text-primary)' : '1px solid var(--color-border)',
               background: isActive
-                ? 'rgba(255,255,255,0.22)'
-                : 'rgba(30,30,30,0.75)',
+                ? 'var(--color-text-primary)'
+                : 'var(--color-bg-raised)',
               backdropFilter: 'blur(16px)',
               WebkitBackdropFilter: 'blur(16px)',
-              boxShadow: '0 4px 20px rgba(0,0,0,0.35)',
-              color: isActive ? '#fff' : 'rgba(255,255,255,0.7)',
+              boxShadow: 'var(--shadow-float)',
+              color: isActive ? 'var(--color-bg)' : 'var(--color-text-secondary)',
               transform: open
                 ? `translate(${x}px, ${y}px) scale(1)`
                 : 'translate(0,0) scale(0.4)',
@@ -190,15 +190,13 @@ export function FloatingMenu() {
           width: 52,
           height: 52,
           background: open
-            ? 'rgba(255,255,255,0.18)'
-            : 'rgba(20,20,20,0.82)',
-          border: '1.5px solid rgba(255,255,255,0.25)',
-          backdropFilter: 'blur(20px)',
-          WebkitBackdropFilter: 'blur(20px)',
-          boxShadow: open
-            ? '0 8px 32px rgba(0,0,0,0.5), 0 0 0 4px rgba(255,255,255,0.08)'
-            : '0 4px 24px rgba(0,0,0,0.45)',
-          transition: 'box-shadow 200ms ease, background 200ms ease',
+            ? 'var(--color-bg-subtle)'
+            : 'color-mix(in srgb, var(--color-text-primary) 70%, transparent)',
+          border: open ? '1px solid var(--color-border)' : '1px solid color-mix(in srgb, var(--color-border) 40%, transparent)',
+          backdropFilter: open ? 'none' : 'blur(16px)',
+          WebkitBackdropFilter: open ? 'none' : 'blur(16px)',
+          boxShadow: 'var(--shadow-float)',
+          transition: 'box-shadow 200ms ease, background 200ms ease, color 200ms ease',
         }}
       >
         {/* Animated hamburger → X */}
@@ -207,9 +205,9 @@ export function FloatingMenu() {
           style={{
             display: 'grid',
             placeItems: 'center',
-            color: 'rgba(255,255,255,0.92)',
+            color: open ? 'var(--color-text-primary)' : 'var(--color-bg)',
             transition: 'transform 300ms cubic-bezier(0.34,1.56,0.64,1)',
-            transform: open ? 'rotate(45deg)' : 'rotate(0deg)',
+            transform: open ? 'rotate(90deg)' : 'rotate(0deg)',
           }}
         >
           {open ? (

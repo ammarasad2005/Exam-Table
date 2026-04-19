@@ -15,6 +15,7 @@ import { TimetableExportButton } from '@/components/TimetableExportButton';
 import { SearchBar } from '@/components/SearchBar';
 import { EmptyState } from '@/components/EmptyState';
 import { ThemeToggle } from '@/components/ThemeToggle';
+import { Header } from '@/components/Header';
 import type { TimetableEntry, RawTimetableJSON } from '@/lib/types';
 import { DAYS_ORDER } from '@/lib/types';
 
@@ -57,32 +58,32 @@ function TimetablePageInner() {
     <div className="min-h-dvh flex flex-col">
 
       {/* ── Sticky header ─────────────────────────────────────────────────── */}
-      <header className="sticky top-0 z-20 bg-[var(--color-bg)]/90 backdrop-blur-sm border-b border-[var(--color-border)] h-14 flex items-center px-4 gap-3">
-        <button
-          onClick={() => router.back()}
-          aria-label="Back"
-          className="w-8 h-8 flex items-center justify-center text-[var(--color-text-secondary)] hover:bg-[var(--color-bg-subtle)] rounded-full transition-colors focus-visible:outline-none focus-visible:ring-2"
-        >
-          <svg width="18" height="18" viewBox="0 0 18 18" fill="none" aria-hidden="true">
-            <path d="M11 4l-5 5 5 5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
-          </svg>
-        </button>
-
-        <div className="flex-1 flex items-center gap-2 min-w-0">
-          <span
-            className="font-mono text-sm font-medium px-2 py-0.5 rounded shrink-0"
-            style={{ backgroundColor: accentBg, color: accentColor }}
+      <Header rightActions={<TimetableExportButton entries={filtered} />}>
+        <div className="flex flex-1 items-center gap-2 md:gap-3 w-full max-w-full min-w-0">
+          <button
+            onClick={() => router.back()}
+            aria-label="Back"
+            className="w-8 h-8 flex items-center justify-center text-[var(--color-text-secondary)] hover:bg-[var(--color-bg-subtle)] rounded-full transition-colors focus-visible:outline-none focus-visible:ring-2 shrink-0 -ml-2"
           >
-            {dept}
-          </span>
-          <span className="font-mono text-sm text-[var(--color-text-secondary)] truncate">
-            Batch {batch} · Section {section}
-          </span>
-        </div>
+            <svg width="18" height="18" viewBox="0 0 18 18" fill="none" aria-hidden="true">
+              <path d="M11 4l-5 5 5 5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+            </svg>
+          </button>
 
-        <ThemeToggle />
-        <TimetableExportButton entries={filtered} />
-      </header>
+          <div className="flex-1 flex items-center gap-2 min-w-0">
+            <span
+              className="font-mono text-sm font-medium px-2 py-0.5 rounded shrink-0"
+              style={{ backgroundColor: accentBg, color: accentColor }}
+            >
+              {dept}
+            </span>
+            <span className="font-mono text-sm text-[var(--color-text-secondary)] truncate">
+              Batch {batch} · Section {section}
+            </span>
+          </div>
+        </div>
+      </Header>
+
 
       {/* ── Main content ──────────────────────────────────────────────────── */}
       <div className="flex flex-1 md:gap-0">

@@ -6,6 +6,8 @@ import { ExamDetail } from '@/components/ExamDetail';
 import { SearchBar } from '@/components/SearchBar';
 import { ExportButton } from '@/components/ExportButton';
 import { EmptyState } from '@/components/EmptyState';
+import { Header } from '@/components/Header';
+
 import { ThemeToggle } from '@/components/ThemeToggle';
 import { groupByDay } from '@/lib/filter';
 import { sortByChronological } from '@/lib/dates';
@@ -134,22 +136,22 @@ function CustomPageInner() {
     <div className="min-h-dvh flex flex-col">
 
       {/* ── Sticky header ── */}
-      <header className="sticky top-0 z-20 bg-[var(--color-bg)]/90 backdrop-blur-sm border-b border-[var(--color-border)] h-14 flex items-center px-4 gap-3">
-        <button
-          onClick={() => router.push('/')}
-          aria-label="Back to setup"
-          className="w-8 h-8 flex items-center justify-center text-[var(--color-text-secondary)] hover:bg-[var(--color-bg-subtle)] rounded-full transition-colors focus-visible:outline-none focus-visible:ring-2"
-        >
-          <svg width="18" height="18" viewBox="0 0 18 18" fill="none" aria-hidden="true">
-            <path d="M11 4l-5 5 5 5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
-          </svg>
-        </button>
-        <div className="flex-1 min-w-0">
-          <span className="font-mono text-sm font-medium text-[var(--color-text-primary)]">Custom Courses</span>
+      <Header rightActions={saved && <ExportButton entries={filtered} />}>
+        <div className="flex flex-1 items-center gap-2 md:gap-3 w-full max-w-full min-w-0">
+          <button
+            onClick={() => router.push('/')}
+            aria-label="Back to setup"
+            className="w-8 h-8 flex items-center justify-center text-[var(--color-text-secondary)] hover:bg-[var(--color-bg-subtle)] rounded-full transition-colors focus-visible:outline-none focus-visible:ring-2 shrink-0 -ml-2"
+          >
+            <svg width="18" height="18" viewBox="0 0 18 18" fill="none" aria-hidden="true">
+              <path d="M11 4l-5 5 5 5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+            </svg>
+          </button>
+          <div className="flex-1 min-w-0">
+            <span className="font-mono text-sm font-medium text-[var(--color-text-primary)]">Custom Courses</span>
+          </div>
         </div>
-        <ThemeToggle />
-        {saved && <ExportButton entries={filtered} />}
-      </header>
+      </Header>
 
       <div className="flex flex-1 md:gap-0">
 
