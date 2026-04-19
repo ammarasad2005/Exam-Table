@@ -7,7 +7,7 @@ export function Navbar() {
   const pathname = usePathname();
 
   const links = [
-    { name: 'Home', path: '/' },
+    { name: 'Home', path: '/home' },
     { name: 'Rooms', path: '/rooms' },
     { name: 'Faculty', path: '/faculty' },
     { name: 'Custom', path: '/timetable/custom' },

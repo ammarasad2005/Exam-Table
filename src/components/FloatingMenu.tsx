@@ -46,7 +46,7 @@ function CustomIcon() {
 
 // ── Data ───────────────────────────────────────────────────────────────────
 const MENU_ITEMS = [
-  { name: 'Home',    path: '/',                 icon: <HomeIcon />,    label: 'Go to Home'    },
+  { name: 'Home',    path: '/home',             icon: <HomeIcon />,    label: 'Go to Home'    },
   { name: 'Rooms',   path: '/rooms',             icon: <RoomsIcon />,   label: 'View Rooms'    },
   { name: 'Faculty', path: '/faculty',           icon: <FacultyIcon />, label: 'View Faculty'  },
   { name: 'Custom',  path: '/timetable/custom',  icon: <CustomIcon />,  label: 'Custom Search' },
