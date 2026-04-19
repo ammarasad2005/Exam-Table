@@ -133,7 +133,7 @@ export default function FacultyPage() {
             <div className="flex flex-col gap-1">
               <button
                 onClick={() => handleDeptChange('ALL')}
-                className="flex items-center justify-between h-9 px-3 rounded-lg text-left transition-colors w-full"
+                className="flex items-center justify-between h-9 px-3 rounded-lg text-left transition-colors w-full hover:bg-[var(--color-text-primary)] hover:text-[var(--color-bg)]"
                 style={activeDept === 'ALL' ? {
                   backgroundColor: 'var(--color-text-primary)',
                   color: 'var(--color-bg)',
@@ -150,14 +150,19 @@ export default function FacultyPage() {
                   <button
                     key={key}
                     onClick={() => handleDeptChange(key)}
-                    className="flex items-center justify-between h-9 px-3 rounded-lg text-left transition-colors w-full"
-                    style={isActive ? {
-                      backgroundColor: `var(--accent-${accent}-bg)`,
-                      color: `var(--accent-${accent})`,
-                    } : { color: 'var(--color-text-secondary)' }}
+                    className="flex items-center justify-between h-9 px-3 rounded-lg text-left transition-colors w-full hover:bg-[var(--hover-bg)] hover:text-[var(--hover-color)] hover:ring-1 hover:ring-[var(--hover-color)] group"
+                    style={{
+                      '--hover-bg': `var(--accent-${accent}-bg)`,
+                      '--hover-color': `var(--accent-${accent})`,
+                      ...(isActive ? {
+                        backgroundColor: `var(--accent-${accent}-bg)`,
+                        color: `var(--accent-${accent})`,
+                        boxShadow: `0 0 0 1px var(--accent-${accent})`,
+                      } : { color: 'var(--color-text-secondary)' })
+                    } as any}
                   >
                     <span className="font-mono text-xs font-medium truncate">{key}</span>
-                    <span className="font-mono text-[10px] opacity-70">{totalByDept[key] ?? 0}</span>
+                    <span className="font-mono text-[10px] opacity-70 group-hover:opacity-100 transition-opacity">{totalByDept[key] ?? 0}</span>
                   </button>
                 );
               })}
@@ -206,7 +211,7 @@ export default function FacultyPage() {
           <div className="md:hidden flex gap-2 overflow-x-auto pb-3 mb-4 scrollbar-none -mx-4 px-4">
             <button
               onClick={() => handleDeptChange('ALL')}
-              className="shrink-0 h-8 px-4 rounded-full font-mono text-[11px] font-bold border transition-all"
+              className="shrink-0 h-8 px-4 rounded-full font-mono text-[11px] font-bold border transition-all hover:bg-[var(--color-text-primary)] hover:text-[var(--color-bg)] hover:border-[var(--color-text-primary)]"
               style={activeDept === 'ALL' ? {
                 backgroundColor: 'var(--color-text-primary)',
                 color: 'var(--color-bg)',
@@ -225,15 +230,19 @@ export default function FacultyPage() {
                 <button
                   key={key}
                   onClick={() => handleDeptChange(key)}
-                  className="shrink-0 h-8 px-4 rounded-full font-mono text-[11px] font-bold border transition-all"
-                  style={isActive ? {
-                    backgroundColor: `var(--accent-${accent}-bg)`,
-                    color: `var(--accent-${accent})`,
-                    borderColor: `var(--accent-${accent})`,
-                  } : {
-                    borderColor: 'var(--color-border-strong)',
-                    color: 'var(--color-text-secondary)',
-                  }}
+                  className="shrink-0 h-8 px-4 rounded-full font-mono text-[11px] font-bold border transition-all hover:bg-[var(--hover-bg)] hover:text-[var(--hover-color)] hover:border-[var(--hover-color)]"
+                  style={{
+                    '--hover-bg': `var(--accent-${accent}-bg)`,
+                    '--hover-color': `var(--accent-${accent})`,
+                    ...(isActive ? {
+                      backgroundColor: `var(--accent-${accent}-bg)`,
+                      color: `var(--accent-${accent})`,
+                      borderColor: `var(--accent-${accent})`,
+                    } : {
+                      borderColor: 'var(--color-border-strong)',
+                      color: 'var(--color-text-secondary)',
+                    })
+                  } as any}
                 >
                   {key}
                 </button>

@@ -8,6 +8,8 @@ import { flattenTimetable, getAvailableSections } from '@/lib/timetable-filter';
 import type { RawTimetableJSON, TimetableEntry } from '@/lib/types';
 import { AlertCircle, Terminal, ShieldAlert } from 'lucide-react';
 import { DesktopTicker } from '@/components/DesktopTicker';
+import { DEPT_ACCENT } from '@/lib/faculty';
+import type { DeptFileKey } from '@/lib/faculty';
 
 
 
@@ -612,15 +614,22 @@ export default function SetupPage() {
                 Explore the directory of FAST Islamabad faculty members across 9 departments. Find emails, office locations, and other details instantly.
               </p>
               <div className="grid grid-cols-3 sm:grid-cols-4 gap-2">
-                {['CS', 'AIDS', 'SE', 'CY', 'EE', 'CE', 'SH', 'AF', 'MS'].map(d => (
-                  <button 
-                    key={d}
-                    onClick={() => router.push(`/faculty?dept=${d}`)}
-                    className="flex items-center justify-center h-12 rounded-xl border border-[var(--color-border-strong)] bg-[var(--color-bg-subtle)] hover:bg-[var(--color-bg-raised)] transition-all active:scale-95"
-                  >
-                    <span className="font-mono text-xs font-bold text-[var(--color-text-secondary)]">{d}</span>
-                  </button>
-                ))}
+                {['CS', 'AIDS', 'SE', 'CY', 'EE', 'CE', 'SH', 'AF', 'MS'].map(d => {
+                  const accent = DEPT_ACCENT[d as DeptFileKey];
+                  return (
+                    <button 
+                      key={d}
+                      onClick={() => router.push(`/faculty?dept=${d}`)}
+                      className="flex items-center justify-center h-12 rounded-xl border border-[var(--color-border-strong)] bg-[var(--color-bg-subtle)] transition-all active:scale-95 hover:bg-[var(--hover-bg)] hover:text-[var(--hover-color)] hover:border-[var(--hover-color)]"
+                      style={{
+                        '--hover-bg': `var(--accent-${accent}-bg)`,
+                        '--hover-color': `var(--accent-${accent})`,
+                      } as React.CSSProperties}
+                    >
+                      <span className="font-mono text-xs font-bold text-[var(--color-text-secondary)] group-hover:text-inherit transition-colors">{d}</span>
+                    </button>
+                  );
+                })}
               </div>
             </div>
           ) : (
@@ -781,15 +790,22 @@ export default function SetupPage() {
                       Explore the directory of FAST Islamabad faculty members. Find emails, office locations, and other details instantly.
                     </p>
                     <div className="grid grid-cols-3 gap-3">
-                      {['CS', 'AIDS', 'SE', 'CY', 'EE', 'CE', 'SH', 'AF', 'MS'].map(d => (
-                        <button 
-                          key={d}
-                          onClick={() => router.push(`/faculty?dept=${d}`)}
-                          className="flex items-center justify-center h-14 rounded-xl border border-[var(--color-border-strong)] bg-[var(--color-bg-subtle)] hover:border-[var(--color-text-primary)] hover:bg-[var(--color-bg-raised)] hover:text-[var(--color-text-primary)] transition-all active:scale-95 group"
-                        >
-                          <span className="font-mono text-[13px] font-bold text-[var(--color-text-secondary)] group-hover:text-[var(--color-text-primary)] transition-colors">{d}</span>
-                        </button>
-                      ))}
+                      {['CS', 'AIDS', 'SE', 'CY', 'EE', 'CE', 'SH', 'AF', 'MS'].map(d => {
+                        const accent = DEPT_ACCENT[d as DeptFileKey];
+                        return (
+                          <button 
+                            key={d}
+                            onClick={() => router.push(`/faculty?dept=${d}`)}
+                            className="flex items-center justify-center h-14 rounded-xl border border-[var(--color-border-strong)] bg-[var(--color-bg-subtle)] transition-all active:scale-95 group hover:bg-[var(--hover-bg)] hover:border-[var(--hover-color)] hover:text-[var(--hover-color)]"
+                            style={{
+                              '--hover-bg': `var(--accent-${accent}-bg)`,
+                              '--hover-color': `var(--accent-${accent})`,
+                            } as React.CSSProperties}
+                          >
+                            <span className="font-mono text-[13px] font-bold text-[var(--color-text-secondary)] group-hover:text-inherit transition-colors">{d}</span>
+                          </button>
+                        );
+                      })}
                     </div>
                   </div>
                 ) : (
