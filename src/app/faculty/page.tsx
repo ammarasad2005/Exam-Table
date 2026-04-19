@@ -34,6 +34,17 @@ export default function FacultyPage() {
   const [page, setPage]             = useState(1);
   const [selected, setSelected]     = useState<(FacultyMember & { deptKey: DeptFileKey }) | null>(null);
 
+  // ── Read URL parameter on mount ──────────────────────────────────────────
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const params = new URLSearchParams(window.location.search);
+      const deptParam = params.get('dept');
+      if (deptParam && DEPT_ORDER.includes(deptParam as DeptFileKey)) {
+        setActiveDept(deptParam as DeptFileKey);
+      }
+    }
+  }, []);
+
   // ── Filtered list (all data always in memory, zero extra fetches) ──────────
   const filtered = useMemo(() => {
     const list = activeDept === 'ALL'

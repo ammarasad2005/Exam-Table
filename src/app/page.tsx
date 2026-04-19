@@ -225,7 +225,7 @@ export default function SetupPage() {
       : (batch === '-' || !dept || !section)
   );
 
-  const ctaDisabled = feature === 'rooms'
+  const ctaDisabled = (feature === 'rooms' || feature === 'faculty')
     ? false
     : feature === 'exams'
       ? examCtaDisabled
@@ -607,10 +607,21 @@ export default function SetupPage() {
         <div className="flex flex-col gap-6 flex-1">
           {feature === 'rooms' ? roomsCard
           : feature === 'faculty' ? (
-            <div className="flex flex-col gap-3">
+            <div className="flex flex-col gap-5">
               <p className="font-body text-sm text-[var(--color-text-secondary)] leading-relaxed">
-                213 faculty members across 9 departments. Search by name, filter by department, view office, email, and LinkedIn.
+                Explore the directory of 248 faculty members across 9 departments. Find office locations, contact details, and department heads instantly.
               </p>
+              <div className="grid grid-cols-3 sm:grid-cols-4 gap-2">
+                {['CS', 'AIDS', 'SE', 'CY', 'EE', 'CE', 'SH', 'AF', 'MS'].map(d => (
+                  <button 
+                    key={d}
+                    onClick={() => router.push(`/faculty?dept=${d}`)}
+                    className="flex items-center justify-center h-12 rounded-xl border border-[var(--color-border-strong)] bg-[var(--color-bg-subtle)] hover:bg-[var(--color-bg-raised)] transition-all active:scale-95"
+                  >
+                    <span className="font-mono text-xs font-bold text-[var(--color-text-secondary)]">{d}</span>
+                  </button>
+                ))}
+              </div>
             </div>
           ) : (
             <>
@@ -765,13 +776,19 @@ export default function SetupPage() {
                 {feature === 'rooms' ? (
                   roomsCard
                 ) : feature === 'faculty' ? (
-                  <div className="flex flex-col gap-4">
+                  <div className="flex flex-col gap-5">
                     <p className="font-body text-sm text-[var(--color-text-secondary)] leading-relaxed">
-                      Browse all 213 FAST Islamabad faculty members. Search by name or title, filter by department, and view office, email, and LinkedIn details.
+                      Explore the directory of 248 FAST Islamabad faculty members. Find office locations, contact details, and department heads instantly.
                     </p>
-                    <div className="flex flex-wrap gap-2">
-                      {['AIDS', 'CS', 'SE', 'CY', 'MS', 'AF', 'SH', 'EE', 'CE'].map(d => (
-                        <span key={d} className="font-mono text-[10px] font-bold px-2 py-0.5 rounded bg-[var(--color-bg-subtle)] text-[var(--color-text-secondary)]">{d}</span>
+                    <div className="grid grid-cols-3 gap-3">
+                      {['CS', 'AIDS', 'SE', 'CY', 'EE', 'CE', 'SH', 'AF', 'MS'].map(d => (
+                        <button 
+                          key={d}
+                          onClick={() => router.push(`/faculty?dept=${d}`)}
+                          className="flex items-center justify-center h-14 rounded-xl border border-[var(--color-border-strong)] bg-[var(--color-bg-subtle)] hover:border-[var(--color-text-primary)] hover:bg-[var(--color-bg-raised)] hover:text-[var(--color-text-primary)] transition-all active:scale-95 group"
+                        >
+                          <span className="font-mono text-[13px] font-bold text-[var(--color-text-secondary)] group-hover:text-[var(--color-text-primary)] transition-colors">{d}</span>
+                        </button>
                       ))}
                     </div>
                   </div>
