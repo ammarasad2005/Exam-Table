@@ -1,14 +1,16 @@
 'use client';
 import { useState } from 'react';
+import { MapPin } from 'lucide-react';
 import type { FacultyMember, DeptFileKey } from '@/lib/faculty';
 import { DEPT_LABELS, DEPT_ACCENT } from '@/lib/faculty';
 
 interface Props {
   member: FacultyMember & { deptKey: DeptFileKey };
+  priority?: boolean;   // true → eager load (above fold); false → lazy
   onClick: () => void;
 }
 
-export function FacultyCard({ member, onClick }: Props) {
+export function FacultyCard({ member, priority = false, onClick }: Props) {
   const accent = DEPT_ACCENT[member.deptKey];
   const accentColor = `var(--accent-${accent})`;
   const accentBg = `var(--accent-${accent}-bg)`;
@@ -39,6 +41,8 @@ export function FacultyCard({ member, onClick }: Props) {
             src={member.image_url}
             alt={member.name}
             className="w-full h-full object-cover object-top group-hover:scale-105 transition-transform duration-300"
+            loading={priority ? 'eager' : 'lazy'}
+            decoding="async"
             onError={() => setImgError(true)}
           />
         ) : (
@@ -88,9 +92,7 @@ export function FacultyCard({ member, onClick }: Props) {
         <div className="mt-auto pt-2 border-t border-[var(--color-border)] flex items-center gap-3">
           {/* Office */}
           <div className="flex items-center gap-1.5 min-w-0">
-            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" className="text-[var(--color-text-tertiary)] shrink-0">
-              <path d="M3 21h18M9 21V5a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2v16"/><path d="M10 10h.01"/>
-            </svg>
+            <MapPin size={12} className="text-[var(--color-text-tertiary)] shrink-0" />
             <span className="font-mono text-[10px] text-[var(--color-text-tertiary)] truncate">{member.office_room || 'N/A'}</span>
           </div>
         </div>

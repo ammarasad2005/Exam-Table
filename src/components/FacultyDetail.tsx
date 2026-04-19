@@ -1,5 +1,6 @@
 'use client';
 import { useEffect, useRef, useState } from 'react';
+import { MapPin } from 'lucide-react';
 import type { FacultyMember, DeptFileKey } from '@/lib/faculty';
 import { DEPT_LABELS, DEPT_ACCENT } from '@/lib/faculty';
 
@@ -119,9 +120,7 @@ export function FacultyDetail({ member, onClose }: Props) {
         <div className="px-6 py-5 flex flex-col gap-3">
           {/* Office */}
           <div className="flex items-center gap-3 px-4 py-3 rounded-xl bg-[var(--color-bg-subtle)]">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" className="text-[var(--color-text-tertiary)] shrink-0">
-              <path d="M3 21h18M9 21V5a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2v16"/><path d="M10 10h.01"/>
-            </svg>
+            <MapPin size={16} className="text-[var(--color-text-tertiary)] shrink-0" />
             <div className="min-w-0">
               <p className="font-mono text-[10px] uppercase tracking-widest text-[var(--color-text-tertiary)]">Office</p>
               <p className="font-mono text-sm font-medium text-[var(--color-text-primary)]">{member.office_room || 'N/A'}</p>

@@ -56,8 +56,8 @@ export const DEPT_KEY_FROM_GROUP: Record<string, DeptFileKey> = {
   'Department of Software Engineering': 'SE',
 };
 
-/** Ordered list of departments for the filter bar */
-export const DEPT_ORDER: DeptFileKey[] = ['AIDS', 'CS', 'SE', 'CY', 'EE', 'CE', 'MS', 'AF', 'SH'];
+/** Ordered list of departments for the filter bar and All Faculty list */
+export const DEPT_ORDER: DeptFileKey[] = ['CS', 'AIDS', 'SE', 'CY', 'EE', 'CE', 'SH', 'AF', 'MS'];
 
 // ─── Accent colours per dept ──────────────────────────────────────────────────
 // Using the same CSS variable naming convention as the rest of the app,
@@ -96,17 +96,27 @@ export function searchFaculty<T extends FacultyMember>(members: T[], query: stri
 
 /**
  * Given the grouped faculty_data.json array, returns a flat array
- * with each member tagged with its DeptFileKey.
+ * with each member tagged with its DeptFileKey, ordered by DEPT_ORDER.
  */
 export function flattenFaculty(
   data: RawFacultyDepartment[]
 ): Array<FacultyMember & { deptKey: DeptFileKey }> {
   const out: Array<FacultyMember & { deptKey: DeptFileKey }> = [];
-  for (const dept of data) {
-    const deptKey = DEPT_KEY_FROM_GROUP[dept.department];
-    if (!deptKey) continue;
-    for (const m of dept.faculty) {
-      out.push({ ...m, deptKey });
+  
+  // Create a map for easy lookup by DeptFileKey
+  const deptMap: Record<string, FacultyMember[]> = {};
+  for (const item of data) {
+    const key = DEPT_KEY_FROM_GROUP[item.department];
+    if (key) deptMap[key] = item.faculty;
+  }
+
+  // Flatten based on the requested DEPT_ORDER
+  for (const key of DEPT_ORDER) {
+    const faculty = deptMap[key];
+    if (faculty) {
+      for (const m of faculty) {
+        out.push({ ...m, deptKey: key });
+      }
     }
   }
   return out;
