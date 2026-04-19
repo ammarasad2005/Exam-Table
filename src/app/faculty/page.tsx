@@ -303,16 +303,28 @@ export default function FacultyPage() {
             <div className={
               viewMode === 'grid' 
                 ? "flex overflow-x-auto snap-x snap-mandatory gap-4 pb-6 px-4 -mx-4 scrollbar-none md:grid md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 md:overflow-visible md:snap-none md:px-0 md:mx-0"
-                : "flex flex-col gap-3 md:grid md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4"
+                : "flex flex-col gap-3 md:grid md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 md:gap-4"
             }>
               {pageMembers.map((member, i) => (
                 <div key={`${member.deptKey}-${(page - 1) * PAGE_SIZE + i}`} className={viewMode === 'grid' ? "w-[85vw] shrink-0 snap-center md:w-auto md:shrink" : "w-full"}>
-                  <FacultyCard
-                    member={member}
-                    priority={i < 8}          /* first 8 cards load eagerly */
-                    viewMode={viewMode}
-                    onClick={() => setSelected(member)}
-                  />
+                  {/* Mobile version follows toggle state */}
+                  <div className="md:hidden h-full">
+                    <FacultyCard
+                      member={member}
+                      priority={i < 8}
+                      viewMode={viewMode}
+                      onClick={() => setSelected(member)}
+                    />
+                  </div>
+                  {/* Desktop version is always grid */}
+                  <div className="hidden md:block h-full">
+                    <FacultyCard
+                      member={member}
+                      priority={i < 8}
+                      viewMode="grid"
+                      onClick={() => setSelected(member)}
+                    />
+                  </div>
                 </div>
               ))}
             </div>

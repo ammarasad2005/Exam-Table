@@ -39,7 +39,7 @@ export function FacultyCard({ member, priority = false, viewMode = 'grid', onCli
     return (
       <button
         onClick={onClick}
-        className={`w-full text-left bg-[var(--color-bg-raised)] border rounded-xl overflow-hidden flex items-center p-3 gap-4 transition-all duration-150 focus-visible:outline-none focus-visible:ring-2 active:scale-[0.98] group`}
+        className={`w-full h-full text-left bg-[var(--color-bg-raised)] border rounded-xl overflow-hidden flex items-center p-3 gap-4 transition-all duration-150 focus-visible:outline-none focus-visible:ring-2 active:scale-[0.98] group`}
         style={baseStyle}
         onMouseOver={e => (e.currentTarget.style.boxShadow = hoverBoxShadow)}
         onMouseOut={e => (e.currentTarget.style.boxShadow = outBoxShadow)}
@@ -87,7 +87,7 @@ export function FacultyCard({ member, priority = false, viewMode = 'grid', onCli
   return (
     <button
       onClick={onClick}
-      className={`w-full text-left bg-[var(--color-bg-raised)] border rounded-xl overflow-hidden flex flex-col transition-all duration-150 focus-visible:outline-none focus-visible:ring-2 active:scale-[0.98] group`}
+      className={`w-full h-full text-left bg-[var(--color-bg-raised)] border rounded-xl overflow-hidden flex flex-col transition-all duration-150 focus-visible:outline-none focus-visible:ring-2 active:scale-[0.98] group`}
       style={baseStyle}
       onMouseOver={e => (e.currentTarget.style.boxShadow = hoverBoxShadow)}
       onMouseOut={e => (e.currentTarget.style.boxShadow = outBoxShadow)}
