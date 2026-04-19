@@ -14,14 +14,14 @@ const allTimetableEntries: TimetableEntry[] = flattenTimetable(timetableRaw);
 
 // ── Typing animation text ────────────────────────────────────────────────────
 const INTRO_TEXT =
-  'A unified utility layer for FAST Islamabad. Timetables, exam schedules, room availability, and faculty — all in one place.';
+  'A unified utility layer for FAST Islamabad. Timetables, exam schedules, room availability, faculty, and the full semester calendar — all in one place.';
 
 // ── Feature card definitions ─────────────────────────────────────────────────
 const FEATURES = [
   {
     id: 'timetable',
     title: 'Timetable',
-    description: 'Your full weekly class schedule — every slot, room, and timing — instantly.',
+    description: 'Your full weekly class schedule — every course, room, and timing — instantly.',
     icon: (
       <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
         <rect x="3" y="4" width="18" height="18" rx="2" />
@@ -39,7 +39,7 @@ const FEATURES = [
   {
     id: 'exams',
     title: 'Exam Finder',
-    description: 'Every exam date, time, and venue for your batch and department.',
+    description: 'Every exam date and time for your batch and department.',
     icon: (
       <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
         <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
@@ -68,7 +68,7 @@ const FEATURES = [
   {
     id: 'faculty',
     title: 'Faculty',
-    description: 'Browse all FAST Islamabad faculty. Search by name, title, or department.',
+    description: 'Find emails, office numbers, and other details for all faculty members.',
     icon: (
       <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
         <circle cx="12" cy="7" r="4" />
@@ -81,7 +81,7 @@ const FEATURES = [
   {
     id: 'semester',
     title: 'Semester Schedule',
-    description: 'Full academic calendar — key dates, holidays, and deadlines.',
+    description: 'Full academic calendar — key dates, holidays, sessionals, and finals.',
     icon: (
       <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
         <circle cx="12" cy="12" r="10" />
@@ -89,7 +89,7 @@ const FEATURES = [
       </svg>
     ),
     accent: 'cy',
-    placeholder: true,
+    placeholder: false,
   },
 ] as const;
 
@@ -125,7 +125,7 @@ export default function RootPage() {
       if (stored) setUserConfig(JSON.parse(stored));
       const storedBundles = localStorage.getItem('fsc_custom_bundles');
       if (storedBundles) setBundles(JSON.parse(storedBundles));
-    } catch {}
+    } catch { }
   }, []);
 
   // Typing animation on mount
@@ -143,7 +143,11 @@ export default function RootPage() {
 
   function handleFeatureClick(id: string, placeholder: boolean) {
     if (placeholder) return;
-    router.push(`/home?feature=${id}`);
+    if (id === 'semester') {
+      router.push('/semester');
+    } else {
+      router.push(`/home?feature=${id}`);
+    }
   }
 
   return (
