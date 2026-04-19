@@ -14,9 +14,7 @@ export function Navbar() {
   ];
 
   return (
-    <nav className={`fixed bottom-6 left-1/2 -translate-x-1/2 z-50 p-1 bg-zinc-900/40 dark:bg-white/40 backdrop-blur-xl backdrop-saturate-150 shadow-float rounded-full flex items-center gap-1 border border-white/20 dark:border-black/10 ${
-      pathname === '/' ? 'hidden md:flex' : 'flex'
-    }`}>
+    <nav className={`hidden md:flex fixed bottom-6 left-1/2 -translate-x-1/2 z-50 p-1 bg-zinc-900/40 dark:bg-white/40 backdrop-blur-xl backdrop-saturate-150 shadow-float rounded-full items-center gap-1 border border-white/20 dark:border-black/10`}>
       {links.map(link => {
         const isActive = pathname === link.path;
         return (

@@ -4,6 +4,7 @@ import { DM_Sans, DM_Mono, Instrument_Serif, JetBrains_Mono } from 'next/font/go
 import '../styles/globals.css';
 import { ThemeProvider } from '@/lib/theme';
 import { Navbar } from '@/components/Navbar';
+import { FloatingMenu } from '@/components/FloatingMenu';
 import { Analytics } from '@vercel/analytics/next';
 
 const dmSans = DM_Sans({
@@ -66,6 +67,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <ThemeProvider>
           {children}
           <Navbar />
+          <FloatingMenu />
         </ThemeProvider>
         <Analytics />
       </body>
