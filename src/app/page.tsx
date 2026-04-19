@@ -609,7 +609,7 @@ export default function SetupPage() {
           : feature === 'faculty' ? (
             <div className="flex flex-col gap-5">
               <p className="font-body text-sm text-[var(--color-text-secondary)] leading-relaxed">
-                Explore the directory of 248 faculty members across 9 departments. Find office locations, contact details, and department heads instantly.
+                Explore the directory of FAST Islamabad faculty members across 9 departments. Find emails, office locations, and other details instantly.
               </p>
               <div className="grid grid-cols-3 sm:grid-cols-4 gap-2">
                 {['CS', 'AIDS', 'SE', 'CY', 'EE', 'CE', 'SH', 'AF', 'MS'].map(d => (
@@ -778,7 +778,7 @@ export default function SetupPage() {
                 ) : feature === 'faculty' ? (
                   <div className="flex flex-col gap-5">
                     <p className="font-body text-sm text-[var(--color-text-secondary)] leading-relaxed">
-                      Explore the directory of 248 FAST Islamabad faculty members. Find office locations, contact details, and department heads instantly.
+                      Explore the directory of FAST Islamabad faculty members. Find emails, office locations, and other details instantly.
                     </p>
                     <div className="grid grid-cols-3 gap-3">
                       {['CS', 'AIDS', 'SE', 'CY', 'EE', 'CE', 'SH', 'AF', 'MS'].map(d => (
@@ -816,7 +816,7 @@ export default function SetupPage() {
                   : feature === 'timetable'
                     ? 'Time-Table for Spring 2026.'
                     : feature === 'faculty'
-                      ? '213 faculty members across 9 departments.'
+                      ? 'Faculty members across 9 departments.'
                       : 'Room availability from Spring 2026 timetable.'}
               </p>
 
