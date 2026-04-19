@@ -2,7 +2,7 @@
 import { useState } from 'react';
 import { MapPin } from 'lucide-react';
 import type { FacultyMember, DeptFileKey } from '@/lib/faculty';
-import { DEPT_LABELS, DEPT_ACCENT } from '@/lib/faculty';
+import { DEPT_LABELS, DEPT_ACCENT, getFacultyRank } from '@/lib/faculty';
 
 interface Props {
   member: FacultyMember & { deptKey: DeptFileKey };
@@ -25,13 +25,18 @@ export function FacultyCard({ member, priority = false, onClick }: Props) {
     .map(w => w[0].toUpperCase())
     .join('');
 
+  const isLeadership = getFacultyRank(member.status) <= 2;
+
   return (
     <button
       onClick={onClick}
-      className="w-full text-left bg-[var(--color-bg-raised)] border border-[var(--color-border)] rounded-xl overflow-hidden flex flex-col transition-all duration-150 focus-visible:outline-none focus-visible:ring-2 active:scale-[0.98] group"
-      style={{ boxShadow: 'var(--shadow-card), var(--border-inset)' }}
-      onMouseOver={e => (e.currentTarget.style.boxShadow = 'var(--shadow-raised), var(--border-inset)')}
-      onMouseOut={e => (e.currentTarget.style.boxShadow = 'var(--shadow-card), var(--border-inset)')}
+      className={`w-full text-left bg-[var(--color-bg-raised)] border rounded-xl overflow-hidden flex flex-col transition-all duration-150 focus-visible:outline-none focus-visible:ring-2 active:scale-[0.98] group`}
+      style={{ 
+        boxShadow: isLeadership ? `0 0 0 1px ${accentColor}, var(--shadow-card), var(--border-inset)` : 'var(--shadow-card), var(--border-inset)',
+        borderColor: isLeadership ? accentColor : 'var(--color-border)'
+      }}
+      onMouseOver={e => (e.currentTarget.style.boxShadow = isLeadership ? `0 0 0 1px ${accentColor}, var(--shadow-raised), var(--border-inset)` : 'var(--shadow-raised), var(--border-inset)')}
+      onMouseOut={e => (e.currentTarget.style.boxShadow = isLeadership ? `0 0 0 1px ${accentColor}, var(--shadow-card), var(--border-inset)` : 'var(--shadow-card), var(--border-inset)')}
     >
       {/* Photo area */}
       <div className="relative w-full aspect-[4/3] bg-[var(--color-bg-subtle)] overflow-hidden">
@@ -79,8 +84,13 @@ export function FacultyCard({ member, priority = false, onClick }: Props) {
       {/* Card body */}
       <div className="flex flex-col gap-2 p-4 flex-1">
         {/* Name */}
-        <h3 className="font-display text-lg leading-tight text-[var(--color-text-primary)] line-clamp-2">
-          {member.name}
+        <h3 className="font-display text-lg leading-tight text-[var(--color-text-primary)] line-clamp-2 flex items-start gap-1.5">
+          <span className="line-clamp-2">{member.name}</span>
+          {isLeadership && (
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" className="shrink-0 translate-y-[2px]" style={{ color: accentColor }} aria-label="Head of Department">
+              <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
+            </svg>
+          )}
         </h3>
 
         {/* Status/title */}

@@ -79,6 +79,21 @@ export const DEPT_ACCENT: Record<DeptFileKey, string> = {
 /** Normalise a string for case-insensitive substring searching. */
 function norm(s?: string | null) { return (s || '').toLowerCase(); }
 
+/** Get the hierarchy rank of a faculty member based on their status. Lower rank = higher priority. */
+export function getFacultyRank(status: string): number {
+  const lowerStatus = status.toLowerCase();
+  
+  if (lowerStatus.includes('director') || lowerStatus.includes('dean')) return 1;
+  if (lowerStatus.includes('hod') || lowerStatus.includes('incharge') || lowerStatus.includes('hos') || lowerStatus.includes('head')) return 2;
+  if (lowerStatus.includes('professor') && !lowerStatus.includes('assistant') && !lowerStatus.includes('associate') && !lowerStatus.includes('adjunct')) return 3;
+  if (lowerStatus.includes('associate professor')) return 4;
+  if (lowerStatus.includes('assistant professor')) return 5;
+  if (lowerStatus.includes('lecturer')) return 6;
+  if (lowerStatus.includes('instructor') || lowerStatus.includes('lab engineer')) return 7;
+  
+  return 8; // Default fallback for any other roles
+}
+
 /**
  * Filter a flat array of FacultyMember by a free-text query.
  * Searches: name, status, email, office_room.
@@ -110,7 +125,7 @@ export function flattenFaculty(
     if (key) deptMap[key] = item.faculty;
   }
 
-  // Flatten based on the requested DEPT_ORDER
+  // Collect all members
   for (const key of DEPT_ORDER) {
     const faculty = deptMap[key];
     if (faculty) {
@@ -119,5 +134,19 @@ export function flattenFaculty(
       }
     }
   }
+
+  // Sort them
+  out.sort((a, b) => {
+    const rankA = getFacultyRank(a.status);
+    const rankB = getFacultyRank(b.status);
+    if (rankA !== rankB) {
+      return rankA - rankB; // Lower rank first (1 = Director, 2 = HoD, etc.)
+    }
+    // If same rank, order by DEPT_ORDER
+    const deptA = DEPT_ORDER.indexOf(a.deptKey);
+    const deptB = DEPT_ORDER.indexOf(b.deptKey);
+    return deptA - deptB;
+  });
+
   return out;
 }
