@@ -1,4 +1,5 @@
 'use client';
+import { useEffect, useRef, useState } from 'react';
 import type { TimetableEntry } from '@/lib/types';
 import { formatTimeRange } from '@/lib/timetable-filter';
 
@@ -8,17 +9,45 @@ interface Props {
   conflicting?: boolean;
   isRepeat?: boolean;
   onClick: () => void;
+  onRemove?: () => void;
+  onChangeSection?: (section: string) => void;
+  availableSections?: string[];
 }
 
-export function TimetableCard({ entry, dept, conflicting = false, isRepeat = false, onClick }: Props) {
+export function TimetableCard({
+  entry,
+  dept,
+  conflicting = false,
+  isRepeat = false,
+  onClick,
+  onRemove,
+  onChangeSection,
+  availableSections = [],
+}: Props) {
   const accentColor = `var(--accent-${dept.toLowerCase()})`;
   const accentBg    = `var(--accent-${dept.toLowerCase()}-bg)`;
+  const [isSectionMenuOpen, setIsSectionMenuOpen] = useState(false);
+  const sectionMenuRef = useRef<HTMLDivElement | null>(null);
 
   const isLab = entry.type === 'lab';
+  const canChangeSection = !!onChangeSection && availableSections.length > 0;
+
+  useEffect(() => {
+    if (!isSectionMenuOpen) return;
+    const handler = (ev: MouseEvent) => {
+      const target = ev.target as Node;
+      if (sectionMenuRef.current && !sectionMenuRef.current.contains(target)) {
+        setIsSectionMenuOpen(false);
+      }
+    };
+    window.addEventListener('mousedown', handler);
+    return () => window.removeEventListener('mousedown', handler);
+  }, [isSectionMenuOpen]);
+
+  const hasActions = !!onRemove || canChangeSection;
 
   return (
-    <button
-      onClick={onClick}
+    <div
       className="timetable-card w-full text-left border border-[var(--color-border)] rounded-lg p-4 flex flex-col gap-2 active:scale-[0.98] transition-all duration-100 focus-visible:outline-none focus-visible:ring-2"
       style={{
         background: isRepeat
@@ -31,6 +60,7 @@ export function TimetableCard({ entry, dept, conflicting = false, isRepeat = fal
       onMouseOver={e => (e.currentTarget.style.boxShadow = 'var(--shadow-raised), var(--border-inset)')}
       onMouseOut={e => (e.currentTarget.style.boxShadow = 'var(--shadow-card), var(--border-inset)')}
     >
+      <button type="button" onClick={onClick} className="text-left flex flex-col gap-2 w-full">
       {/* Top row: course name truncated + type badge */}
       <div className="flex items-center justify-between gap-2 overflow-hidden">
         <div className="flex gap-1.5 overflow-hidden shrink-0">
@@ -104,6 +134,56 @@ export function TimetableCard({ entry, dept, conflicting = false, isRepeat = fal
           <>Room {entry.room}</>
         )}
       </p>
-    </button>
+
+      </button>
+
+      {hasActions && (
+        <div className="pt-1 border-t border-[var(--color-border)] flex items-center justify-between gap-2">
+          <div className="relative" ref={sectionMenuRef}>
+            {canChangeSection && (
+              <button
+                type="button"
+                onClick={() => setIsSectionMenuOpen(v => !v)}
+                className="h-8 px-3 rounded border border-[var(--color-border-strong)] font-mono text-[10px] text-[var(--color-text-secondary)] hover:bg-[var(--color-bg-subtle)]"
+              >
+                Change Section
+              </button>
+            )}
+
+            {isSectionMenuOpen && canChangeSection && (
+              <div className="absolute left-0 bottom-9 z-20 min-w-[10rem] rounded-md border border-[var(--color-border-strong)] bg-[var(--color-bg-raised)] shadow-lg p-1">
+                {availableSections.map(sectionOption => {
+                  const isCurrent = sectionOption === entry.section;
+                  return (
+                    <button
+                      key={sectionOption}
+                      type="button"
+                      onClick={() => {
+                        onChangeSection(sectionOption);
+                        setIsSectionMenuOpen(false);
+                      }}
+                      className="w-full text-left px-2 py-1.5 rounded font-mono text-[10px] hover:bg-[var(--color-bg-subtle)] flex items-center justify-between gap-2"
+                    >
+                      <span>{sectionOption || 'Unspecified'}</span>
+                      {isCurrent && <span className="text-[var(--color-text-tertiary)]">Current</span>}
+                    </button>
+                  );
+                })}
+              </div>
+            )}
+          </div>
+
+          {onRemove && (
+            <button
+              type="button"
+              onClick={onRemove}
+              className="h-8 px-3 rounded border border-[var(--color-border-strong)] font-mono text-[10px] text-red-600 hover:bg-red-50 dark:hover:bg-red-950/20"
+            >
+              Remove ×
+            </button>
+          )}
+        </div>
+      )}
+    </div>
   );
 }

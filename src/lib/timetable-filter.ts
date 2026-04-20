@@ -125,6 +125,16 @@ export function getAvailableSections(
       if (batch === '2025') {
         const normalized = e.section.replace(/\d+$/, '');
         set.add(normalized);
+      } else if (batch === '2022' && (
+        e.section.includes(', G-') || e.section.startsWith('G-') ||
+        e.section.includes(', Gp-') || e.section.startsWith('Gp-') ||
+        e.section === 'AI' || e.section === 'DS'
+      )) {
+        // Skip elective sections for 2022 in the initial dropdown
+        continue;
+      } else if (e.section === '') {
+        // Skip empty sections (department-level electives) from the dropdown
+        continue;
       } else {
         set.add(e.section);
       }

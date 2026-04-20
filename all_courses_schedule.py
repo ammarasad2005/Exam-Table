@@ -48,15 +48,20 @@ VALID_COURSES_MAP = {
 # ==============================================================================
 # HELPER: Batch reverse-lookup (returns ALL possible batches, not just the first)
 # ==============================================================================
-def find_possible_batches(course_name, dept):
+def find_possible_batches(course_name, dept=None):
     """Returns every batch in VALID_COURSES_MAP that lists (dept, course_name)."""
     lookup_name = course_name[:-4].strip() if course_name.lower().endswith("lab") else course_name
     possible = []
     for b, departments in VALID_COURSES_MAP.items():
-        if dept in departments:
-            courses = departments[dept]
-            if course_name in courses or lookup_name in courses:
-                possible.append(b)
+        if dept:
+            if dept in departments:
+                courses = departments[dept]
+                if course_name in courses or lookup_name in courses:
+                    possible.append(b)
+        else:
+            for d, courses in departments.items():
+                if course_name in courses or lookup_name in courses:
+                    possible.append((b, d))
     return possible
 
 # ==============================================================================
@@ -142,7 +147,7 @@ days = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday"]
 
 # Regex patterns
 repeat_pattern = re.compile(r'^([^(]+?)\s*\(\s*([A-Z]{2,}(?:\/[A-Z]{2,})?)\s*-\s*([A-Z0-9]+)\s*,\s*(\d{2})\s*\)')
-regular_pattern = re.compile(r'^([^(]+?)\s*\(\s*([A-Z]{2,}(?:\/[A-Z]{2,})?)\s*-\s*([A-Z0-9]+)\s*\)')
+regular_pattern = re.compile(r'^([^(]+?)\s*\(\s*(?:([A-Z]{2,}(?:\/[A-Z]{2,})?)\s*-)?\s*([^)]+?)\s*\)')
 time_pattern    = re.compile(r'\d{1,2}:\d{2}\s*-\s*\d{1,2}:\d{2}')
 
 # ==============================================================================
@@ -265,9 +270,31 @@ for day in days:
                     reg_match = regular_pattern.search(val)
                     if reg_match:
                         course_name = reg_match.group(1).strip()
-                        dept        = reg_match.group(2).strip()
+                        dept_group  = reg_match.group(2)
+                        dept        = dept_group.strip() if dept_group else None
                         section     = reg_match.group(3).strip()
                         category    = "regular"
+                        
+                        # Fix for AI/DS department courses appearing as sections
+                        # Matches "AI", "DS" or "DS, Gp-II", "AI, G-I"
+                        for dcode in ["AI", "DS", "SE", "CY"]:
+                            if dept is None:
+                                if section == dcode:
+                                    dept = dcode
+                                    section = ""
+                                    break
+                                elif section.startswith(f"{dcode},") or section.startswith(f"{dcode} "):
+                                    dept = dcode
+                                    section = section[len(dcode):].strip(", ").strip()
+                                    break
+                        
+                        if dept is None:
+                            # Try to infer department directly
+                            possible = find_possible_batches(course_name, dept=None)
+                            if possible:
+                                dept = possible[0][1] # (batch, dept)
+                            else:
+                                dept = "CS" # Fallback
 
                 if not category:
                     continue
@@ -293,6 +320,15 @@ for day in days:
                     if explicit_time
                     else time_map.get(i, "Unknown Time")
                 )
+
+                # Skip Masters courses (scheduled after 5:15 PM)
+                if actual_time != "Unknown Time":
+                    try:
+                        _, e_min = parse_time_to_minutes(actual_time)
+                        if e_min > (17 * 60 + 15): # 17:15 is 5:15 PM
+                            continue
+                    except:
+                        pass
 
                 # Force specific durations based on cell type (per user request)
                 is_actually_lab = is_lab_section or course_name.lower().endswith("lab")

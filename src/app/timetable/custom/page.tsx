@@ -61,7 +61,7 @@ function makeRow(id: string): CourseRow {
 
 function findClasses(entry: CourseRow): TimetableEntry[] {
   if (!entry.batch || !entry.stream || !entry.category || !entry.selection) return [];
-  const [courseName, section] = entry.selection.split('|');
+  const [courseName, section] = entry.selection.split(' | ');
   return allTimetableEntries.filter(e =>
     e.batch === entry.batch &&
     e.department === entry.stream &&
@@ -604,10 +604,9 @@ function RowEditor({ row, index, matchCount, showMatchHint, onUpdate, onRemove, 
     const coursesMap = new Map<string, string>();
     for (const e of allTimetableEntries) {
       if (e.batch === row.batch && e.department === row.stream && e.category === row.category) {
-        const key = `${e.courseName}|${e.section}`;
-        const label = `(${e.courseName})-${e.section}`;
-        if (!coursesMap.has(key)) {
-          coursesMap.set(key, label);
+        const label = `${e.courseName} | ${e.section}`;
+        if (!coursesMap.has(label)) {
+          coursesMap.set(label, label);
         }
       }
     }
@@ -710,23 +709,20 @@ function RowEditor({ row, index, matchCount, showMatchHint, onUpdate, onRemove, 
             Course & Section
           </label>
           <div className="relative">
-            <select
+            <input
+              list={`courses-list-${row.id}`}
               value={row.selection}
               onChange={e => onUpdate({ selection: e.target.value, errorSelection: false })}
-              className={`w-full h-9 pl-2 pr-6 rounded-md border text-xs font-mono bg-[var(--color-bg)] appearance-none focus:outline-none focus:ring-2 focus:ring-[var(--accent-cs)] cursor-pointer truncate ${row.errorSelection ? errorBase : normalBase}`}
+              placeholder={!row.stream ? 'Select Dept first' : availableCourses.length === 0 ? 'No classes found' : 'Type to search course...'}
+              className={`w-full h-9 px-2 rounded-md border text-xs font-mono bg-[var(--color-bg)] focus:outline-none focus:ring-2 focus:ring-[var(--accent-cs)] truncate ${row.errorSelection ? errorBase : normalBase}`}
               aria-invalid={row.errorSelection}
               disabled={!row.stream || availableCourses.length === 0}
-            >
-              <option value="" disabled>
-                {!row.stream ? 'Select Dept first' : availableCourses.length === 0 ? 'No classes found' : 'Select (Course)-Section'}
-              </option>
+            />
+            <datalist id={`courses-list-${row.id}`}>
               {availableCourses.map(c => (
-                <option key={c.key} value={c.key}>{c.label}</option>
+                <option key={c.key} value={c.key} />
               ))}
-            </select>
-            <div className="absolute right-2 top-1/2 -translate-y-1/2 pointer-events-none text-[var(--color-text-tertiary)]">
-              <svg width="10" height="6" viewBox="0 0 12 7" fill="none" aria-hidden="true"><path d="M1 1l5 5 5-5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>
-            </div>
+            </datalist>
           </div>
         </div>
       </div>

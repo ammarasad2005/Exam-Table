@@ -2477,6 +2477,24 @@
                         ]
                     }
                 },
+                "DLD Lab  Lab": {
+                    "A/B/C": {
+                        "Tuesday": [
+                            {
+                                "room": "C-Margala 3",
+                                "time": "11:30-01:00",
+                                "rescheduled": false,
+                                "exam": true
+                            },
+                            {
+                                "room": "C-Margala 4",
+                                "time": "11:30-01:00",
+                                "rescheduled": false,
+                                "exam": true
+                            }
+                        ]
+                    }
+                },
                 "Exp Writing Lab": {
                     "A1": {
                         "Tuesday": [
@@ -2599,6 +2617,24 @@
                                 "time": "09:30-11:15",
                                 "rescheduled": false,
                                 "exam": false
+                            }
+                        ]
+                    }
+                },
+                "OOP Lab  Lab": {
+                    "A/B/C": {
+                        "Thursday": [
+                            {
+                                "room": "D-IT Lab 4",
+                                "time": "11:30-01:00",
+                                "rescheduled": false,
+                                "exam": true
+                            },
+                            {
+                                "room": "C-Rawal 4",
+                                "time": "11:30-01:00",
+                                "rescheduled": false,
+                                "exam": true
                             }
                         ]
                     }
@@ -6734,6 +6770,26 @@
                         ]
                     }
                 },
+                "NLP": {
+                    "Gp-I": {
+                        "Tuesday": [
+                            {
+                                "room": "D-413",
+                                "time": "11:30-12:50",
+                                "rescheduled": false,
+                                "exam": false
+                            }
+                        ],
+                        "Thursday": [
+                            {
+                                "room": "D-415",
+                                "time": "11:30-12:50",
+                                "rescheduled": false,
+                                "exam": false
+                            }
+                        ]
+                    }
+                },
                 "AI": {
                     "A": {
                         "Tuesday": [
@@ -7055,6 +7111,22 @@
                     }
                 },
                 "AI Lab": {
+                    "A&B": {
+                        "Tuesday": [
+                            {
+                                "room": "C-Rawal 1",
+                                "time": "08:30-10:00",
+                                "rescheduled": false,
+                                "exam": true
+                            },
+                            {
+                                "room": "C-Rawal 4",
+                                "time": "08:30-10:00",
+                                "rescheduled": false,
+                                "exam": true
+                            }
+                        ]
+                    },
                     "B": {
                         "Tuesday": [
                             {
@@ -8116,6 +8188,256 @@
                         ]
                     }
                 },
+                "Big Data": {
+                    "B, G-I": {
+                        "Monday": [
+                            {
+                                "room": "D-312",
+                                "time": "01:00-02:20",
+                                "rescheduled": false,
+                                "exam": false
+                            }
+                        ],
+                        "Wednesday": [
+                            {
+                                "room": "D-401",
+                                "time": "01:00-02:20",
+                                "rescheduled": false,
+                                "exam": false
+                            }
+                        ]
+                    },
+                    "A, G-I": {
+                        "Tuesday": [
+                            {
+                                "room": "C-407",
+                                "time": "11:30-12:50",
+                                "rescheduled": false,
+                                "exam": false
+                            }
+                        ]
+                    },
+                    "A": {
+                        "Thursday": [
+                            {
+                                "room": "D-303",
+                                "time": "11:30-12:50",
+                                "rescheduled": false,
+                                "exam": false
+                            }
+                        ]
+                    }
+                },
+                "ML for Robo": {
+                    "G-III": {
+                        "Monday": [
+                            {
+                                "room": "D-312",
+                                "time": "03:55-05:15",
+                                "rescheduled": false,
+                                "exam": false
+                            }
+                        ],
+                        "Wednesday": [
+                            {
+                                "room": "D-316",
+                                "time": "03:55-05:15",
+                                "rescheduled": false,
+                                "exam": false
+                            }
+                        ]
+                    }
+                },
+                "Gen AI": {
+                    "A, G-II": {
+                        "Monday": [
+                            {
+                                "room": "D-313",
+                                "time": "11:30-12:50",
+                                "rescheduled": false,
+                                "exam": false
+                            }
+                        ],
+                        "Wednesday": [
+                            {
+                                "room": "D-316",
+                                "time": "11:30-12:50",
+                                "rescheduled": false,
+                                "exam": false
+                            }
+                        ]
+                    },
+                    "B, G-II": {
+                        "Monday": [
+                            {
+                                "room": "D-313",
+                                "time": "01:00-02:20",
+                                "rescheduled": false,
+                                "exam": false
+                            }
+                        ],
+                        "Wednesday": [
+                            {
+                                "room": "D-311",
+                                "time": "01:00-02:20",
+                                "rescheduled": false,
+                                "exam": false
+                            }
+                        ]
+                    },
+                    "C, G-II": {
+                        "Tuesday": [
+                            {
+                                "room": "D-503",
+                                "time": "10:00-11:20",
+                                "rescheduled": false,
+                                "exam": false
+                            }
+                        ],
+                        "Thursday": [
+                            {
+                                "room": "D-414",
+                                "time": "10:00-11:20",
+                                "rescheduled": false,
+                                "exam": false
+                            }
+                        ]
+                    }
+                },
+                "Fund of Data Vis": {
+                    "G-III": {
+                        "Monday": [
+                            {
+                                "room": "D-313",
+                                "time": "02:30-03:50",
+                                "rescheduled": false,
+                                "exam": false
+                            }
+                        ],
+                        "Wednesday": [
+                            {
+                                "room": "D-401",
+                                "time": "02:30-03:50",
+                                "rescheduled": false,
+                                "exam": false
+                            }
+                        ]
+                    }
+                },
+                "Cloud Comp": {
+                    "A, G-II": {
+                        "Monday": [
+                            {
+                                "room": "D-314",
+                                "time": "11:30-12:50",
+                                "rescheduled": false,
+                                "exam": false
+                            }
+                        ],
+                        "Wednesday": [
+                            {
+                                "room": "D-306",
+                                "time": "11:30-12:50",
+                                "rescheduled": false,
+                                "exam": false
+                            }
+                        ]
+                    },
+                    "B, G-II": {
+                        "Monday": [
+                            {
+                                "room": "D-314",
+                                "time": "01:00-02:20",
+                                "rescheduled": false,
+                                "exam": false
+                            }
+                        ],
+                        "Wednesday": [
+                            {
+                                "room": "D-306",
+                                "time": "01:00-02:20",
+                                "rescheduled": false,
+                                "exam": false
+                            }
+                        ]
+                    }
+                },
+                "Agentic AI": {
+                    "C, G-I": {
+                        "Monday": [
+                            {
+                                "room": "D-314",
+                                "time": "02:30-03:50",
+                                "rescheduled": false,
+                                "exam": false
+                            }
+                        ],
+                        "Wednesday": [
+                            {
+                                "room": "D-402",
+                                "time": "02:30-03:50",
+                                "rescheduled": false,
+                                "exam": false
+                            }
+                        ]
+                    },
+                    "B, G-I": {
+                        "Tuesday": [
+                            {
+                                "room": "D-402",
+                                "time": "01:00-02:20",
+                                "rescheduled": false,
+                                "exam": false
+                            }
+                        ],
+                        "Thursday": [
+                            {
+                                "room": "D-402",
+                                "time": "01:00-02:20",
+                                "rescheduled": false,
+                                "exam": false
+                            }
+                        ]
+                    },
+                    "A, G-I": {
+                        "Tuesday": [
+                            {
+                                "room": "D-406",
+                                "time": "11:30-12:50",
+                                "rescheduled": false,
+                                "exam": false
+                            }
+                        ],
+                        "Thursday": [
+                            {
+                                "room": "D-403",
+                                "time": "11:30-12:50",
+                                "rescheduled": false,
+                                "exam": false
+                            }
+                        ]
+                    }
+                },
+                "Deep Learn": {
+                    "G-II": {
+                        "Monday": [
+                            {
+                                "room": "D-315",
+                                "time": "01:00-02:20",
+                                "rescheduled": false,
+                                "exam": false
+                            }
+                        ],
+                        "Wednesday": [
+                            {
+                                "room": "D-402",
+                                "time": "01:00-02:20",
+                                "rescheduled": false,
+                                "exam": false
+                            }
+                        ]
+                    }
+                },
                 "Digital Mktg": {
                     "A": {
                         "Monday": [
@@ -8246,12 +8568,74 @@
                         ]
                     }
                 },
-                "Big Data": {
-                    "A": {
-                        "Thursday": [
+                "AI Prod Develop": {
+                    "A, G-II": {
+                        "Monday": [
+                            {
+                                "room": "D-401",
+                                "time": "10:00-11:20",
+                                "rescheduled": false,
+                                "exam": false
+                            }
+                        ],
+                        "Wednesday": [
+                            {
+                                "room": "D-301",
+                                "time": "10:00-11:20",
+                                "rescheduled": false,
+                                "exam": false
+                            }
+                        ]
+                    },
+                    "B, G-II": {
+                        "Monday": [
+                            {
+                                "room": "D-401",
+                                "time": "11:30-12:50",
+                                "rescheduled": false,
+                                "exam": false
+                            }
+                        ],
+                        "Wednesday": [
+                            {
+                                "room": "D-301",
+                                "time": "11:30-12:50",
+                                "rescheduled": false,
+                                "exam": false
+                            }
+                        ]
+                    },
+                    "C, G-II": {
+                        "Tuesday": [
                             {
                                 "room": "D-303",
                                 "time": "11:30-12:50",
+                                "rescheduled": false,
+                                "exam": false
+                            }
+                        ],
+                        "Thursday": [
+                            {
+                                "room": "C-406",
+                                "time": "11:30-12:50",
+                                "rescheduled": false,
+                                "exam": false
+                            }
+                        ]
+                    },
+                    "D, G-II": {
+                        "Tuesday": [
+                            {
+                                "room": "D-401",
+                                "time": "01:00-02:20",
+                                "rescheduled": false,
+                                "exam": false
+                            }
+                        ],
+                        "Thursday": [
+                            {
+                                "room": "C-309",
+                                "time": "01:00-02:20",
                                 "rescheduled": false,
                                 "exam": false
                             }
@@ -8259,11 +8643,97 @@
                     }
                 },
                 "Robo Tech": {
+                    "A, G-I": {
+                        "Tuesday": [
+                            {
+                                "room": "C-309",
+                                "time": "01:00-02:20",
+                                "rescheduled": false,
+                                "exam": false
+                            }
+                        ]
+                    },
                     "A": {
                         "Thursday": [
                             {
                                 "room": "D-401",
                                 "time": "01:00-02:20",
+                                "rescheduled": false,
+                                "exam": false
+                            }
+                        ]
+                    }
+                },
+                "Fund of SPM": {
+                    "A, G-I": {
+                        "Tuesday": [
+                            {
+                                "room": "D-316",
+                                "time": "11:30-12:50",
+                                "rescheduled": false,
+                                "exam": false
+                            }
+                        ],
+                        "Thursday": [
+                            {
+                                "room": "D-315",
+                                "time": "11:30-12:50",
+                                "rescheduled": false,
+                                "exam": false
+                            }
+                        ]
+                    },
+                    "B, G-I": {
+                        "Tuesday": [
+                            {
+                                "room": "D-316",
+                                "time": "01:00-02:20",
+                                "rescheduled": false,
+                                "exam": false
+                            }
+                        ],
+                        "Thursday": [
+                            {
+                                "room": "D-315",
+                                "time": "01:00-02:20",
+                                "rescheduled": false,
+                                "exam": false
+                            }
+                        ]
+                    }
+                },
+                "MLOPs": {
+                    "B, G-I": {
+                        "Tuesday": [
+                            {
+                                "room": "D-401",
+                                "time": "10:00-11:20",
+                                "rescheduled": false,
+                                "exam": false
+                            }
+                        ],
+                        "Thursday": [
+                            {
+                                "room": "D-401",
+                                "time": "10:00-11:20",
+                                "rescheduled": false,
+                                "exam": false
+                            }
+                        ]
+                    },
+                    "A, G-I": {
+                        "Tuesday": [
+                            {
+                                "room": "D-401",
+                                "time": "11:30-12:50",
+                                "rescheduled": false,
+                                "exam": false
+                            }
+                        ],
+                        "Thursday": [
+                            {
+                                "room": "D-401",
+                                "time": "11:30-12:50",
                                 "rescheduled": false,
                                 "exam": false
                             }
@@ -8423,6 +8893,26 @@
                         ]
                     }
                 },
+                "Blockchain": {
+                    "": {
+                        "Monday": [
+                            {
+                                "room": "D-405",
+                                "time": "01:00-02:20",
+                                "rescheduled": false,
+                                "exam": false
+                            }
+                        ],
+                        "Wednesday": [
+                            {
+                                "room": "D-411",
+                                "time": "01:00-02:20",
+                                "rescheduled": false,
+                                "exam": false
+                            }
+                        ]
+                    }
+                },
                 "Fin Mgt": {
                     "B": {
                         "Monday": [
@@ -8496,6 +8986,66 @@
                             }
                         ]
                     }
+                },
+                "Responsible AI": {
+                    "": {
+                        "Monday": [
+                            {
+                                "room": "D-406",
+                                "time": "01:00-02:20",
+                                "rescheduled": false,
+                                "exam": false
+                            }
+                        ],
+                        "Wednesday": [
+                            {
+                                "room": "D-412",
+                                "time": "01:00-02:20",
+                                "rescheduled": false,
+                                "exam": false
+                            }
+                        ]
+                    }
+                },
+                "Agentic AI": {
+                    "": {
+                        "Monday": [
+                            {
+                                "room": "D-411",
+                                "time": "01:00-02:20",
+                                "rescheduled": false,
+                                "exam": false
+                            }
+                        ],
+                        "Wednesday": [
+                            {
+                                "room": "D-413",
+                                "time": "01:00-02:20",
+                                "rescheduled": false,
+                                "exam": false
+                            }
+                        ]
+                    }
+                },
+                "Gen AI": {
+                    "": {
+                        "Monday": [
+                            {
+                                "room": "D-412",
+                                "time": "01:00-02:20",
+                                "rescheduled": false,
+                                "exam": false
+                            }
+                        ],
+                        "Wednesday": [
+                            {
+                                "room": "D-414",
+                                "time": "01:00-02:20",
+                                "rescheduled": false,
+                                "exam": false
+                            }
+                        ]
+                    }
                 }
             },
             "repeat": {
@@ -8535,6 +9085,68 @@
         },
         "DS": {
             "regular": {
+                "Reinf Learn": {
+                    "Gp-II": {
+                        "Tuesday": [
+                            {
+                                "room": "D-403",
+                                "time": "10:00-11:20",
+                                "rescheduled": false,
+                                "exam": false
+                            }
+                        ]
+                    },
+                    "A, Gp-II": {
+                        "Thursday": [
+                            {
+                                "room": "D-403",
+                                "time": "10:00-11:20",
+                                "rescheduled": false,
+                                "exam": false
+                            }
+                        ]
+                    }
+                },
+                "Agentic AI": {
+                    "B, Gp-I": {
+                        "Tuesday": [
+                            {
+                                "room": "D-403",
+                                "time": "11:30-12:50",
+                                "rescheduled": false,
+                                "exam": false
+                            }
+                        ],
+                        "Thursday": [
+                            {
+                                "room": "C-110",
+                                "time": "11:30-12:50",
+                                "rescheduled": false,
+                                "exam": false
+                            }
+                        ]
+                    },
+                    "A, Gp-II": {
+                        "Tuesday": [
+                            {
+                                "room": "D-414",
+                                "time": "10:00-11:20",
+                                "rescheduled": false,
+                                "exam": false
+                            }
+                        ]
+                    },
+                    "Gp-II": {
+                        "Thursday": [
+                            {
+                                "room": "D-416",
+                                "time": "10:00-11:20",
+                                "rescheduled": false,
+                                "exam": false
+                            }
+                        ]
+                    }
+                },
                 "Fin Mgt": {
                     "A": {
                         "Tuesday": [
@@ -8609,6 +9221,66 @@
                         ]
                     }
                 },
+                "Resp AI": {
+                    "Gp-I": {
+                        "Tuesday": [
+                            {
+                                "room": "D-414",
+                                "time": "11:30-12:50",
+                                "rescheduled": false,
+                                "exam": false
+                            }
+                        ],
+                        "Thursday": [
+                            {
+                                "room": "D-416",
+                                "time": "11:30-12:50",
+                                "rescheduled": false,
+                                "exam": false
+                            }
+                        ]
+                    }
+                },
+                "Gen AI": {
+                    "Gp-II": {
+                        "Tuesday": [
+                            {
+                                "room": "D-415",
+                                "time": "10:00-11:20",
+                                "rescheduled": false,
+                                "exam": false
+                            }
+                        ],
+                        "Thursday": [
+                            {
+                                "room": "D-501",
+                                "time": "10:00-11:20",
+                                "rescheduled": false,
+                                "exam": false
+                            }
+                        ]
+                    }
+                },
+                "Comp Vision": {
+                    "Gp-I": {
+                        "Tuesday": [
+                            {
+                                "room": "D-415",
+                                "time": "11:30-12:50",
+                                "rescheduled": false,
+                                "exam": false
+                            }
+                        ],
+                        "Thursday": [
+                            {
+                                "room": "D-501",
+                                "time": "11:30-12:50",
+                                "rescheduled": false,
+                                "exam": false
+                            }
+                        ]
+                    }
+                },
                 "NLP": {
                     "A": {
                         "Tuesday": [
@@ -8659,18 +9331,6 @@
                             {
                                 "room": "D-501",
                                 "time": "11:30-12:50",
-                                "rescheduled": false,
-                                "exam": false
-                            }
-                        ]
-                    }
-                },
-                "NLP Lab": {
-                    "B": {
-                        "Friday": [
-                            {
-                                "room": "C-Margala 1",
-                                "time": "05:20-08:05",
                                 "rescheduled": false,
                                 "exam": false
                             }

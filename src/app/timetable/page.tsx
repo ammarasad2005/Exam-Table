@@ -1,6 +1,6 @@
 'use client';
 import { useSearchParams, useRouter } from 'next/navigation';
-import { useMemo, useState, Suspense } from 'react';
+import { useEffect, useMemo, useState, Suspense } from 'react';
 import {
   flattenTimetable,
   filterTimetable,
@@ -25,8 +25,36 @@ const allEntries: TimetableEntry[] = flattenTimetable(timetableRaw);
 
 // ─── Time slots for the grid view ─────────────────────────────────────────────
 const GRID_SLOTS = ['08:00', '09:30', '11:00', '12:30', '14:00', '15:30', '17:00'];
+const RESULT_PREFS_STORAGE_KEY = 'fsc_timetable_results_preferences_v1';
 
 type ViewMode = 'list' | 'grid';
+type CourseKey = string;
+
+interface TimetableResultPreference {
+  sectionByCourse: Record<CourseKey, string>;
+  removedCourseKeys: CourseKey[];
+}
+
+function isDepartmentMatch(entryDept: string, filterDept: string): boolean {
+  if (entryDept === filterDept) return true;
+  const depts = entryDept.split('/').map(d => d.trim());
+  return depts.includes(filterDept);
+}
+
+function normalizeSectionForBatch(batch: string, rawSection: string): string {
+  if (batch === '2025') {
+    return rawSection.replace(/\d+$/, '');
+  }
+  return rawSection;
+}
+
+function isSelectedSection(batch: string, candidateSection: string, selectedSection: string): boolean {
+  return normalizeSectionForBatch(batch, candidateSection) === normalizeSectionForBatch(batch, selectedSection);
+}
+
+function makeCourseKey(entry: Pick<TimetableEntry, 'department' | 'category' | 'courseName'>): CourseKey {
+  return `${entry.department}|${entry.category}|${entry.courseName}`;
+}
 
 function TimetablePageInner() {
   const params  = useSearchParams();
@@ -39,11 +67,314 @@ function TimetablePageInner() {
   const [selected, setSelected] = useState<TimetableEntry | null>(null);
   const [viewMode, setViewMode] = useState<ViewMode>('list');
   const [includeRepeats, setIncludeRepeats] = useState(false);
+  const [manualSectionByCourse, setManualSectionByCourse] = useState<Record<CourseKey, string>>({});
+  const [removedCourseKeys, setRemovedCourseKeys] = useState<CourseKey[]>([]);
+  const [isOtherCoursesExpanded, setIsOtherCoursesExpanded] = useState(false);
+  const [saveFeedback, setSaveFeedback] = useState('');
 
-  const filtered = useMemo(
-    () => filterTimetable(allEntries, { batch, department: dept, section, query, includeRepeats }),
-    [batch, dept, section, query, includeRepeats]
+  const preferenceScopeKey = useMemo(() => `${batch}|${dept}`, [batch, dept]);
+
+  const contextEntries = useMemo(() => {
+    return allEntries.filter(e => {
+      if (e.batch !== batch) return false;
+      if (!isDepartmentMatch(e.department, dept)) return false;
+      if (!includeRepeats && e.category === 'repeat') return false;
+      return true;
+    });
+  }, [batch, dept, includeRepeats]);
+
+  const defaultEntries = useMemo(() => {
+    return filterTimetable(allEntries, {
+      batch,
+      department: dept,
+      section,
+      query: '',
+      includeRepeats,
+    });
+  }, [batch, dept, section, includeRepeats]);
+
+  const defaultSectionByCourse = useMemo(() => {
+    const map = new Map<CourseKey, string>();
+    for (const entry of defaultEntries) {
+      const key = makeCourseKey(entry);
+      if (!map.has(key)) {
+        map.set(key, entry.section);
+      }
+    }
+    return map;
+  }, [defaultEntries]);
+
+  const courseSectionsByKey = useMemo(() => {
+    const map = new Map<CourseKey, Set<string>>();
+    for (const entry of contextEntries) {
+      const key = makeCourseKey(entry);
+      if (!map.has(key)) map.set(key, new Set<string>());
+      map.get(key)!.add(entry.section);
+    }
+    return map;
+  }, [contextEntries]);
+
+  const courseSectionsListByKey = useMemo(() => {
+    const map = new Map<CourseKey, string[]>();
+    for (const [key, sectionSet] of courseSectionsByKey.entries()) {
+      map.set(
+        key,
+        [...sectionSet].sort((a, b) => {
+          if (a.length !== b.length) return a.length - b.length;
+          return a.localeCompare(b);
+        })
+      );
+    }
+    return map;
+  }, [courseSectionsByKey]);
+
+  const cleanedManualSectionByCourse = useMemo(() => {
+    const next: Record<CourseKey, string> = {};
+    for (const [courseKey, targetSection] of Object.entries(manualSectionByCourse)) {
+      const options = courseSectionsListByKey.get(courseKey) ?? [];
+      if (options.includes(targetSection)) {
+        next[courseKey] = targetSection;
+      }
+    }
+    return next;
+  }, [manualSectionByCourse, courseSectionsListByKey]);
+
+  const cleanedRemovedCourseKeys = useMemo(
+    () => removedCourseKeys.filter(courseKey => courseSectionsByKey.has(courseKey)),
+    [removedCourseKeys, courseSectionsByKey]
   );
+
+  const removedSet = useMemo(() => new Set(cleanedRemovedCourseKeys), [cleanedRemovedCourseKeys]);
+
+  useEffect(() => {
+    let loaded: TimetableResultPreference | null = null;
+    try {
+      const raw = localStorage.getItem(RESULT_PREFS_STORAGE_KEY);
+      if (raw) {
+        const parsed = JSON.parse(raw) as Record<string, TimetableResultPreference>;
+        loaded = parsed[preferenceScopeKey] ?? null;
+      }
+    } catch (err) {
+      console.error('Failed to parse timetable result preferences', err);
+    }
+
+    setManualSectionByCourse(loaded?.sectionByCourse ?? {});
+    setRemovedCourseKeys(loaded?.removedCourseKeys ?? []);
+    setSaveFeedback('');
+  }, [preferenceScopeKey]);
+
+  const persistResultPreferences = () => {
+    try {
+      const raw = localStorage.getItem(RESULT_PREFS_STORAGE_KEY);
+      const parsed = raw ? (JSON.parse(raw) as Record<string, TimetableResultPreference>) : {};
+
+      parsed[preferenceScopeKey] = {
+        sectionByCourse: cleanedManualSectionByCourse,
+        removedCourseKeys: cleanedRemovedCourseKeys,
+      };
+
+      localStorage.setItem(RESULT_PREFS_STORAGE_KEY, JSON.stringify(parsed));
+      setSaveFeedback('Preferences saved');
+    } catch (err) {
+      console.error('Failed to save timetable result preferences', err);
+      setSaveFeedback('Save failed');
+    }
+  };
+
+  const effectiveSectionByCourse = useMemo(() => {
+    const map = new Map<CourseKey, string>();
+
+    for (const [courseKey, defaultSection] of defaultSectionByCourse.entries()) {
+      map.set(courseKey, defaultSection);
+    }
+
+    for (const [courseKey, manualSection] of Object.entries(cleanedManualSectionByCourse)) {
+      map.set(courseKey, manualSection);
+    }
+
+    return map;
+  }, [defaultSectionByCourse, cleanedManualSectionByCourse]);
+
+  const filtered = useMemo(() => {
+    const activeCourseKeys = new Set<CourseKey>([
+      ...defaultSectionByCourse.keys(),
+      ...Object.keys(cleanedManualSectionByCourse),
+    ]);
+
+    const result: TimetableEntry[] = [];
+    const seen = new Set<string>();
+
+    for (const courseKey of activeCourseKeys) {
+      if (removedSet.has(courseKey)) continue;
+
+      const activeSection = effectiveSectionByCourse.get(courseKey);
+      if (!activeSection) continue;
+
+      for (const entry of contextEntries) {
+        if (makeCourseKey(entry) !== courseKey) continue;
+        if (entry.section !== activeSection) continue;
+
+        const uniqueSlotKey = `${entry.day}|${entry.time}|${entry.courseName}|${entry.section}|${entry.category}`;
+        if (!seen.has(uniqueSlotKey)) {
+          seen.add(uniqueSlotKey);
+          result.push(entry);
+        }
+      }
+    }
+
+    const q = query.toLowerCase().trim();
+    if (!q) return result;
+
+    return result.filter(e =>
+      e.courseName.toLowerCase().includes(q) ||
+      e.room.toLowerCase().includes(q) ||
+      e.section.toLowerCase().includes(q)
+    );
+  }, [
+    cleanedManualSectionByCourse,
+    contextEntries,
+    defaultSectionByCourse,
+    effectiveSectionByCourse,
+    query,
+    removedSet,
+  ]);
+
+  const selectedOtherCount = useMemo(() => {
+    let count = 0;
+    for (const [courseKey, sectionChoice] of effectiveSectionByCourse.entries()) {
+      if (removedSet.has(courseKey)) continue;
+      const defaultSection = defaultSectionByCourse.get(courseKey);
+      if (!defaultSection || defaultSection !== sectionChoice) {
+        count += 1;
+      }
+    }
+    return count;
+  }, [effectiveSectionByCourse, removedSet, defaultSectionByCourse]);
+
+  const updateCourseSection = (courseKey: CourseKey, nextSection: string) => {
+    setRemovedCourseKeys(prev => prev.filter(key => key !== courseKey));
+    setManualSectionByCourse(prev => {
+      const defaultSection = defaultSectionByCourse.get(courseKey);
+      if (defaultSection && defaultSection === nextSection) {
+        const next = { ...prev };
+        delete next[courseKey];
+        return next;
+      }
+      return { ...prev, [courseKey]: nextSection };
+    });
+  };
+
+  const removeCourseByKey = (courseKey: CourseKey) => {
+    setRemovedCourseKeys(prev => (prev.includes(courseKey) ? prev : [...prev, courseKey]));
+    setManualSectionByCourse(prev => {
+      if (!(courseKey in prev)) return prev;
+      const next = { ...prev };
+      delete next[courseKey];
+      return next;
+    });
+  };
+
+  const toggleOtherCourse = (courseKey: CourseKey, targetSection: string) => {
+    setRemovedCourseKeys(prev => prev.filter(key => key !== courseKey));
+
+    setManualSectionByCourse(prev => {
+      const defaultSection = defaultSectionByCourse.get(courseKey);
+
+      if (defaultSection) {
+        if (defaultSection === targetSection) {
+          const next = { ...prev };
+          delete next[courseKey];
+          return next;
+        }
+        return { ...prev, [courseKey]: targetSection };
+      }
+
+      if (prev[courseKey] === targetSection) {
+        const next = { ...prev };
+        delete next[courseKey];
+        return next;
+      }
+
+      return { ...prev, [courseKey]: targetSection };
+    });
+  };
+
+  const electiveGroups = useMemo(() => {
+    if (batch !== '2022') return null;
+    
+    const electives = contextEntries.filter(e => 
+      e.batch === batch && 
+      e.department === dept && 
+      (
+        e.section.includes(', G-') || e.section.includes(', Gp-') ||
+        e.section.startsWith('G-') || e.section.startsWith('Gp-') ||
+        e.section.includes('G-III') || e.section.includes('Gp-III') ||
+        // Courses with department-level "sections" or empty sections (electives)
+        e.section === '' || e.section === 'AI' || e.section === 'DS'
+      )
+    );
+
+    const g1 = new Map<string, { section: string, department: string, courseKey: CourseKey }[]>();
+    const g2 = new Map<string, { section: string, department: string, courseKey: CourseKey }[]>();
+    const g3 = new Map<string, { section: string, department: string, courseKey: CourseKey }[]>();
+
+    electives.forEach(e => {
+      const sec = e.section;
+      const isG3 = sec.includes('G-III') || sec.includes('Gp-III');
+      const isG2 = !isG3 && (sec.includes('G-II') || sec.includes('Gp-II'));
+      // Default to G1 if it's G1, or if it's a department-level entry (AI/DS)
+      const isG1 = (!isG3 && !isG2 && (sec.includes('G-I') || sec.includes('Gp-I'))) || (sec === '');
+      
+      const map = isG1 ? g1 : isG2 ? g2 : isG3 ? g3 : null;
+      if (!map) return;
+      
+      if (!map.has(e.courseName)) map.set(e.courseName, []);
+      if (!map.get(e.courseName)!.some(item => item.section === e.section && item.department === e.department)) {
+         map.get(e.courseName)!.push({ section: e.section, department: e.department, courseKey: makeCourseKey(e) });
+      }
+    });
+    
+    return { g1, g2, g3 };
+  }, [batch, dept, contextEntries]);
+
+  const otherCourseGroups = useMemo(() => {
+    if (batch === '2022') return [];
+
+    const groups = new Map<CourseKey, {
+      courseName: string;
+      department: string;
+      category: 'regular' | 'repeat';
+      sections: Set<string>;
+    }>();
+
+    for (const entry of contextEntries) {
+      if (isSelectedSection(batch, entry.section, section)) continue;
+
+      const courseKey = makeCourseKey(entry);
+      if (!groups.has(courseKey)) {
+        groups.set(courseKey, {
+          courseName: entry.courseName,
+          department: entry.department,
+          category: entry.category,
+          sections: new Set<string>(),
+        });
+      }
+      groups.get(courseKey)!.sections.add(entry.section);
+    }
+
+    return [...groups.entries()]
+      .map(([courseKey, value]) => ({
+        courseKey,
+        courseName: value.courseName,
+        department: value.department,
+        category: value.category,
+        sections: [...value.sections].sort((a, b) => {
+          if (a.length !== b.length) return a.length - b.length;
+          return a.localeCompare(b);
+        }),
+      }))
+      .sort((a, b) => a.courseName.localeCompare(b.courseName));
+  }, [batch, contextEntries, section]);
 
   const grouped  = useMemo(() => groupByDayTimetable(filtered), [filtered]);
   const conflicts = useMemo(() => detectConflicts(filtered, includeRepeats), [filtered, includeRepeats]);
@@ -162,6 +493,15 @@ function TimetablePageInner() {
 
           <div className="mt-auto flex flex-col gap-2">
             <button
+              onClick={persistResultPreferences}
+              className="h-9 rounded border border-[var(--color-border-strong)] font-mono text-[10px] text-[var(--color-text-primary)] hover:bg-[var(--color-bg-subtle)]"
+            >
+              Save Preferences
+            </button>
+            {saveFeedback && (
+              <p className="font-mono text-[10px] text-[var(--color-text-tertiary)]">{saveFeedback}</p>
+            )}
+            <button
               onClick={() => router.push('/')}
               className="text-xs text-[var(--color-text-secondary)] underline underline-offset-2 text-left hover:text-[var(--color-text-primary)] focus-visible:outline-none focus-visible:ring-2"
             >
@@ -223,7 +563,205 @@ function TimetablePageInner() {
                 ))}
               </div>
             </div>
+            <div className="mt-2 md:hidden flex items-center gap-2">
+              <button
+                onClick={persistResultPreferences}
+                className="h-8 px-3 rounded border border-[var(--color-border-strong)] font-mono text-[10px] text-[var(--color-text-primary)] hover:bg-[var(--color-bg-subtle)]"
+              >
+                Save Preferences
+              </button>
+              {saveFeedback && (
+                <span className="font-mono text-[10px] text-[var(--color-text-tertiary)]">{saveFeedback}</span>
+              )}
+            </div>
           </div>
+
+          {/* Other Courses UI */}
+          {batch === '2022' && electiveGroups && (
+            <div className="border-b border-[var(--color-border)] bg-[var(--color-bg-subtle)]/30">
+              <button
+                onClick={() => setIsOtherCoursesExpanded(!isOtherCoursesExpanded)}
+                className="w-full flex items-center justify-between px-4 py-4 focus-visible:outline-none focus-visible:bg-[var(--color-bg-raised)] transition-colors hover:bg-[var(--color-bg-raised)]"
+              >
+                <div className="flex items-center gap-3">
+                  <h2 className="font-display text-lg text-[var(--color-text-primary)]">Other Courses</h2>
+                  {selectedOtherCount > 0 && (
+                    <span className="font-mono text-[10px] px-2 py-0.5 rounded-full bg-[var(--color-text-primary)] text-[var(--color-bg)]">
+                      {selectedOtherCount} selected
+                    </span>
+                  )}
+                </div>
+                <svg
+                  width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"
+                  className={`text-[var(--color-text-secondary)] transition-transform duration-200 ${isOtherCoursesExpanded ? 'rotate-180' : ''}`}
+                >
+                  <polyline points="6 9 12 15 18 9" />
+                </svg>
+              </button>
+              
+              {isOtherCoursesExpanded && (
+                <div className="px-4 pb-6 pt-2">
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+                {/* G-I Column */}
+                <div>
+                  <h3 className="font-mono text-xs uppercase tracking-widest text-[var(--color-text-tertiary)] mb-3">Group I (G-I)</h3>
+                  <div className="flex flex-col gap-4">
+                    {Array.from(electiveGroups.g1.entries()).map(([courseName, items]) => (
+                      <div key={courseName} className="border-b border-[var(--color-border-strong)] pb-4 last:border-b-0">
+                        <p className="font-bold text-sm mb-2">{courseName}</p>
+                        <div className="flex flex-wrap gap-2">
+                          {items.map(item => {
+                            const isSelected = effectiveSectionByCourse.get(item.courseKey) === item.section && !removedSet.has(item.courseKey);
+                            const label = item.section ? item.section.split(',')[0].trim() : `Dept: ${item.department}`;
+                            return (
+                              <button 
+                                key={`${item.courseKey}-${item.section}`}
+                                onClick={() => toggleOtherCourse(item.courseKey, item.section)}
+                                className={`px-2 py-1 rounded text-xs font-mono transition-colors border ${
+                                  isSelected 
+                                    ? 'bg-[var(--color-text-primary)] text-[var(--color-bg)] border-transparent' 
+                                    : 'bg-[var(--color-bg-subtle)] text-[var(--color-text-secondary)] border-[var(--color-border)] hover:bg-[var(--color-border)]'
+                                }`}
+                              >
+                                {label}
+                              </button>
+                            )
+                          })}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+                
+                {/* G-II Column */}
+                <div>
+                  <h3 className="font-mono text-xs uppercase tracking-widest text-[var(--color-text-tertiary)] mb-3">Group II (G-II)</h3>
+                  <div className="flex flex-col gap-4">
+                    {Array.from(electiveGroups.g2.entries()).map(([courseName, items]) => (
+                      <div key={courseName} className="border-b border-[var(--color-border-strong)] pb-4 last:border-b-0">
+                        <p className="font-bold text-sm mb-2">{courseName}</p>
+                        <div className="flex flex-wrap gap-2">
+                          {items.map(item => {
+                            const isSelected = effectiveSectionByCourse.get(item.courseKey) === item.section && !removedSet.has(item.courseKey);
+                            const label = item.section ? item.section.split(',')[0].trim() : `Dept: ${item.department}`;
+                            return (
+                              <button 
+                                key={`${item.courseKey}-${item.section}`}
+                                onClick={() => toggleOtherCourse(item.courseKey, item.section)}
+                                className={`px-2 py-1 rounded text-xs font-mono transition-colors border ${
+                                  isSelected 
+                                    ? 'bg-[var(--color-text-primary)] text-[var(--color-bg)] border-transparent' 
+                                    : 'bg-[var(--color-bg-subtle)] text-[var(--color-text-secondary)] border-[var(--color-border)] hover:bg-[var(--color-border)]'
+                                }`}
+                              >
+                                {label}
+                              </button>
+                            )
+                          })}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+                
+                {/* G-III Column */}
+                <div>
+                  <h3 className="font-mono text-xs uppercase tracking-widest text-[var(--color-text-tertiary)] mb-3">Group III (G-III)</h3>
+                  <div className="flex flex-col gap-4">
+                    {Array.from(electiveGroups.g3.entries()).map(([courseName, items]) => (
+                      <div key={courseName} className="border-b border-[var(--color-border-strong)] pb-4 last:border-b-0">
+                        <p className="font-bold text-sm mb-2">{courseName}</p>
+                        <div className="flex flex-wrap gap-2">
+                          {items.map(item => {
+                            const isSelected = effectiveSectionByCourse.get(item.courseKey) === item.section && !removedSet.has(item.courseKey);
+                            const label = item.section ? item.section.split(',')[0].trim() : `Dept: ${item.department}`;
+                            return (
+                              <button 
+                                key={`${item.courseKey}-${item.section}`}
+                                onClick={() => toggleOtherCourse(item.courseKey, item.section)}
+                                className={`px-2 py-1 rounded text-xs font-mono transition-colors border ${
+                                  isSelected 
+                                    ? 'bg-[var(--color-text-primary)] text-[var(--color-bg)] border-transparent' 
+                                    : 'bg-[var(--color-bg-subtle)] text-[var(--color-text-secondary)] border-[var(--color-border)] hover:bg-[var(--color-border)]'
+                                }`}
+                              >
+                                {label}
+                              </button>
+                            )
+                          })}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div></div>
+              )}
+            </div>
+          )}
+
+          {batch !== '2022' && (
+            <div className="border-b border-[var(--color-border)] bg-[var(--color-bg-subtle)]/30">
+              <button
+                onClick={() => setIsOtherCoursesExpanded(!isOtherCoursesExpanded)}
+                className="w-full flex items-center justify-between px-4 py-4 focus-visible:outline-none focus-visible:bg-[var(--color-bg-raised)] transition-colors hover:bg-[var(--color-bg-raised)]"
+              >
+                <div className="flex items-center gap-3">
+                  <h2 className="font-display text-lg text-[var(--color-text-primary)]">Other Courses</h2>
+                  {selectedOtherCount > 0 && (
+                    <span className="font-mono text-[10px] px-2 py-0.5 rounded-full bg-[var(--color-text-primary)] text-[var(--color-bg)]">
+                      {selectedOtherCount} selected
+                    </span>
+                  )}
+                </div>
+                <svg
+                  width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"
+                  className={`text-[var(--color-text-secondary)] transition-transform duration-200 ${isOtherCoursesExpanded ? 'rotate-180' : ''}`}
+                >
+                  <polyline points="6 9 12 15 18 9" />
+                </svg>
+              </button>
+
+              {isOtherCoursesExpanded && (
+                <div className="px-4 pb-6 pt-2">
+                  {otherCourseGroups.length === 0 ? (
+                    <p className="font-mono text-xs text-[var(--color-text-tertiary)]">No additional courses found outside your selected section.</p>
+                  ) : (
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      {otherCourseGroups.map(group => (
+                        <div key={group.courseKey} className="border border-[var(--color-border)] rounded-md p-3 bg-[var(--color-bg-raised)]">
+                          <div className="flex items-center justify-between gap-2 mb-2">
+                            <p className="font-body text-sm font-medium text-[var(--color-text-primary)] leading-snug">{group.courseName}</p>
+                            {group.category === 'repeat' && (
+                              <span className="font-mono text-[10px] px-1.5 py-0.5 rounded bg-amber-100 text-amber-700 dark:bg-amber-900/40 dark:text-amber-400">Repeat</span>
+                            )}
+                          </div>
+                          <p className="font-mono text-[10px] text-[var(--color-text-tertiary)] mb-2">{group.department}</p>
+                          <div className="flex flex-wrap gap-2">
+                            {group.sections.map(sectionOption => {
+                              const isSelected = effectiveSectionByCourse.get(group.courseKey) === sectionOption && !removedSet.has(group.courseKey);
+                              return (
+                                <button
+                                  key={`${group.courseKey}-${sectionOption}`}
+                                  onClick={() => toggleOtherCourse(group.courseKey, sectionOption)}
+                                  className={`px-2 py-1 rounded text-xs font-mono transition-colors border ${
+                                    isSelected
+                                      ? 'bg-[var(--color-text-primary)] text-[var(--color-bg)] border-transparent'
+                                      : 'bg-[var(--color-bg-subtle)] text-[var(--color-text-secondary)] border-[var(--color-border)] hover:bg-[var(--color-border)]'
+                                  }`}
+                                >
+                                  {sectionOption || 'Unspecified'}
+                                </button>
+                              );
+                            })}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
+          )}
 
           {/* Partial data banner */}
           {hasPartialDays && (
@@ -253,7 +791,15 @@ function TimetablePageInner() {
                 }
               />
             ) : viewMode === 'list' ? (
-              <ListView grouped={grouped} dept={dept} conflicts={conflicts} onSelect={setSelected} />
+              <ListView
+                grouped={grouped}
+                dept={dept}
+                conflicts={conflicts}
+                onSelect={setSelected}
+                onRemoveCourse={(entry) => removeCourseByKey(makeCourseKey(entry))}
+                onChangeCourseSection={(entry, nextSection) => updateCourseSection(makeCourseKey(entry), nextSection)}
+                getAvailableSections={(entry) => courseSectionsListByKey.get(makeCourseKey(entry)) ?? []}
+              />
             ) : (
               <GridView entries={filtered} dept={dept} conflicts={conflicts} onSelect={setSelected} />
             )}
@@ -280,11 +826,17 @@ function ListView({
   dept,
   conflicts,
   onSelect,
+  onRemoveCourse,
+  onChangeCourseSection,
+  getAvailableSections,
 }: {
   grouped: { day: string; entries: TimetableEntry[] }[];
   dept: string;
   conflicts: Set<string>;
   onSelect: (e: TimetableEntry) => void;
+  onRemoveCourse: (e: TimetableEntry) => void;
+  onChangeCourseSection: (e: TimetableEntry, section: string) => void;
+  getAvailableSections: (e: TimetableEntry) => string[];
 }) {
   return (
     <>
@@ -304,6 +856,9 @@ function ListView({
                   conflicting={conflicts.has(key)}
                   isRepeat={entry.category === 'repeat'}
                   onClick={() => onSelect(entry)}
+                  onRemove={() => onRemoveCourse(entry)}
+                  onChangeSection={(nextSection) => onChangeCourseSection(entry, nextSection)}
+                  availableSections={getAvailableSections(entry)}
                 />
               );
             })}
