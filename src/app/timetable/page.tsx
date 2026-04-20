@@ -340,6 +340,16 @@ function TimetablePageInner() {
   const otherCourseGroups = useMemo(() => {
     if (batch === '2022') return [];
 
+    // Only show courses that are not part of the selected section at all.
+    // If a course already exists in the selected section, it stays in default results
+    // and can be switched via "Change Section" directly on the course card.
+    const selectedSectionCourseKeys = new Set<CourseKey>();
+    for (const entry of contextEntries) {
+      if (isSelectedSection(batch, entry.section, section)) {
+        selectedSectionCourseKeys.add(makeCourseKey(entry));
+      }
+    }
+
     const groups = new Map<CourseKey, {
       courseName: string;
       department: string;
@@ -351,6 +361,8 @@ function TimetablePageInner() {
       if (isSelectedSection(batch, entry.section, section)) continue;
 
       const courseKey = makeCourseKey(entry);
+      if (selectedSectionCourseKeys.has(courseKey)) continue;
+
       if (!groups.has(courseKey)) {
         groups.set(courseKey, {
           courseName: entry.courseName,
