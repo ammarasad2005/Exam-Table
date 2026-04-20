@@ -26,6 +26,7 @@ export function TimetableCard({
 }: Props) {
   const accentColor = `var(--accent-${dept.toLowerCase()})`;
   const accentBg    = `var(--accent-${dept.toLowerCase()}-bg)`;
+  const stripColor = conflicting ? '#f87171' : accentColor;
   const [isSectionMenuOpen, setIsSectionMenuOpen] = useState(false);
   const sectionMenuRef = useRef<HTMLDivElement | null>(null);
 
@@ -48,18 +49,22 @@ export function TimetableCard({
 
   return (
     <div
-      className="timetable-card w-full text-left border border-[var(--color-border)] rounded-lg p-4 flex flex-col gap-2 active:scale-[0.98] transition-all duration-100 focus-visible:outline-none focus-visible:ring-2"
+      className="timetable-card group relative overflow-hidden w-full text-left border border-[var(--color-border)] rounded-lg p-4 flex flex-col gap-2 active:scale-[0.98] transition-all duration-100 focus-visible:outline-none focus-visible:ring-2"
       style={{
         background: isRepeat
           ? 'linear-gradient(135deg, var(--color-bg-raised) 50%, color-mix(in srgb, var(--color-bg-raised) 80%, #f59e0b 20%))'
           : 'var(--color-bg-raised)',
-        borderLeftWidth: conflicting ? '3px' : undefined,
-        borderLeftColor: conflicting ? '#f87171' : undefined,
         boxShadow: 'var(--shadow-card), var(--border-inset)',
       }}
       onMouseOver={e => (e.currentTarget.style.boxShadow = 'var(--shadow-raised), var(--border-inset)')}
       onMouseOut={e => (e.currentTarget.style.boxShadow = 'var(--shadow-card), var(--border-inset)')}
     >
+      <span
+        aria-hidden="true"
+        className="absolute left-0 top-0 bottom-0 w-[5px] rounded-l-lg opacity-80 group-hover:opacity-100 transition-opacity duration-150"
+        style={{ backgroundColor: stripColor }}
+      />
+
       <button type="button" onClick={onClick} className="text-left flex flex-col gap-2 w-full">
       {/* Top row: course name truncated + type badge */}
       <div className="flex items-center justify-between gap-2 overflow-hidden">

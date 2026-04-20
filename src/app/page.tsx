@@ -185,7 +185,7 @@ export default function RootPage() {
                 key={f.id}
                 onClick={() => handleFeatureClick(f.id, f.placeholder)}
                 disabled={f.placeholder}
-                className="w-full text-left rounded-2xl border bg-[var(--color-bg-raised)] p-4 flex items-center gap-4 transition-all duration-150 active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 group disabled:opacity-50 disabled:cursor-not-allowed"
+                className="relative overflow-hidden w-full text-left rounded-2xl border bg-[var(--color-bg-raised)] p-4 flex items-center gap-4 transition-all duration-150 active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 group disabled:opacity-50 disabled:cursor-not-allowed"
                 style={{
                   borderColor: 'var(--color-border)',
                   boxShadow: 'var(--shadow-card)',
@@ -201,6 +201,11 @@ export default function RootPage() {
                   (e.currentTarget as HTMLElement).style.borderColor = 'var(--color-border)';
                 }}
               >
+                <span
+                  aria-hidden="true"
+                  className="absolute left-0 top-0 bottom-0 w-[5px] rounded-l-2xl opacity-80 group-hover:opacity-100 transition-opacity duration-150"
+                  style={{ backgroundColor: `var(--accent-${f.accent})` }}
+                />
                 <div
                   className="w-11 h-11 rounded-xl flex items-center justify-center shrink-0 transition-colors duration-150"
                   style={{
@@ -327,7 +332,7 @@ export default function RootPage() {
                   key={f.id}
                   onClick={() => handleFeatureClick(f.id, f.placeholder)}
                   disabled={f.placeholder}
-                  className="group text-left rounded-2xl border bg-[var(--color-bg-raised)] p-6 flex flex-col gap-4 transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="group relative overflow-hidden text-left rounded-2xl border bg-[var(--color-bg-raised)] p-6 flex flex-col gap-4 transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 disabled:opacity-50 disabled:cursor-not-allowed"
                   style={{
                     borderColor: 'var(--color-border)',
                     boxShadow: 'var(--shadow-card), var(--border-inset)',
@@ -345,6 +350,11 @@ export default function RootPage() {
                     (e.currentTarget as HTMLElement).style.transform = 'translateY(0)';
                   }}
                 >
+                  <span
+                    aria-hidden="true"
+                    className="absolute left-0 top-0 bottom-0 w-[5px] rounded-l-2xl opacity-80 group-hover:opacity-100 transition-opacity duration-200"
+                    style={{ backgroundColor: `var(--accent-${f.accent})` }}
+                  />
                   <div className="flex items-start justify-between">
                     <div
                       className="w-11 h-11 rounded-xl flex items-center justify-center transition-colors duration-200"
