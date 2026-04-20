@@ -537,6 +537,14 @@
                                 "rescheduled": false,
                                 "exam": false
                             }
+                        ],
+                        "Friday": [
+                            {
+                                "room": "C-304",
+                                "time": "09:30-11:30",
+                                "rescheduled": true,
+                                "exam": false
+                            }
                         ]
                     },
                     "A": {
@@ -931,6 +939,14 @@
                                 "rescheduled": false,
                                 "exam": false
                             }
+                        ],
+                        "Friday": [
+                            {
+                                "room": "C-303",
+                                "time": "02:30-05:15",
+                                "rescheduled": true,
+                                "exam": false
+                            }
                         ]
                     },
                     "J2": {
@@ -1169,9 +1185,9 @@
                         "Monday": [
                             {
                                 "room": "D-IT Lab 4",
-                                "time": "02:30-04:00",
+                                "time": "02:30-05:15",
                                 "rescheduled": false,
-                                "exam": true
+                                "exam": false
                             }
                         ]
                     },
@@ -1581,6 +1597,14 @@
                                 "room": "A-CALL-1",
                                 "time": "02:30-05:15",
                                 "rescheduled": false,
+                                "exam": false
+                            }
+                        ],
+                        "Friday": [
+                            {
+                                "room": "C-307",
+                                "time": "08:30-11:15",
+                                "rescheduled": true,
                                 "exam": false
                             }
                         ]
@@ -2096,6 +2120,22 @@
                             }
                         ]
                     },
+                    "D2": {
+                        "Wednesday": [
+                            {
+                                "room": "D-302",
+                                "time": "08:30-11:15",
+                                "rescheduled": true,
+                                "exam": false
+                            },
+                            {
+                                "room": "A-CALL-3",
+                                "time": "11:30-02:15",
+                                "rescheduled": false,
+                                "exam": false
+                            }
+                        ]
+                    },
                     "C1": {
                         "Wednesday": [
                             {
@@ -2126,16 +2166,6 @@
                             }
                         ]
                     },
-                    "D2": {
-                        "Wednesday": [
-                            {
-                                "room": "A-CALL-3",
-                                "time": "11:30-02:15",
-                                "rescheduled": false,
-                                "exam": false
-                            }
-                        ]
-                    },
                     "A1": {
                         "Thursday": [
                             {
@@ -2152,6 +2182,14 @@
                                 "room": "A-CALL-3",
                                 "time": "11:30-02:15",
                                 "rescheduled": false,
+                                "exam": false
+                            }
+                        ],
+                        "Friday": [
+                            {
+                                "room": "C-304",
+                                "time": "02:30-05:15",
+                                "rescheduled": true,
                                 "exam": false
                             }
                         ]
@@ -6514,9 +6552,9 @@
                         "Monday": [
                             {
                                 "room": "D-IT Lab 1",
-                                "time": "08:30-10:00",
+                                "time": "08:30-11:15",
                                 "rescheduled": false,
-                                "exam": true
+                                "exam": false
                             }
                         ]
                     },
@@ -6524,9 +6562,9 @@
                         "Monday": [
                             {
                                 "room": "D-IT Lab 2",
-                                "time": "02:30-04:00",
+                                "time": "02:30-05:15",
                                 "rescheduled": false,
-                                "exam": true
+                                "exam": false
                             }
                         ]
                     },
