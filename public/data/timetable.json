@@ -913,6 +913,14 @@
                                 "rescheduled": false,
                                 "exam": false
                             }
+                        ],
+                        "Friday": [
+                            {
+                                "room": "C-302",
+                                "time": "02:30-05:15",
+                                "rescheduled": true,
+                                "exam": false
+                            }
                         ]
                     },
                     "J1": {
@@ -1515,6 +1523,14 @@
                                 "room": "A-Mehran 2",
                                 "time": "11:30-02:15",
                                 "rescheduled": false,
+                                "exam": false
+                            }
+                        ],
+                        "Thursday": [
+                            {
+                                "room": "C-309",
+                                "time": "02:30-05:15",
+                                "rescheduled": true,
                                 "exam": false
                             }
                         ]
@@ -7797,6 +7813,14 @@
                                 "rescheduled": false,
                                 "exam": false
                             }
+                        ],
+                        "Friday": [
+                            {
+                                "room": "C-308",
+                                "time": "11:30-12:50",
+                                "rescheduled": true,
+                                "exam": false
+                            }
                         ]
                     },
                     "A": {
@@ -8147,6 +8171,14 @@
                                 "room": "D-315",
                                 "time": "11:30-12:50",
                                 "rescheduled": false,
+                                "exam": false
+                            }
+                        ],
+                        "Friday": [
+                            {
+                                "room": "C-301",
+                                "time": "02:30-03:50",
+                                "rescheduled": true,
                                 "exam": false
                             }
                         ]
