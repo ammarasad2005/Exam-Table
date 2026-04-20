@@ -35,10 +35,15 @@ const instrumentSerif = Instrument_Serif({
 
 
 export const metadata: Metadata = {
-  title: 'FAST Isb Schedule',
+  title: 'FAST Isb Utilities',
   description: 'Find your weekly and exam schedules — FAST NUCES, Islamabad',
+  icons: {
+    icon: '/logo/icon.png',
+    shortcut: '/logo/icon.png',
+    apple: '/logo/icon.png',
+  },
   openGraph: {
-    title: 'FAST Isb Schedule',
+    title: 'FAST Isb Utilities',
     description: 'Find your weekly and exam schedules instantly',
     type: 'website',
   },
