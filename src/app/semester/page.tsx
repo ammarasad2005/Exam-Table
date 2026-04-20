@@ -107,8 +107,8 @@ export default function SemesterPlanPage() {
         <div className="flex flex-col flex-1 px-5 pb-28 pt-4 max-w-lg mx-auto w-full gap-10">
           <MobileHero />
           <KeyDatesSection />
-          <HolidaysSection />
           {mounted && <CalendarsSection />}
+          <HolidaysSection />
         </div>
         <FloatingMenu />
       </main>
@@ -118,11 +118,28 @@ export default function SemesterPlanPage() {
       ================================================================ */}
       <div className="hidden md:flex min-h-dvh flex-col bg-[var(--color-bg)]">
         <Header />
-        <div className="flex-1 max-w-4xl mx-auto w-full px-10 lg:px-16 py-14 flex flex-col gap-12">
-          <DesktopHero />
-          <KeyDatesSection />
-          {mounted && <CalendarsSection />}
-          <HolidaysSection />
+        <div className="flex-1 w-full px-6 md:px-10 lg:px-12 xl:px-16 py-14">
+          <div className="flex flex-col gap-10 lg:flex-row lg:gap-8 xl:gap-12 justify-between">
+            <div className="min-w-0 flex flex-col gap-8 w-full max-w-[800px]">
+              <DesktopHero />
+              <KeyDatesSection />
+            </div>
+
+            <aside className="min-w-0 lg:sticky lg:top-20 lg:self-start w-full max-w-2xl lg:ml-auto">
+              <section
+                className="rounded-2xl border p-6 xl:p-7 flex flex-col gap-8"
+                style={{
+                  borderColor: 'var(--color-border)',
+                  backgroundColor: 'var(--color-bg-raised)',
+                  boxShadow: 'var(--shadow-card), var(--border-inset)',
+                }}
+              >
+                {mounted && <CalendarsSection compact />}
+                <div className="h-px" style={{ backgroundColor: 'var(--color-border)' }} />
+                <HolidaysSection compact />
+              </section>
+            </aside>
+          </div>
         </div>
         <div className="pb-20" /> {/* spacer for navbar */}
         <Navbar />
@@ -174,59 +191,122 @@ function SectionLabel({ children }: { children: React.ReactNode }) {
 }
 
 function KeyDatesSection() {
+  const [mounted, setMounted] = useState(false);
+  const [animatedItems, setAnimatedItems] = useState<number[]>([]);
+
+  useEffect(() => {
+    // 1. Timeline Line animate
+    setMounted(true);
+
+    // 2. Timeline Items + Marker staggered reveal
+    KEY_DATES.forEach((_, index) => {
+      setTimeout(() => {
+        setAnimatedItems((prev) => [...prev, index]);
+      }, 150 + index * 60);
+    });
+  }, []);
+
   return (
     <section>
+      <style>{`
+        .timeline-line {
+          transform: scaleY(0);
+          transform-origin: top;
+          transition: transform 700ms ease-out;
+        }
+        .timeline-line.animate {
+          transform: scaleY(1);
+        }
+
+        .timeline-item {
+          opacity: 0;
+          transform: translateY(8px);
+          transition: all 400ms ease-out;
+        }
+        .timeline-item.visible {
+          opacity: 1;
+          transform: translateY(0);
+        }
+
+        .timeline-marker {
+          transform: scale(0);
+          transition: transform 300ms ease-out;
+        }
+        .timeline-marker.visible {
+          transform: scale(1);
+        }
+      `}</style>
       <SectionLabel>Key dates at a glance</SectionLabel>
-      <div className="flex flex-col gap-2">
-        {KEY_DATES.map((ev, i) => {
-          const isKey = ev.type !== 'info';
-          const badgeStyle = BADGE_STYLES[ev.type];
-          const borderColor = isKey ? BORDER_COLORS[ev.type] : undefined;
 
-          return (
-            <div
-              key={i}
-              className="flex items-center gap-3 px-4 py-3 rounded-xl border transition-all"
-              style={{
-                borderColor: 'var(--color-border)',
-                backgroundColor: 'var(--color-bg-raised)',
-                boxShadow: 'var(--shadow-card)',
-                ...(isKey && {
-                  borderLeftWidth: '3px',
-                  borderLeftColor: borderColor,
-                  borderRadius: '0 12px 12px 0',
-                }),
-              }}
-            >
-              {/* Badge */}
-              <span
-                className="font-mono text-[10px] font-semibold px-2 py-0.5 rounded-full shrink-0"
-                style={{
-                  backgroundColor: badgeStyle.bg,
-                  color: badgeStyle.text,
-                }}
+      <div className="relative mt-4 pl-10">
+        {/* Timeline Spine */}
+        <div
+          className={`absolute left-[16px] top-6 bottom-4 w-[2px] bg-[#E5E7EB] timeline-line ${mounted ? 'animate' : ''}`}
+        />
+
+        <div className="flex flex-col gap-6">
+          {KEY_DATES.map((ev, i) => {
+            const isVisible = animatedItems.includes(i);
+            const badgeStyle = BADGE_STYLES[ev.type];
+            const borderColor = BORDER_COLORS[ev.type] || 'var(--color-text-tertiary)';
+
+            return (
+              <div
+                key={i}
+                className={`relative flex items-center group timeline-item ${isVisible ? 'visible' : ''}`}
+                style={{ marginBottom: '24px' }}
               >
-                {ev.badge}
-              </span>
+                {/* Timeline Marker Container */}
+                <div className="absolute -left-[29px] w-6 flex justify-center z-10">
+                  <div
+                    className={`w-[10px] h-[10px] rounded-full timeline-marker ${isVisible ? 'visible' : ''}`}
+                    style={{
+                      backgroundColor: borderColor,
+                      boxShadow: `0 0 0 4px ${badgeStyle.bg}`,
+                    }}
+                  />
+                </div>
 
-              {/* Label */}
-              <span className="font-body text-sm text-[var(--color-text-primary)] flex-1 min-w-0">
-                {ev.label}
-              </span>
+                {/* Event Card */}
+                <div
+                  className="flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-4 flex-1 p-4 rounded-xl border bg-[var(--color-bg-raised)] transition-all duration-300 hover:-translate-y-[2px] hover:shadow-md"
+                  style={{
+                    borderColor: 'var(--color-border)',
+                  }}
+                >
+                  <div className="flex items-center gap-3 flex-1 min-w-0">
+                    {/* Badge */}
+                    <span
+                      className="font-mono text-[10px] font-semibold px-2.5 py-1 rounded-full shrink-0"
+                      style={{
+                        backgroundColor: badgeStyle.bg,
+                        color: badgeStyle.text,
+                      }}
+                    >
+                      {ev.badge}
+                    </span>
 
-              {/* Date */}
-              <span className="font-mono text-[11px] text-[var(--color-text-tertiary)] shrink-0 ml-2">
-                {ev.date}
-              </span>
-            </div>
-          );
-        })}
+                    {/* Label */}
+                    <span className="font-body text-sm text-[var(--color-text-primary)] font-medium leading-tight">
+                      {ev.label}
+                    </span>
+                  </div>
+
+                  {/* Date */}
+                  <span className="font-mono text-[12px] text-[var(--color-text-tertiary)] shrink-0 sm:text-right pt-1 sm:pt-0">
+                    {ev.date}
+                  </span>
+                </div>
+              </div>
+            );
+          })}
+        </div>
       </div>
     </section>
   );
 }
 
-function CalendarsSection() {
+function CalendarsSection({ compact = false }: { compact?: boolean }) {
   const months = [0, 1, 2, 3, 4, 5]; // Jan–Jun 2026 (0-indexed)
 
   return (
@@ -252,7 +332,7 @@ function CalendarsSection() {
         ))}
       </div>
 
-      <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+      <div className={`grid gap-4 ${compact ? 'grid-cols-2' : 'grid-cols-2 md:grid-cols-3'}`}>
         {months.map((mi) => {
           const m1 = mi + 1; // 1-indexed month
           const year = 2026;
@@ -266,7 +346,7 @@ function CalendarsSection() {
           return (
             <div
               key={mi}
-              className="rounded-2xl border p-4"
+              className={`rounded-2xl border ${compact ? 'p-3' : 'p-4'}`}
               style={{
                 borderColor: 'var(--color-border)',
                 backgroundColor: 'var(--color-bg-raised)',
@@ -305,11 +385,11 @@ function CalendarsSection() {
   );
 }
 
-function HolidaysSection() {
+function HolidaysSection({ compact = false }: { compact?: boolean }) {
   return (
     <section>
       <SectionLabel>Holidays</SectionLabel>
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+      <div className={`grid gap-3 ${compact ? 'grid-cols-1' : 'grid-cols-1 sm:grid-cols-2'}`}>
         {HOLIDAYS.map((h, i) => (
           <div
             key={i}
