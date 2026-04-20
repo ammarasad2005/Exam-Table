@@ -614,6 +614,17 @@ function RowEditor({ row, index, matchCount, showMatchHint, onUpdate, onRemove, 
       .sort((a, b) => a.label.localeCompare(b.label));
   }, [row.batch, row.stream, row.category]);
 
+  function handleCourseKeyDown(e: React.KeyboardEvent<HTMLSelectElement>) {
+    if (!/^[a-z]$/i.test(e.key)) return;
+    const firstLetter = e.key.toLowerCase();
+    const match = availableCourses.find(course =>
+      course.label.charAt(0).toLowerCase() === firstLetter
+    );
+    if (!match) return;
+    e.preventDefault();
+    onUpdate({ selection: match.key, errorSelection: false });
+  }
+
   return (
     <div className="rounded-lg border border-[var(--color-border)] bg-[var(--color-bg-raised)] p-3 flex flex-col gap-3">
       {/* Row header */}
@@ -708,22 +719,22 @@ function RowEditor({ row, index, matchCount, showMatchHint, onUpdate, onRemove, 
           <label className="font-mono text-[9px] uppercase tracking-widest text-[var(--color-text-tertiary)]">
             Course & Section
           </label>
-          <div className="relative">
-            <input
-              list={`courses-list-${row.id}`}
-              value={row.selection}
-              onChange={e => onUpdate({ selection: e.target.value, errorSelection: false })}
-              placeholder={!row.stream ? 'Select Dept first' : availableCourses.length === 0 ? 'No classes found' : 'Type to search course...'}
-              className={`w-full h-9 px-2 rounded-md border text-xs font-mono bg-[var(--color-bg)] focus:outline-none focus:ring-2 focus:ring-[var(--accent-cs)] truncate ${row.errorSelection ? errorBase : normalBase}`}
-              aria-invalid={row.errorSelection}
-              disabled={!row.stream || availableCourses.length === 0}
-            />
-            <datalist id={`courses-list-${row.id}`}>
-              {availableCourses.map(c => (
-                <option key={c.key} value={c.key} />
-              ))}
-            </datalist>
-          </div>
+          <select
+            value={row.selection}
+            onChange={e => onUpdate({ selection: e.target.value, errorSelection: false })}
+            onKeyDown={handleCourseKeyDown}
+            className={`w-full h-9 px-2 rounded-md border text-xs font-mono bg-[var(--color-bg)] appearance-none focus:outline-none focus:ring-2 focus:ring-[var(--accent-cs)] cursor-pointer ${row.errorSelection ? errorBase : normalBase}`}
+            aria-invalid={row.errorSelection}
+            disabled={!row.stream || availableCourses.length === 0}
+            title="Type a single letter (A-Z) to jump"
+          >
+            <option value="" disabled>
+              {!row.stream ? 'Select Dept first' : availableCourses.length === 0 ? 'No classes found' : 'Select course & section'}
+            </option>
+            {availableCourses.map(c => (
+              <option key={c.key} value={c.key}>{c.label}</option>
+            ))}
+          </select>
         </div>
       </div>
 
