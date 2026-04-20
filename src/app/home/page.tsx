@@ -714,7 +714,7 @@ export default function SetupPage() {
             {/* Headline block */}
             <div className="relative z-10">
               <p className="font-mono text-xs uppercase tracking-widest text-[var(--color-text-tertiary)] mb-6">
-                FAST Isb Schedule —{' '}
+                FAST Isb Utilities —{' '}
                 {feature === 'exams' ? 'Exam Portal' : feature === 'timetable' ? 'Timetable Portal' : feature === 'faculty' ? 'Faculty Directory' : 'Room Finder'}
               </p>
               <h1
