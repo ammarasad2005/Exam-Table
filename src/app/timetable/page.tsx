@@ -59,9 +59,9 @@ function makeCourseKey(entry: Pick<TimetableEntry, 'department' | 'category' | '
 function TimetablePageInner() {
   const params  = useSearchParams();
   const router  = useRouter();
-  const batch   = params.get('batch')   ?? '';
-  const dept    = params.get('dept')    ?? 'CS';
-  const section = params.get('section') ?? '';
+  const batch   = params?.get('batch')   ?? '';
+  const dept    = params?.get('dept')    ?? 'CS';
+  const section = params?.get('section') ?? '';
 
   const [query,    setQuery]    = useState('');
   const [selected, setSelected] = useState<TimetableEntry | null>(null);

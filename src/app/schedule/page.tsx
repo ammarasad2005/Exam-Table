@@ -20,9 +20,9 @@ const allExams = scheduleData as ExamEntry[];
 function SchedulePageInner() {
   const params = useSearchParams();
   const router = useRouter();
-  const batch = params.get('batch') ?? '';
-  const school = params.get('school') ?? '';
-  const dept = params.get('dept') ?? 'CS';
+  const batch = params?.get('batch') ?? '';
+  const school = params?.get('school') ?? '';
+  const dept = params?.get('dept') ?? 'CS';
 
   const [query, setQuery] = useState('');
   const [selected, setSelected] = useState<ExamEntry | null>(null);

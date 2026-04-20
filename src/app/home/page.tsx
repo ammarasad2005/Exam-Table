@@ -55,7 +55,7 @@ const HERO_TEXTS: Record<Feature, string> = {
 function FeatureActivator({ onActivate }: { onActivate: (f: string) => void }) {
   const searchParams = useSearchParams();
   useEffect(() => {
-    const f = searchParams.get('feature');
+    const f = searchParams?.get('feature');
     if (f && ['timetable', 'exams', 'rooms', 'faculty'].includes(f)) {
       onActivate(f);
     }
