@@ -133,13 +133,50 @@ export default function EventsPage() {
             <EventsCalendar />
           </div>
 
+          {ongoingEvents.length > 0 && (
+            <section
+              className="rounded-2xl border p-4 events-panel-enter"
+              style={{
+                borderColor: 'var(--color-border)',
+                backgroundColor: 'var(--color-bg-raised)',
+                boxShadow: 'var(--shadow-card), var(--border-inset)',
+                animationDelay: '260ms',
+              }}
+            >
+              <h2 className="font-mono text-[10px] uppercase tracking-widest text-[var(--color-text-tertiary)] mb-3">
+                Ongoing Snapshot
+              </h2>
+              <div className="flex flex-col gap-2">
+                {ongoingEvents.map((event, index) => (
+                  <div
+                    key={`ongoing-mobile-${event.id ?? event.event_name}-${event.time}-${index}`}
+                    className="rounded-lg border px-3 py-2 events-item-enter"
+                    style={{ borderColor: 'var(--color-border)', animationDelay: `${280 + index * 40}ms` }}
+                  >
+                    <div className="flex items-start gap-2">
+                      <span className="mt-1.5 w-2 h-2 rounded-full bg-emerald-400 animate-pulse" aria-hidden="true" />
+                      <div className="min-w-0">
+                        <p className="font-body text-sm text-[var(--color-text-primary)] leading-snug">
+                          {event.event_name}
+                        </p>
+                        <p className="font-mono text-[10px] text-[var(--color-text-tertiary)] mt-1">
+                          {event.time}
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </section>
+          )}
+
           <section
             className="rounded-2xl border p-4 events-panel-enter"
             style={{
               borderColor: 'var(--color-border)',
               backgroundColor: 'var(--color-bg-raised)',
               boxShadow: 'var(--shadow-card), var(--border-inset)',
-              animationDelay: '290ms',
+              animationDelay: ongoingEvents.length > 0 ? '330ms' : '290ms',
             }}
           >
             <h2 className="font-mono text-[10px] uppercase tracking-widest text-[var(--color-text-tertiary)] mb-3">

@@ -14,7 +14,7 @@ const allTimetableEntries: TimetableEntry[] = flattenTimetable(timetableRaw);
 
 // ── Typing animation text ────────────────────────────────────────────────────
 const INTRO_TEXT =
-  'A unified utility layer for FAST Isb students. Timetables, exam schedules, room availability, faculty info, and the full semester calendar — all in one place.';
+  'A unified utility layer for FAST Isb students. Timetables, exam schedules, room availability, faculty info, semester plan and the events calendar — all in one place.';
 
 // ── Feature card definitions ─────────────────────────────────────────────────
 const FEATURES = [
@@ -198,36 +198,28 @@ export default function RootPage() {
             </p>
           </div>
 
-          {/* Feature cards */}
-          <div className="flex flex-col gap-3">
+          {/* Feature cards grid */}
+          <div className="grid grid-cols-2 gap-3">
             {FEATURES.map((f) => (
               <button
                 key={f.id}
                 onClick={() => handleFeatureClick(f.id, f.placeholder)}
                 disabled={f.placeholder}
-                className="relative overflow-hidden w-full text-left rounded-2xl border bg-[var(--color-bg-raised)] p-4 flex items-center gap-4 transition-all duration-150 active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 group disabled:opacity-50 disabled:cursor-not-allowed"
+                className="relative overflow-hidden w-full text-left rounded-2xl border bg-[var(--color-bg-raised)] p-4 flex flex-col justify-between aspect-ratio-square transition-all duration-150 active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 group disabled:opacity-50 disabled:cursor-not-allowed"
                 style={{
                   borderColor: 'var(--color-border)',
                   boxShadow: 'var(--shadow-card)',
-                }}
-                onMouseOver={e => {
-                  if (!f.placeholder) {
-                    (e.currentTarget as HTMLElement).style.boxShadow = 'var(--shadow-raised)';
-                    (e.currentTarget as HTMLElement).style.borderColor = `var(--accent-${f.accent})`;
-                  }
-                }}
-                onMouseOut={e => {
-                  (e.currentTarget as HTMLElement).style.boxShadow = 'var(--shadow-card)';
-                  (e.currentTarget as HTMLElement).style.borderColor = 'var(--color-border)';
+                  aspectRatio: '1/1',
                 }}
               >
                 <span
                   aria-hidden="true"
-                  className="absolute left-0 top-0 bottom-0 w-[5px] rounded-l-2xl opacity-80 group-hover:opacity-100 transition-opacity duration-150"
+                  className="absolute left-0 top-0 bottom-0 w-[4px] opacity-90 transition-opacity duration-150"
                   style={{ backgroundColor: `var(--accent-${f.accent})` }}
                 />
+                
                 <div
-                  className="w-11 h-11 rounded-xl flex items-center justify-center shrink-0 transition-colors duration-150"
+                  className="w-11 h-11 rounded-xl flex items-center justify-center shrink-0"
                   style={{
                     backgroundColor: `var(--accent-${f.accent}-bg)`,
                     color: `var(--accent-${f.accent})`,
@@ -235,22 +227,24 @@ export default function RootPage() {
                 >
                   {f.icon}
                 </div>
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-center gap-2">
-                    <span className="font-display text-base text-[var(--color-text-primary)]">{f.title}</span>
-                    {f.placeholder && (
-                      <span className="font-mono text-[8px] uppercase tracking-wider px-1.5 py-0.5 rounded-full bg-[var(--color-bg-subtle)] text-[var(--color-text-tertiary)] border border-[var(--color-border)]">
-                        Soon
+
+                <div className="flex flex-col gap-1.5">
+                  <div className="flex items-center justify-between gap-2">
+                    <span className="font-display text-base leading-tight text-[var(--color-text-primary)]">
+                      {f.title}
+                    </span>
+                    {!f.placeholder && (
+                      <span className="font-mono text-[11px] text-[var(--color-text-tertiary)] opacity-60 group-hover:translate-x-0.5 transition-transform">
+                        →
                       </span>
                     )}
                   </div>
-                  <p className="font-body text-xs text-[var(--color-text-secondary)] mt-0.5 leading-snug">{f.description}</p>
+                  {f.placeholder && (
+                    <span className="inline-block self-start font-mono text-[8px] uppercase tracking-wider px-1.5 py-0.5 rounded-full bg-[var(--color-bg-subtle)] text-[var(--color-text-tertiary)] border border-[var(--color-border)]">
+                      Soon
+                    </span>
+                  )}
                 </div>
-                {!f.placeholder && (
-                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-[var(--color-text-tertiary)] shrink-0 group-hover:translate-x-0.5 transition-transform">
-                    <path d="M9 18l6-6-6-6" />
-                  </svg>
-                )}
               </button>
             ))}
           </div>

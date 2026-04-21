@@ -241,6 +241,8 @@ body {
 .slide-in-from-right-4  { animation-name: slide-in-from-right; }
 .duration-200 { animation-duration: 200ms; }
 .duration-250 { animation-duration: 250ms; }
+.duration-300 { animation-duration: 300ms; }
+.ease-out { animation-timing-function: cubic-bezier(0, 0, 0.2, 1); }
 
 @keyframes events-hero-in {
   from {

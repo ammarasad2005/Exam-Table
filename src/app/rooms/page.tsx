@@ -67,10 +67,10 @@ function RoomDetail({
 
   return (
     <>
-      <div className="fixed inset-0 z-30 bg-black/40 md:hidden animate-in fade-in duration-200" onClick={onClose} />
+      <div className="fixed inset-0 z-30 bg-black/40 md:hidden animate-in fade-in duration-300 ease-out" onClick={onClose} />
       <div
         role="dialog"
-        className="fixed z-40 bottom-0 left-0 right-0 rounded-t-2xl max-h-[85dvh] overflow-y-auto md:bottom-0 md:top-14 md:left-auto md:right-0 md:w-96 md:rounded-none md:rounded-l-2xl md:max-h-[calc(100dvh-56px)] animate-in slide-in-from-bottom-4 md:slide-in-from-right-4 duration-250 bg-[var(--color-bg-raised)] shadow-float border-l border-[var(--color-border)]"
+        className="fixed z-40 bottom-0 left-0 right-0 rounded-t-2xl max-h-[85dvh] overflow-y-auto md:bottom-0 md:top-14 md:left-auto md:right-0 md:w-96 md:rounded-none md:rounded-l-2xl md:max-h-[calc(100dvh-56px)] animate-in slide-in-from-bottom-4 md:slide-in-from-right-4 duration-300 ease-out bg-[var(--color-bg-raised)] shadow-float border-l border-[var(--color-border)]"
       >
         <div className="md:hidden flex justify-center pt-3 pb-1">
           <div className="w-10 h-1 rounded-full bg-[var(--color-border-strong)]" />

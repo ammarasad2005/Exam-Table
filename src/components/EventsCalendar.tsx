@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useMemo, useState } from 'react';
+import { createPortal } from 'react-dom';
 import {
   DAY_NAMES,
   MONTH_NAMES,
@@ -39,7 +40,10 @@ function EventDayDetail({
   events: CalendarEvent[];
   onClose: () => void;
 }) {
+  const [mounted, setMounted] = useState(false);
+
   useEffect(() => {
+    setMounted(true);
     document.body.style.overflow = 'hidden';
     return () => {
       document.body.style.overflow = '';
@@ -54,6 +58,8 @@ function EventDayDetail({
     return () => window.removeEventListener('keydown', handler);
   }, [onClose]);
 
+  if (!mounted) return null;
+
   const title = new Date(year, month, day).toLocaleDateString('en-US', {
     weekday: 'long',
     month: 'long',
@@ -62,10 +68,10 @@ function EventDayDetail({
   });
   const dotPalette = ['#378ADD', '#1D9E75', '#534AB7'] as const;
 
-  return (
+  return createPortal(
     <>
       <div
-        className="fixed inset-0 z-30 bg-black/30 md:hidden animate-in fade-in duration-200"
+        className="fixed inset-0 z-[60] bg-black/30 md:hidden animate-in fade-in duration-300 ease-out"
         onClick={onClose}
         aria-hidden="true"
       />
@@ -74,7 +80,7 @@ function EventDayDetail({
         role="dialog"
         aria-modal="true"
         aria-label={`${title} events`}
-        className="fixed z-40 bottom-0 left-0 right-0 rounded-t-2xl max-h-[85dvh] overflow-y-auto md:bottom-0 md:top-14 md:left-auto md:right-0 md:w-[430px] md:rounded-none md:rounded-l-2xl md:max-h-[calc(100dvh-56px)] animate-in slide-in-from-bottom-4 md:slide-in-from-right-4 duration-250"
+        className="fixed z-[70] bottom-0 left-0 right-0 rounded-t-2xl max-h-[85dvh] overflow-y-auto md:bottom-0 md:top-14 md:left-auto md:right-0 md:w-[430px] md:rounded-none md:rounded-l-2xl md:max-h-[calc(100dvh-56px)] animate-in slide-in-from-bottom-4 md:slide-in-from-right-4 duration-300 ease-out"
         style={{
           backgroundColor: 'var(--color-bg-raised)',
           boxShadow: 'var(--shadow-float)',
@@ -101,32 +107,33 @@ function EventDayDetail({
         </div>
 
         <div className="md:hidden px-5 pb-5">
-          {events.map((event, index) => (
-            <article
-              key={`${event.id ?? event.event_name}-${event.time}-${index}`}
-              className="flex items-start gap-3 border-b py-3 last:border-b-0"
-              style={{ borderColor: 'var(--color-border)' }}
-            >
-              <span
-                className="mt-1 h-2.5 w-2.5 flex-none rounded-full"
-                style={{ backgroundColor: dotPalette[Math.min(index, dotPalette.length - 1)] }}
-                aria-hidden="true"
-              />
+          <div className="flex flex-col divide-y divide-[var(--color-border)] rounded-lg border border-[var(--color-border)] overflow-hidden">
+            {events.map((event, index) => (
+              <article
+                key={`${event.id ?? event.event_name}-${event.time}-${index}`}
+                className="flex items-start gap-3 p-4 bg-[var(--color-bg-raised)]"
+              >
+                <span
+                  className="mt-1 h-2 w-2 flex-none rounded-full"
+                  style={{ backgroundColor: dotPalette[Math.min(index, dotPalette.length - 1)] }}
+                  aria-hidden="true"
+                />
 
-              <div className="min-w-0">
-                <p className="font-body text-sm font-medium leading-snug text-[var(--color-text-primary)]">
-                  {event.event_name}
-                </p>
-                <p className="mt-1 font-mono text-[11px] leading-relaxed text-[var(--color-text-secondary)]">
-                  {event.time}
-                  <span className="px-1.5 text-[var(--color-text-tertiary)]" aria-hidden="true">
-                    ·
-                  </span>
-                  {event.event_location || 'Location not provided'}
-                </p>
-              </div>
-            </article>
-          ))}
+                <div className="min-w-0">
+                  <p className="font-body text-sm font-medium leading-snug text-[var(--color-text-primary)]">
+                    {event.event_name}
+                  </p>
+                  <p className="mt-1 font-mono text-[11px] leading-relaxed text-[var(--color-text-secondary)]">
+                    {event.time}
+                    <span className="px-1.5 text-[var(--color-text-tertiary)]" aria-hidden="true">
+                      ·
+                    </span>
+                    {event.event_location || 'Location not provided'}
+                  </p>
+                </div>
+              </article>
+            ))}
+          </div>
         </div>
 
         <div className="hidden px-5 pb-6 md:flex md:flex-col md:gap-3">
@@ -152,7 +159,8 @@ function EventDayDetail({
           ))}
         </div>
       </div>
-    </>
+    </>,
+    document.body
   );
 }
 
