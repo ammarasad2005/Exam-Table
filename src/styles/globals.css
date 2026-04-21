@@ -242,6 +242,53 @@ body {
 .duration-200 { animation-duration: 200ms; }
 .duration-250 { animation-duration: 250ms; }
 
+@keyframes events-hero-in {
+  from {
+    opacity: 0;
+    transform: translateY(18px) scale(0.985);
+    filter: blur(1.5px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+    filter: blur(0);
+  }
+}
+
+@keyframes events-panel-in {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes events-item-in {
+  from {
+    opacity: 0;
+    transform: translateX(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+.events-hero-enter {
+  animation: events-hero-in 560ms cubic-bezier(0.2, 0.7, 0.2, 1) both;
+}
+
+.events-panel-enter {
+  animation: events-panel-in 430ms ease-out both;
+}
+
+.events-item-enter {
+  animation: events-item-in 380ms ease-out both;
+}
+
 /* Card stagger on list render */
 .exam-card { animation: page-enter 160ms ease-out both; }
 .exam-card:nth-child(1)  { animation-delay: 0ms; }

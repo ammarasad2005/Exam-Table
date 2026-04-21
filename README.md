@@ -97,6 +97,17 @@ There are two primary data pipelines in this project:
 - Purpose: powers both the Timetable and Free Rooms features.
 - Output: normalized timetable data in `public/data/timetable.json`
 
+3. Campus Events pipeline
+- Source: SLATE calendar list view with a custom date range.
+- Step 1 (scrape): `scripts/scrape_slate.py` -> `public/data/slate_calendar_events.json`
+- Step 2 (filter): `scripts/filter_events.py` -> `public/data/student_events.json`
+- Purpose: powers the Campus Events calendar view.
+- Required environment variables:
+   - `SLATE_USERNAME`
+   - `SLATE_PASSWORD`
+   - `SLATE_TOOL_BASE`
+   - `GROQ_API_KEY`
+
 ## Routes
 
 - `/` -> setup/configuration home
@@ -105,6 +116,7 @@ There are two primary data pipelines in this project:
 - `/timetable` -> timetable results
 - `/timetable/custom` -> custom timetable builder + bundles
 - `/rooms` -> free room finder
+- `/events` -> campus events calendar
 - `/api/schedule` -> filtered exam JSON API
 
 ## Local Development
@@ -131,6 +143,46 @@ http://localhost:3000
 - `npm run start` -> start production server
 - `npm run type-check` -> TypeScript checks
 - `npm run lint` -> Next.js linting
+- `npm run timetable:update` -> regenerate timetable JSON and copy to frontend data
+- `npm run events:scrape` -> scrape SLATE events into JSON
+- `npm run events:filter` -> filter scraped events for student relevance
+- `npm run events:update` -> run scrape + filter in sequence
+
+## Scheduled Automation
+
+### Option A: GitHub Actions (recommended)
+
+This repo now includes:
+- `.github/workflows/update-timetable.yml` (hourly timetable refresh)
+- `.github/workflows/update-events.yml` (weekly Monday events refresh)
+
+Required repository secrets for events workflow:
+- `MAIN_PUSH_TOKEN`
+- `SLATE_USERNAME`
+- `SLATE_PASSWORD`
+- `SLATE_TOOL_BASE`
+- `GROQ_API_KEY`
+
+### Option B: Local server cron jobs
+
+1. Create your local env file:
+```bash
+cp .env.events.example .env.events
+```
+
+2. Add these cron entries:
+```cron
+# Weekly events update (every Monday 06:00 UTC)
+0 6 * * 1 cd /home/ammarasad2005/projects/exams && set -a; . ./.env.events; set +a; npm run events:update >> logs/events.log 2>&1
+
+# Hourly timetable update
+0 * * * * cd /home/ammarasad2005/projects/exams && npm run timetable:update >> logs/timetable.log 2>&1
+```
+
+3. Create logs directory once:
+```bash
+mkdir -p logs
+```
 
 ## Notes
 

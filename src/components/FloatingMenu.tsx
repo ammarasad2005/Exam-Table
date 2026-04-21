@@ -24,6 +24,20 @@ function RoomsIcon() {
   );
 }
 
+function EventsIcon() {
+  return (
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+      <rect x="3" y="4" width="18" height="18" rx="2" />
+      <line x1="16" y1="2" x2="16" y2="6" />
+      <line x1="8" y1="2" x2="8" y2="6" />
+      <line x1="3" y1="10" x2="21" y2="10" />
+      <line x1="8" y1="14" x2="8" y2="14" strokeWidth="2.8" strokeLinecap="round" />
+      <line x1="12" y1="14" x2="12" y2="14" strokeWidth="2.8" strokeLinecap="round" />
+      <line x1="16" y1="14" x2="16" y2="14" strokeWidth="2.8" strokeLinecap="round" />
+    </svg>
+  );
+}
+
 function FacultyIcon() {
   return (
     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
@@ -48,6 +62,7 @@ function CustomIcon() {
 const MENU_ITEMS = [
   { name: 'Home',    path: '/home',             icon: <HomeIcon />,    label: 'Go to Home'    },
   { name: 'Rooms',   path: '/rooms',             icon: <RoomsIcon />,   label: 'View Rooms'    },
+  { name: 'Events',  path: '/events',            icon: <EventsIcon />,  label: 'View Events'   },
   { name: 'Faculty', path: '/faculty',           icon: <FacultyIcon />, label: 'View Faculty'  },
   { name: 'Custom',  path: '/timetable/custom',  icon: <CustomIcon />,  label: 'Custom Search' },
 ];
