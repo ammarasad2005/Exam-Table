@@ -9155,6 +9155,12 @@
                                 "time": "10:00-11:20",
                                 "rescheduled": false,
                                 "exam": false
+                            },
+                            {
+                                "room": "D-413",
+                                "time": "11:30-12:50",
+                                "rescheduled": true,
+                                "exam": false
                             }
                         ]
                     }
