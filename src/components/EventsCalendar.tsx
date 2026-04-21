@@ -60,6 +60,7 @@ function EventDayDetail({
     day: 'numeric',
     year: 'numeric',
   });
+  const dotPalette = ['#378ADD', '#1D9E75', '#534AB7'] as const;
 
   return (
     <>
@@ -83,7 +84,7 @@ function EventDayDetail({
           <div className="w-10 h-1 rounded-full bg-[var(--color-border-strong)]" />
         </div>
 
-        <div className="flex items-start justify-between px-5 pt-4 pb-3">
+        <div className="flex items-start justify-between px-5 pt-4 pb-3 md:pb-3 border-b md:border-b-0 border-[var(--color-border)]">
           <div>
             <span className="font-mono text-xs text-[var(--color-text-tertiary)]">Campus Events</span>
             <h2 className="mt-1 font-display text-xl leading-tight text-[var(--color-text-primary)]">{title}</h2>
@@ -99,7 +100,36 @@ function EventDayDetail({
           </button>
         </div>
 
-        <div className="px-5 pb-6 flex flex-col gap-3">
+        <div className="md:hidden px-5 pb-5">
+          {events.map((event, index) => (
+            <article
+              key={`${event.id ?? event.event_name}-${event.time}-${index}`}
+              className="flex items-start gap-3 border-b py-3 last:border-b-0"
+              style={{ borderColor: 'var(--color-border)' }}
+            >
+              <span
+                className="mt-1 h-2.5 w-2.5 flex-none rounded-full"
+                style={{ backgroundColor: dotPalette[Math.min(index, dotPalette.length - 1)] }}
+                aria-hidden="true"
+              />
+
+              <div className="min-w-0">
+                <p className="font-body text-sm font-medium leading-snug text-[var(--color-text-primary)]">
+                  {event.event_name}
+                </p>
+                <p className="mt-1 font-mono text-[11px] leading-relaxed text-[var(--color-text-secondary)]">
+                  {event.time}
+                  <span className="px-1.5 text-[var(--color-text-tertiary)]" aria-hidden="true">
+                    ·
+                  </span>
+                  {event.event_location || 'Location not provided'}
+                </p>
+              </div>
+            </article>
+          ))}
+        </div>
+
+        <div className="hidden px-5 pb-6 md:flex md:flex-col md:gap-3">
           {events.map((event, index) => (
             <article
               key={`${event.id ?? event.event_name}-${event.time}-${index}`}
@@ -186,6 +216,12 @@ export function EventsCalendar({ initialMonth, initialYear, compact = false }: E
     })
     : [];
   const monthEventCount = Object.values(eventsByDay).reduce((sum, events) => sum + events.length, 0);
+  const chipPalette = [
+    'bg-blue-100 dark:bg-blue-900/40 text-blue-700 dark:text-blue-300',
+    'bg-teal-100 dark:bg-teal-900/40 text-teal-700 dark:text-teal-300',
+    'bg-indigo-100 dark:bg-indigo-900/40 text-indigo-700 dark:text-indigo-300',
+  ] as const;
+  const dotPalette = ['#378ADD', '#1D9E75', '#534AB7'] as const;
 
   function goPrev() {
     if (!canGoPrev) return;
@@ -203,16 +239,192 @@ export function EventsCalendar({ initialMonth, initialYear, compact = false }: E
     setSelectedDate(null);
   }
 
+  function renderDesktopCell(cell: CalendarCell, index: number) {
+    const dayEvents = getEventsForCell(cell);
+    const hasEvents = dayEvents.length > 0;
+    const isToday =
+      cell.day === now.getDate() &&
+      cell.month === now.getMonth() &&
+      cell.year === now.getFullYear();
+    const isOverflowDay = !cell.inCurrentMonth;
+    const previewLimit = compact ? 2 : 3;
+    const baseClass = `group relative rounded-lg border text-left transition-all ${compact ? 'h-[70px] p-1.5' : 'h-[132px] lg:h-[142px] p-2.5'}`;
+    const interactiveClass = hasEvents ? 'hover:-translate-y-[1px] hover:border-[var(--color-border-strong)]' : '';
+
+    const content = (
+      <>
+        <span
+          className={`absolute font-mono leading-none ${compact ? 'text-[10px] top-1.5 left-1.5' : 'text-sm top-2 left-2.5'} ${isToday && !isOverflowDay ? 'text-[#16c60c] dark:text-[#7CFC00]' : ''}`}
+          style={{
+            color: isOverflowDay ? 'var(--color-text-tertiary)' : (isToday ? undefined : 'var(--color-text-secondary)'),
+            fontWeight: isToday ? '700' : '500',
+            opacity: isOverflowDay ? 0.5 : 1,
+          }}
+        >
+          {cell.day}
+        </span>
+
+        {hasEvents && (
+          <span
+            className={`absolute w-1.5 h-1.5 rounded-full ${compact ? 'top-1.5 right-1.5' : 'top-2.5 right-2.5'}`}
+            style={{ backgroundColor: 'var(--accent-ds)', opacity: isOverflowDay ? 0.7 : 1 }}
+            aria-hidden="true"
+          />
+        )}
+
+        <div className={`flex flex-col gap-1 ${compact ? 'pt-3' : 'pt-5'}`}>
+          {dayEvents.slice(0, previewLimit).map((event, eventIndex) => (
+            <span
+              key={`${event.id ?? event.event_name}-${event.time}-${eventIndex}`}
+              className={`inline-block font-mono leading-tight rounded truncate ${compact ? 'text-[9px] px-1 py-0.5' : 'text-[11px] px-1.5 py-0.5'} ${chipPalette[Math.min(eventIndex, chipPalette.length - 1)]}`}
+              style={{
+                opacity: isOverflowDay ? 0.75 : 1,
+              }}
+            >
+              {event.event_name}
+            </span>
+          ))}
+
+          {dayEvents.length > previewLimit && (
+            <span
+              className={`font-mono text-[var(--color-text-tertiary)] ${compact ? 'text-[9px]' : 'text-[10px]'}`}
+              style={{ opacity: isOverflowDay ? 0.7 : 1 }}
+            >
+              +{dayEvents.length - previewLimit} more
+            </span>
+          )}
+        </div>
+      </>
+    );
+
+    const commonStyle = {
+      borderColor: isToday ? '#ff7a00' : 'var(--color-border)',
+      backgroundColor: hasEvents ? 'var(--color-bg-raised)' : 'var(--color-bg-subtle)',
+      boxShadow: isToday
+        ? '0 0 0 1px rgba(255, 122, 0, 0.9), 0 0 14px rgba(255, 122, 0, 0.55), inset 0 0 0 1px rgba(255, 170, 90, 0.25)'
+        : (hasEvents ? 'var(--shadow-card)' : 'none'),
+      opacity: isOverflowDay ? 0.82 : 1,
+    } as const;
+
+    if (!hasEvents) {
+      return (
+        <div
+          key={`desktop-day-${cell.year}-${cell.month}-${cell.day}-${index}`}
+          className={baseClass}
+          style={commonStyle}
+        >
+          {content}
+        </div>
+      );
+    }
+
+    return (
+      <button
+        key={`desktop-day-${cell.year}-${cell.month}-${cell.day}-${index}`}
+        type="button"
+        onClick={() => setSelectedDate({ day: cell.day, month: cell.month, year: cell.year })}
+        className={`${baseClass} ${interactiveClass}`}
+        style={commonStyle}
+      >
+        {content}
+      </button>
+    );
+  }
+
+  function renderMobileCell(cell: CalendarCell, index: number) {
+    const dayEvents = getEventsForCell(cell);
+    const hasEvents = dayEvents.length > 0;
+    const isToday =
+      cell.day === now.getDate() &&
+      cell.month === now.getMonth() &&
+      cell.year === now.getFullYear();
+    const isOverflowDay = !cell.inCurrentMonth;
+    const cellClasses = [
+      'min-h-[54px] border-b border-r px-1 py-1 text-center transition-colors',
+      hasEvents ? 'cursor-pointer active:bg-[var(--color-bg-subtle)]' : 'cursor-default',
+      isToday ? 'bg-[color:rgba(55,138,221,0.07)]' : 'bg-[var(--color-bg-raised)]',
+    ].join(' ');
+
+    const numberClasses = [
+      'inline-flex h-5 w-5 items-center justify-center rounded-full font-mono text-[11px] leading-none',
+      isToday ? 'bg-[#378ADD] text-white' : '',
+    ].join(' ');
+
+    const content = (
+      <>
+        <div
+          className="flex justify-center"
+          style={{
+            color: isOverflowDay ? 'var(--color-text-tertiary)' : 'var(--color-text-primary)',
+            opacity: isOverflowDay ? 0.45 : 1,
+            fontWeight: 500,
+          }}
+        >
+          <span className={numberClasses}>{cell.day}</span>
+        </div>
+
+        <div className="mt-1 flex min-h-[8px] items-center justify-center gap-1">
+          {dayEvents.slice(0, 3).map((event, eventIndex) => (
+            <span
+              key={`${event.id ?? event.event_name}-${event.time}-${eventIndex}`}
+              className="h-1.5 w-1.5 rounded-full"
+              style={{
+                backgroundColor: dotPalette[Math.min(eventIndex, dotPalette.length - 1)],
+                opacity: isOverflowDay ? 0.4 : 1,
+              }}
+              aria-hidden="true"
+            />
+          ))}
+
+          {dayEvents.length > 3 && (
+            <span
+              className="h-1.5 w-1.5 rounded-full"
+              style={{
+                backgroundColor: 'var(--color-text-tertiary)',
+                opacity: isOverflowDay ? 0.25 : 0.5,
+              }}
+              aria-hidden="true"
+            />
+          )}
+        </div>
+      </>
+    );
+
+    if (!hasEvents) {
+      return (
+        <div
+          key={`mobile-day-${cell.year}-${cell.month}-${cell.day}-${index}`}
+          className={cellClasses}
+          style={{ borderColor: 'var(--color-border)' }}
+        >
+          {content}
+        </div>
+      );
+    }
+
+    return (
+      <button
+        key={`mobile-day-${cell.year}-${cell.month}-${cell.day}-${index}`}
+        type="button"
+        onClick={() => setSelectedDate({ day: cell.day, month: cell.month, year: cell.year })}
+        className={cellClasses}
+        style={{ borderColor: 'var(--color-border)' }}
+      >
+        {content}
+      </button>
+    );
+  }
+
   return (
     <section
-      className={`rounded-2xl border ${compact ? 'p-4' : 'p-6 md:p-7'}`}
+      className={`rounded-2xl border ${compact ? 'p-4' : 'p-4 md:p-7'}`}
       style={{
         borderColor: 'var(--color-border)',
         backgroundColor: 'var(--color-bg-raised)',
         boxShadow: 'var(--shadow-card), var(--border-inset)',
       }}
     >
-      <div className={`flex items-center gap-3 ${compact ? 'mb-2' : 'mb-4'}`}>
+      <div className={`flex items-center gap-3 ${compact ? 'mb-2' : 'mb-3 md:mb-4'}`}>
         <button
           onClick={goPrev}
           disabled={!canGoPrev}
@@ -241,118 +453,23 @@ export function EventsCalendar({ initialMonth, initialYear, compact = false }: E
         </button>
       </div>
 
-      <div className={`grid grid-cols-7 ${compact ? 'gap-1.5 mb-2' : 'gap-2 mb-3'}`}>
+      <div className={`grid grid-cols-7 border-b border-[var(--color-border)] md:border-b-0 ${compact ? 'gap-1.5 mb-2' : 'gap-0 md:gap-2 mb-0 md:mb-3'}`}>
         {DAY_NAMES.map((dayName) => (
           <div
             key={dayName}
-            className={`font-mono uppercase tracking-widest text-[var(--color-text-tertiary)] text-center py-1 ${compact ? 'text-[10px]' : 'text-xs'}`}
+            className={`font-mono uppercase tracking-widest text-[var(--color-text-tertiary)] text-center py-1 ${compact ? 'text-[10px]' : 'text-[10px] md:text-xs'}`}
           >
             {dayName}
           </div>
         ))}
       </div>
 
-      <div className={`grid grid-cols-7 ${compact ? 'gap-1.5' : 'gap-2'}`}>
-        {cells.map((cell, index) => {
-          const dayEvents = getEventsForCell(cell);
-          const hasEvents = dayEvents.length > 0;
-          const isToday =
-            cell.day === now.getDate() &&
-            cell.month === now.getMonth() &&
-            cell.year === now.getFullYear();
-          const isOverflowDay = !cell.inCurrentMonth;
+      <div className="grid grid-cols-7 border-l border-t border-[var(--color-border)] md:hidden">
+        {cells.map((cell, index) => renderMobileCell(cell, index))}
+      </div>
 
-          const baseClass = `group relative rounded-lg border text-left transition-all ${compact ? 'h-[70px] p-1.5' : 'h-[132px] lg:h-[142px] p-2.5'}`;
-          const interactiveClass = hasEvents
-            ? 'hover:-translate-y-[1px] hover:border-[var(--color-border-strong)]'
-            : '';
-
-          const previewLimit = compact ? 2 : 3;
-          const chipPalette = [
-            'bg-blue-100 dark:bg-blue-900/40 text-blue-700 dark:text-blue-300',
-            'bg-teal-100 dark:bg-teal-900/40 text-teal-700 dark:text-teal-300',
-            'bg-indigo-100 dark:bg-indigo-900/40 text-indigo-700 dark:text-indigo-300',
-          ] as const;
-
-          const content = (
-            <>
-              <span
-                className={`absolute font-mono leading-none ${compact ? 'text-[10px] top-1.5 left-1.5' : 'text-sm top-2 left-2.5'} ${isToday && !isOverflowDay ? 'text-[#16c60c] dark:text-[#7CFC00]' : ''}`}
-                style={{
-                  color: isOverflowDay ? 'var(--color-text-tertiary)' : (isToday ? undefined : 'var(--color-text-secondary)'),
-                  fontWeight: isToday ? '700' : '500',
-                  opacity: isOverflowDay ? 0.5 : 1,
-                }}
-              >
-                {cell.day}
-              </span>
-
-              {hasEvents && (
-                <span
-                  className={`absolute w-1.5 h-1.5 rounded-full ${compact ? 'top-1.5 right-1.5' : 'top-2.5 right-2.5'}`}
-                  style={{ backgroundColor: 'var(--accent-ds)', opacity: isOverflowDay ? 0.7 : 1 }}
-                  aria-hidden="true"
-                />
-              )}
-
-              <div className={`flex flex-col gap-1 ${compact ? 'pt-3' : 'pt-5'}`}>
-                {dayEvents.slice(0, previewLimit).map((event, eventIndex) => (
-                  <span
-                    key={`${event.id ?? event.event_name}-${event.time}-${eventIndex}`}
-                    className={`inline-block font-mono leading-tight rounded truncate ${compact ? 'text-[9px] px-1 py-0.5' : 'text-[11px] px-1.5 py-0.5'} ${chipPalette[Math.min(eventIndex, chipPalette.length - 1)]}`}
-                    style={{
-                      opacity: isOverflowDay ? 0.75 : 1,
-                    }}
-                  >
-                    {event.event_name}
-                  </span>
-                ))}
-
-                {dayEvents.length > previewLimit && (
-                  <span
-                    className={`font-mono text-[var(--color-text-tertiary)] ${compact ? 'text-[9px]' : 'text-[10px]'}`}
-                    style={{ opacity: isOverflowDay ? 0.7 : 1 }}
-                  >
-                    +{dayEvents.length - previewLimit} more
-                  </span>
-                )}
-              </div>
-            </>
-          );
-
-          const commonStyle = {
-            borderColor: isToday ? '#ff7a00' : 'var(--color-border)',
-            backgroundColor: hasEvents ? 'var(--color-bg-raised)' : 'var(--color-bg-subtle)',
-            boxShadow: isToday
-              ? '0 0 0 1px rgba(255, 122, 0, 0.9), 0 0 14px rgba(255, 122, 0, 0.55), inset 0 0 0 1px rgba(255, 170, 90, 0.25)'
-              : (hasEvents ? 'var(--shadow-card)' : 'none'),
-            opacity: isOverflowDay ? 0.82 : 1,
-          } as const;
-
-          if (!hasEvents) {
-            return (
-              <div
-                key={`day-${cell.year}-${cell.month}-${cell.day}-${index}`}
-                className={baseClass}
-                style={commonStyle}
-              >
-                {content}
-              </div>
-            );
-          }
-
-          return (
-            <button
-              key={`day-${cell.year}-${cell.month}-${cell.day}-${index}`}
-              type="button"
-              onClick={() => setSelectedDate({ day: cell.day, month: cell.month, year: cell.year })}
-              className={`${baseClass} ${interactiveClass}`}
-              style={commonStyle}
-            >
-              {content}
-            </button>
-          );
-        })}
+      <div className={`hidden md:grid md:grid-cols-7 ${compact ? 'md:gap-1.5' : 'md:gap-2'}`}>
+        {cells.map((cell, index) => renderDesktopCell(cell, index))}
       </div>
 
       {selectedDate && selectedEvents.length > 0 && (
