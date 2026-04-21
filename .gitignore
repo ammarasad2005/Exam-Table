@@ -27,6 +27,8 @@ yarn-error.log*
 
 # local env files
 .env*.local
+.env.events
+.env.events.*
 
 # vercel
 .vercel
@@ -46,4 +48,9 @@ next-env.d.ts
 FSC_ExamSchedule_GenerationPlan.md
 *_GenerationPlan.md
 time-table-extension-plan.md
+
+# events automation artifacts
+scripts/debug_list.html
+logs/events.log
+logs/timetable.log
 

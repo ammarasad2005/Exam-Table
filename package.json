@@ -8,7 +8,11 @@
     "dev": "npm run prebuild && next dev",
     "start": "next start",
     "type-check": "tsc --noEmit",
-    "lint": "next lint"
+    "lint": "next lint",
+    "timetable:update": "python3 all_courses_schedule.py && mkdir -p public/data && cp timetable.json public/data/timetable.json",
+    "events:scrape": "python3 scripts/scrape_slate.py",
+    "events:filter": "python3 scripts/filter_events.py",
+    "events:update": "npm run events:scrape && npm run events:filter"
   },
   "dependencies": {
     "@vercel/analytics": "^2.0.1",
