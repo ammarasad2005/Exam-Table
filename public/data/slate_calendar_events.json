@@ -1,9 +1,14 @@
 {
-  "filtered_at": "2026-04-21T07:03:25.064741",
+  "scraped_at": "2026-04-21T07:03:25.064741",
   "date_range": "2026-04-01 to 2026-04-30",
-  "total_original": 42,
-  "total_filtered": 26,
+  "total_events": 42,
   "events": [
+    {
+      "event_name": "BOS and BOF - FSM",
+      "date": "April 1",
+      "time": "9:00 am - 2:00 pm",
+      "event_location": "MEDC-117 by Mr. Afaq"
+    },
     {
       "event_name": "PPIT - Seminar",
       "date": "April 1",
@@ -11,10 +16,40 @@
       "event_location": "Auditorium by Mr. Fahad"
     },
     {
+      "event_name": "Meeting NBEAC",
+      "date": "April 2",
+      "time": "9:00 am - 4:00 pm",
+      "event_location": "MEDC-117 by Mr. Afaq"
+    },
+    {
+      "event_name": "ICABRP Meeting",
+      "date": "April 2",
+      "time": "12:00 pm - 1:00 pm",
+      "event_location": "CMR by Ms. Faseeha FSM"
+    },
+    {
       "event_name": "FSM Weekly Seminar 2",
       "date": "April 2",
       "time": "1:00 pm - 5:00 pm",
       "event_location": "Auditorium by Mr. Afaq"
+    },
+    {
+      "event_name": "Online Faculty Meeting",
+      "date": "April 3",
+      "time": "9:00 am - 12:00 pm",
+      "event_location": "MEDC-117 by Mr. Afaq"
+    },
+    {
+      "event_name": "Faculty Meetng ( EE)",
+      "date": "April 6",
+      "time": "11:20 am - 1:20 pm",
+      "event_location": "MEDC 117 by Dr. Niaz Ahmed"
+    },
+    {
+      "event_name": "THESIS DEFENSE Mr. Ghiayas Tahir",
+      "date": "April 6",
+      "time": "2:30 pm - 5:30 pm",
+      "event_location": "MEDC 117 by Mr. Shakeel Kiyani"
     },
     {
       "event_name": "Combine Class",
@@ -29,10 +64,22 @@
       "event_location": "Auditorium by Mr. Afaq"
     },
     {
+      "event_name": "Meeting with Lab Engineers",
+      "date": "April 7",
+      "time": "11:20 am - 1:00 pm",
+      "event_location": "EE Meeting Room"
+    },
+    {
       "event_name": "PPIT - Seminar",
       "date": "April 8",
       "time": "10:00 am - 2:00 pm",
       "event_location": "Auditorium by Mr. Fahad"
+    },
+    {
+      "event_name": "Dr. Qurat ul Ain DDC Meeting",
+      "date": "April 8",
+      "time": "10:00 am - 12:00 pm",
+      "event_location": "MEDC 117 & CMR"
     },
     {
       "event_name": "FSM Weekly Seminar 2",
@@ -47,6 +94,18 @@
       "event_location": "MEDC 118 By Ms. Sumaira Abbas"
     },
     {
+      "event_name": "BOF Studies Meeting",
+      "date": "April 13",
+      "time": "9:00 am - 4:00 pm",
+      "event_location": "MEDC-117 by Ms. Neelofar"
+    },
+    {
+      "event_name": "Interviews HR",
+      "date": "April 14",
+      "time": "9:00 am - 5:00 pm",
+      "event_location": "MEDC-117 & 118 by Mr. Adnan"
+    },
+    {
       "event_name": "FSM Weekly Seminar",
       "date": "April 14",
       "time": "10:00 am - 1:00 pm",
@@ -59,6 +118,12 @@
       "event_location": "CS Lawn by Mr. Afaq"
     },
     {
+      "event_name": "Interviews HR",
+      "date": "April 15",
+      "time": "9:00 am - 5:00 pm",
+      "event_location": "MEDC-117 & 118 by Mr. Adnan"
+    },
+    {
       "event_name": "Mobilink Talent Hunt",
       "date": "April 15",
       "time": "9:00 am - 5:00 pm",
@@ -69,6 +134,30 @@
       "date": "April 15",
       "time": "10:00 am - 2:00 pm",
       "event_location": "Auditorium by Mr. Fahad"
+    },
+    {
+      "event_name": "Meeting with CRS (FSM)",
+      "date": "April 15",
+      "time": "1:00 pm - 3:00 pm",
+      "event_location": "MEDC 118 by Afaq FSM"
+    },
+    {
+      "event_name": "Interviews HR",
+      "date": "April 16",
+      "time": "9:00 am - 5:00 pm",
+      "event_location": "Auditorium D Block, MEDC-117 & 118 by Mr. Adnan"
+    },
+    {
+      "event_name": "Meeting CS",
+      "date": "April 16",
+      "time": "12:00 pm - 3:00 pm",
+      "event_location": "C-109 by Ms. Nayab"
+    },
+    {
+      "event_name": "FSM Weekly Seminar 2",
+      "date": "April 16",
+      "time": "1:00 pm - 5:00 pm",
+      "event_location": "Auditorium by Mr. Afaq"
     },
     {
       "event_name": "Mock Interviews - FSM",
@@ -105,6 +194,12 @@
       "date": "April 21",
       "time": "1:00 pm - 6:00 pm",
       "event_location": "C-109 by Ms. Ujala"
+    },
+    {
+      "event_name": "BOS and BOF - FSM",
+      "date": "April 22",
+      "time": "9:00 am - 2:00 pm",
+      "event_location": "MEDC-117 by Mr. Afaq"
     },
     {
       "event_name": "PPIT - Seminar",
