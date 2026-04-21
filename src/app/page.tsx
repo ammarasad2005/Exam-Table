@@ -91,6 +91,24 @@ const FEATURES = [
     accent: 'cy',
     placeholder: false,
   },
+  {
+    id: 'events',
+    title: 'Campus Events',
+    description: 'Student-relevant events, seminars, drives, and activities in one monthly view.',
+    icon: (
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+        <rect x="3" y="4" width="18" height="18" rx="2" />
+        <line x1="16" y1="2" x2="16" y2="6" />
+        <line x1="8" y1="2" x2="8" y2="6" />
+        <line x1="3" y1="10" x2="21" y2="10" />
+        <line x1="8" y1="14" x2="8" y2="14" strokeWidth="2.5" strokeLinecap="round" />
+        <line x1="12" y1="14" x2="12" y2="14" strokeWidth="2.5" strokeLinecap="round" />
+        <line x1="16" y1="14" x2="16" y2="14" strokeWidth="2.5" strokeLinecap="round" />
+      </svg>
+    ),
+    accent: 'ee',
+    placeholder: false,
+  },
 ] as const;
 
 interface UserConfig {
@@ -145,6 +163,8 @@ export default function RootPage() {
     if (placeholder) return;
     if (id === 'semester') {
       router.push('/semester');
+    } else if (id === 'events') {
+      router.push('/events');
     } else {
       router.push(`/home?feature=${id}`);
     }
@@ -326,7 +346,7 @@ export default function RootPage() {
               Features
             </p>
 
-            <div className="grid grid-cols-2 gap-4 flex-1 content-start">
+            <div className="grid grid-cols-2 gap-4 content-start">
               {FEATURES.map((f) => (
                 <button
                   key={f.id}
