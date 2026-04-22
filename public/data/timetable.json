@@ -156,6 +156,14 @@
                                 "exam": false
                             }
                         ],
+                        "Thursday": [
+                            {
+                                "room": "D-302",
+                                "time": "01:30-03:00",
+                                "rescheduled": true,
+                                "exam": false
+                            }
+                        ],
                         "Saturday": [
                             {
                                 "room": "C-304",
@@ -8743,6 +8751,12 @@
                                 "time": "08:30-09:50",
                                 "rescheduled": true,
                                 "exam": false
+                            },
+                            {
+                                "room": "D-506",
+                                "time": "10:00-11:20",
+                                "rescheduled": true,
+                                "exam": false
                             }
                         ],
                         "Saturday": [
@@ -8767,6 +8781,12 @@
                             {
                                 "room": "D-505",
                                 "time": "08:30-09:50",
+                                "rescheduled": true,
+                                "exam": false
+                            },
+                            {
+                                "room": "D-505",
+                                "time": "10:00-11:20",
                                 "rescheduled": true,
                                 "exam": false
                             }
