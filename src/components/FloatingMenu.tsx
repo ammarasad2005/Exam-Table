@@ -2,250 +2,614 @@
 
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { usePathname, useRouter } from 'next/navigation';
+import { BarChart3, CalendarDays, Grid2x2, Home, Plus, Users } from 'lucide-react';
 
-// ── Icons ──────────────────────────────────────────────────────────────────
-function HomeIcon() {
-  return (
-    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
-      <path d="M3 9.5L12 3l9 6.5V20a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V9.5z" />
-      <polyline points="9 21 9 12 15 12 15 21" />
-    </svg>
-  );
-}
+const R = 250;
+const VISIBLE_START = 185;
+const VISIBLE_END = 260;
+const SPACING = 25;
+const rad = (d: number) => (d * Math.PI) / 180;
 
-function RoomsIcon() {
-  return (
-    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
-      <rect x="3" y="3" width="7" height="7" rx="1" />
-      <rect x="14" y="3" width="7" height="7" rx="1" />
-      <rect x="3" y="14" width="7" height="7" rx="1" />
-      <rect x="14" y="14" width="7" height="7" rx="1" />
-    </svg>
-  );
-}
+type MenuItem = {
+  id: string;
+  path: string;
+  label: string;
+  color: string;
+  icon: JSX.Element;
+};
 
-function EventsIcon() {
-  return (
-    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
-      <rect x="3" y="4" width="18" height="18" rx="2" />
-      <line x1="16" y1="2" x2="16" y2="6" />
-      <line x1="8" y1="2" x2="8" y2="6" />
-      <line x1="3" y1="10" x2="21" y2="10" />
-      <line x1="8" y1="14" x2="8" y2="14" strokeWidth="2.8" strokeLinecap="round" />
-      <line x1="12" y1="14" x2="12" y2="14" strokeWidth="2.8" strokeLinecap="round" />
-      <line x1="16" y1="14" x2="16" y2="14" strokeWidth="2.8" strokeLinecap="round" />
-    </svg>
-  );
-}
-
-function FacultyIcon() {
-  return (
-    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
-      <circle cx="12" cy="7" r="4" />
-      <path d="M5.5 21a7 7 0 0 1 13 0" />
-    </svg>
-  );
-}
-
-function CustomIcon() {
-  return (
-    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
-      <rect x="3" y="4" width="18" height="18" rx="2" />
-      <line x1="16" y1="2" x2="16" y2="6" />
-      <line x1="8" y1="2" x2="8" y2="6" />
-      <line x1="3" y1="10" x2="21" y2="10" />
-    </svg>
-  );
-}
-
-// ── Data ───────────────────────────────────────────────────────────────────
-const MENU_ITEMS = [
-  { name: 'Home',    path: '/home',             icon: <HomeIcon />,    label: 'Go to Home'    },
-  { name: 'Rooms',   path: '/rooms',             icon: <RoomsIcon />,   label: 'View Rooms'    },
-  { name: 'Events',  path: '/events',            icon: <EventsIcon />,  label: 'View Events'   },
-  { name: 'Faculty', path: '/faculty',           icon: <FacultyIcon />, label: 'View Faculty'  },
-  { name: 'Custom',  path: '/timetable/custom',  icon: <CustomIcon />,  label: 'Custom Search' },
+const MENU_ITEMS: MenuItem[] = [
+  { id: 'home', path: '/home', label: 'Home', color: '#3b82f6', icon: <Home size={22} /> },
+  { id: 'rooms', path: '/rooms', label: 'Rooms', color: '#10b981', icon: <Grid2x2 size={22} /> },
+  { id: 'events', path: '/events', label: 'Events', color: '#f97316', icon: <CalendarDays size={22} /> },
+  { id: 'faculty', path: '/faculty', label: 'Faculty', color: '#a855f7', icon: <Users size={22} /> },
+  { id: 'custom', path: '/timetable/custom', label: 'Custom', color: '#06b6d4', icon: <BarChart3 size={22} /> },
 ];
 
-// Spread items across a 90° arc, opening upward-left from the button.
-// 0° = left, 90° = up.
-const ARC_START_DEG = 0;
-const ARC_SPAN_DEG  = 90;
-const RADIUS        = 125; // increased to prevent overlap and elevate from button
-
-function getPosition(index: number, total: number) {
-  const step  = total > 1 ? ARC_SPAN_DEG / (total - 1) : 0;
-  const angle = ARC_START_DEG + index * step;
-  const rad   = (angle * Math.PI) / 180;
-  return {
-    x: -Math.cos(rad) * RADIUS,  // negative = moves left
-    y: -Math.sin(rad) * RADIUS,  // negative = moves up
-  };
+function computeVirtualItems(offsetAmount: number) {
+  const list: Array<{ virtualIndex: number; itemIndex: number; item: MenuItem; angle: number }> = [];
+  const visible = new Set<number>();
+  for (let i = Math.floor(offsetAmount) - 2; i <= Math.ceil(offsetAmount) + 6; i++) {
+    const angle = VISIBLE_START + (i - offsetAmount) * SPACING;
+    if (angle >= VISIBLE_START - 0.1 && angle <= VISIBLE_END + 0.1) {
+      const idx = ((i % MENU_ITEMS.length) + MENU_ITEMS.length) % MENU_ITEMS.length;
+      visible.add(idx);
+      list.push({ virtualIndex: i, itemIndex: idx, item: MENU_ITEMS[idx], angle });
+    }
+  }
+  return { list, visible };
 }
+
+const ARC_MENU_CSS = `
+.fm-root {
+  position: fixed;
+  right: 24px;
+  bottom: 24px;
+  z-index: 50;
+}
+
+.fm-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 49;
+  pointer-events: none;
+  opacity: 0;
+  background: transparent;
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+  transition: opacity 0.28s ease, background 0.28s ease, backdrop-filter 0.28s ease;
+}
+
+.fm-backdrop.open {
+  pointer-events: auto;
+  opacity: 1;
+  background: rgba(0, 0, 0, 0.12);
+  backdrop-filter: blur(2px);
+  -webkit-backdrop-filter: blur(2px);
+}
+
+.fm-toast {
+  position: fixed;
+  bottom: 108px;
+  right: 24px;
+  background: var(--color-text-primary);
+  color: var(--color-bg);
+  font-size: 0.64rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  padding: 8px 12px;
+  border-radius: 8px;
+  pointer-events: none;
+  z-index: 100;
+  transition: opacity 0.4s, transform 0.4s;
+  border: 1px solid color-mix(in srgb, var(--color-border) 50%, transparent);
+}
+
+.fm-toast.hide {
+  opacity: 0;
+  transform: translateY(8px);
+}
+
+.fm-fab {
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  background: color-mix(in srgb, var(--color-text-primary) 35%, transparent);
+  color: var(--color-bg);
+  border: 1px solid color-mix(in srgb, var(--color-border) 40%, transparent);
+
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: var(--shadow-float);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  position: relative;
+  z-index: 61;
+  overflow: hidden;
+  transition: background 0.22s ease, border-color 0.22s ease, box-shadow 0.22s ease;
+}
+
+.fm-fab:focus {
+  outline: none;
+}
+
+.fm-fab.open {
+  background: color-mix(in srgb, var(--color-bg-subtle) 60%, transparent);
+  color: var(--color-text-primary);
+  border-color: color-mix(in srgb, var(--color-border) 75%, transparent);
+}
+
+@keyframes fmRipple {
+  from { transform: scale(0); opacity: 0.45; }
+  to { transform: scale(2.9); opacity: 0; }
+}
+
+.fm-fab-ripple {
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  background: rgba(255,255,255,0.35);
+  animation: fmRipple 0.55s cubic-bezier(0.4,0,0.2,1) forwards;
+  pointer-events: none;
+}
+
+.fm-fab-icon {
+  display: flex;
+  position: relative;
+  z-index: 1;
+  transition: transform 0.45s cubic-bezier(0.34,1.56,0.64,1);
+}
+
+.fm-fab-icon.open {
+  transform: rotate(135deg);
+}
+
+.fm-arc-container {
+  position: absolute;
+  width: 320px;
+  height: 320px;
+  right: 28px;
+  bottom: 28px;
+  z-index: 60;
+  user-select: none;
+  touch-action: none;
+  pointer-events: none;
+}
+
+.fm-arc-container.open {
+  pointer-events: auto;
+  cursor: grab;
+}
+
+.fm-arc-container.dragging {
+  cursor: grabbing;
+}
+
+.fm-wrap-svg {
+  position: absolute;
+  right: 0;
+  bottom: 0;
+  width: 0;
+  height: 0;
+  overflow: visible;
+  pointer-events: none;
+  opacity: 0;
+  color: var(--color-text-primary);
+  transform: rotate(-30deg);
+  transition: opacity 0.4s cubic-bezier(0.34,1.56,0.64,1) 0.15s, transform 0.4s cubic-bezier(0.34,1.56,0.64,1) 0.15s;
+}
+
+.fm-arc-container.open .fm-wrap-svg {
+  opacity: 1;
+  transform: rotate(0deg);
+}
+
+.fm-arc-container.closing .fm-wrap-svg {
+  opacity: 0;
+  transform: rotate(-20deg);
+  transition: opacity 0.2s ease, transform 0.2s ease;
+}
+
+.fm-arc-anchor {
+  position: absolute;
+  right: 0;
+  bottom: 0;
+  width: 0;
+  height: 0;
+  pointer-events: none;
+}
+
+.fm-arc-anchor.smooth {
+  transition: transform 300ms ease-out;
+}
+
+@keyframes fmArcRise {
+  from {
+    transform: translate(calc(-50% + var(--fx)), calc(-50% + var(--fy))) scale(0.08);
+    opacity: 0;
+  }
+  to {
+    transform: translate(-50%, -50%) scale(1);
+    opacity: 1;
+  }
+}
+
+@keyframes fmArcSink {
+  from {
+    transform: translate(-50%, -50%) scale(1);
+    opacity: 1;
+  }
+  65% { opacity: 0.55; }
+  to {
+    transform: translate(calc(-50% + var(--fx)), calc(-50% + var(--fy))) scale(0.06);
+    opacity: 0;
+  }
+}
+
+@keyframes fmArcRiseLocal {
+  from { transform: translate(-50%, -50%) scale(0.7); opacity: 0; }
+  to { transform: translate(-50%, -50%) scale(1); opacity: 1; }
+}
+
+.fm-arc-wrapper {
+  position: absolute;
+}
+
+.fm-arc-wrapper.rising {
+  animation: fmArcRise 0.52s cubic-bezier(0.34,1.56,0.64,1) both;
+  animation-delay: var(--stagger, 0s);
+}
+
+.fm-arc-wrapper.rising-local {
+  animation: fmArcRiseLocal 0.44s cubic-bezier(0.34,1.56,0.64,1) both;
+}
+
+.fm-arc-wrapper.sinking {
+  animation: fmArcSink 0.4s cubic-bezier(0.55,0,1,0.45) both;
+  animation-delay: var(--sink-delay, 0s);
+}
+
+.fm-arc-btn {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  width: 80px;
+  height: 80px;
+  border-radius: 50%;
+  border: none;
+  color: white;
+  cursor: pointer;
+  gap: 4px;
+  box-shadow: 0 8px 24px rgba(0,0,0,0.18), 0 2px 6px rgba(0,0,0,0.1);
+  transition: transform 0.18s cubic-bezier(0.34,1.56,0.64,1), box-shadow 0.18s ease;
+}
+
+.fm-arc-btn.active {
+  outline: 2px solid color-mix(in srgb, white 70%, transparent);
+  outline-offset: 2px;
+}
+
+.fm-arc-btn:hover {
+  transform: scale(1.12);
+  box-shadow: 0 14px 32px rgba(0,0,0,0.22);
+}
+
+.fm-arc-btn:active {
+  transform: scale(0.94);
+}
+
+.fm-arc-btn:focus {
+  outline: none;
+}
+
+.fm-btn-label {
+  font-size: 9px;
+  font-family: var(--font-mono);
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: rgba(255,255,255,0.92);
+  line-height: 1;
+}
+
+.fm-dots-outer {
+  position: absolute;
+  display: flex;
+  align-items: center;
+  pointer-events: none;
+  opacity: 0;
+  transform: translate(50%,50%) scale(0.4);
+  transition: opacity 0.3s ease 0.25s, transform 0.35s cubic-bezier(0.34,1.56,0.64,1) 0.25s;
+}
+
+.fm-arc-container.open .fm-dots-outer {
+  opacity: 1;
+  transform: translate(50%,50%) scale(1);
+}
+
+.fm-arc-container.closing .fm-dots-outer {
+  opacity: 0;
+  transform: translate(50%,50%) scale(0.5);
+  transition: opacity 0.18s ease, transform 0.18s ease;
+}
+
+.fm-dots-inner {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+}
+
+.fm-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: #d1d5db;
+  transition: background 0.3s, transform 0.3s;
+}
+
+.fm-dot.active {
+  background: #475569;
+  transform: scale(1.25);
+}
+`;
 
 // ── Main Component ─────────────────────────────────────────────────────────
 export function FloatingMenu() {
-  const [open, setOpen]     = useState(false);
-  const pathname            = usePathname();
-  const router              = useRouter();
-  const containerRef        = useRef<HTMLDivElement>(null);
+  const [menuIntent, setMenuIntent] = useState(false);
+  const [isRendered, setIsRendered] = useState(false);
+  const [isClosing, setIsClosing] = useState(false);
+  const [rippleKey, setRippleKey] = useState(0);
+  const [offset, setOffset] = useState(0);
+  const [dragOffset, setDragOffset] = useState<number | null>(null);
+  const [isDragging, setIsDragging] = useState(false);
+  const [toastVisible, setToastVisible] = useState(false);
+  const [selectedLabel, setSelectedLabel] = useState('');
 
-  const close = useCallback(() => setOpen(false), []);
+  const pathname = usePathname();
+  const router = useRouter();
+  const containerRef = useRef<HTMLDivElement>(null);
 
-  // Close on outside click
+  const dragStartX = useRef(0);
+  const dragStartOff = useRef(0);
+  const wheelTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const openTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const closeTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const toastTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const isOpeningRef = useRef(false);
+
+  const activeOffset = dragOffset !== null ? dragOffset : offset;
+  const { list: visibleItems, visible: visibleSet } = computeVirtualItems(activeOffset);
+
+  const wR = 38;
+  const wrapD = `M ${wR * Math.cos(rad(160))} ${wR * Math.sin(rad(160))} A ${wR} ${wR} 0 0 1 ${wR * Math.cos(rad(290))} ${wR * Math.sin(rad(290))}`;
+  const firstItemX = R * Math.cos(rad(VISIBLE_START));
+  const dotsRight = -(firstItemX / 2);
+  const dotsBottom = -28;
+
+  const closeMenu = useCallback(() => {
+    if (!menuIntent || isClosing) {
+      return;
+    }
+    if (openTimer.current) {
+      clearTimeout(openTimer.current);
+    }
+    isOpeningRef.current = false;
+    setMenuIntent(false);
+    setIsClosing(true);
+    closeTimer.current = setTimeout(() => {
+      setIsRendered(false);
+      setIsClosing(false);
+    }, 520);
+  }, [isClosing, menuIntent]);
+
   useEffect(() => {
-    if (!open) return;
-    function handleOutside(e: MouseEvent | TouchEvent) {
+    function handleOutsideClick(e: MouseEvent | TouchEvent) {
+      if (!menuIntent) return;
       if (containerRef.current && !containerRef.current.contains(e.target as Node)) {
-        close();
+        closeMenu();
       }
     }
-    document.addEventListener('mousedown', handleOutside);
-    document.addEventListener('touchstart', handleOutside);
-    return () => {
-      document.removeEventListener('mousedown', handleOutside);
-      document.removeEventListener('touchstart', handleOutside);
-    };
-  }, [open, close]);
 
-  // Close on Escape
-  useEffect(() => {
-    function handleKey(e: KeyboardEvent) {
-      if (e.key === 'Escape') close();
+    function handleKeyDown(e: KeyboardEvent) {
+      if (e.key === 'Escape') {
+        closeMenu();
+      }
     }
-    document.addEventListener('keydown', handleKey);
-    return () => document.removeEventListener('keydown', handleKey);
-  }, [close]);
 
-  function handleNavigate(path: string) {
-    close();
-    router.push(path);
-  }
+    document.addEventListener('mousedown', handleOutsideClick);
+    document.addEventListener('touchstart', handleOutsideClick);
+    document.addEventListener('keydown', handleKeyDown);
+    return () => {
+      document.removeEventListener('mousedown', handleOutsideClick);
+      document.removeEventListener('touchstart', handleOutsideClick);
+      document.removeEventListener('keydown', handleKeyDown);
+    };
+  }, [closeMenu, menuIntent]);
+
+  useEffect(() => {
+    return () => {
+      if (wheelTimer.current) clearTimeout(wheelTimer.current);
+      if (openTimer.current) clearTimeout(openTimer.current);
+      if (closeTimer.current) clearTimeout(closeTimer.current);
+      if (toastTimer.current) clearTimeout(toastTimer.current);
+    };
+  }, []);
+
+  const toggleMenu = useCallback(() => {
+    setRippleKey((k) => k + 1);
+
+    if (!menuIntent) {
+      isOpeningRef.current = true;
+      if (closeTimer.current) clearTimeout(closeTimer.current);
+      setMenuIntent(true);
+      setIsClosing(false);
+      setIsRendered(true);
+      if (openTimer.current) clearTimeout(openTimer.current);
+      openTimer.current = setTimeout(() => {
+        isOpeningRef.current = false;
+      }, 1100);
+      return;
+    }
+
+    closeMenu();
+  }, [closeMenu, menuIntent]);
+
+  const handlePointerDown = useCallback((e: React.PointerEvent<HTMLDivElement>) => {
+    if (e.button !== 0 && e.pointerType === 'mouse') return;
+    if (isClosing) return;
+    isOpeningRef.current = false;
+    dragStartX.current = e.clientX;
+    dragStartOff.current = offset;
+    setDragOffset(offset);
+    setIsDragging(true);
+    e.currentTarget.setPointerCapture(e.pointerId);
+  }, [isClosing, offset]);
+
+  const handlePointerMove = useCallback((e: React.PointerEvent<HTMLDivElement>) => {
+    setDragOffset((prev) => (prev === null ? null : dragStartOff.current - (e.clientX - dragStartX.current) / 50));
+  }, []);
+
+  const endDrag = useCallback((e: React.PointerEvent<HTMLDivElement>) => {
+    setDragOffset((prev) => {
+      if (prev !== null) {
+        setOffset(Math.round(prev));
+      }
+      return null;
+    });
+    setIsDragging(false);
+    try {
+      e.currentTarget.releasePointerCapture(e.pointerId);
+    } catch {
+      return;
+    }
+  }, []);
+
+  const handleWheel = useCallback((e: React.WheelEvent<HTMLDivElement>) => {
+    if (isClosing) return;
+    isOpeningRef.current = false;
+    if (wheelTimer.current) return;
+    setOffset((prev) => prev + Math.sign(e.deltaY));
+    wheelTimer.current = setTimeout(() => {
+      wheelTimer.current = null;
+    }, 150);
+  }, [isClosing]);
+
+  const handleNavigate = useCallback((item: MenuItem) => {
+    setSelectedLabel(item.label);
+    setToastVisible(true);
+    if (toastTimer.current) clearTimeout(toastTimer.current);
+    toastTimer.current = setTimeout(() => setToastVisible(false), 1800);
+
+    closeMenu();
+    router.push(item.path);
+  }, [closeMenu, router]);
+
+  const containerClass = [
+    'fm-arc-container',
+    menuIntent ? 'open' : '',
+    isClosing ? 'closing' : '',
+    isDragging ? 'dragging' : '',
+  ].filter(Boolean).join(' ');
+
+  const totalVisible = visibleItems.length;
 
   return (
-    /* Only render on mobile — hidden on md+ */
-    <div
-      ref={containerRef}
-      className="md:hidden fixed bottom-6 right-5 z-50"
-      aria-label="Navigation menu"
-    >
-      {/* ── Backdrop blur overlay ──────────────────────────────────────────── */}
+    <div ref={containerRef} className="md:hidden fm-root" aria-label="Navigation menu">
+      <style>{ARC_MENU_CSS}</style>
+
       <div
         aria-hidden="true"
-        className="fixed inset-0 pointer-events-none transition-all duration-300"
-        style={{
-          backdropFilter: open ? 'blur(2px)' : 'none',
-          WebkitBackdropFilter: open ? 'blur(2px)' : 'none',
-          opacity: open ? 1 : 0,
-          background: open ? 'rgba(0,0,0,0.12)' : 'transparent',
-          zIndex: -1,
-          pointerEvents: open ? 'auto' : 'none',
-        }}
-        onClick={close}
+        className={`fm-backdrop${(menuIntent || isClosing) ? ' open' : ''}`}
+        onClick={closeMenu}
       />
 
-      {/* ── Arc menu items ─────────────────────────────────────────────────── */}
-      {MENU_ITEMS.map((item, i) => {
-        const { x, y } = getPosition(i, MENU_ITEMS.length);
-        const isActive  = pathname === item.path;
-        const delay     = open ? i * 45 : (MENU_ITEMS.length - 1 - i) * 30;
+      <div className={`fm-toast${!toastVisible ? ' hide' : ''}`}>
+        {toastVisible ? `Open ${selectedLabel}` : ''}
+      </div>
 
-        return (
-          <button
-            key={item.path}
-            aria-label={item.label}
-            onClick={() => handleNavigate(item.path)}
-            className="absolute bottom-0 right-0 flex flex-col items-center justify-center gap-1 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white"
-            style={{
-              width: 52,
-              height: 52,
-              borderRadius: '50%',
-              border: isActive ? '1px solid var(--color-text-primary)' : '1px solid var(--color-border)',
-              background: isActive
-                ? 'var(--color-text-primary)'
-                : 'var(--color-bg-raised)',
-              backdropFilter: 'blur(16px)',
-              WebkitBackdropFilter: 'blur(16px)',
-              boxShadow: 'var(--shadow-float)',
-              color: isActive ? 'var(--color-bg)' : 'var(--color-text-secondary)',
-              transform: open
-                ? `translate(${x}px, ${y}px) scale(1)`
-                : 'translate(0,0) scale(0.4)',
-              opacity: open ? 1 : 0,
-              transition: `transform 380ms cubic-bezier(0.34,1.56,0.64,1) ${delay}ms,
-                           opacity  240ms ease ${delay}ms`,
-              pointerEvents: open ? 'auto' : 'none',
-              zIndex: 51,
-            }}
-          >
-            {item.icon}
-            <span
-              style={{
-                fontSize: 8,
-                fontFamily: 'var(--font-mono)',
-                letterSpacing: '0.08em',
-                textTransform: 'uppercase',
-                lineHeight: 1,
-                marginTop: -2,
-              }}
-            >
-              {item.name}
-            </span>
-          </button>
-        );
-      })}
-
-      {/* ── Trigger Button ─────────────────────────────────────────────────── */}
-      <button
-        onClick={() => setOpen(v => !v)}
-        aria-label={open ? 'Close navigation' : 'Open navigation'}
-        aria-expanded={open}
-        className="relative z-[52] flex items-center justify-center rounded-full focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white"
-        style={{
-          width: 52,
-          height: 52,
-          background: open
-            ? 'var(--color-bg-subtle)'
-            : 'color-mix(in srgb, var(--color-text-primary) 70%, transparent)',
-          border: open ? '1px solid var(--color-border)' : '1px solid color-mix(in srgb, var(--color-border) 40%, transparent)',
-          backdropFilter: open ? 'none' : 'blur(16px)',
-          WebkitBackdropFilter: open ? 'none' : 'blur(16px)',
-          boxShadow: 'var(--shadow-float)',
-          transition: 'box-shadow 200ms ease, background 200ms ease, color 200ms ease',
-        }}
-      >
-        {/* Animated hamburger → X */}
-        <span
-          aria-hidden="true"
-          style={{
-            display: 'grid',
-            placeItems: 'center',
-            color: open ? 'var(--color-text-primary)' : 'var(--color-bg)',
-            transition: 'transform 300ms cubic-bezier(0.34,1.56,0.64,1)',
-            transform: open ? 'rotate(90deg)' : 'rotate(0deg)',
-          }}
+      {isRendered && (
+        <div
+          className={containerClass}
+          onPointerDown={handlePointerDown}
+          onPointerMove={handlePointerMove}
+          onPointerUp={endDrag}
+          onPointerCancel={endDrag}
+          onWheel={handleWheel}
         >
-          {open ? (
-            /* X icon */
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
-              <line x1="18" y1="6" x2="6" y2="18" />
-              <line x1="6" y1="6" x2="18" y2="18" />
-            </svg>
-          ) : (
-            /* Grid / dots icon */
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
-              <circle cx="5"  cy="5"  r="2" />
-              <circle cx="12" cy="5"  r="2" />
-              <circle cx="19" cy="5"  r="2" />
-              <circle cx="5"  cy="12" r="2" />
-              <circle cx="12" cy="12" r="2" />
-              <circle cx="19" cy="12" r="2" />
-              <circle cx="5"  cy="19" r="2" />
-              <circle cx="12" cy="19" r="2" />
-              <circle cx="19" cy="19" r="2" />
-            </svg>
-          )}
-        </span>
+          <svg className="fm-wrap-svg" aria-hidden="true">
+            <defs>
+              <marker id="fm-arc-mk" markerWidth="6" markerHeight="6" refX="4.5" refY="3" orient="auto-start-reverse">
+                <path d="M 0 0 L 6 3 L 0 6 z" fill="currentColor" />
+              </marker>
+            </defs>
+            <path
+              d={wrapD}
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+              strokeDasharray="4 4"
+              opacity="0.6"
+              markerStart="url(#fm-arc-mk)"
+              markerEnd="url(#fm-arc-mk)"
+            />
+          </svg>
+
+          {visibleItems.map(({ virtualIndex, item, angle }, idx) => {
+            const x = R * Math.cos(rad(angle));
+            const y = R * Math.sin(rad(angle));
+            const fx = -x;
+            const fy = -y;
+            const isActive = pathname === item.path;
+
+            let wrapperClass = 'fm-arc-wrapper rising-local';
+            let stagger = '0s';
+            if (isClosing) {
+              wrapperClass = 'fm-arc-wrapper sinking';
+              stagger = `${(totalVisible - 1 - idx) * 0.028}s`;
+            } else if (isOpeningRef.current) {
+              wrapperClass = 'fm-arc-wrapper rising';
+              stagger = `${idx * 0.042}s`;
+            }
+
+            return (
+              <div
+                key={`${item.id}-${virtualIndex}`}
+                className={`fm-arc-anchor${dragOffset === null ? ' smooth' : ''}`}
+                style={{ transform: `translate(${x}px,${y}px)` }}
+              >
+                <div
+                  className={wrapperClass}
+                  style={{
+                    ['--fx' as string]: `${fx}px`,
+                    ['--fy' as string]: `${fy}px`,
+                    ['--stagger' as string]: stagger,
+                    ['--sink-delay' as string]: stagger,
+                    animationDelay: stagger,
+                    pointerEvents: 'auto',
+                  }}
+                >
+                  <button
+                    className={`fm-arc-btn${isActive ? ' active' : ''}`}
+                    style={{ backgroundColor: item.color }}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleNavigate(item);
+                    }}
+                    onPointerDown={(e) => e.stopPropagation()}
+                    aria-label={item.label}
+                  >
+                    <div style={{ transform: 'scale(1.1)', display: 'flex', pointerEvents: 'none' }}>
+                      {item.icon}
+                    </div>
+                    <span className="fm-btn-label">{item.label}</span>
+                  </button>
+                </div>
+              </div>
+            );
+          })}
+
+          <div className="fm-dots-outer" style={{ right: dotsRight, bottom: dotsBottom }}>
+            <div className="fm-dots-inner">
+              {MENU_ITEMS.map((item, idx) => (
+                <div key={item.id} className={`fm-dot${visibleSet.has(idx) ? ' active' : ''}`} />
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
+
+      <button
+        className={`fm-fab${menuIntent ? ' open' : ''}`}
+        onClick={toggleMenu}
+        aria-label={menuIntent ? 'Close navigation menu' : 'Open navigation menu'}
+        aria-expanded={menuIntent}
+      >
+        <span key={rippleKey} className="fm-fab-ripple" />
+        <div className={`fm-fab-icon${menuIntent ? ' open' : ''}`}>
+          <Plus size={24} />
+        </div>
       </button>
     </div>
   );

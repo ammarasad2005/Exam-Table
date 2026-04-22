@@ -2,8 +2,6 @@
 import { useState, useEffect, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 import { Header } from '@/components/Header';
-import { Navbar } from '@/components/Navbar';
-import { FloatingMenu } from '@/components/FloatingMenu';
 import { DesktopTicker } from '@/components/DesktopTicker';
 import { flattenTimetable } from '@/lib/timetable-filter';
 import type { RawTimetableJSON, TimetableEntry } from '@/lib/types';
@@ -256,8 +254,6 @@ export default function RootPage() {
             </p>
           </div>
         </div>
-
-        <FloatingMenu />
       </main>
 
       {/* ================================================================
@@ -410,8 +406,6 @@ export default function RootPage() {
           </div>
 
         </div>
-
-        <Navbar />
       </div>
     </>
   );

@@ -198,7 +198,6 @@ export default function EventsPage() {
             </div>
           </section>
         </div>
-        <FloatingMenu />
       </main>
 
       <div className="hidden md:flex min-h-dvh flex-col bg-[var(--color-bg)]">
@@ -300,7 +299,6 @@ export default function EventsPage() {
         </div>
 
         <div className="pb-20" />
-        <Navbar />
       </div>
     </>
   );

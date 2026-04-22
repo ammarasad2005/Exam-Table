@@ -110,7 +110,6 @@ export default function SemesterPlanPage() {
           {mounted && <CalendarsSection />}
           <HolidaysSection />
         </div>
-        <FloatingMenu />
       </main>
 
       {/* ================================================================
@@ -142,7 +141,6 @@ export default function SemesterPlanPage() {
           </div>
         </div>
         <div className="pb-20" /> {/* spacer for navbar */}
-        <Navbar />
       </div>
     </>
   );
