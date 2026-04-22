@@ -169,8 +169,8 @@ const ARC_MENU_CSS = `
 
 .fm-wrap-svg {
   position: absolute;
-  right: 0;
-  bottom: 0;
+  right: -40px;
+  bottom: -40px;
   width: 80px;
   height: 80px;
   overflow: visible;
@@ -361,7 +361,7 @@ export function FloatingMenu() {
   const activeOffset = dragOffset !== null ? dragOffset : offset;
   const { list: visibleItems, visible: visibleSet } = computeVirtualItems(activeOffset);
 
-  const wR = 38;
+  const wR = 44;
   const wrapD = `M ${wR * Math.cos(rad(160))} ${wR * Math.sin(rad(160))} A ${wR} ${wR} 0 0 1 ${wR * Math.cos(rad(290))} ${wR * Math.sin(rad(290))}`;
   const firstItemX = R * Math.cos(rad(VISIBLE_START));
   const dotsRight = -(firstItemX / 2);
