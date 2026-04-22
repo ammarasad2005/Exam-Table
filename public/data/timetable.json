@@ -1553,6 +1553,14 @@
                                 "rescheduled": false,
                                 "exam": false
                             }
+                        ],
+                        "Thursday": [
+                            {
+                                "room": "A-Mehran 1",
+                                "time": "02:30-05:15",
+                                "rescheduled": true,
+                                "exam": false
+                            }
                         ]
                     },
                     "A2": {
@@ -2079,6 +2087,14 @@
                                 "room": "A-CALL-1",
                                 "time": "11:30-02:15",
                                 "rescheduled": false,
+                                "exam": false
+                            }
+                        ],
+                        "Friday": [
+                            {
+                                "room": "B-229",
+                                "time": "08:30-11:15",
+                                "rescheduled": true,
                                 "exam": false
                             }
                         ]
@@ -4979,6 +4995,14 @@
                                 "room": "D-412",
                                 "time": "08:30-09:50",
                                 "rescheduled": false,
+                                "exam": false
+                            }
+                        ],
+                        "Thursday": [
+                            {
+                                "room": "D-503",
+                                "time": "10:00-11:20",
+                                "rescheduled": true,
                                 "exam": false
                             }
                         ],
