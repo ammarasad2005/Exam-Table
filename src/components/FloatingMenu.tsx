@@ -171,12 +171,11 @@ const ARC_MENU_CSS = `
   position: absolute;
   right: 0;
   bottom: 0;
-  width: 0;
-  height: 0;
+  width: 80px;
+  height: 80px;
   overflow: visible;
   pointer-events: none;
   opacity: 0;
-  color: var(--color-text-primary);
   transform: rotate(-30deg);
   transition: opacity 0.4s cubic-bezier(0.34,1.56,0.64,1) 0.15s, transform 0.4s cubic-bezier(0.34,1.56,0.64,1) 0.15s;
 }
@@ -518,16 +517,16 @@ export function FloatingMenu() {
           onPointerCancel={endDrag}
           onWheel={handleWheel}
         >
-          <svg className="fm-wrap-svg" aria-hidden="true">
+          <svg width="80" height="80" viewBox="-40 -40 80 80" className="fm-wrap-svg" aria-hidden="true">
             <defs>
               <marker id="fm-arc-mk" markerWidth="6" markerHeight="6" refX="4.5" refY="3" orient="auto-start-reverse">
-                <path d="M 0 0 L 6 3 L 0 6 z" fill="currentColor" />
+                <path d="M 0 0 L 6 3 L 0 6 z" fill="var(--color-text-primary)" />
               </marker>
             </defs>
             <path
               d={wrapD}
               fill="none"
-              stroke="currentColor"
+              stroke="var(--color-text-primary)"
               strokeWidth="2"
               strokeDasharray="4 4"
               opacity="0.6"
