@@ -1,7 +1,6 @@
 'use client';
 import { useState, useEffect, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
-import { useTheme } from '@/lib/theme';
 import { Header } from '@/components/Header';
 import { DesktopTicker } from '@/components/DesktopTicker';
 import { flattenTimetable } from '@/lib/timetable-filter';
@@ -125,10 +124,6 @@ interface Bundle {
 
 export default function RootPage() {
   const router = useRouter();
-  const { theme } = useTheme();
-  const isDark = theme === 'dark';
-
-  const BORDERED_FEATURES = ['timetable', 'exams', 'rooms', 'faculty'];
 
   // Typing animation
   const [displayText, setDisplayText] = useState('');
@@ -203,69 +198,53 @@ export default function RootPage() {
 
           {/* Feature cards grid */}
           <div className="grid grid-cols-2 gap-3">
-            {FEATURES.map((f) => {
-              const hasBorder = BORDERED_FEATURES.includes(f.id);
-              const cardContent = (
-                <button
-                  key={f.id}
-                  onClick={() => handleFeatureClick(f.id, f.placeholder)}
-                  disabled={f.placeholder}
-                  className={`relative overflow-hidden w-full text-left rounded-2xl border bg-[var(--color-bg-raised)] p-4 flex flex-col justify-between aspect-ratio-square transition-all duration-150 active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 group disabled:opacity-50 disabled:cursor-not-allowed h-full`}
+            {FEATURES.map((f) => (
+              <button
+                key={f.id}
+                onClick={() => handleFeatureClick(f.id, f.placeholder)}
+                disabled={f.placeholder}
+                className="relative overflow-hidden w-full text-left rounded-2xl border bg-[var(--color-bg-raised)] p-4 flex flex-col justify-between aspect-ratio-square transition-all duration-150 active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 group disabled:opacity-50 disabled:cursor-not-allowed"
+                style={{
+                  borderColor: 'var(--color-border)',
+                  boxShadow: 'var(--shadow-card)',
+                  aspectRatio: '1/1',
+                }}
+              >
+                <span
+                  aria-hidden="true"
+                  className="absolute left-0 top-0 bottom-0 w-[4px] opacity-90 transition-opacity duration-150"
+                  style={{ backgroundColor: `var(--accent-${f.accent})` }}
+                />
+                
+                <div
+                  className="w-11 h-11 rounded-xl flex items-center justify-center shrink-0"
                   style={{
-                    borderColor: 'var(--color-border)',
-                    boxShadow: 'var(--shadow-card)',
-                    aspectRatio: '1/1',
+                    backgroundColor: `var(--accent-${f.accent}-bg)`,
+                    color: `var(--accent-${f.accent})`,
                   }}
                 >
-                  <span
-                    aria-hidden="true"
-                    className="absolute left-0 top-0 bottom-0 w-[4px] opacity-90 transition-opacity duration-150"
-                    style={{ backgroundColor: `var(--accent-${f.accent})` }}
-                  />
-                  
-                  <div
-                    className="w-11 h-11 rounded-xl flex items-center justify-center shrink-0"
-                    style={{
-                      backgroundColor: `var(--accent-${f.accent}-bg)`,
-                      color: `var(--accent-${f.accent})`,
-                    }}
-                  >
-                    {f.icon}
-                  </div>
+                  {f.icon}
+                </div>
 
-                  <div className="flex flex-col gap-1.5">
-                    <div className="flex items-center justify-between gap-2">
-                      <span className="font-display text-base leading-tight text-[var(--color-text-primary)]">
-                        {f.title}
-                      </span>
-                      {!f.placeholder && (
-                        <span className="font-mono text-[11px] text-[var(--color-text-tertiary)] opacity-60 group-hover:translate-x-0.5 transition-transform">
-                          →
-                        </span>
-                      )}
-                    </div>
-                    {f.placeholder && (
-                      <span className="inline-block self-start font-mono text-[8px] uppercase tracking-wider px-1.5 py-0.5 rounded-full bg-[var(--color-bg-subtle)] text-[var(--color-text-tertiary)] border border-[var(--color-border)]">
-                        Soon
+                <div className="flex flex-col gap-1.5">
+                  <div className="flex items-center justify-between gap-2">
+                    <span className="font-display text-base leading-tight text-[var(--color-text-primary)]">
+                      {f.title}
+                    </span>
+                    {!f.placeholder && (
+                      <span className="font-mono text-[11px] text-[var(--color-text-tertiary)] opacity-60 group-hover:translate-x-0.5 transition-transform">
+                        →
                       </span>
                     )}
                   </div>
-                </button>
-              );
-
-              if (hasBorder) {
-                return (
-                  <div key={f.id} className={`rounded-[18px] p-[2px] ${
-                    isDark 
-                      ? "bg-gradient-to-r from-amber-500/40 via-yellow-200/70 to-amber-500/40" 
-                      : "bg-gradient-to-r from-purple-600/40 via-orange-500/60 to-purple-600/40"
-                  }`}>
-                    {cardContent}
-                  </div>
-                );
-              }
-              return cardContent;
-            })}
+                  {f.placeholder && (
+                    <span className="inline-block self-start font-mono text-[8px] uppercase tracking-wider px-1.5 py-0.5 rounded-full bg-[var(--color-bg-subtle)] text-[var(--color-text-tertiary)] border border-[var(--color-border)]">
+                      Soon
+                    </span>
+                  )}
+                </div>
+              </button>
+            ))}
           </div>
 
           {/* Footer strip */}
@@ -358,80 +337,64 @@ export default function RootPage() {
             </p>
 
             <div className="grid grid-cols-2 gap-4 content-start">
-              {FEATURES.map((f) => {
-                const hasBorder = BORDERED_FEATURES.includes(f.id);
-                const cardContent = (
-                  <button
-                    key={f.id}
-                    onClick={() => handleFeatureClick(f.id, f.placeholder)}
-                    disabled={f.placeholder}
-                    className="group relative overflow-hidden text-left rounded-2xl border bg-[var(--color-bg-raised)] p-6 flex flex-col gap-4 transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 disabled:opacity-50 disabled:cursor-not-allowed w-full h-full"
-                    style={{
-                      borderColor: 'var(--color-border)',
-                      boxShadow: 'var(--shadow-card), var(--border-inset)',
-                    }}
-                    onMouseOver={e => {
-                      if (!f.placeholder) {
-                        (e.currentTarget as HTMLElement).style.boxShadow = `var(--shadow-raised), var(--border-inset), 0 0 0 1px var(--accent-${f.accent})`;
-                        (e.currentTarget as HTMLElement).style.borderColor = `var(--accent-${f.accent})`;
-                        (e.currentTarget as HTMLElement).style.transform = 'translateY(-2px)';
-                      }
-                    }}
-                    onMouseOut={e => {
-                      (e.currentTarget as HTMLElement).style.boxShadow = 'var(--shadow-card), var(--border-inset)';
-                      (e.currentTarget as HTMLElement).style.borderColor = 'var(--color-border)';
-                      (e.currentTarget as HTMLElement).style.transform = 'translateY(0)';
-                    }}
-                  >
-                    <span
-                      aria-hidden="true"
-                      className="absolute left-0 top-0 bottom-0 w-[5px] rounded-l-2xl opacity-80 group-hover:opacity-100 transition-opacity duration-200"
-                      style={{ backgroundColor: `var(--accent-${f.accent})` }}
-                    />
-                    <div className="flex items-start justify-between">
-                      <div
-                        className="w-11 h-11 rounded-xl flex items-center justify-center transition-colors duration-200"
-                        style={{
-                          backgroundColor: `var(--accent-${f.accent}-bg)`,
-                          color: `var(--accent-${f.accent})`,
-                        }}
+              {FEATURES.map((f) => (
+                <button
+                  key={f.id}
+                  onClick={() => handleFeatureClick(f.id, f.placeholder)}
+                  disabled={f.placeholder}
+                  className="group relative overflow-hidden text-left rounded-2xl border bg-[var(--color-bg-raised)] p-6 flex flex-col gap-4 transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                  style={{
+                    borderColor: 'var(--color-border)',
+                    boxShadow: 'var(--shadow-card), var(--border-inset)',
+                  }}
+                  onMouseOver={e => {
+                    if (!f.placeholder) {
+                      (e.currentTarget as HTMLElement).style.boxShadow = `var(--shadow-raised), var(--border-inset), 0 0 0 1px var(--accent-${f.accent})`;
+                      (e.currentTarget as HTMLElement).style.borderColor = `var(--accent-${f.accent})`;
+                      (e.currentTarget as HTMLElement).style.transform = 'translateY(-2px)';
+                    }
+                  }}
+                  onMouseOut={e => {
+                    (e.currentTarget as HTMLElement).style.boxShadow = 'var(--shadow-card), var(--border-inset)';
+                    (e.currentTarget as HTMLElement).style.borderColor = 'var(--color-border)';
+                    (e.currentTarget as HTMLElement).style.transform = 'translateY(0)';
+                  }}
+                >
+                  <span
+                    aria-hidden="true"
+                    className="absolute left-0 top-0 bottom-0 w-[5px] rounded-l-2xl opacity-80 group-hover:opacity-100 transition-opacity duration-200"
+                    style={{ backgroundColor: `var(--accent-${f.accent})` }}
+                  />
+                  <div className="flex items-start justify-between">
+                    <div
+                      className="w-11 h-11 rounded-xl flex items-center justify-center transition-colors duration-200"
+                      style={{
+                        backgroundColor: `var(--accent-${f.accent}-bg)`,
+                        color: `var(--accent-${f.accent})`,
+                      }}
+                    >
+                      {f.icon}
+                    </div>
+                    {f.placeholder ? (
+                      <span className="font-mono text-[9px] uppercase tracking-wider px-2 py-0.5 rounded-full bg-[var(--color-bg-subtle)] text-[var(--color-text-tertiary)] border border-[var(--color-border)]">
+                        Coming Soon
+                      </span>
+                    ) : (
+                      <svg
+                        width="16" height="16" viewBox="0 0 24 24" fill="none"
+                        stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"
+                        className="text-[var(--color-text-tertiary)] opacity-0 group-hover:opacity-100 group-hover:translate-x-0.5 transition-all"
                       >
-                        {f.icon}
-                      </div>
-                      {f.placeholder ? (
-                        <span className="font-mono text-[9px] uppercase tracking-wider px-2 py-0.5 rounded-full bg-[var(--color-bg-subtle)] text-[var(--color-text-tertiary)] border border-[var(--color-border)]">
-                          Coming Soon
-                        </span>
-                      ) : (
-                        <svg
-                          width="16" height="16" viewBox="0 0 24 24" fill="none"
-                          stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"
-                          className="text-[var(--color-text-tertiary)] opacity-0 group-hover:opacity-100 group-hover:translate-x-0.5 transition-all"
-                        >
-                          <path d="M9 18l6-6-6-6" />
-                        </svg>
-                      )}
-                    </div>
-                    <div>
-                      <h2 className="font-display text-lg text-[var(--color-text-primary)] mb-1">{f.title}</h2>
-                      <p className="font-body text-sm text-[var(--color-text-secondary)] leading-relaxed">{f.description}</p>
-                    </div>
-                  </button>
-                );
-
-                if (hasBorder) {
-                  return (
-                    <div key={f.id} className={`rounded-[18px] p-[2px] ${
-                      isDark 
-                        ? "bg-gradient-to-r from-amber-500/40 via-yellow-200/70 to-amber-500/40" 
-                        : "bg-gradient-to-r from-purple-600/40 via-orange-500/60 to-purple-600/40"
-                    }`}>
-                      {cardContent}
-                    </div>
-                  );
-                }
-                return cardContent;
-              })}
+                        <path d="M9 18l6-6-6-6" />
+                      </svg>
+                    )}
+                  </div>
+                  <div>
+                    <h2 className="font-display text-lg text-[var(--color-text-primary)] mb-1">{f.title}</h2>
+                    <p className="font-body text-sm text-[var(--color-text-secondary)] leading-relaxed">{f.description}</p>
+                  </div>
+                </button>
+              ))}
             </div>
 
             {/* Footer strip */}

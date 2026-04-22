@@ -773,59 +773,59 @@ export default function SetupPage() {
           <div className="flex-1 relative flex items-center justify-center px-10 lg:px-16 xl:px-24 py-14">
             <div className="w-full max-w-sm">
 
-              <div className={`rounded-[26px] p-[2px] ${
+              <div className={`rounded-[26px] md:p-[2px] p-0 ${
                 isDark 
-                  ? "bg-gradient-to-r from-amber-500/40 via-yellow-200/70 to-amber-500/40" 
-                  : "bg-gradient-to-r from-purple-600/40 via-orange-500/60 to-purple-600/40"
+                  ? "md:bg-gradient-to-r md:from-amber-500/40 md:via-yellow-200/70 md:to-amber-500/40 bg-transparent" 
+                  : "md:bg-gradient-to-r md:from-purple-600/40 md:via-orange-500/60 md:to-purple-600/40 bg-transparent"
               }`}>
                 <div
-                  className="bg-[var(--color-bg-raised)] border border-[var(--color-border)] rounded-[24px] p-8 lg:p-10 flex flex-col gap-6"
+                  className="bg-[var(--color-bg-raised)] border border-[var(--color-border)] rounded-2xl md:rounded-[24px] p-8 lg:p-10 flex flex-col gap-6"
                   style={{ boxShadow: 'var(--shadow-raised), var(--border-inset)' }}
                 >
-                  {feature === 'rooms' ? (
-                    roomsCard
-                  ) : feature === 'faculty' ? (
-                    <div className="flex flex-col gap-5">
-                      <p className="font-body text-sm text-[var(--color-text-secondary)] leading-relaxed">
-                        Explore the directory of FAST Islamabad faculty members. Find emails, office locations, and other details instantly.
-                      </p>
-                      <div className="grid grid-cols-3 gap-3">
-                        {['CS', 'AIDS', 'SE', 'CY', 'EE', 'CE', 'SH', 'AF', 'MS'].map(d => {
-                          const accent = DEPT_ACCENT[d as DeptFileKey];
-                          return (
-                            <button 
-                              key={d}
-                              onClick={() => router.push(`/faculty?dept=${d}`)}
-                              className="flex items-center justify-center h-14 rounded-xl border border-[var(--color-border-strong)] bg-[var(--color-bg-subtle)] transition-all active:scale-95 group hover:bg-[var(--hover-bg)] hover:border-[var(--hover-color)] hover:text-[var(--hover-color)]"
-                              style={{
-                                '--hover-bg': `var(--accent-${accent}-bg)`,
-                                '--hover-color': `var(--accent-${accent})`,
-                              } as React.CSSProperties}
-                            >
-                              <span className="font-mono text-[13px] font-bold text-[var(--color-text-secondary)] group-hover:text-inherit transition-colors">{d}</span>
-                            </button>
-                          );
-                        })}
-                      </div>
+                {feature === 'rooms' ? (
+                  roomsCard
+                ) : feature === 'faculty' ? (
+                  <div className="flex flex-col gap-5">
+                    <p className="font-body text-sm text-[var(--color-text-secondary)] leading-relaxed">
+                      Explore the directory of FAST Islamabad faculty members. Find emails, office locations, and other details instantly.
+                    </p>
+                    <div className="grid grid-cols-3 gap-3">
+                      {['CS', 'AIDS', 'SE', 'CY', 'EE', 'CE', 'SH', 'AF', 'MS'].map(d => {
+                        const accent = DEPT_ACCENT[d as DeptFileKey];
+                        return (
+                          <button 
+                            key={d}
+                            onClick={() => router.push(`/faculty?dept=${d}`)}
+                            className="flex items-center justify-center h-14 rounded-xl border border-[var(--color-border-strong)] bg-[var(--color-bg-subtle)] transition-all active:scale-95 group hover:bg-[var(--hover-bg)] hover:border-[var(--hover-color)] hover:text-[var(--hover-color)]"
+                            style={{
+                              '--hover-bg': `var(--accent-${accent}-bg)`,
+                              '--hover-color': `var(--accent-${accent})`,
+                            } as React.CSSProperties}
+                          >
+                            <span className="font-mono text-[13px] font-bold text-[var(--color-text-secondary)] group-hover:text-inherit transition-colors">{d}</span>
+                          </button>
+                        );
+                      })}
                     </div>
-                  ) : (
-                    <>
-                      {modeSelector}
-                      {userConfigView ? userConfigView : (
-                        <>
-                          {batchSelector}
-                          {schoolSelector}
-                          {deptPills}
-                          {sectionPills}
-                        </>
-                      )}
-                    </>
-                  )}
+                  </div>
+                ) : (
+                  <>
+                    {modeSelector}
+                    {userConfigView ? userConfigView : (
+                      <>
+                        {batchSelector}
+                        {schoolSelector}
+                        {deptPills}
+                        {sectionPills}
+                      </>
+                    )}
+                  </>
+                )}
 
 
-                  {ctaButton}
-                </div>
+                {ctaButton}
               </div>
+            </div>
 
               <p className="mt-5 font-mono text-[11px] text-[var(--color-text-tertiary)] text-center leading-relaxed">
                 {feature === 'exams'
