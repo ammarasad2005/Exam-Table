@@ -325,22 +325,66 @@ body {
   }
 }
 
-/* ───────────────── Theme toggle button ───────────────── */
-.theme-toggle {
-  width: 32px; height: 32px;
-  border-radius: 50%;
-  border: none;
-  display: flex; align-items: center; justify-content: center;
-  color: var(--color-text-secondary);
-  background: transparent;
+/* ───────────────── Theme toggle switch (Uiverse.io by Madflows) ───────────────── */
+.toggle-switch {
+  position: relative;
+  width: 52px; /* Scaled down from 100px */
+  height: 26px; /* Scaled down from 50px */
+  --light: #d8dbe0;
+  --dark: #28292c;
+}
+
+.switch-label {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  background-color: var(--dark);
+  border-radius: 25px;
   cursor: pointer;
-  transition: all 150ms ease;
+  border: 2px solid var(--dark);
 }
-.theme-toggle:hover { 
-  color: var(--color-text-primary);
-  background: var(--color-bg-subtle);
+
+.checkbox {
+  position: absolute;
+  display: none;
 }
-.theme-toggle:focus-visible { outline: 2px solid var(--accent-cs); outline-offset: 2px; }
+
+.slider {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  border-radius: 25px;
+  -webkit-transition: 0.3s;
+  transition: 0.3s;
+}
+
+.checkbox:checked ~ .slider {
+  background-color: var(--light);
+}
+
+.slider::before {
+  content: "";
+  position: absolute;
+  top: 4px;
+  left: 4px;
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  -webkit-box-shadow: inset 6px -2px 0px 0px var(--light);
+  box-shadow: inset 6px -2px 0px 0px var(--light);
+  background-color: var(--dark);
+  -webkit-transition: 0.3s;
+  transition: 0.3s;
+}
+
+.checkbox:checked ~ .slider::before {
+  -webkit-transform: translateX(26px);
+  -ms-transform: translateX(26px);
+  transform: translateX(26px);
+  background-color: var(--dark);
+  -webkit-box-shadow: none;
+  box-shadow: none;
+}
 
 /* ───────────────── Glass Laser Header ───────────────── */
 .glass-header-laser {

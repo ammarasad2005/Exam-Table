@@ -67,7 +67,7 @@ export interface TimetableEntry {
 }
 
 export const DAYS_ORDER: string[] = [
-  'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday',
+  'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday',
 ];
 
 // Fixed section set shown on the home-page pill selector.

@@ -780,7 +780,7 @@ function TimetablePageInner() {
             <div className="px-4 pt-3">
               <div className="flex items-start gap-2 text-xs text-[var(--color-text-secondary)] bg-[var(--color-bg-subtle)] rounded-md px-3 py-2">
                 <span>ℹ</span>
-                <span>Showing {grouped.length} of 5 days. Some classes may not yet be scheduled.</span>
+                <span>Showing {grouped.length} of {DAYS_ORDER.length} days. Some classes may not yet be scheduled.</span>
               </div>
             </div>
           )}          {/* Result count (mobile) */}
@@ -903,8 +903,19 @@ function GridView({
   conflicts: Set<string>;
   onSelect: (e: TimetableEntry) => void;
 }) {
+  const [isMobile, setIsMobile] = useState(false);
+
+  useEffect(() => {
+    const checkMobile = () => setIsMobile(window.innerWidth < 768);
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
+    return () => window.removeEventListener('resize', checkMobile);
+  }, []);
+
   const accentColor = `var(--accent-${dept.toLowerCase()})`;
   const accentBg    = `var(--accent-${dept.toLowerCase()}-bg)`;
+  const dayCount = DAYS_ORDER.length;
+  const gridTemplateColumns = `minmax(36px, 60px) repeat(${dayCount}, minmax(0, 1fr))`;
 
   const totalHeight = (GRID_END - GRID_START) * PX_PER_MIN;
 
@@ -915,11 +926,14 @@ function GridView({
   }
 
   return (
-    <div className="mt-8 overflow-x-auto select-none rounded-xl border border-[var(--color-border)] shadow-sm bg-[var(--color-bg-raised)]">
-      <div className="min-w-[650px] md:min-w-[850px] relative flex flex-col">
+    <div className="mt-8 md:overflow-x-auto select-none rounded-xl border border-[var(--color-border)] shadow-sm bg-[var(--color-bg-raised)]">
+      <div className="w-full md:min-w-[980px] relative flex flex-col">
         
         {/* Day Headers - Sticky */}
-        <div className="grid grid-cols-[45px_repeat(5,1fr)] md:grid-cols-[60px_repeat(5,1fr)] sticky top-0 z-20 bg-[var(--color-bg-raised)]/95 backdrop-blur-sm border-b border-[var(--color-border)]">
+        <div
+          className="grid sticky top-0 z-20 bg-[var(--color-bg-raised)]/95 backdrop-blur-sm border-b border-[var(--color-border)]"
+          style={{ gridTemplateColumns }}
+        >
           <div className="h-10 border-r border-[var(--color-border)]" /> {/* Spacer for time column */}
           {DAYS_ORDER.map(day => (
             <div key={day} className="text-center font-mono text-[10px] uppercase tracking-widest text-[var(--color-text-tertiary)] flex items-center justify-center border-r border-[var(--color-border)] last:border-r-0">
@@ -930,8 +944,13 @@ function GridView({
         </div>
 
         {/* Grid Body */}
-        <div className="relative grid grid-cols-[45px_repeat(5,1fr)] md:grid-cols-[60px_repeat(5,1fr)]" 
-             style={{ height: `${totalHeight}px` }}>
+        <div
+          className="relative grid"
+          style={{
+            height: `${totalHeight}px`,
+            gridTemplateColumns,
+          }}
+        >
           
           {/* Time Column & Grid Lines */}
           <div className="absolute inset-0 pointer-events-none">
@@ -947,7 +966,7 @@ function GridView({
             })}
             
             {/* Vertical lines */}
-            <div className="absolute inset-0 grid grid-cols-[45px_repeat(5,1fr)] md:grid-cols-[60px_repeat(5,1fr)]">
+            <div className="absolute inset-0 grid" style={{ gridTemplateColumns }}>
               <div className="border-r border-[var(--color-border)] bg-[var(--color-bg-subtle)]/30 sticky left-0 z-10" />
               {DAYS_ORDER.map(day => (
                 <div key={day} className="border-r border-[var(--color-border)] last:border-r-0" />
@@ -956,8 +975,8 @@ function GridView({
           </div>
 
           {/* Classes Layer */}
-          <div className="col-start-2 col-span-5 relative h-full">
-            <div className="absolute inset-0 grid grid-cols-5 h-full">
+          <div className="col-start-2 relative h-full" style={{ gridColumn: `2 / span ${dayCount}` }}>
+            <div className="absolute inset-0 grid h-full" style={{ gridTemplateColumns: `repeat(${dayCount}, minmax(0, 1fr))` }}>
               {DAYS_ORDER.map((day, dayIdx) => (
                 <div key={day} className="relative h-full px-0.5 md:px-1">
                   {entries
@@ -974,7 +993,7 @@ function GridView({
                         <button
                           key={idx}
                           onClick={() => onSelect(e)}
-                          className="absolute left-0.5 right-0.5 rounded-md p-1.5 md:p-2 text-[9px] md:text-[10px] transition-all hover:ring-1 hover:ring-[var(--color-text-tertiary)] active:scale-[0.98] focus-visible:outline-none overflow-hidden text-left"
+                          className="absolute left-0.5 right-0.5 rounded-md md:p-2 text-[9px] md:text-[10px] transition-all hover:ring-1 hover:ring-[var(--color-text-tertiary)] active:scale-[0.98] focus-visible:outline-none overflow-hidden text-left flex items-center justify-center"
                           style={{
                             top: `${top}px`,
                             height: `${height}px`,
@@ -982,19 +1001,31 @@ function GridView({
                               ? (isRepeat ? 'repeating-linear-gradient(45deg, #fef2f2, #fef2f2 10px, #fff1f2 10px, #fff1f2 20px)' : '#fef2f2')
                               : (isRepeat 
                                 ? 'linear-gradient(135deg, var(--color-bg-raised) 50%, color-mix(in srgb, var(--color-bg-raised) 80%, #f59e0b 20%))'
-                                : accentBg),
+                                : (isMobile ? 'transparent' : accentBg)),
                             color: isConflict ? '#dc2626' : accentColor,
-                            borderLeft: isConflict ? '2px md:border-l-[3px] solid #f87171' : (isRepeat ? '2px md:border-l-[3px] solid #f59e0b' : `2px md:border-l-[3px] solid ${accentColor}`),
-                            boxShadow: 'var(--shadow-card)',
+                            borderLeft: isMobile ? 'none' : (isConflict ? '2px md:border-l-[3px] solid #f87171' : (isRepeat ? '2px md:border-l-[3px] solid #f59e0b' : `2px md:border-l-[3px] solid ${accentColor}`)),
+                            boxShadow: isMobile ? 'none' : 'var(--shadow-card)',
                             zIndex: isConflict ? 10 : 1,
                           }}
                         >
-                          <div className="flex flex-col h-full justify-between">
+                          {/* Desktop View (Chip) */}
+                          <div className="hidden md:flex flex-col h-full w-full justify-between">
                             <div className="min-w-0">
                               <p className="font-bold leading-tight line-clamp-2 uppercase break-all">{e.courseName}</p>
                               <p className="mt-0.5 opacity-80 font-mono text-[8.5px] whitespace-nowrap overflow-hidden text-ellipsis">{formatTimeRange(e.time)}</p>
                             </div>
                             <p className="font-medium opacity-80 self-end text-[8.5px] truncate max-w-full">{e.room}</p>
+                          </div>
+
+                          {/* Mobile View (Dot) */}
+                          <div className="md:hidden flex items-center justify-center">
+                            <div 
+                              className="w-2 h-2 rounded-full shadow-sm" 
+                              style={{ 
+                                backgroundColor: isConflict ? '#ef4444' : accentColor,
+                                boxShadow: `0 0 6px ${isConflict ? '#ef444460' : accentColor + '60'}`
+                              }} 
+                            />
                           </div>
                         </button>
                       );
