@@ -9,7 +9,7 @@ type Tab = {
   id: string;
   path: string;
   label: string;
-  icon: React.ComponentType<{ className?: string; strokeWidth?: number }>;
+  icon: any;
 };
 
 const TABS: Tab[] = [

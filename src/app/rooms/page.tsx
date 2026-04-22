@@ -1,6 +1,7 @@
 'use client';
 import { useMemo, useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
+import { useTheme } from '@/lib/theme';
 import { Header } from '@/components/Header';
 import { ThemeToggle } from '@/components/ThemeToggle';
 import {
@@ -366,6 +367,8 @@ function CalendarGrid({ onSelect }: { onSelect: (cell: CalendarCell) => void }) 
 // ─── Main Page ────────────────────────────────────────────────────────────────
 export default function RoomsPage() {
   const router = useRouter();
+  const { theme } = useTheme();
+  const isDark = theme === 'dark';
 
   const [selectedDay, setSelectedDay] = useState<string>('');
   const [selectedSlot, setSelectedSlot] = useState<string>('');
@@ -418,10 +421,16 @@ export default function RoomsPage() {
 
 
       {/* ── Body ────────────────────────────────────────────────────────── */}
-      <div className="flex flex-1">
+      <div className="flex-1 p-3 md:p-6 lg:p-8 flex flex-col">
+        <div className={`flex-1 flex flex-col rounded-[26px] p-[2px] ${
+          isDark 
+            ? "bg-gradient-to-r from-amber-500/40 via-yellow-200/70 to-amber-500/40" 
+            : "bg-gradient-to-r from-purple-600/40 via-orange-500/60 to-purple-600/40"
+        }`}>
+          <div className="flex flex-1 bg-[var(--color-bg-raised)] border border-[var(--color-border)] rounded-[24px] overflow-hidden">
 
-        {/* Sidebar (desktop) */}
-        <aside className="hidden md:flex md:w-56 lg:w-64 flex-col gap-5 p-6 border-r border-[var(--color-border)] sticky top-14 h-[calc(100dvh-56px)] overflow-y-auto">
+            {/* Sidebar (desktop) */}
+            <aside className="hidden md:flex md:w-56 lg:w-64 flex-col gap-5 p-6 border-r border-[var(--color-border)] sticky top-0 h-[calc(100dvh-120px)] overflow-y-auto">
           <div>
             <p className="font-mono text-[10px] uppercase tracking-widest text-[var(--color-text-tertiary)] mb-1">Feature</p>
             <p className="font-mono text-sm font-medium">Room Finder</p>
@@ -576,13 +585,14 @@ export default function RoomsPage() {
 
           {viewMode === 'calendar' && <CalendarGrid onSelect={setSelectedCell} />}
 
-          {/* Bottom padding for mobile */}
           <div className="h-16 md:h-8" />
-        </div>
-      {selectedCell && (
-        <RoomDetail cell={selectedCell} onClose={() => setSelectedCell(null)} />
-      )}
-      </div>
-    </div>
-  );
-}
+          </div>
+          {selectedCell && (
+          <RoomDetail cell={selectedCell} onClose={() => setSelectedCell(null)} />
+          )}
+          </div>
+          </div>
+          </div>
+          </div>
+          );
+          }

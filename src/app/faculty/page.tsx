@@ -4,6 +4,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { ThemeToggle } from '@/components/ThemeToggle';
 import { LayoutGrid, List } from 'lucide-react';
+import { useTheme } from '@/lib/theme';
 import { Header } from '@/components/Header';
 
 import { FacultyCard } from '@/components/FacultyCard';
@@ -30,6 +31,8 @@ type ActiveDept = 'ALL' | DeptFileKey;
 
 export default function FacultyPage() {
   const router = useRouter();
+  const { theme } = useTheme();
+  const isDark = theme === 'dark';
   const gridRef = useRef<HTMLDivElement>(null);
 
   const [query, setQuery]           = useState('');
@@ -124,10 +127,16 @@ export default function FacultyPage() {
 
 
       {/* ── Body ──────────────────────────────────────────────────────────── */}
-      <div className="flex flex-1">
+      <div className="flex-1 p-3 md:p-6 lg:p-8 flex flex-col">
+        <div className={`flex-1 flex flex-col rounded-[26px] p-[2px] ${
+          isDark 
+            ? "bg-gradient-to-r from-amber-500/40 via-yellow-200/70 to-amber-500/40" 
+            : "bg-gradient-to-r from-purple-600/40 via-orange-500/60 to-purple-600/40"
+        }`}>
+          <div className="flex flex-1 bg-[var(--color-bg-raised)] border border-[var(--color-border)] rounded-[24px] overflow-hidden">
 
-        {/* ── Desktop Sidebar ─────────────────────────────────────────────── */}
-        <aside className="hidden md:flex md:w-56 lg:w-64 flex-col gap-5 p-6 border-r border-[var(--color-border)] sticky top-14 h-[calc(100dvh-56px)] overflow-y-auto">
+            {/* ── Desktop Sidebar ─────────────────────────────────────────────── */}
+            <aside className="hidden md:flex md:w-56 lg:w-64 flex-col gap-5 p-6 border-r border-[var(--color-border)] sticky top-0 h-[calc(100dvh-120px)] overflow-y-auto">
           <div>
             <p className="font-mono text-[10px] uppercase tracking-widest text-[var(--color-text-tertiary)] mb-3">
               Departments
@@ -383,18 +392,21 @@ export default function FacultyPage() {
           {/* Bottom padding for mobile navbar */}
           <div className="h-20 md:h-8" />
         </div>
-      </div>
+        </div>
 
-      {/* ── Detail Sheet ────────────────────────────────────────────────────── */}
-      {selected && (
+        {/* ── Detail Panel ─────────────────────────────────────────────────── */}
+        {selected && (
         <FacultyDetail
           member={selected}
           onClose={() => setSelected(null)}
         />
-      )}
-    </div>
-  );
-}
+        )}
+        </div>
+        </div>
+        </div>
+        );
+        }
+
 
 // ── Helper: build page number list with ellipsis ─────────────────────────────
 function buildPageList(current: number, total: number): (number | '…')[] {
