@@ -21,6 +21,13 @@ const timetableRaw: RawTimetableJSON = require('../../../public/data/timetable.j
 // Build room calendar once at module level — it's pure and cheap to cache
 const ROOM_CALENDAR = buildRoomCalendar(timetableRaw);
 
+const ACTIVE_DAYS = DAYS_OF_WEEK.filter(d => {
+  if (d === 'Saturday') {
+    return !!(timetableRaw as any).__meta__?.days?.Saturday;
+  }
+  return true;
+});
+
 type ViewMode = 'specific' | 'calendar' | null;
 
 // ─── Tiny chip sub-component ──────────────────────────────────────────────────
@@ -277,6 +284,9 @@ function SpecificResults({
 function CalendarGrid({ onSelect }: { onSelect: (cell: CalendarCell) => void }) {
   const grid: CalendarCell[][] = useMemo(() => buildFullCalendar(ROOM_CALENDAR), []);
 
+  // Map ACTIVE_DAYS to their indices in the full grid (which has 6 days now)
+  const activeDayIndices = ACTIVE_DAYS.map(day => DAYS_OF_WEEK.indexOf(day));
+
   return (
     <div className="mt-6 animate-in fade-in duration-200">
       <div className="mb-4 flex items-center gap-3">
@@ -295,7 +305,7 @@ function CalendarGrid({ onSelect }: { onSelect: (cell: CalendarCell) => void }) 
               <th className="sticky left-0 z-10 font-mono text-[10px] uppercase tracking-widest text-[var(--color-text-tertiary)] px-4 py-3 border-b border-r border-[var(--color-border)] bg-[var(--color-bg-raised)] w-[130px]">
                 Time
               </th>
-              {DAYS_OF_WEEK.map(day => (
+              {ACTIVE_DAYS.map(day => (
                 <th key={day} className="font-mono text-[10px] uppercase tracking-widest text-[var(--color-text-tertiary)] px-3 py-3 border-b border-r border-[var(--color-border)] last:border-r-0 text-center w-[150px]">
                   {day.slice(0, 3)}
                 </th>
@@ -308,7 +318,8 @@ function CalendarGrid({ onSelect }: { onSelect: (cell: CalendarCell) => void }) 
                 <td className="sticky left-0 z-10 font-mono text-[10px] text-[var(--color-text-secondary)] px-4 py-3 border-r border-[var(--color-border)] bg-[var(--color-bg-raised)] align-top whitespace-nowrap">
                   {slot.label}
                 </td>
-                {DAYS_OF_WEEK.map((day, dayIdx) => {
+                {activeDayIndices.map((dayIdx) => {
+                  const day = DAYS_OF_WEEK[dayIdx];
                   const cell = grid[dayIdx][slotIdx];
                   const count = cell.fullyVacant.length;
                   return (
@@ -484,7 +495,7 @@ export default function RoomsPage() {
                       className="w-full h-12 pl-4 pr-10 bg-[var(--color-bg)] border border-[var(--color-border-strong)] rounded-md font-mono text-sm appearance-none focus:outline-none focus:ring-2 focus:ring-[var(--accent-cs)] cursor-pointer"
                     >
                       <option value="" disabled>Select day</option>
-                      {DAYS_OF_WEEK.map(d => (
+                      {ACTIVE_DAYS.map(d => (
                         <option key={d} value={d}>{d}</option>
                       ))}
                     </select>

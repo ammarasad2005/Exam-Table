@@ -65,7 +65,7 @@ export const STANDARD_SLOTS: TimeSlot[] = [
 ];
 
 export const DAYS_OF_WEEK = [
-  'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday',
+  'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday',
 ];
 
 // ─── Core: Build Room Calendar ────────────────────────────────────────────────
