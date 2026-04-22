@@ -409,6 +409,14 @@
                                 "rescheduled": false,
                                 "exam": false
                             }
+                        ],
+                        "Friday": [
+                            {
+                                "room": "C-310",
+                                "time": "02:30-03:50",
+                                "rescheduled": true,
+                                "exam": false
+                            }
                         ]
                     },
                     "A": {
@@ -445,6 +453,14 @@
                                 "room": "C-302",
                                 "time": "02:30-04:15",
                                 "rescheduled": false,
+                                "exam": false
+                            }
+                        ],
+                        "Friday": [
+                            {
+                                "room": "C-310",
+                                "time": "03:55-05:15",
+                                "rescheduled": true,
                                 "exam": false
                             }
                         ]
@@ -735,14 +751,6 @@
                                 "rescheduled": false,
                                 "exam": false
                             }
-                        ],
-                        "Tuesday": [
-                            {
-                                "room": "C-305",
-                                "time": "02:30-04:15",
-                                "rescheduled": true,
-                                "exam": false
-                            }
                         ]
                     },
                     "J": {
@@ -857,6 +865,14 @@
                                 "room": "C-Margala 3",
                                 "time": "11:30-02:15",
                                 "rescheduled": false,
+                                "exam": false
+                            }
+                        ],
+                        "Friday": [
+                            {
+                                "room": "D-504",
+                                "time": "08:30-11:15",
+                                "rescheduled": true,
                                 "exam": false
                             }
                         ]
@@ -981,6 +997,14 @@
                                 "rescheduled": false,
                                 "exam": false
                             }
+                        ],
+                        "Friday": [
+                            {
+                                "room": "D-503",
+                                "time": "08:30-11:15",
+                                "rescheduled": true,
+                                "exam": false
+                            }
                         ]
                     },
                     "A1": {
@@ -989,6 +1013,14 @@
                                 "room": "A-CALL-2",
                                 "time": "02:30-05:15",
                                 "rescheduled": false,
+                                "exam": false
+                            }
+                        ],
+                        "Friday": [
+                            {
+                                "room": "C-311",
+                                "time": "02:30-05:15",
+                                "rescheduled": true,
                                 "exam": false
                             }
                         ]
@@ -4872,6 +4904,14 @@
                                 "rescheduled": false,
                                 "exam": false
                             }
+                        ],
+                        "Friday": [
+                            {
+                                "room": "C-309",
+                                "time": "02:30-03:50",
+                                "rescheduled": true,
+                                "exam": false
+                            }
                         ]
                     },
                     "A": {
@@ -4880,6 +4920,14 @@
                                 "room": "D-411",
                                 "time": "09:30-11:15",
                                 "rescheduled": false,
+                                "exam": false
+                            }
+                        ],
+                        "Friday": [
+                            {
+                                "room": "D-502",
+                                "time": "10:00-11:20",
+                                "rescheduled": true,
                                 "exam": false
                             }
                         ]
@@ -5146,6 +5194,14 @@
                                 "rescheduled": false,
                                 "exam": false
                             }
+                        ],
+                        "Thursday": [
+                            {
+                                "room": "D-503",
+                                "time": "02:30-03:50",
+                                "rescheduled": true,
+                                "exam": false
+                            }
                         ]
                     }
                 },
@@ -5158,14 +5214,6 @@
                                 "rescheduled": false,
                                 "exam": false
                             }
-                        ],
-                        "Friday": [
-                            {
-                                "room": "C-Rawal 4",
-                                "time": "02:30-05:15",
-                                "rescheduled": true,
-                                "exam": false
-                            }
                         ]
                     },
                     "B": {
@@ -5174,6 +5222,14 @@
                                 "room": "C-Rawal 1",
                                 "time": "08:30-11:15",
                                 "rescheduled": false,
+                                "exam": false
+                            }
+                        ],
+                        "Friday": [
+                            {
+                                "room": "C-Rawal 4",
+                                "time": "02:30-05:15",
+                                "rescheduled": true,
                                 "exam": false
                             }
                         ]
@@ -5324,14 +5380,6 @@
                                 "room": "C-Margala 4",
                                 "time": "02:30-05:15",
                                 "rescheduled": false,
-                                "exam": false
-                            }
-                        ],
-                        "Friday": [
-                            {
-                                "room": "C-GPU Lab",
-                                "time": "08:30-11:15",
-                                "rescheduled": true,
                                 "exam": false
                             }
                         ]
@@ -7211,9 +7259,9 @@
                         "Tuesday": [
                             {
                                 "room": "C-Margala 3",
-                                "time": "02:30-04:00",
+                                "time": "02:30-05:15",
                                 "rescheduled": false,
-                                "exam": true
+                                "exam": false
                             }
                         ],
                         "Friday": [
@@ -7251,9 +7299,9 @@
                         "Tuesday": [
                             {
                                 "room": "C-Rawal 4",
-                                "time": "02:30-04:00",
+                                "time": "02:30-05:15",
                                 "rescheduled": false,
-                                "exam": true
+                                "exam": false
                             }
                         ],
                         "Friday": [
@@ -7267,22 +7315,6 @@
                     }
                 },
                 "AI Lab": {
-                    "A&B": {
-                        "Tuesday": [
-                            {
-                                "room": "C-Rawal 1",
-                                "time": "08:30-10:00",
-                                "rescheduled": false,
-                                "exam": true
-                            },
-                            {
-                                "room": "C-Rawal 4",
-                                "time": "08:30-10:00",
-                                "rescheduled": false,
-                                "exam": true
-                            }
-                        ]
-                    },
                     "B": {
                         "Tuesday": [
                             {
