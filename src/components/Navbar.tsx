@@ -49,10 +49,10 @@ export function Navbar() {
   return (
     <nav className="hidden md:flex fixed bottom-6 left-1/2 -translate-x-1/2 z-50 p-1 rounded-full items-center">
       {/* Gradient Border Wrapper */}
-      <div className={`rounded-full p-[1.5px] ${
+      <div className={`rounded-full p-[2px] ${
         isDark 
           ? "bg-gradient-to-r from-amber-500/40 via-yellow-200/70 to-amber-500/40" 
-          : "bg-gradient-to-r from-neutral-300/60 via-white to-neutral-300/60"
+          : "bg-gradient-to-r from-purple-600/40 via-orange-500/60 to-purple-600/40"
       }`}>
         <div className={`relative inline-flex rounded-full px-3 py-1.5 ${barBg} ${barShadow}`}>
           {TABS.map((tab) => {
