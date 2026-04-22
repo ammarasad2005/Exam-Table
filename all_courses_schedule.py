@@ -1,9 +1,13 @@
 #!/usr/bin/env python3
 
+import io
 import urllib.request
+import urllib.parse
 import re
 import json
 import sys
+import zipfile
+import xml.etree.ElementTree as ET
 
 # ==============================================================================
 # INPUT VARIABLE: Paste your Google Sheets string here.
@@ -45,6 +49,48 @@ VALID_COURSES_MAP = {
     }
 }
 
+DAY_ALIASES = {
+    "mon": "Monday",
+    "monday": "Monday",
+    "tue": "Tuesday",
+    "tues": "Tuesday",
+    "tuesday": "Tuesday",
+    "wed": "Wednesday",
+    "weds": "Wednesday",
+    "wednesday": "Wednesday",
+    "thu": "Thursday",
+    "thur": "Thursday",
+    "thurs": "Thursday",
+    "thursday": "Thursday",
+    "fri": "Friday",
+    "friday": "Friday",
+    "sat": "Saturday",
+    "saturday": "Saturday",
+}
+
+MONTH_MAP = {
+    "january": "Jan", "jan": "Jan",
+    "february": "Feb", "feb": "Feb",
+    "march": "Mar", "mar": "Mar",
+    "april": "Apr", "apr": "Apr",
+    "may": "May",
+    "june": "Jun", "jun": "Jun",
+    "july": "Jul", "jul": "Jul",
+    "august": "Aug", "aug": "Aug",
+    "september": "Sep", "sep": "Sep",
+    "october": "Oct", "oct": "Oct",
+    "november": "Nov", "nov": "Nov",
+    "december": "Dec", "dec": "Dec",
+}
+
+MONTH_PATTERN = r"(?:jan(?:uary)?|feb(?:ruary)?|mar(?:ch)?|apr(?:il)?|may|jun(?:e)?|jul(?:y)?|aug(?:ust)?|sep(?:t(?:ember)?)?|oct(?:ober)?|nov(?:ember)?|dec(?:ember)?)"
+DATE_PATTERNS = [
+    re.compile(rf"(?i)\b(?P<day>\d{{1,2}})(?:st|nd|rd|th)?[\s,/-]+(?P<month>{MONTH_PATTERN})(?:[\s,/-]+(?P<year>\d{{4}}))?\b"),
+    re.compile(rf"(?i)\b(?P<month>{MONTH_PATTERN})[\s,/-]+(?P<day>\d{{1,2}})(?:st|nd|rd|th)?(?:[\s,/-]+(?P<year>\d{{4}}))?\b"),
+]
+
+CANONICAL_DAYS = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"]
+
 # ==============================================================================
 # HELPER: Batch reverse-lookup (returns ALL possible batches, not just the first)
 # ==============================================================================
@@ -63,6 +109,104 @@ def find_possible_batches(course_name, dept=None):
                 if course_name in courses or lookup_name in courses:
                     possible.append((b, d))
     return possible
+
+def fetch_workbook_sheet_names(sheet_id):
+    html_url = f"https://docs.google.com/spreadsheets/d/{sheet_id}/edit?usp=sharing"
+    request = urllib.request.Request(html_url, headers={"User-Agent": "Mozilla/5.0"})
+    html = urllib.request.urlopen(request).read().decode("utf-8", errors="ignore")
+
+    sheet_pattern = re.compile(
+        r'(?i)\b(?:monday|tuesday|wednesday|thursday|friday|saturday|mon|tue|wed|thu|fri|sat)(?:\s*\([^)]{1,40}\))?'
+    )
+    sheet_names = []
+    seen = set()
+
+    for match in sheet_pattern.finditer(html):
+        title = match.group(0).strip()
+        normalized = title.lower()
+        if normalized in seen:
+            continue
+        seen.add(normalized)
+        sheet_names.append(title)
+
+    if sheet_names:
+        return sheet_names
+
+    export_url = f"https://docs.google.com/spreadsheets/d/{sheet_id}/export?format=xlsx"
+    response = urllib.request.urlopen(export_url)
+    workbook_bytes = response.read()
+
+    with zipfile.ZipFile(io.BytesIO(workbook_bytes)) as workbook_zip:
+        workbook_xml = workbook_zip.read("xl/workbook.xml")
+
+    root = ET.fromstring(workbook_xml)
+    namespace = {"main": "http://schemas.openxmlformats.org/spreadsheetml/2006/main"}
+    return [sheet.attrib["name"] for sheet in root.findall("main:sheets/main:sheet", namespace)]
+
+def resolve_day_name(sheet_title):
+    cleaned = re.sub(r"\s*\([^)]*\)\s*$", "", sheet_title).strip()
+    prefix_match = re.match(r"^([A-Za-z]+)", cleaned)
+    if not prefix_match:
+        return None
+    prefix = prefix_match.group(1).lower()
+    if prefix in DAY_ALIASES:
+        return DAY_ALIASES[prefix]
+    for short_name, canonical in DAY_ALIASES.items():
+        if prefix.startswith(short_name):
+            return canonical
+    return None
+
+def extract_date_label(sheet_title):
+    for pattern in DATE_PATTERNS:
+        match = pattern.search(sheet_title)
+        if not match:
+            continue
+        day = match.group("day").zfill(2)
+        month = MONTH_MAP.get(match.group("month").lower(), match.group("month")[:3].title())
+        year = match.groupdict().get("year")
+        return f"{day} {month}" + (f" {year}" if year else "")
+    return ""
+
+def resolve_timetable_sheets(sheet_id):
+    try:
+        sheet_names = fetch_workbook_sheet_names(sheet_id)
+        print(f"Resolved workbook sheet names: {', '.join(sheet_names)}")
+    except Exception as exc:
+        print(f"Warning: Could not inspect workbook tabs; falling back to canonical day names. Error: {exc}")
+        return [
+            {"day": day, "sheet_name": day, "date": ""}
+            for day in CANONICAL_DAYS
+        ]
+
+    resolved = []
+    used = set()
+    for day in CANONICAL_DAYS:
+        matched_sheets = []
+        for sheet_name in sheet_names:
+            if sheet_name in used:
+                continue
+            if resolve_day_name(sheet_name) == day:
+                matched_sheets.append(sheet_name)
+
+        if matched_sheets:
+            matched_sheet = min(
+                matched_sheets,
+                key=lambda title: (
+                    0 if '(' in title and ')' in title else 1,
+                    sheet_names.index(title),
+                ),
+            )
+            used.add(matched_sheet)
+        else:
+            matched_sheet = day
+
+        resolved.append({
+            "day": day,
+            "sheet_name": matched_sheet,
+            "date": extract_date_label(matched_sheet),
+        })
+
+    return resolved
 
 # ==============================================================================
 # HELPER: Time Overlap Logic
@@ -143,7 +287,7 @@ if not sheet_id or sheet_id.startswith("http"):
 print(f"Using Spreadsheet ID: {sheet_id}")
 print("Fetching and parsing unified timetable (2-pass constraint satisfaction)...")
 
-days = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday"]
+day_sheets = resolve_timetable_sheets(sheet_id)
 
 # Regex patterns
 repeat_pattern = re.compile(r'^([^(]+?)\s*\(\s*([A-Z]{2,}(?:\/[A-Z]{2,})?)\s*-\s*([A-Z0-9]+)\s*,\s*(\d{2})\s*\)')
@@ -166,6 +310,7 @@ busy_calendar       = {}   # key: "{batch}-{dept}-{section}-{day}" → list[str]
 quota_calendar      = {}   # key: "{batch}-{dept}-{section}-{course_name}" -> int (count)
 unambiguous_classes = []   # list of fully resolved records
 ambiguous_pool      = []   # list of records still needing deduction
+timetable_meta      = {"days": {}}
 
 # ==============================================================================
 # PASS 1 — ANCHOR PASS
@@ -176,10 +321,18 @@ ambiguous_pool      = []   # list of records still needing deduction
 #       len  > 1  → ambiguous   → push to ambiguous_pool
 #       len == 0  → unmapped    → discard
 # ==============================================================================
-for day in days:
+for day_info in day_sheets:
+    day = day_info["day"]
+    sheet_name = day_info["sheet_name"]
+    timetable_meta["days"][day] = {
+        "sheetName": sheet_name,
+    }
+    if day_info.get("date"):
+        timetable_meta["days"][day]["date"] = day_info["date"]
+
     req_url = (
         f"https://docs.google.com/spreadsheets/d/{sheet_id}"
-        f"/gviz/tq?tqx=out:json&sheet={day}"
+        f"/gviz/tq?tqx=out:json&sheet={urllib.parse.quote(sheet_name, safe='')}"
     )
     try:
         response = urllib.request.urlopen(req_url)
@@ -403,7 +556,7 @@ for day in days:
                         ambiguous_pool.append(record)
 
     except Exception as e:
-        print(f"Warning: Could not process {day}. Error: {e}")
+        print(f"Warning: Could not process {day} ({sheet_name}). Error: {e}")
 
 print(
     f"\nPass 1 complete — "
@@ -585,6 +738,7 @@ for rec in unambiguous_classes:
 # OUTPUT
 # ==============================================================================
 output_filename = "timetable.json"
+data_hierarchy["__meta__"] = timetable_meta
 with open(output_filename, "w") as json_file:
     json.dump(data_hierarchy, json_file, indent=4)
 

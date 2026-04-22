@@ -66,6 +66,37 @@ export interface TimetableEntry {
   exam?: boolean;                      // flags "Mid", "Exam", or "Sessional" slots
 }
 
+export const TIMETABLE_META_KEY = '__meta__';
+
+export interface TimetableSheetMeta {
+  sheetName: string;
+  date?: string;
+}
+
+export interface TimetableMetadata {
+  days: Record<string, TimetableSheetMeta>;
+}
+
+export type TimetableSlot = {
+  room: string;
+  time: string;
+  rescheduled?: boolean;
+  exam?: boolean;
+};
+
+export type TimetableDayMap = Record<string, TimetableSlot[]>;
+
+export type TimetableSectionMap = Record<string, TimetableDayMap>;
+
+export type TimetableCourseMap = Record<string, TimetableSectionMap>;
+
+export interface TimetableDepartmentMap {
+  regular: TimetableCourseMap;
+  repeat: TimetableCourseMap;
+}
+
+export type TimetableBatchMap = Record<string, TimetableDepartmentMap>;
+
 export const DAYS_ORDER: string[] = [
   'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday',
 ];
@@ -79,11 +110,7 @@ export const TIMETABLE_SECTIONS: string[] = ['A', 'B', 'C', 'BX'];
 // batch → dept → ("regular"|"repeat") → courseName → section → day → [{room,time}]
 export type RawTimetableJSON = Record<
   string,
-  Record<
-    string,
-    {
-      regular: Record<string, Record<string, Record<string, Array<{ room: string; time: string; rescheduled?: boolean; exam?: boolean }>>>>;
-      repeat:  Record<string, Record<string, Record<string, Array<{ room: string; time: string; rescheduled?: boolean; exam?: boolean }>>>>;
-    }
-  >
->;
+  TimetableBatchMap
+> & {
+  [TIMETABLE_META_KEY]?: TimetableMetadata;
+};

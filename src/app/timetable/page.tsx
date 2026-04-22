@@ -22,6 +22,7 @@ import { DAYS_ORDER } from '@/lib/types';
 // eslint-disable-next-line
 const timetableRaw: RawTimetableJSON = require('../../../public/data/timetable.json');
 const allEntries: TimetableEntry[] = flattenTimetable(timetableRaw);
+const timetableDayMeta = timetableRaw.__meta__?.days ?? {};
 
 // ─── Time slots for the grid view ─────────────────────────────────────────────
 const GRID_SLOTS = ['08:00', '09:30', '11:00', '12:30', '14:00', '15:30', '17:00'];
@@ -807,6 +808,7 @@ function TimetablePageInner() {
                 grouped={grouped}
                 dept={dept}
                 conflicts={conflicts}
+                dayMeta={timetableDayMeta}
                 onSelect={setSelected}
                 onRemoveCourse={(entry) => removeCourseByKey(makeCourseKey(entry))}
                 onChangeCourseSection={(entry, nextSection) => updateCourseSection(makeCourseKey(entry), nextSection)}
@@ -837,6 +839,7 @@ function ListView({
   grouped,
   dept,
   conflicts,
+  dayMeta,
   onSelect,
   onRemoveCourse,
   onChangeCourseSection,
@@ -845,6 +848,7 @@ function ListView({
   grouped: { day: string; entries: TimetableEntry[] }[];
   dept: string;
   conflicts: Set<string>;
+  dayMeta: Record<string, { sheetName: string; date?: string }>;
   onSelect: (e: TimetableEntry) => void;
   onRemoveCourse: (e: TimetableEntry) => void;
   onChangeCourseSection: (e: TimetableEntry, section: string) => void;
@@ -854,9 +858,16 @@ function ListView({
     <>
       {grouped.map(({ day, entries }) => (
         <section key={day} className="mt-6 first:mt-4">
-          <h2 className="font-mono text-[11px] uppercase tracking-widest text-[var(--color-text-tertiary)] mb-3">
-            {day}
-          </h2>
+          <div className="mb-3 flex flex-wrap items-baseline gap-x-2 gap-y-1">
+            <h2 className="font-mono text-[11px] uppercase tracking-widest text-[var(--color-text-tertiary)]">
+              {day}
+            </h2>
+            {dayMeta[day]?.date && (
+              <span className="font-mono text-[10px] uppercase tracking-widest text-[var(--color-text-secondary)]">
+                {dayMeta[day]?.date}
+              </span>
+            )}
+          </div>
           <div className="flex flex-col gap-2 md:grid md:grid-cols-2 lg:grid-cols-3 md:gap-3">
             {entries.map((entry, idx) => {
               const key = `${entry.day}|${entry.time}|${entry.courseName}|${entry.section}`;

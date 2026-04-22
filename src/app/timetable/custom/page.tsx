@@ -16,6 +16,7 @@ import type { TimetableEntry, RawTimetableJSON } from '@/lib/types';
 // eslint-disable-next-line
 const timetableRaw: RawTimetableJSON = require('../../../../public/data/timetable.json');
 const allTimetableEntries = flattenTimetable(timetableRaw);
+const timetableDayMeta = timetableRaw.__meta__?.days ?? {};
 
 // Derive available batches from data
 const availableBatches: string[] = [...new Set<string>(allTimetableEntries.map(e => e.batch))]
@@ -486,27 +487,36 @@ function CustomTimetableInner() {
             ) : filtered.length === 0 ? (
               <EmptyState query={query} batch="" dept="" message="No classes found for the selected rows." />
             ) : (
-              grouped.map(({ day, entries }) => (
-                <section key={day} className="mt-6 first:mt-4">
-                  <h2 className="font-mono text-[11px] uppercase tracking-widest text-[var(--color-text-tertiary)] mb-3">
-                    {day}
-                  </h2>
-                  <div className="flex flex-col gap-2 md:grid md:grid-cols-2 lg:grid-cols-3 md:gap-3">
-                    {entries.map((entry, idx) => {
-                      const key = `${entry.day}|${entry.time}|${entry.courseName}|${entry.section}`;
-                      return (
-                        <TimetableCard
-                          key={`${key}-${idx}`}
-                          entry={entry}
-                          dept={entry.department}
-                          conflicting={conflicts.has(key)}
-                          onClick={() => setSelected(entry)}
-                        />
-                      );
-                    })}
-                  </div>
-                </section>
-              ))
+              <>
+                {grouped.map(({ day, entries }) => (
+                  <section key={day} className="mt-6 first:mt-4">
+                    <div className="mb-3 flex flex-wrap items-baseline gap-x-2 gap-y-1">
+                      <h2 className="font-mono text-[11px] uppercase tracking-widest text-[var(--color-text-tertiary)]">
+                        {day}
+                      </h2>
+                      {timetableDayMeta[day]?.date && (
+                        <span className="font-mono text-[10px] uppercase tracking-widest text-[var(--color-text-secondary)]">
+                          {timetableDayMeta[day]?.date}
+                        </span>
+                      )}
+                    </div>
+                    <div className="flex flex-col gap-2 md:grid md:grid-cols-2 lg:grid-cols-3 md:gap-3">
+                      {entries.map((entry, idx) => {
+                        const key = `${entry.day}|${entry.time}|${entry.courseName}|${entry.section}`;
+                        return (
+                          <TimetableCard
+                            key={`${key}-${idx}`}
+                            entry={entry}
+                            dept={entry.department}
+                            conflicting={conflicts.has(key)}
+                            onClick={() => setSelected(entry)}
+                          />
+                        );
+                      })}
+                    </div>
+                  </section>
+                ))}
+              </>
             )}
           </div>
         </div>

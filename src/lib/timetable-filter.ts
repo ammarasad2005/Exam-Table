@@ -1,5 +1,5 @@
-import type { TimetableEntry, RawTimetableJSON } from './types';
-import { DAYS_ORDER } from './types';
+import type { TimetableEntry, RawTimetableJSON, TimetableBatchMap } from './types';
+import { DAYS_ORDER, TIMETABLE_META_KEY } from './types';
 
 // ─── Flatten ─────────────────────────────────────────────────────────────────
 // Converts the nested Python output into a flat TimetableEntry[].
@@ -8,10 +8,11 @@ import { DAYS_ORDER } from './types';
 export function flattenTimetable(raw: RawTimetableJSON): TimetableEntry[] {
   const entries: TimetableEntry[] = [];
 
-  for (const batch of Object.keys(raw)) {
-    const deptMap = raw[batch];
-    for (const dept of Object.keys(deptMap)) {
-      const cats = deptMap[dept];
+  for (const [batch, deptMap] of Object.entries(raw)) {
+    if (batch === TIMETABLE_META_KEY) continue;
+    const typedDeptMap = deptMap as unknown as TimetableBatchMap;
+    for (const dept of Object.keys(typedDeptMap)) {
+      const cats = typedDeptMap[dept];
       for (const category of ['regular', 'repeat'] as const) {
         const courseMap = cats[category] ?? {};
         for (const courseName of Object.keys(courseMap)) {

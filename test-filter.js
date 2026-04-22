@@ -2,6 +2,7 @@ const fs = require('fs');
 const raw = JSON.parse(fs.readFileSync('/home/ammarasad2005/projects/exams/public/data/timetable.json', 'utf8'));
 const entries = [];
 for (const batch in raw) {
+    if (batch === '__meta__') continue;
     for (const dept in raw[batch]) {
         for (const cat in raw[batch][dept]) {
             for (const course in raw[batch][dept][cat]) {
