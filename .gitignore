@@ -54,3 +54,7 @@ scripts/debug_list.html
 logs/events.log
 logs/timetable.log
 
+# python cache artifacts
+__pycache__/
+*.py[cod]
+

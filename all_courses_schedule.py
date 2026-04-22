@@ -6,6 +6,7 @@ import urllib.parse
 import re
 import json
 import sys
+from datetime import date, timedelta
 import zipfile
 import xml.etree.ElementTree as ET
 
@@ -83,13 +84,29 @@ MONTH_MAP = {
     "december": "Dec", "dec": "Dec",
 }
 
+MONTH_NUM_MAP = {
+    "jan": 1, "january": 1,
+    "feb": 2, "february": 2,
+    "mar": 3, "march": 3,
+    "apr": 4, "april": 4,
+    "may": 5,
+    "jun": 6, "june": 6,
+    "jul": 7, "july": 7,
+    "aug": 8, "august": 8,
+    "sep": 9, "sept": 9, "september": 9,
+    "oct": 10, "october": 10,
+    "nov": 11, "november": 11,
+    "dec": 12, "december": 12,
+}
+
 MONTH_PATTERN = r"(?:jan(?:uary)?|feb(?:ruary)?|mar(?:ch)?|apr(?:il)?|may|jun(?:e)?|jul(?:y)?|aug(?:ust)?|sep(?:t(?:ember)?)?|oct(?:ober)?|nov(?:ember)?|dec(?:ember)?)"
 DATE_PATTERNS = [
-    re.compile(rf"(?i)\b(?P<day>\d{{1,2}})(?:st|nd|rd|th)?[\s,/-]+(?P<month>{MONTH_PATTERN})(?:[\s,/-]+(?P<year>\d{{4}}))?\b"),
-    re.compile(rf"(?i)\b(?P<month>{MONTH_PATTERN})[\s,/-]+(?P<day>\d{{1,2}})(?:st|nd|rd|th)?(?:[\s,/-]+(?P<year>\d{{4}}))?\b"),
+    re.compile(rf"(?i)\b(?P<day>\d{{1,2}})(?:st|nd|rd|th)?\s*[-/,]?\s*(?P<month>{MONTH_PATTERN})\.?\s*(?:[-/,]?\s*(?P<year>\d{{4}}))?\b"),
+    re.compile(rf"(?i)\b(?P<month>{MONTH_PATTERN})\.?\s*[-/,]?\s*(?P<day>\d{{1,2}})(?:st|nd|rd|th)?\s*(?:[-/,]?\s*(?P<year>\d{{4}}))?\b"),
 ]
 
 CANONICAL_DAYS = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"]
+DAY_INDEX = {name: idx for idx, name in enumerate(CANONICAL_DAYS)}
 
 # ==============================================================================
 # HELPER: Batch reverse-lookup (returns ALL possible batches, not just the first)
@@ -157,15 +174,51 @@ def resolve_day_name(sheet_title):
     return None
 
 def extract_date_label(sheet_title):
+    parsed, explicit_year = parse_sheet_date(sheet_title, date.today())
+    if not parsed:
+        return ""
+    label = parsed.strftime("%d %b")
+    if explicit_year:
+        label = f"{label} {parsed.year}"
+    return label
+
+def parse_sheet_date(sheet_title, reference_day):
     for pattern in DATE_PATTERNS:
         match = pattern.search(sheet_title)
         if not match:
             continue
-        day = match.group("day").zfill(2)
-        month = MONTH_MAP.get(match.group("month").lower(), match.group("month")[:3].title())
-        year = match.groupdict().get("year")
-        return f"{day} {month}" + (f" {year}" if year else "")
-    return ""
+
+        day_num = int(match.group("day"))
+        month_token = match.group("month").lower().rstrip('.')
+        month_num = MONTH_NUM_MAP.get(month_token)
+        if not month_num:
+            continue
+
+        year_group = match.groupdict().get("year")
+        explicit_year = bool(year_group)
+
+        if explicit_year:
+            try:
+                return date(int(year_group), month_num, day_num), True
+            except ValueError:
+                continue
+
+        # If year is omitted in the sheet tab, infer the nearest plausible year.
+        candidates = []
+        for candidate_year in (reference_day.year - 1, reference_day.year, reference_day.year + 1):
+            try:
+                d = date(candidate_year, month_num, day_num)
+                candidates.append(d)
+            except ValueError:
+                continue
+
+        if not candidates:
+            continue
+
+        best = min(candidates, key=lambda d: abs((d - reference_day).days))
+        return best, False
+
+    return None, False
 
 def resolve_timetable_sheets(sheet_id):
     try:
@@ -180,7 +233,11 @@ def resolve_timetable_sheets(sheet_id):
 
     resolved = []
     used = set()
+    today = date.today()
+    week_start = today - timedelta(days=today.weekday())
+
     for day in CANONICAL_DAYS:
+        target_date = week_start + timedelta(days=DAY_INDEX[day])
         matched_sheets = []
         for sheet_name in sheet_names:
             if sheet_name in used:
@@ -189,21 +246,37 @@ def resolve_timetable_sheets(sheet_id):
                 matched_sheets.append(sheet_name)
 
         if matched_sheets:
-            matched_sheet = min(
-                matched_sheets,
-                key=lambda title: (
-                    0 if '(' in title and ')' in title else 1,
-                    sheet_names.index(title),
-                ),
-            )
+            enriched = []
+            for title in matched_sheets:
+                parsed_date, explicit_year = parse_sheet_date(title, target_date)
+                enriched.append((title, parsed_date, explicit_year))
+
+            dated = [item for item in enriched if item[1] is not None]
+            if dated:
+                matched_sheet, parsed_sheet_date, explicit_year = min(
+                    dated,
+                    key=lambda item: (
+                        abs((item[1] - target_date).days),
+                        0 if (item[1] - target_date).days <= 0 else 1,
+                        sheet_names.index(item[0]),
+                    ),
+                )
+                date_label = parsed_sheet_date.strftime("%d %b")
+                if explicit_year:
+                    date_label = f"{date_label} {parsed_sheet_date.year}"
+            else:
+                matched_sheet = min(matched_sheets, key=lambda title: sheet_names.index(title))
+                date_label = extract_date_label(matched_sheet)
+
             used.add(matched_sheet)
         else:
             matched_sheet = day
+            date_label = ""
 
         resolved.append({
             "day": day,
             "sheet_name": matched_sheet,
-            "date": extract_date_label(matched_sheet),
+            "date": date_label,
         })
 
     return resolved
