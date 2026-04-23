@@ -1,8 +1,6 @@
 'use client';
 import { useState, useEffect } from 'react';
 import { Header } from '@/components/Header';
-import { Navbar } from '@/components/Navbar';
-import { FloatingMenu } from '@/components/FloatingMenu';
 
 // ── Data ─────────────────────────────────────────────────────────────────────
 
@@ -36,7 +34,6 @@ function addRange(set: Set<string>, y: number, m: number, d1: number, d2: number
   for (let d = d1; d <= d2; d++) set.add(`${y}-${m}-${d}`);
 }
 
-// m is 1-indexed here to match original JS exactly
 const examDays     = new Set<string>();
 const deadlineDays = new Set<string>();
 const holidayDays  = new Set<string>();
@@ -66,8 +63,6 @@ function classifyDay(y: number, m1: number, d: number): DayKind {
   return 'normal';
 }
 
-// ── Badge colour maps (theme-aware via CSS vars) ──────────────────────────────
-
 const BADGE_STYLES: Record<string, { bg: string; text: string; border?: string }> = {
   exam:      { bg: 'var(--accent-cs-bg)',  text: 'var(--accent-cs)'  },
   deadline:  { bg: 'var(--accent-ee-bg)',  text: 'var(--accent-ee)'  },
@@ -91,17 +86,12 @@ const DAY_STYLES: Record<DayKind, { bg: string; color: string; fw?: string }> = 
   empty:         { bg: 'transparent',            color: 'transparent'                             },
 };
 
-// ── Component ─────────────────────────────────────────────────────────────────
-
 export default function SemesterPlanPage() {
   const [mounted, setMounted] = useState(false);
   useEffect(() => setMounted(true), []);
 
   return (
     <>
-      {/* ================================================================
-          MOBILE  (< 768px)
-      ================================================================ */}
       <main className="md:hidden min-h-dvh flex flex-col bg-[var(--color-bg)]">
         <Header />
         <div className="flex flex-col flex-1 px-5 pb-28 pt-4 max-w-lg mx-auto w-full gap-10">
@@ -112,19 +102,27 @@ export default function SemesterPlanPage() {
         </div>
       </main>
 
-      {/* ================================================================
-          DESKTOP  (≥ 768px)
-      ================================================================ */}
       <div className="hidden md:flex min-h-dvh flex-col bg-[var(--color-bg)]">
         <Header />
         <div className="flex-1 w-full px-6 md:px-10 lg:px-12 xl:px-16 py-14">
-          <div className="flex flex-col gap-10 lg:flex-row lg:gap-8 xl:gap-12 justify-between">
-            <div className="min-w-0 flex flex-col gap-8 w-full max-w-[800px]">
-              <DesktopHero />
+          
+          <DesktopHero />
+
+          <div className="mt-12 flex flex-col gap-10 lg:flex-row lg:gap-8 xl:gap-12">
+            
+            {/* COLUMN 1: Key Dates (Left) */}
+            <div className="flex-[1.2] min-w-0 flex flex-col gap-8">
               <KeyDatesSection />
             </div>
 
-            <aside className="min-w-0 lg:sticky lg:top-20 lg:self-start w-full max-w-2xl lg:ml-auto">
+            {/* COLUMN 2: Holidays (Middle) */}
+            <div className="flex-[0.6] min-w-[200px] hidden lg:flex flex-col">
+              <HolidaysSection vertical />
+            </div>
+
+            {/* COLUMN 3: Calendars (Right) */}
+            <aside className="flex-[1] min-w-[320px] lg:sticky lg:top-20 lg:self-start">
+              <SectionLabel>Monthly calendars</SectionLabel>
               <section
                 className="rounded-2xl border p-6 xl:p-7 flex flex-col gap-8"
                 style={{
@@ -133,20 +131,23 @@ export default function SemesterPlanPage() {
                   boxShadow: 'var(--shadow-card), var(--border-inset)',
                 }}
               >
-                {mounted && <CalendarsSection compact />}
-                <div className="h-px" style={{ backgroundColor: 'var(--color-border)' }} />
-                <HolidaysSection compact />
+                {mounted && <CalendarsSection compact hideLabel />}
+                
+                {/* Fallback for smaller desktop screens where middle column is hidden */}
+                <div className="lg:hidden">
+                    <div className="h-px mb-8" style={{ backgroundColor: 'var(--color-border)' }} />
+                    <HolidaysSection compact />
+                </div>
               </section>
             </aside>
+
           </div>
         </div>
-        <div className="pb-20" /> {/* spacer for navbar */}
+        <div className="pb-20" />
       </div>
     </>
   );
 }
-
-// ── Sub-components ────────────────────────────────────────────────────────────
 
 function MobileHero() {
   return (
@@ -166,13 +167,13 @@ function MobileHero() {
 
 function DesktopHero() {
   return (
-    <div>
+    <div className="max-w-4xl">
       <p className="font-mono text-xs uppercase tracking-widest text-[var(--color-text-tertiary)] mb-4">
         FAST NUCES · Islamabad · Signed Jan 8, 2026
       </p>
       <h1
         className="font-display leading-[1.1] text-[var(--color-text-primary)]"
-        style={{ fontSize: 'clamp(2.2rem, 3vw, 3rem)' }}
+        style={{ fontSize: 'clamp(2.2rem, 3.5vw, 3.6rem)' }}
       >
         Semester Schedule — <span className="italic">Spring 2026.</span>
       </h1>
@@ -182,7 +183,7 @@ function DesktopHero() {
 
 function SectionLabel({ children }: { children: React.ReactNode }) {
   return (
-    <p className="font-mono text-[11px] uppercase tracking-widest text-[var(--color-text-tertiary)] mb-4">
+    <p className="font-mono text-[11px] uppercase tracking-widest text-[var(--color-text-tertiary)] mb-4 text-center">
       {children}
     </p>
   );
@@ -193,10 +194,7 @@ function KeyDatesSection() {
   const [animatedItems, setAnimatedItems] = useState<number[]>([]);
 
   useEffect(() => {
-    // 1. Timeline Line animate
     setMounted(true);
-
-    // 2. Timeline Items + Marker staggered reveal
     KEY_DATES.forEach((_, index) => {
       setTimeout(() => {
         setAnimatedItems((prev) => [...prev, index]);
@@ -215,7 +213,6 @@ function KeyDatesSection() {
         .timeline-line.animate {
           transform: scaleY(1);
         }
-
         .timeline-item {
           opacity: 0;
           transform: translateY(8px);
@@ -225,7 +222,6 @@ function KeyDatesSection() {
           opacity: 1;
           transform: translateY(0);
         }
-
         .timeline-marker {
           transform: scale(0);
           transition: transform 300ms ease-out;
@@ -237,7 +233,6 @@ function KeyDatesSection() {
       <SectionLabel>Key dates at a glance</SectionLabel>
 
       <div className="relative mt-4 pl-10">
-        {/* Timeline Spine */}
         <div
           className={`absolute left-[16px] top-6 bottom-4 w-[2px] bg-[#E5E7EB] timeline-line ${mounted ? 'animate' : ''}`}
         />
@@ -254,7 +249,6 @@ function KeyDatesSection() {
                 className={`relative flex items-center group timeline-item ${isVisible ? 'visible' : ''}`}
                 style={{ marginBottom: '24px' }}
               >
-                {/* Timeline Marker Container */}
                 <div className="absolute -left-[29px] w-6 flex justify-center z-10">
                   <div
                     className={`w-[10px] h-[10px] rounded-full timeline-marker ${isVisible ? 'visible' : ''}`}
@@ -265,7 +259,6 @@ function KeyDatesSection() {
                   />
                 </div>
 
-                {/* Event Card */}
                 <div
                   className="flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-4 flex-1 p-4 rounded-xl border bg-[var(--color-bg-raised)] transition-all duration-300 hover:-translate-y-[2px] hover:shadow-md"
                   style={{
@@ -273,7 +266,6 @@ function KeyDatesSection() {
                   }}
                 >
                   <div className="flex items-center gap-3 flex-1 min-w-0">
-                    {/* Badge */}
                     <span
                       className="font-mono text-[10px] font-semibold px-2.5 py-1 rounded-full shrink-0"
                       style={{
@@ -283,14 +275,10 @@ function KeyDatesSection() {
                     >
                       {ev.badge}
                     </span>
-
-                    {/* Label */}
                     <span className="font-body text-sm text-[var(--color-text-primary)] font-medium leading-tight">
                       {ev.label}
                     </span>
                   </div>
-
-                  {/* Date */}
                   <span className="font-mono text-[12px] text-[var(--color-text-tertiary)] shrink-0 sm:text-right pt-1 sm:pt-0">
                     {ev.date}
                   </span>
@@ -304,14 +292,13 @@ function KeyDatesSection() {
   );
 }
 
-function CalendarsSection({ compact = false }: { compact?: boolean }) {
-  const months = [0, 1, 2, 3, 4, 5]; // Jan–Jun 2026 (0-indexed)
+function CalendarsSection({ compact = false, hideLabel = false }: { compact?: boolean; hideLabel?: boolean }) {
+  const months = [0, 1, 2, 3, 4, 5]; 
 
   return (
     <section>
-      <SectionLabel>Monthly calendars</SectionLabel>
+      {!hideLabel && <SectionLabel>Monthly calendars</SectionLabel>}
 
-      {/* Legend */}
       <div className="flex flex-wrap gap-x-5 gap-y-2 mb-6">
         {[
           { label: 'Classes start / Last day', bg: 'var(--accent-ds)',                                border: undefined },
@@ -330,9 +317,9 @@ function CalendarsSection({ compact = false }: { compact?: boolean }) {
         ))}
       </div>
 
-      <div className={`grid gap-4 ${compact ? 'grid-cols-2' : 'grid-cols-2 md:grid-cols-3'}`}>
+      <div className={`grid gap-4 ${compact ? 'grid-cols-1 xl:grid-cols-2' : 'grid-cols-2 md:grid-cols-3'}`}>
         {months.map((mi) => {
-          const m1 = mi + 1; // 1-indexed month
+          const m1 = mi + 1; 
           const year = 2026;
           const firstDay = new Date(year, mi, 1).getDay();
           const daysInMonth = new Date(year, mi + 1, 0).getDate();
@@ -383,31 +370,31 @@ function CalendarsSection({ compact = false }: { compact?: boolean }) {
   );
 }
 
-function HolidaysSection({ compact = false }: { compact?: boolean }) {
+function HolidaysSection({ compact = false, vertical = false }: { compact?: boolean; vertical?: boolean }) {
   return (
     <section>
       <SectionLabel>Holidays</SectionLabel>
-      <div className={`grid gap-3 ${compact ? 'grid-cols-1' : 'grid-cols-1 sm:grid-cols-2'}`}>
+      <div className={`grid gap-3 ${vertical ? 'grid-cols-1' : compact ? 'grid-cols-1' : 'grid-cols-1 sm:grid-cols-2'}`}>
         {HOLIDAYS.map((h, i) => (
           <div
             key={i}
-            className="flex items-center gap-3 px-4 py-3 rounded-xl border"
+            className="flex flex-col gap-1.5 px-5 py-4 rounded-xl border group transition-all duration-300 hover:shadow-sm"
             style={{
               borderColor: 'var(--color-border)',
               backgroundColor: 'var(--color-bg-subtle)',
             }}
           >
-            <div
-              className="w-2 h-2 rounded-full shrink-0"
-              style={{ background: 'var(--accent-cy)' }}
-            />
-            <div className="flex-1 min-w-0">
-              <span className="font-body text-sm text-[var(--color-text-primary)]">{h.name}</span>
-              {h.lunar && (
-                <span className="font-mono text-[9px] text-[var(--color-text-tertiary)] ml-1">(lunar)</span>
-              )}
+            <div className="flex items-center gap-2">
+                <div
+                className="w-1.5 h-1.5 rounded-full shrink-0"
+                style={{ background: 'var(--accent-cy)' }}
+                />
+                <span className="font-body text-sm font-semibold text-[var(--color-text-primary)]">{h.name}</span>
+                {h.lunar && (
+                <span className="font-mono text-[9px] text-[var(--color-text-tertiary)] italic">(lunar)</span>
+                )}
             </div>
-            <span className="font-mono text-[11px] text-[var(--color-text-tertiary)] shrink-0">{h.date}</span>
+            <span className="font-mono text-[11px] text-[var(--color-text-secondary)] pl-3.5">{h.date}</span>
           </div>
         ))}
       </div>

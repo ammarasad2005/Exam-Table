@@ -1,4 +1,5 @@
 import type { ExamEntry, TimetableEntry } from './types';
+import type { CalendarEvent } from './events';
 
 
 // Download as CSV
@@ -342,5 +343,98 @@ export function downloadTimetableICS(entries: TimetableEntry[]): void {
     URL.revokeObjectURL(url);
   } catch (err) {
     console.error('Timetable ICS export failed:', err);
+  }
+}
+
+// ─── Campus Events Exports ──────────────────────────────────────────────────
+
+function parseEventTime(timeStr: string, year: number, month: number, day: number): { start: Date, end: Date } {
+  const defaultStart = new Date(year, month, day, 9, 0, 0);
+  const defaultEnd = new Date(year, month, day, 10, 0, 0);
+
+  if (!timeStr || timeStr.toLowerCase().includes('all day')) {
+    const start = new Date(year, month, day, 0, 0, 0);
+    const end = new Date(year, month, day, 23, 59, 59);
+    return { start, end };
+  }
+
+  try {
+    const parts = timeStr.split('-').map(s => s.trim());
+    
+    const parseTimePart = (t: string) => {
+      const match = t.match(/(\d{1,2}):(\d{2})\s*([ap]m)/i);
+      if (!match) return null;
+      let h = parseInt(match[1], 10);
+      const m = parseInt(match[2], 10);
+      const p = match[3].toLowerCase();
+      if (p === 'pm' && h !== 12) h += 12;
+      if (p === 'am' && h === 12) h = 0;
+      return { h, m };
+    };
+
+    const startInfo = parseTimePart(parts[0]);
+    if (!startInfo) return { start: defaultStart, end: defaultEnd };
+
+    const start = new Date(year, month, day, startInfo.h, startInfo.m, 0);
+    
+    let end: Date;
+    if (parts.length > 1) {
+      const endInfo = parseTimePart(parts[1]);
+      if (endInfo) {
+        end = new Date(year, month, day, endInfo.h, endInfo.m, 0);
+      } else {
+        end = new Date(start.getTime() + 60 * 60 * 1000); // +1 hour
+      }
+    } else {
+      end = new Date(start.getTime() + 60 * 60 * 1000); // +1 hour
+    }
+
+    return { start, end };
+  } catch {
+    return { start: defaultStart, end: defaultEnd };
+  }
+}
+
+export function downloadEventsICS(events: CalendarEvent[], filename?: string): void {
+  try {
+    const dtStamp = new Date().toISOString().replace(/[-:]/g, '').split('.')[0] + 'Z';
+
+    const formatICSDate = (d: Date) => 
+      d.toISOString().replace(/[-:]/g, '').split('.')[0] + 'Z';
+
+    const eventBlocks = events.map((e, idx) => {
+      const { start, end } = parseEventTime(e.time, e.year, e.month, e.day);
+      const uid = `event-${e.year}${e.month}${e.day}-${idx}-${Date.now()}@fast-portal`;
+
+      return [
+        'BEGIN:VEVENT',
+        `UID:${uid}`,
+        `DTSTAMP:${dtStamp}`,
+        `DTSTART:${formatICSDate(start)}`,
+        `DTEND:${formatICSDate(end)}`,
+        `SUMMARY:${e.event_name}`,
+        `DESCRIPTION:Location: ${e.event_location || 'N/A'}\\nExported from FAST NUCES Portal`,
+        `LOCATION:${e.event_location || ''}`,
+        'END:VEVENT'
+      ].join('\r\n');
+    }).join('\r\n');
+
+    const ics = [
+      'BEGIN:VCALENDAR',
+      'VERSION:2.0',
+      'PRODID:-//FAST NUCES//Unified Portal//EN',
+      eventBlocks,
+      'END:VCALENDAR'
+    ].join('\r\n');
+
+    const blob = new Blob([ics], { type: 'text/calendar' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = filename || `campus-events-${Date.now()}.ics`;
+    a.click();
+    URL.revokeObjectURL(url);
+  } catch (err) {
+    console.error('Events ICS export failed:', err);
   }
 }
