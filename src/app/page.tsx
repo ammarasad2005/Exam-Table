@@ -203,45 +203,34 @@ export default function RootPage() {
                 key={f.id}
                 onClick={() => handleFeatureClick(f.id, f.placeholder)}
                 disabled={f.placeholder}
-                className="relative overflow-hidden w-full text-left rounded-2xl border bg-[var(--color-bg-raised)] p-4 flex flex-col justify-between aspect-ratio-square transition-all duration-150 active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 group disabled:opacity-50 disabled:cursor-not-allowed"
+                className="relative overflow-hidden w-full text-left rounded-2xl bg-[var(--color-bg-raised)] p-4 flex flex-col justify-between aspect-ratio-square transition-all duration-150 active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 group disabled:opacity-50 disabled:cursor-not-allowed"
                 style={{
-                  borderColor: 'var(--color-border)',
+                  border: `1.5px solid var(--accent-${f.accent})`,
                   boxShadow: 'var(--shadow-card)',
                   aspectRatio: '1/1',
                 }}
               >
-                <span
-                  aria-hidden="true"
-                  className="absolute left-0 top-0 bottom-0 w-[4px] opacity-90 transition-opacity duration-150"
-                  style={{ backgroundColor: `var(--accent-${f.accent})` }}
-                />
-                
-                <div
-                  className="w-11 h-11 rounded-xl flex items-center justify-center shrink-0"
-                  style={{
-                    backgroundColor: `var(--accent-${f.accent}-bg)`,
-                    color: `var(--accent-${f.accent})`,
-                  }}
-                >
-                  {f.icon}
-                </div>
+                <div className="flex flex-col items-center justify-center flex-1 gap-4 text-center">
+                  <div
+                    className="w-11 h-11 rounded-xl flex items-center justify-center shrink-0 shadow-sm"
+                    style={{
+                      backgroundColor: `var(--accent-${f.accent}-bg)`,
+                      color: `var(--accent-${f.accent})`,
+                    }}
+                  >
+                    {f.icon}
+                  </div>
 
-                <div className="flex flex-col gap-1.5">
-                  <div className="flex items-center justify-between gap-2">
-                    <span className="font-display text-base leading-tight text-[var(--color-text-primary)]">
+                  <div className="flex flex-col items-center gap-2">
+                    <span className="font-body text-[11px] font-bold uppercase tracking-[0.12em] text-[var(--color-text-primary)] leading-tight">
                       {f.title}
                     </span>
-                    {!f.placeholder && (
-                      <span className="font-mono text-[11px] text-[var(--color-text-tertiary)] opacity-60 group-hover:translate-x-0.5 transition-transform">
-                        →
+                    {f.placeholder && (
+                      <span className="inline-block font-mono text-[7px] uppercase tracking-wider px-1.5 py-0.5 rounded-full bg-[var(--color-bg-subtle)] text-[var(--color-text-tertiary)] border border-[var(--color-border)]">
+                        Coming Soon
                       </span>
                     )}
                   </div>
-                  {f.placeholder && (
-                    <span className="inline-block self-start font-mono text-[8px] uppercase tracking-wider px-1.5 py-0.5 rounded-full bg-[var(--color-bg-subtle)] text-[var(--color-text-tertiary)] border border-[var(--color-border)]">
-                      Soon
-                    </span>
-                  )}
                 </div>
               </button>
             ))}
