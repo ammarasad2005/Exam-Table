@@ -166,8 +166,8 @@ export function detectConflicts(entries: TimetableEntry[], includeRepeats = true
         const a = dayEntries[i];
         const b = dayEntries[j];
         
-        // If either class is rescheduled or an exam, it's allowed to overlap
-        if (a.rescheduled || b.rescheduled || a.exam || b.exam) continue;
+        // If either class is rescheduled, an exam, or on Saturday, it's allowed to overlap
+        if (a.rescheduled || b.rescheduled || a.exam || b.exam || a.day === 'Saturday' || b.day === 'Saturday') continue;
 
         // Skip conflicts involving repeat courses when repeats are excluded
         if (!includeRepeats && (a.category === 'repeat' || b.category === 'repeat')) continue;

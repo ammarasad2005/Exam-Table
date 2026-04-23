@@ -4558,6 +4558,14 @@
                                 "rescheduled": false,
                                 "exam": false
                             }
+                        ],
+                        "Saturday": [
+                            {
+                                "room": "D-301",
+                                "time": "01:00-02:20",
+                                "rescheduled": false,
+                                "exam": false
+                            }
                         ]
                     },
                     "E": {
@@ -4598,6 +4606,14 @@
                     },
                     "D": {
                         "Monday": [
+                            {
+                                "room": "D-303",
+                                "time": "10:00-11:20",
+                                "rescheduled": false,
+                                "exam": false
+                            }
+                        ],
+                        "Saturday": [
                             {
                                 "room": "D-303",
                                 "time": "10:00-11:20",
@@ -4666,6 +4682,14 @@
                                 "rescheduled": false,
                                 "exam": false
                             }
+                        ],
+                        "Thursday": [
+                            {
+                                "room": "D-312",
+                                "time": "10:00-11:20",
+                                "rescheduled": false,
+                                "exam": false
+                            }
                         ]
                     }
                 },
@@ -4678,10 +4702,26 @@
                                 "rescheduled": false,
                                 "exam": false
                             }
+                        ],
+                        "Saturday": [
+                            {
+                                "room": "D-IT Lab 3",
+                                "time": "08:30-11:15",
+                                "rescheduled": false,
+                                "exam": false
+                            }
                         ]
                     },
                     "E": {
                         "Monday": [
+                            {
+                                "room": "D-IT Lab 3",
+                                "time": "11:30-02:15",
+                                "rescheduled": false,
+                                "exam": false
+                            }
+                        ],
+                        "Saturday": [
                             {
                                 "room": "D-IT Lab 3",
                                 "time": "11:30-02:15",
@@ -6326,6 +6366,14 @@
                                 "rescheduled": false,
                                 "exam": false
                             }
+                        ],
+                        "Saturday": [
+                            {
+                                "room": "D-501",
+                                "time": "08:30-09:50",
+                                "rescheduled": false,
+                                "exam": false
+                            }
                         ]
                     },
                     "B": {
@@ -6350,6 +6398,14 @@
                 "Comp Net Lab": {
                     "B": {
                         "Monday": [
+                            {
+                                "room": "C-Margala 3",
+                                "time": "08:30-11:15",
+                                "rescheduled": false,
+                                "exam": false
+                            }
+                        ],
+                        "Saturday": [
                             {
                                 "room": "C-Margala 3",
                                 "time": "08:30-11:15",
@@ -6660,17 +6716,17 @@
                                 "rescheduled": false,
                                 "exam": false
                             }
-                        ]
-                    },
-                    "A": {
-                        "Saturday": [
+                        ],
+                        "Wednesday": [
                             {
-                                "room": "D-413",
-                                "time": "01:00-02:20",
+                                "room": "D-406",
+                                "time": "11:30-12:50",
                                 "rescheduled": false,
                                 "exam": false
                             }
-                        ],
+                        ]
+                    },
+                    "A": {
                         "Monday": [
                             {
                                 "room": "D-413",
@@ -6678,13 +6734,11 @@
                                 "rescheduled": false,
                                 "exam": false
                             }
-                        ]
-                    },
-                    "C": {
-                        "Saturday": [
+                        ],
+                        "Wednesday": [
                             {
-                                "room": "D-415",
-                                "time": "08:30-09:50",
+                                "room": "D-406",
+                                "time": "01:00-02:20",
                                 "rescheduled": false,
                                 "exam": false
                             }
@@ -6697,6 +6751,20 @@
                             {
                                 "room": "D-IT Lab 4",
                                 "time": "08:30-11:15",
+                                "rescheduled": false,
+                                "exam": false
+                            }
+                        ],
+                        "Saturday": [
+                            {
+                                "room": "D-IT Lab 4",
+                                "time": "08:30-11:15",
+                                "rescheduled": false,
+                                "exam": false
+                            },
+                            {
+                                "room": "D-IT Lab 4",
+                                "time": "11:30-02:15",
                                 "rescheduled": false,
                                 "exam": false
                             }
@@ -6725,6 +6793,14 @@
                         ]
                     },
                     "B": {
+                        "Monday": [
+                            {
+                                "room": "D-416",
+                                "time": "09:30-11:15",
+                                "rescheduled": false,
+                                "exam": false
+                            }
+                        ],
                         "Saturday": [
                             {
                                 "room": "D-416",
@@ -7846,6 +7922,14 @@
                                 "rescheduled": false,
                                 "exam": false
                             }
+                        ],
+                        "Saturday": [
+                            {
+                                "room": "D-305",
+                                "time": "10:00-11:20",
+                                "rescheduled": false,
+                                "exam": false
+                            }
                         ]
                     },
                     "G": {
@@ -7860,6 +7944,14 @@
                         "Saturday": [
                             {
                                 "room": "D-311",
+                                "time": "10:00-11:20",
+                                "rescheduled": false,
+                                "exam": false
+                            }
+                        ],
+                        "Wednesday": [
+                            {
+                                "room": "D-313",
                                 "time": "10:00-11:20",
                                 "rescheduled": false,
                                 "exam": false
@@ -7918,10 +8010,18 @@
                                 "rescheduled": false,
                                 "exam": false
                             }
+                        ],
+                        "Saturday": [
+                            {
+                                "room": "D-306",
+                                "time": "08:30-09:50",
+                                "rescheduled": false,
+                                "exam": false
+                            }
                         ]
                     },
                     "C": {
-                        "Saturday": [
+                        "Monday": [
                             {
                                 "room": "D-302",
                                 "time": "08:30-09:50",
@@ -7929,7 +8029,7 @@
                                 "exam": false
                             }
                         ],
-                        "Monday": [
+                        "Saturday": [
                             {
                                 "room": "D-302",
                                 "time": "08:30-09:50",
@@ -7939,15 +8039,15 @@
                         ]
                     },
                     "D": {
-                        "Saturday": [
+                        "Tuesday": [
                             {
-                                "room": "D-303",
-                                "time": "10:00-11:20",
+                                "room": "D-311",
+                                "time": "11:30-12:50",
                                 "rescheduled": false,
                                 "exam": false
                             }
                         ],
-                        "Tuesday": [
+                        "Thursday": [
                             {
                                 "room": "D-311",
                                 "time": "11:30-12:50",
@@ -7966,10 +8066,26 @@
                                 "rescheduled": false,
                                 "exam": false
                             }
+                        ],
+                        "Saturday": [
+                            {
+                                "room": "D-IT Lab 1",
+                                "time": "08:30-11:15",
+                                "rescheduled": false,
+                                "exam": false
+                            }
                         ]
                     },
                     "B": {
                         "Monday": [
+                            {
+                                "room": "D-IT Lab 2",
+                                "time": "02:30-05:15",
+                                "rescheduled": false,
+                                "exam": false
+                            }
+                        ],
+                        "Saturday": [
                             {
                                 "room": "D-IT Lab 2",
                                 "time": "02:30-05:15",
@@ -8292,16 +8408,6 @@
                                 "exam": false
                             }
                         ]
-                    },
-                    "C": {
-                        "Saturday": [
-                            {
-                                "room": "D-415",
-                                "time": "11:30-12:50",
-                                "rescheduled": false,
-                                "exam": false
-                            }
-                        ]
                     }
                 },
                 "AI": {
@@ -8318,6 +8424,14 @@
                             {
                                 "room": "D-413",
                                 "time": "08:30-09:50",
+                                "rescheduled": false,
+                                "exam": false
+                            }
+                        ],
+                        "Saturday": [
+                            {
+                                "room": "D-413",
+                                "time": "01:00-02:20",
                                 "rescheduled": false,
                                 "exam": false
                             }
@@ -8353,6 +8467,14 @@
                         "Wednesday": [
                             {
                                 "room": "D-501",
+                                "time": "08:30-09:50",
+                                "rescheduled": false,
+                                "exam": false
+                            }
+                        ],
+                        "Saturday": [
+                            {
+                                "room": "D-415",
                                 "time": "08:30-09:50",
                                 "rescheduled": false,
                                 "exam": false
@@ -11410,6 +11532,14 @@
                         "Wednesday": [
                             {
                                 "room": "D-501",
+                                "time": "11:30-12:50",
+                                "rescheduled": false,
+                                "exam": false
+                            }
+                        ],
+                        "Saturday": [
+                            {
+                                "room": "D-415",
                                 "time": "11:30-12:50",
                                 "rescheduled": false,
                                 "exam": false

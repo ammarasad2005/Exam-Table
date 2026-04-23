@@ -534,9 +534,14 @@ for day_info in day_sheets:
                     course_name = f"{course_name} Lab"
 
                 # Determine if special slot
+                is_saturday    = (day == "Saturday")
                 is_rescheduled = any(k in val.lower() for k in ["rescheduled", "resch"])
                 is_exam        = any(k in val.lower() for k in ["mid", "exam", "sessional"])
                 
+                # Logic: Saturday itself is a "rescheduled day" concept.
+                # It bypasses quotas internally, but only carries the label if explicitly marked.
+                bypasses_quota = is_rescheduled or is_saturday
+
                 if is_rescheduled or is_exam:
                     # Strip keywords from course name if they got captured
                     course_name = re.sub(r'(?i)\b(resch(eduled)?|mid|exam|sessional)\b', '', course_name).strip()
@@ -600,6 +605,8 @@ for day_info in day_sheets:
                     "category":    category,
                     "batch":       batch,        # None for regular until resolved
                     "is_rescheduled": is_rescheduled,
+                    "is_saturday": is_saturday,
+                    "bypasses_quota": bypasses_quota,
                     "is_exam":     is_exam,
                     "quota":       quota
                 }
@@ -608,7 +615,7 @@ for day_info in day_sheets:
                     # Batch encoded in cell — anchor immediately
                     cal_key = f"{batch}-{dept}-{section}-{day}"
                     busy_calendar.setdefault(cal_key, []).append(blocking_time)
-                    if not is_rescheduled:
+                    if not bypasses_quota:
                         q_key = f"{batch}-{dept}-{section}-{course_name}"
                         quota_calendar[q_key] = quota_calendar.get(q_key, 0) + 1
                     unambiguous_classes.append(record)
@@ -623,7 +630,7 @@ for day_info in day_sheets:
                         record["batch"] = batch_val
                         cal_key = f"{batch_val}-{dept}-{section}-{day}"
                         busy_calendar.setdefault(cal_key, []).append(blocking_time)
-                        if not is_rescheduled:
+                        if not bypasses_quota:
                             q_key = f"{batch_val}-{dept}-{section}-{course_name}"
                             quota_calendar[q_key] = quota_calendar.get(q_key, 0) + 1
                         unambiguous_classes.append(record)
@@ -675,12 +682,13 @@ while changed:
         course_name    = record["course_name"]
         quota          = record["quota"]
         is_rescheduled = record["is_rescheduled"]
+        bypasses_quota = record.get("bypasses_quota", False)
 
         # Per-batch key: check if THAT batch is already busy or at its quota
         free_candidates = [
             b for b in possible
             if not is_batch_busy(b, dept, section, day, blocking_time, busy_calendar)
-            and (is_rescheduled or has_quota_room(b, dept, section, course_name, quota, quota_calendar))
+            and (bypasses_quota or has_quota_room(b, dept, section, course_name, quota, quota_calendar))
         ]
 
         if len(free_candidates) == 1:
@@ -689,7 +697,7 @@ while changed:
             record["batch"] = assigned
             cal_key = f"{assigned}-{dept}-{section}-{day}"
             busy_calendar.setdefault(cal_key, []).append(blocking_time)
-            if not record["is_rescheduled"]:
+            if not bypasses_quota:
                 q_key = f"{assigned}-{dept}-{section}-{record['course_name']}"
                 quota_calendar[q_key] = quota_calendar.get(q_key, 0) + 1
             unambiguous_classes.append(record)
@@ -727,12 +735,13 @@ for record in still_ambiguous:
     course_name    = record["course_name"]
     quota_val      = record["quota"]
     is_rescheduled = record["is_rescheduled"]
+    bypasses_quota = record.get("bypasses_quota", False)
 
     # Re-calculate free candidates based on the MOST RECENT quota and busy state
     free_candidates = [
         b for b in possible
         if not is_batch_busy(b, dept, section, day, blocking_time, busy_calendar)
-        and (is_rescheduled or has_quota_room(b, dept, section, course_name, quota_val, quota_calendar))
+        and (bypasses_quota or has_quota_room(b, dept, section, course_name, quota_val, quota_calendar))
     ]
 
     # Sort candidates by:
@@ -754,7 +763,7 @@ for record in still_ambiguous:
         new_record["batch"] = assigned
         cal_key = f"{assigned}-{dept}-{section}-{day}"
         busy_calendar.setdefault(cal_key, []).append(blocking_time)
-        if not is_rescheduled:
+        if not bypasses_quota:
             q_key = f"{assigned}-{dept}-{section}-{course_name}"
             quota_calendar[q_key] = quota_calendar.get(q_key, 0) + 1
         unambiguous_classes.append(new_record)
