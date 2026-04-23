@@ -2650,8 +2650,8 @@
                         ],
                         "Friday": [
                             {
-                                "room": "D-306",
-                                "time": "10:00-11:20",
+                                "room": "D-305",
+                                "time": "08:30-09:50",
                                 "rescheduled": true,
                                 "exam": false
                             }
@@ -3017,6 +3017,14 @@
                                 "room": "A-Khyber-2",
                                 "time": "11:30-02:15",
                                 "rescheduled": false,
+                                "exam": false
+                            }
+                        ],
+                        "Friday": [
+                            {
+                                "room": "D-305",
+                                "time": "10:00-12:45",
+                                "rescheduled": true,
                                 "exam": false
                             }
                         ]
