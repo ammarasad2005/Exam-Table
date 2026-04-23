@@ -392,6 +392,47 @@ function TimetablePageInner() {
   const grouped  = useMemo(() => groupByDayTimetable(filtered), [filtered]);
   const conflicts = useMemo(() => detectConflicts(filtered, includeRepeats), [filtered, includeRepeats]);
 
+  const reorderedGrouped = useMemo(() => {
+    const today = new Date();
+    const todayName = today.toLocaleDateString('en-US', { weekday: 'long' });
+    const todayDateStr = today.toLocaleDateString('en-US', { day: 'numeric', month: 'short' });
+
+    const groupedMap = new Map(grouped.map(g => [g.day, g.entries]));
+
+    const result: { day: string; entries: TimetableEntry[]; isToday: boolean; dateStr: string }[] = [];
+
+    // 1. Always add Today first
+    result.push({
+      day: todayName,
+      entries: groupedMap.get(todayName) || [],
+      isToday: true,
+      dateStr: todayDateStr
+    });
+
+    // 2. Add others from DAYS_ORDER in ascending order
+    for (const day of DAYS_ORDER) {
+      if (day === todayName) continue;
+      const entries = groupedMap.get(day);
+      if (entries && entries.length > 0) {
+        // Calculate date for this day in the current week
+        const dayJsIdx = (DAYS_ORDER.indexOf(day) + 1) % 7; // Mon=1, ..., Sat=6
+        const todayJsIdx = today.getDay(); // Sun=0, Mon=1, ...
+        const diff = dayJsIdx - todayJsIdx;
+        const d = new Date(today);
+        d.setDate(today.getDate() + diff);
+        const dateStr = d.toLocaleDateString('en-US', { day: 'numeric', month: 'short' });
+
+        result.push({
+          day,
+          entries,
+          isToday: false,
+          dateStr
+        });
+      }
+    }
+    return result;
+  }, [grouped]);
+
   const accentColor = `var(--accent-${dept.toLowerCase()})`;
   const accentBg    = `var(--accent-${dept.toLowerCase()}-bg)`;
 
@@ -805,14 +846,13 @@ function TimetablePageInner() {
               />
             ) : viewMode === 'list' ? (
               <ListView
-                grouped={grouped}
+                grouped={reorderedGrouped}
                 dept={dept}
                 conflicts={conflicts}
-                dayMeta={timetableDayMeta}
                 onSelect={setSelected}
-                onRemoveCourse={(entry) => removeCourseByKey(makeCourseKey(entry))}
-                onChangeCourseSection={(entry, nextSection) => updateCourseSection(makeCourseKey(entry), nextSection)}
-                getAvailableSections={(entry) => courseSectionsListByKey.get(makeCourseKey(entry)) ?? []}
+                onRemoveCourse={(entry: TimetableEntry) => removeCourseByKey(makeCourseKey(entry))}
+                onChangeCourseSection={(entry: TimetableEntry, nextSection: string) => updateCourseSection(makeCourseKey(entry), nextSection)}
+                getAvailableSections={(entry: TimetableEntry) => courseSectionsListByKey.get(makeCourseKey(entry)) ?? []}
               />
             ) : (
               <GridView entries={filtered} dept={dept} conflicts={conflicts} onSelect={setSelected} />
@@ -839,16 +879,14 @@ function ListView({
   grouped,
   dept,
   conflicts,
-  dayMeta,
   onSelect,
   onRemoveCourse,
   onChangeCourseSection,
   getAvailableSections,
 }: {
-  grouped: { day: string; entries: TimetableEntry[] }[];
+  grouped: { day: string; entries: TimetableEntry[]; isToday: boolean; dateStr: string }[];
   dept: string;
   conflicts: Set<string>;
-  dayMeta: Record<string, { sheetName: string; date?: string }>;
   onSelect: (e: TimetableEntry) => void;
   onRemoveCourse: (e: TimetableEntry) => void;
   onChangeCourseSection: (e: TimetableEntry, section: string) => void;
@@ -856,36 +894,55 @@ function ListView({
 }) {
   return (
     <>
-      {grouped.map(({ day, entries }) => (
-        <section key={day} className="mt-6 first:mt-4">
-          <div className="mb-3 flex flex-wrap items-baseline gap-x-2 gap-y-1">
-            <h2 className="font-mono text-[11px] uppercase tracking-widest text-[var(--color-text-tertiary)]">
-              {day}
+      {grouped.map(({ day, entries, isToday, dateStr }) => (
+        <section 
+          key={day} 
+          className={`mt-6 first:mt-4 transition-all duration-300 ${
+            isToday 
+              ? 'p-4 md:p-6 rounded-2xl border-2 border-[var(--color-text-primary)] bg-[var(--color-bg-subtle)]/20 shadow-xl ring-4 ring-[var(--color-text-primary)]/5 relative overflow-hidden' 
+              : ''
+          }`}
+        >
+          {isToday && (
+            <div className="absolute top-0 right-0 px-4 py-1.5 bg-[var(--color-text-primary)] text-[var(--color-bg)] font-mono text-[10px] font-bold uppercase tracking-[0.2em] rounded-bl-xl shadow-sm">
+              Today
+            </div>
+          )}
+
+          <div className="mb-4 flex flex-wrap items-baseline gap-x-2 gap-y-1">
+            <h2 className={`font-mono tracking-widest ${
+              isToday 
+                ? 'text-sm font-black text-[var(--color-text-primary)]' 
+                : 'text-[11px] font-bold text-[var(--color-text-tertiary)] uppercase'
+            }`}>
+              {isToday ? `TODAY (${day}, ${dateStr})` : `${day.toUpperCase()} ${dateStr}`}
             </h2>
-            {dayMeta[day]?.date && (
-              <span className="font-mono text-[10px] uppercase tracking-widest text-[var(--color-text-secondary)]">
-                {dayMeta[day]?.date}
-              </span>
-            )}
           </div>
-          <div className="flex flex-col gap-2 md:grid md:grid-cols-2 lg:grid-cols-3 md:gap-3">
-            {entries.map((entry, idx) => {
-              const key = `${entry.day}|${entry.time}|${entry.courseName}|${entry.section}`;
-              return (
-                <TimetableCard
-                  key={`${key}-${idx}`}
-                  entry={entry}
-                  dept={dept}
-                  conflicting={conflicts.has(key)}
-                  isRepeat={entry.category === 'repeat'}
-                  onClick={() => onSelect(entry)}
-                  onRemove={() => onRemoveCourse(entry)}
-                  onChangeSection={(nextSection) => onChangeCourseSection(entry, nextSection)}
-                  availableSections={getAvailableSections(entry)}
-                />
-              );
-            })}
-          </div>
+
+          {entries.length === 0 ? (
+            <div className="py-12 flex flex-col items-center justify-center border-2 border-dashed border-[var(--color-border)] rounded-xl bg-[var(--color-bg-subtle)]/10">
+              <p className="text-[var(--color-text-secondary)] font-mono text-sm italic">No classes scheduled for today</p>
+            </div>
+          ) : (
+            <div className="flex flex-col gap-2 md:grid md:grid-cols-2 lg:grid-cols-3 md:gap-3">
+              {entries.map((entry, idx) => {
+                const key = `${entry.day}|${entry.time}|${entry.courseName}|${entry.section}`;
+                return (
+                  <TimetableCard
+                    key={`${key}-${idx}`}
+                    entry={entry}
+                    dept={dept}
+                    conflicting={conflicts.has(key)}
+                    isRepeat={entry.category === 'repeat'}
+                    onClick={() => onSelect(entry)}
+                    onRemove={() => onRemoveCourse(entry)}
+                    onChangeSection={(nextSection) => onChangeCourseSection(entry, nextSection)}
+                    availableSections={getAvailableSections(entry)}
+                  />
+                );
+              })}
+            </div>
+          )}
         </section>
       ))}
     </>
