@@ -1,8 +1,8 @@
 {
-  "filtered_at": "2026-04-21T07:03:25.064741",
-  "date_range": "2026-04-01 to 2026-04-30",
-  "total_original": 42,
-  "total_filtered": 26,
+  "filtered_at": "2026-04-23T02:18:36.847826",
+  "date_range": "2026-04-01 to 2026-05-31",
+  "total_original": 58,
+  "total_filtered": 42,
   "events": [
     {
       "event_name": "PPIT - Seminar",
@@ -125,12 +125,6 @@
       "event_location": "Auditorium by Mr. Afaq"
     },
     {
-      "event_name": "Oth Ceremony EE",
-      "date": "April 23",
-      "time": "2:00 pm - 6:00 pm",
-      "event_location": "MEDC-117 by Mr. Atif Baig"
-    },
-    {
       "event_name": "Recruitment Drive CSO",
       "date": "April 28",
       "time": "9:00 am - 6:00 pm",
@@ -141,6 +135,12 @@
       "date": "April 28",
       "time": "10:00 am - 1:00 pm",
       "event_location": "Auditorium by Mr. Afaq"
+    },
+    {
+      "event_name": "Oth Ceremony EE",
+      "date": "April 28",
+      "time": "2:00 pm - 6:00 pm",
+      "event_location": "MEDC-117 by Mr. Atif Baig"
     },
     {
       "event_name": "PPIT - Seminar",
@@ -159,6 +159,102 @@
       "date": "April 30",
       "time": "1:00 pm - 5:00 pm",
       "event_location": "Auditorium by Mr. Afaq"
+    },
+    {
+      "event_name": "Job Fair Trainings",
+      "date": "May 4",
+      "time": "9:00 am - 7:00 pm",
+      "event_location": "Auditorium D Block by Ms. Ujala"
+    },
+    {
+      "event_name": "Job Fair Trainings",
+      "date": "May 5",
+      "time": "9:00 am - 7:00 pm",
+      "event_location": "Auditorium D Block by Ms. Ujala"
+    },
+    {
+      "event_name": "FSM Weekly Seminar",
+      "date": "May 5",
+      "time": "10:00 am - 1:00 pm",
+      "event_location": "Auditorium by Mr. Afaq"
+    },
+    {
+      "event_name": "Job Fair Trainings",
+      "date": "May 6",
+      "time": "9:00 am - 7:00 pm",
+      "event_location": "Auditorium D Block by Ms. Ujala"
+    },
+    {
+      "event_name": "PPIT - Seminar",
+      "date": "May 6",
+      "time": "10:00 am - 2:00 pm",
+      "event_location": "Auditorium by Mr. Fahad"
+    },
+    {
+      "event_name": "Job Fair Trainings",
+      "date": "May 7",
+      "time": "9:00 am - 7:00 pm",
+      "event_location": "Auditorium D Block by Ms. Ujala"
+    },
+    {
+      "event_name": "FSM Weekly Seminar 2",
+      "date": "May 7",
+      "time": "1:00 pm - 5:00 pm",
+      "event_location": "Auditorium by Mr. Afaq"
+    },
+    {
+      "event_name": "Job Fair Trainings",
+      "date": "May 8",
+      "time": "9:00 am - 7:00 pm",
+      "event_location": "Auditorium D Block by Ms. Ujala"
+    },
+    {
+      "event_name": "JOB Fair- CSO",
+      "date": "May 12",
+      "time": "12:00 am - 11:00 pm",
+      "event_location": "All Rooms reserved. No one is allowed to reserve any spot"
+    },
+    {
+      "event_name": "FSM Weekly Seminar",
+      "date": "May 12",
+      "time": "10:00 am - 1:00 pm",
+      "event_location": "Auditorium by Mr. Afaq"
+    },
+    {
+      "event_name": "JOB Fair- CSO",
+      "date": "May 13",
+      "time": "12:00 am - 11:00 pm",
+      "event_location": "All Rooms reserved. No one is allowed to reserve any spot"
+    },
+    {
+      "event_name": "PPIT - Seminar",
+      "date": "May 13",
+      "time": "10:00 am - 2:00 pm",
+      "event_location": "Auditorium by Mr. Fahad"
+    },
+    {
+      "event_name": "JOB Fair- CSO",
+      "date": "May 14",
+      "time": "12:00 am - 11:00 pm",
+      "event_location": "All Rooms reserved. No one is allowed to reserve any spot"
+    },
+    {
+      "event_name": "FSM Weekly Seminar 2",
+      "date": "May 14",
+      "time": "1:00 pm - 5:00 pm",
+      "event_location": "Auditorium by Mr. Afaq"
+    },
+    {
+      "event_name": "AtomCamp Seminar",
+      "date": "May 18",
+      "time": "9:00 am - 6:00 pm",
+      "event_location": "Auditorium D Block by Ms. Laraib"
+    },
+    {
+      "event_name": "AtomCamp Seminar",
+      "date": "May 19",
+      "time": "9:00 am - 6:00 pm",
+      "event_location": "Auditorium D Block by Ms. Laraib"
     }
   ]
 }
