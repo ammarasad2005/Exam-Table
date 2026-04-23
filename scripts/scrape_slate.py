@@ -24,7 +24,7 @@ import calendar
 import json
 import os
 import re
-from datetime import datetime
+from datetime import datetime, timedelta
 from pathlib import Path
 from typing import Any
 
@@ -75,8 +75,15 @@ def parse_args() -> argparse.Namespace:
 
 def parse_date_range(start_text: str, end_text: str) -> tuple[datetime, datetime]:
     now = datetime.now()
-    default_start = now.replace(day=1)
-    default_end = now.replace(day=calendar.monthrange(now.year, now.month)[1])
+    
+    # Start: First day of current month
+    default_start = now.replace(day=1, hour=0, minute=0, second=0, microsecond=0)
+    
+    # End: Last day of NEXT month
+    # To get next month, we add 32 days to current month start
+    next_month_approx = default_start + timedelta(days=32)
+    last_day_next_month = calendar.monthrange(next_month_approx.year, next_month_approx.month)[1]
+    default_end = next_month_approx.replace(day=last_day_next_month, hour=23, minute=59, second=59)
 
     start = datetime.strptime(start_text, "%Y-%m-%d") if start_text else default_start
     end = datetime.strptime(end_text, "%Y-%m-%d") if end_text else default_end
