@@ -2,7 +2,17 @@
 
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { usePathname, useRouter } from 'next/navigation';
-import { BarChart3, CalendarDays, Grid2x2, Home, Plus, Users } from 'lucide-react';
+import { 
+  Home, 
+  Library, 
+  Grid2x2, 
+  Users, 
+  FileText, 
+  CalendarDays, 
+  Clock, 
+  Plus 
+} from 'lucide-react';
+import { useTheme } from '@/lib/theme';
 
 const R = 250;
 const VISIBLE_START = 185;
@@ -19,11 +29,13 @@ type MenuItem = {
 };
 
 const MENU_ITEMS: MenuItem[] = [
-  { id: 'home', path: '/home', label: 'Home', color: '#3b82f6', icon: <Home size={22} /> },
-  { id: 'rooms', path: '/rooms', label: 'Rooms', color: '#10b981', icon: <Grid2x2 size={22} /> },
-  { id: 'events', path: '/events', label: 'Events', color: '#f97316', icon: <CalendarDays size={22} /> },
-  { id: 'faculty', path: '/faculty', label: 'Faculty', color: '#a855f7', icon: <Users size={22} /> },
-  { id: 'custom', path: '/timetable/custom', label: 'Custom', color: '#06b6d4', icon: <BarChart3 size={22} /> },
+  { id: 'home',     path: '/home',              label: 'Home',     color: '#4f46e5',         icon: <Home size={22} /> },
+  { id: 'schedule', path: '/timetable/custom',   label: 'Schedule', color: 'var(--accent-cs)', icon: <Library size={22} /> },
+  { id: 'rooms',    path: '/rooms',             label: 'Rooms',    color: 'var(--accent-ds)', icon: <Grid2x2 size={22} /> },
+  { id: 'faculty',  path: '/faculty',           label: 'Faculty',  color: 'var(--accent-se)', icon: <Users size={22} /> },
+  { id: 'exams',    path: '/home?feature=exams', label: 'Exams',    color: 'var(--accent-ee)', icon: <FileText size={22} /> },
+  { id: 'events',   path: '/events',            label: 'Events',   color: 'var(--accent-ba)', icon: <CalendarDays size={22} /> },
+  { id: 'semester', path: '/semester',          label: 'Semester', color: 'var(--accent-af)', icon: <Clock size={22} /> },
 ];
 
 function computeVirtualItems(offsetAmount: number) {
@@ -348,6 +360,8 @@ export function FloatingMenu() {
 
   const pathname = usePathname();
   const router = useRouter();
+  const { theme } = useTheme();
+  const isDark = theme === 'dark';
   const containerRef = useRef<HTMLDivElement>(null);
 
   const dragStartX = useRef(0);
@@ -552,6 +566,8 @@ export function FloatingMenu() {
               stagger = `${idx * 0.042}s`;
             }
 
+            const isHomeItem = item.id === 'home';
+
             return (
               <div
                 key={`${item.id}-${virtualIndex}`}
@@ -569,21 +585,23 @@ export function FloatingMenu() {
                     pointerEvents: 'auto',
                   }}
                 >
-                  <button
-                    className={`fm-arc-btn${isActive ? ' active' : ''}`}
-                    style={{ backgroundColor: item.color }}
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      handleNavigate(item);
-                    }}
-                    onPointerDown={(e) => e.stopPropagation()}
-                    aria-label={item.label}
-                  >
-                    <div style={{ transform: 'scale(1.1)', display: 'flex', pointerEvents: 'none' }}>
-                      {item.icon}
-                    </div>
-                    <span className="fm-btn-label">{item.label}</span>
-                  </button>
+                  <div className={isHomeItem && isDark ? "rounded-full p-[2px] bg-gradient-to-r from-amber-500 via-yellow-200 to-amber-500 shadow-[0_0_15px_rgba(245,158,11,0.5)]" : ""}>
+                    <button
+                      className={`fm-arc-btn${isActive ? ' active' : ''}`}
+                      style={{ backgroundColor: item.color }}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleNavigate(item);
+                      }}
+                      onPointerDown={(e) => e.stopPropagation()}
+                      aria-label={item.label}
+                    >
+                      <div style={{ transform: 'scale(1.1)', display: 'flex', pointerEvents: 'none' }}>
+                        {item.icon}
+                      </div>
+                      <span className="fm-btn-label">{item.label}</span>
+                    </button>
+                  </div>
                 </div>
               </div>
             );
