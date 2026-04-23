@@ -734,7 +734,7 @@ export default function SetupPage() {
                   <>Find a<br /><span className="italic">free room.</span></>
                 )}
               </h1>
-              <p className="mt-6 font-body text-base text-[var(--color-text-secondary)] max-w-sm leading-relaxed min-h-[4.5rem]">
+              <p className="mt-6 font-body text-base text-[var(--color-text-secondary)] max-w-sm leading-relaxed min-h-[6rem]">
                 {displayText}
                 {!isTypingComplete && (
                   <span className="inline-block w-[2px] h-[1em] bg-[var(--color-text-tertiary)] animate-pulse ml-1 align-middle" />
