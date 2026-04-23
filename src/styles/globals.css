@@ -151,8 +151,7 @@
   --laser-glint-edge: rgba(253, 224, 71, 0.95);
 
   /* Today Section Gradient (Dark: Gold -> Yellow) */
-  --today-bg-gradient: linear-gradient(135deg, rgba(245, 158, 11, 0.12) 0%, rgba(254, 240, 138, 0.12) 100%);
-  --today-border-gradient: linear-gradient(135deg, rgba(245, 158, 11, 0.45) 0%, rgba(254, 240, 138, 0.45) 100%);
+  --today-border-gradient: linear-gradient(135deg, rgba(245, 158, 11, 0.75) 0%, rgba(254, 240, 138, 0.75) 100%);
   --today-label-bg: linear-gradient(90deg, #d97706, #facc15);
 }
 
@@ -200,8 +199,7 @@
     --laser-glint-edge: rgba(253, 224, 71, 0.95);
 
     /* Today Section Gradient (Dark: Gold -> Yellow) */
-    --today-bg-gradient: linear-gradient(135deg, rgba(245, 158, 11, 0.12) 0%, rgba(254, 240, 138, 0.12) 100%);
-    --today-border-gradient: linear-gradient(135deg, rgba(245, 158, 11, 0.45) 0%, rgba(254, 240, 138, 0.45) 100%);
+    --today-border-gradient: linear-gradient(135deg, rgba(245, 158, 11, 0.75) 0%, rgba(254, 240, 138, 0.75) 100%);
     --today-label-bg: linear-gradient(90deg, #d97706, #facc15);
   }
 }
