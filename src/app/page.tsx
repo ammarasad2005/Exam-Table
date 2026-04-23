@@ -47,7 +47,7 @@ const FEATURES = [
         <polyline points="10 9 9 9 8 9" />
       </svg>
     ),
-    accent: 'ai',
+    accent: 'ee',
     placeholder: false,
   },
   {
@@ -86,7 +86,7 @@ const FEATURES = [
         <polyline points="12 6 12 12 16 14" />
       </svg>
     ),
-    accent: 'cy',
+    accent: 'af',
     placeholder: false,
   },
   {
@@ -104,7 +104,7 @@ const FEATURES = [
         <line x1="16" y1="14" x2="16" y2="14" strokeWidth="2.5" strokeLinecap="round" />
       </svg>
     ),
-    accent: 'ee',
+    accent: 'ba',
     placeholder: false,
   },
 ] as const;
