@@ -897,14 +897,24 @@ function ListView({
       {grouped.map(({ day, entries, isToday, dateStr }) => (
         <section 
           key={day} 
-          className={`mt-6 first:mt-4 transition-all duration-300 ${
+          className={`mt-6 first:mt-4 transition-all duration-500 ${
             isToday 
-              ? 'p-4 md:p-6 rounded-2xl border-2 border-[var(--color-text-primary)] bg-[var(--color-bg-subtle)]/20 shadow-xl ring-4 ring-[var(--color-text-primary)]/5 relative overflow-hidden' 
+              ? 'p-4 md:p-6 rounded-2xl relative overflow-hidden shadow-2xl ring-1 ring-[var(--color-text-primary)]/5' 
               : ''
           }`}
+          style={isToday ? {
+            background: 'var(--color-bg-raised)',
+            border: '3px solid transparent',
+            backgroundImage: 'linear-gradient(var(--color-bg-raised), var(--color-bg-raised)), var(--today-border-gradient)',
+            backgroundOrigin: 'border-box',
+            backgroundClip: 'padding-box, border-box',
+          } : {}}
         >
           {isToday && (
-            <div className="absolute top-0 right-0 px-4 py-1.5 bg-[var(--color-text-primary)] text-[var(--color-bg)] font-mono text-[10px] font-bold uppercase tracking-[0.2em] rounded-bl-xl shadow-sm">
+            <div 
+              className="absolute top-0 right-0 px-4 py-1.5 text-[var(--color-bg)] font-mono text-[10px] font-bold uppercase tracking-[0.2em] rounded-bl-xl shadow-md"
+              style={{ background: 'var(--today-label-bg)' }}
+            >
               Today
             </div>
           )}
