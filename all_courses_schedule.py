@@ -253,11 +253,13 @@ def resolve_timetable_sheets(sheet_id):
 
             dated = [item for item in enriched if item[1] is not None]
             if dated:
+                # Priority 1: Closest Date
                 matched_sheet, parsed_sheet_date, explicit_year = min(
                     dated,
                     key=lambda item: (
                         abs((item[1] - target_date).days),
                         0 if (item[1] - target_date).days <= 0 else 1,
+                        -len(item[0]), # Longer name as tie-breaker for same date
                         sheet_names.index(item[0]),
                     ),
                 )
@@ -265,7 +267,9 @@ def resolve_timetable_sheets(sheet_id):
                 if explicit_year:
                     date_label = f"{date_label} {parsed_sheet_date.year}"
             else:
-                matched_sheet = min(matched_sheets, key=lambda title: sheet_names.index(title))
+                # Priority 2: Longest Name (e.g. "Monday" over "Mon")
+                # Priority 3: First Found
+                matched_sheet = max(matched_sheets, key=lambda title: (len(title), -sheet_names.index(title)))
                 date_label = extract_date_label(matched_sheet)
 
             used.add(matched_sheet)

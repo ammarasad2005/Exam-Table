@@ -64,15 +64,8 @@ export function Navbar() {
                 onClick={() => {
                   router.push(tab.path);
                 }}
-                className={`relative flex flex-col items-center justify-end gap-1.5 px-6 pt-5 pb-1.5 outline-none group min-w-[100px] ${
-                  tab.id === 'home' && isDark ? "after:absolute after:inset-0 after:rounded-full after:border-2 after:border-transparent after:bg-gradient-to-r after:from-amber-500/30 after:via-yellow-200/50 after:to-amber-500/30 after:[mask-composite:exclude] after:[mask:linear-gradient(#fff_0_0)_padding-box,linear-gradient(#fff_0_0)]" : ""
-                }`}
+                className="relative flex flex-col items-center justify-end gap-1.5 px-6 pt-5 pb-1.5 outline-none group min-w-[100px]"
               >
-                {/* Special subtle glow for Home button in Dark Mode */}
-                {tab.id === 'home' && isDark && (
-                  <div className="absolute inset-2 bg-amber-500/5 blur-xl rounded-full pointer-events-none" />
-                )}
-
                 {/* Stage light fixture (cone) + beam */}
                 <AnimatePresence>
                   {isActive && (
