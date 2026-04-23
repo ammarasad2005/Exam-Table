@@ -7672,6 +7672,14 @@
                                 "rescheduled": false,
                                 "exam": false
                             }
+                        ],
+                        "Friday": [
+                            {
+                                "room": "D-305",
+                                "time": "02:30-03:50",
+                                "rescheduled": true,
+                                "exam": false
+                            }
                         ]
                     },
                     "B": {
@@ -7688,6 +7696,14 @@
                                 "room": "D-411",
                                 "time": "08:30-09:50",
                                 "rescheduled": false,
+                                "exam": false
+                            }
+                        ],
+                        "Friday": [
+                            {
+                                "room": "D-305",
+                                "time": "03:55-05:15",
+                                "rescheduled": true,
                                 "exam": false
                             }
                         ]
