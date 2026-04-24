@@ -16,6 +16,7 @@ import { SearchBar } from '@/components/SearchBar';
 import { EmptyState } from '@/components/EmptyState';
 import { ThemeToggle } from '@/components/ThemeToggle';
 import { Header } from '@/components/Header';
+import { AlertCircle } from 'lucide-react';
 import type { TimetableEntry, RawTimetableJSON } from '@/lib/types';
 import { DAYS_ORDER } from '@/lib/types';
 
@@ -239,6 +240,7 @@ function TimetablePageInner() {
     contextEntries,
     defaultSectionByCourse,
     effectiveSectionByCourse,
+    includeRepeats,
     query,
     removedSet,
   ]);
@@ -926,9 +928,8 @@ function TimetablePageInner() {
                   <h3 className="font-display text-xl font-bold">Repeat Courses Disabled</h3>
                 </div>
                 <p className="font-body text-sm text-[var(--color-text-secondary)] mb-6 leading-relaxed">
-                  To import this course, you need to enable the <strong>"Include Repeat Courses"</strong> master toggle at the top of the page.
-                </p>
-                <div className="flex flex-col gap-3">
+                  To import this course, you need to enable the <strong>&quot;Include Repeat Courses&quot;</strong> master toggle at the top of the page.
+                </p>                <div className="flex flex-col gap-3">
                   <button
                     onClick={handleEnableRepeatsFromPrompt}
                     className="h-12 w-full rounded-xl bg-[var(--color-text-primary)] text-[var(--color-bg)] font-body font-bold hover:opacity-90 transition-all active:scale-[0.98]"
