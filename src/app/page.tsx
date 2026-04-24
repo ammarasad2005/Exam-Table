@@ -188,11 +188,8 @@ export default function RootPage() {
             <h1 className="font-display text-3xl leading-tight text-[var(--color-text-primary)] mb-4">
               Your campus,<br /><span className="italic">at a glance.</span>
             </h1>
-            <p className="font-body text-sm text-[var(--color-text-secondary)] leading-relaxed min-h-[4.5rem] sm:min-h-[3.5rem]">
-              {displayText}
-              {!isTypingComplete && (
-                <span className="inline-block w-[2px] h-[0.9em] bg-[var(--color-text-tertiary)] animate-pulse ml-0.5 align-middle" />
-              )}
+            <p className="font-body text-sm text-[var(--color-text-secondary)] leading-relaxed">
+              {INTRO_TEXT}
             </p>
           </div>
 
