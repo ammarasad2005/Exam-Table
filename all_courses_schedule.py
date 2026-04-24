@@ -848,104 +848,122 @@ for name, depts in shared_courses.items():
         found_shared = True
         dept_str = ", ".join([f"{b} {d}" for b, d in sorted(list(depts))])
         print(f"  • {name} is shared between: {dept_str}")
-    # 4. Final Hierarchy Build
-    # (batch, course_name, normalized_section) -> group_name
-    global_course_groups = {}
-    # (batch, dept) -> max_section_index
-    dept_max_sections = {}
-    # (batch, dept, course_name) -> max_section_index
-    course_max_sections = {}
 
-    def extract_section_letter(s):
-        if not s: return "A"
-        # 1. Remove group tags like G-I, Gp-II (use non-capturing group for prefix)
-        cleaned = re.sub(r'(?:G|Gp)-(?:III|II|I)', '', s).strip()
-        # 2. If after cleaning we only have punctuation or nothing, it's a group-wide course -> Section A
-        if not re.search(r'[a-zA-Z]', cleaned):
-            return "A"
-        # 3. Look for patterns like CS-A or just A
-        match = re.search(r'([A-Z])\d*', cleaned)
-        if match:
-            letter = match.group(1)
-            # If the "letter" found is actually a Roman numeral leftover (like I in G-I if sub failed)
-            # or if it's just 'I' but the course is clearly an elective, default to A.
-            if letter in ['I', 'V']: return "A"
-            if letter == "B" and "BX" in cleaned: return "B"
-            return letter
+# 4. Final Hierarchy Build
+# (batch, course_name) -> dict of {group_name: count}
+course_group_counts = {}
+# (batch, dept) -> max_section_index
+dept_max_sections = {}
+# (batch, dept, course_name) -> max_section_index
+course_max_sections = {}
+
+def extract_section_letter(s):
+    if not s: return "A"
+    # 1. Remove group tags like G-I, Gp-II (use non-capturing group for prefix)
+    cleaned = re.sub(r'(?:G|Gp)-(?:III|II|I)', '', s).strip()
+    # 2. If after cleaning we only have punctuation or nothing, it's a group-wide course -> Section A
+    if not re.search(r'[a-zA-Z]', cleaned):
         return "A"
+    # 3. Look for patterns like CS-A or just A
+    match = re.search(r'([A-Z])\d*', cleaned)
+    if match:
+        letter = match.group(1)
+        # If the "letter" found is actually a Roman numeral leftover (like I in G-I if sub failed)
+        # or if it's just 'I' but the course is clearly an elective, default to A.
+        if letter in ['I', 'V']: return "A"
+        if letter == "B" and "BX" in cleaned: return "B"
+        return letter
+    return "A"
 
-    # FIRST PASS: Discover everything
-    for rec in unambiguous_classes:
-        b, d, c, s = rec["batch"], rec["dept"], rec["course_name"], rec["section"]
-        
-        # 1. Find Group (Check III then II then I to avoid partial matches)
-        group_match = re.search(r'(G|Gp)-(III|II|I)', s)
-        group_val = None
-        if group_match:
-            group_val = "G-" + group_match.group(2)
-        
-        # 2. Normalize Section
-        norm_s = extract_section_letter(s)
-        rec["normalized_section"] = norm_s
-        
-        # 3. Store Group Globally
-        if group_val:
-            global_course_groups[(b, c, norm_s)] = group_val
-        
-        # 4. Track max sections
-        if norm_s.isalpha() and len(norm_s) == 1:
-            idx = ord(norm_s.upper()) - ord('A')
-            dept_max_sections[(b, d)] = max(dept_max_sections.get((b, d), -1), idx)
-            course_max_sections[(b, d, c)] = max(course_max_sections.get((b, d, c), -1), idx)
+# FIRST PASS: Discover everything and count group occurrences
+for rec in unambiguous_classes:
+    b, d, c, s = rec["batch"], rec["dept"], rec["course_name"], rec["section"]
+    
+    # 1. Find Group (Check III then II then I to avoid partial matches)
+    group_match = re.search(r'(G|Gp)-(III|II|I)', s)
+    group_val = None
+    if group_match:
+        group_val = "G-" + group_match.group(2)
+    
+    # 2. Normalize Section
+    norm_s = extract_section_letter(s)
+    rec["normalized_section"] = norm_s
+    
+    # 3. Count Group Occurrences Globally (per course)
+    if group_val:
+        key = (b, c)
+        if key not in course_group_counts:
+            course_group_counts[key] = {}
+        course_group_counts[key][group_val] = course_group_counts[key].get(group_val, 0) + 1
+    
+    # 4. Track max sections
+    if norm_s.isalpha() and len(norm_s) == 1:
+        idx = ord(norm_s.upper()) - ord('A')
+        dept_max_sections[(b, d)] = max(dept_max_sections.get((b, d), -1), idx)
+        course_max_sections[(b, d, c)] = max(course_max_sections.get((b, d, c), -1), idx)
 
-    # SECOND PASS: Build hierarchy with range-based elective detection
-    for rec in unambiguous_classes:
-        batch       = rec["batch"]
-        dept        = rec["dept"]
-        category    = rec["category"]
-        course_name = rec["course_name"]
-        section     = rec["normalized_section"]
-        day         = rec["day"]
-        actual_time = rec["time"]
-        room        = rec["room"]
-        
-        # Inherit group
-        group = global_course_groups.get((batch, course_name, section))
-        
-        # Range-based detection
-        d_max = dept_max_sections.get((batch, dept), -1)
-        c_max = course_max_sections.get((batch, dept, course_name), -1)
-        
-        is_elective_by_range = (c_max < d_max) if d_max != -1 else False
-        is_elective = is_course_elective(rec) or (group is not None) or is_elective_by_range
+# RESOLVE GROUPS: Apply majority voting
+global_course_groups = {}
+for (b, c), counts in course_group_counts.items():
+    # Find the group with the maximum count
+    best_group = max(counts, key=counts.get)
+    global_course_groups[(b, c)] = best_group
 
-        # Debug specific problematic courses
-        if "Deep Learn" in course_name or "Data Vis" in course_name or "ML for Robo" in course_name:
-            if batch == "2022":
-                print(f"  [DEBUG] 2022 Course: {course_name} ({dept}-{section}) | Group: {group} | Elective: {is_elective}")
+# SECOND PASS: Build hierarchy with range-based elective detection
+seen_slots = set()
+for rec in unambiguous_classes:
+    batch       = rec["batch"]
+    dept        = rec["dept"]
+    category    = rec["category"]
+    course_name = rec["course_name"]
+    section     = rec["normalized_section"]
+    day         = rec["day"]
+    actual_time = rec["time"]
+    room        = rec["room"]
+    
+    # Deduplication: Avoid adding the exact same slot multiple times
+    slot_key = (batch, dept, category, course_name, section, day, actual_time)
+    if slot_key in seen_slots:
+        continue
+    seen_slots.add(slot_key)
+    
+    # Inherit group
+    group = global_course_groups.get((batch, course_name))
+    
+    # Range-based detection
+    d_max = dept_max_sections.get((batch, dept), -1)
+    c_max = course_max_sections.get((batch, dept, course_name), -1)
+    
+    is_elective_by_range = (c_max < d_max) if d_max != -1 else False
+    is_elective = is_course_elective(rec) or (group is not None) or is_elective_by_range
 
-        if batch not in data_hierarchy:
-            data_hierarchy[batch] = {}
-        if dept not in data_hierarchy[batch]:
-            data_hierarchy[batch][dept] = {"regular": {}, "repeat": {}}
+    # Debug specific problematic courses
+    if any(k in course_name for k in ["Deep Learn", "Data Vis", "ML for Robo", "Agentic AI"]):
+        if batch == "2022":
+            print(f"  [DEBUG] 2022 Course: {course_name} ({dept}-{section}) | Group: {group} | Elective: {is_elective}")
 
-        target = data_hierarchy[batch][dept][category]
+    if batch not in data_hierarchy:
+        data_hierarchy[batch] = {}
+    if dept not in data_hierarchy[batch]:
+        data_hierarchy[batch][dept] = {"regular": {}, "repeat": {}}
 
-        if course_name not in target:
-            target[course_name] = {}
-        if section not in target[course_name]:
-            target[course_name][section] = {}
-        if day not in target[course_name][section]:
-            target[course_name][section][day] = []
+    target = data_hierarchy[batch][dept][category]
 
-        target[course_name][section][day].append({
-            "room": room, 
-            "time": actual_time,
-            "rescheduled": rec.get("is_rescheduled", False),
-            "is_elective": is_elective,
-            "elective_group": group,
-            "exam": rec.get("is_exam", False)
-        })
+    if course_name not in target:
+        target[course_name] = {}
+    if section not in target[course_name]:
+        target[course_name][section] = {}
+    if day not in target[course_name][section]:
+        target[course_name][section][day] = []
+
+    target[course_name][section][day].append({
+        "room": room, 
+        "time": actual_time,
+        "rescheduled": rec.get("is_rescheduled", False),
+        "is_elective": is_elective,
+        "elective_group": group,
+        "exam": rec.get("is_exam", False)
+    })
 
 # ==============================================================================
 # OUTPUT
