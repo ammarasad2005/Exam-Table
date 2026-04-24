@@ -2,15 +2,15 @@
 
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { usePathname, useRouter } from 'next/navigation';
-import { 
-  Home, 
-  Library, 
-  Grid2x2, 
-  Users, 
-  FileText, 
-  CalendarDays, 
-  Clock, 
-  Plus 
+import {
+  Home,
+  Library,
+  MapPin,
+  Users,
+  FileText,
+  CalendarDays,
+  Clock,
+  Plus
 } from 'lucide-react';
 import { useTheme } from '@/lib/theme';
 
@@ -31,7 +31,7 @@ type MenuItem = {
 const MENU_ITEMS: MenuItem[] = [
   { id: 'home',     path: '/home',              label: 'Home',     color: '#4f46e5',         icon: <Home size={22} /> },
   { id: 'schedule', path: '/timetable/custom',   label: 'Schedule', color: 'var(--accent-cs)', icon: <Library size={22} /> },
-  { id: 'rooms',    path: '/rooms',             label: 'Rooms',    color: 'var(--accent-ds)', icon: <Grid2x2 size={22} /> },
+  { id: 'rooms',    path: '/rooms',             label: 'Rooms',    color: 'var(--accent-ds)', icon: <MapPin size={22} /> },
   { id: 'faculty',  path: '/faculty',           label: 'Faculty',  color: 'var(--accent-se)', icon: <Users size={22} /> },
   { id: 'exams',    path: '/home?feature=exams', label: 'Exams',    color: 'var(--accent-ee)', icon: <FileText size={22} /> },
   { id: 'events',   path: '/events',            label: 'Events',   color: 'var(--accent-ba)', icon: <CalendarDays size={22} /> },
