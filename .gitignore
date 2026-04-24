@@ -12,6 +12,12 @@
 /.next/
 /out/
 
+
+#codex files
+.codex
+.codex/
+*.codex
+
 # production
 /build
 

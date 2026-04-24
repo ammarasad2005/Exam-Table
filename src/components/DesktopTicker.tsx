@@ -4,13 +4,12 @@ import { useState, useEffect, useMemo } from 'react';
 import { parseTimeRange, formatDuration } from '@/lib/dates';
 import { DAYS_ORDER, type TimetableEntry } from '@/lib/types';
 import { ShieldAlert } from 'lucide-react';
-
-interface UserConfig {
-  batch: string;
-  school: string;
-  dept: string;
-  section: string;
-}
+import {
+  getLiveTimetableEntries,
+  RESULT_PREFS_STORAGE_KEY,
+  type TimetableResultPreference,
+  type UserConfig,
+} from '@/lib/timetable-live';
 
 interface Bundle {
   id: string;
@@ -40,6 +39,7 @@ export function DesktopTicker({ allTimetableEntries, userConfig, bundles }: Desk
 
   const [now, setNow] = useState(new Date());
   const [mounted, setMounted] = useState(false);
+  const [resultPreferences, setResultPreferences] = useState<TimetableResultPreference | null>(null);
 
   // Update clock every second
   useEffect(() => {
@@ -48,28 +48,59 @@ export function DesktopTicker({ allTimetableEntries, userConfig, bundles }: Desk
     return () => clearInterval(timer);
   }, []);
 
+  useEffect(() => {
+    if (!userConfig) {
+      setResultPreferences(null);
+      return;
+    }
+
+    try {
+      const raw = localStorage.getItem(RESULT_PREFS_STORAGE_KEY);
+      if (!raw) {
+        setResultPreferences(null);
+        return;
+      }
+
+      const parsed = JSON.parse(raw) as Record<string, TimetableResultPreference>;
+      setResultPreferences(parsed[`${userConfig.batch}|${userConfig.dept}`] ?? null);
+    } catch (err) {
+      console.error('Failed to parse timetable result preferences', err);
+      setResultPreferences(null);
+    }
+  }, [userConfig]);
+
   // ─── Timetable Logic (Hooks must be called before early returns) ────────
 
   const relevantEntries = useMemo(() => {
-    let filtered: TimetableEntry[] = [];
     if (userConfig) {
-      filtered = allTimetableEntries.filter(e => 
-        e.batch === userConfig.batch && 
-        e.department === userConfig.dept && 
-        e.section === userConfig.section
-      );
-    } else if (bundles.length > 0) {
+      return getLiveTimetableEntries(allTimetableEntries, userConfig, resultPreferences);
+    }
+
+    if (bundles.length > 0) {
       const allSelections = bundles.flatMap((b: any) => b.rows).filter((r: any) => r.selection);
-      filtered = allTimetableEntries.filter(e => {
+      const filtered = allTimetableEntries.filter(e => {
         return allSelections.some((sel: any) => {
           const [course, section] = sel.selection.split('|');
-          return e.courseName === course && e.section === section && e.batch === sel.batch && e.department === sel.stream;
+          return (
+            e.courseName === course.trim() &&
+            e.section === section.trim() &&
+            e.batch === sel.batch &&
+            e.department === sel.stream
+          );
         });
       });
+
+      const seen = new Set<string>();
+      return filtered.filter(entry => {
+        const key = `${entry.day}|${entry.time}|${entry.courseName}|${entry.section}|${entry.category}|${entry.department}|${entry.room}`;
+        if (seen.has(key)) return false;
+        seen.add(key);
+        return entry.time && (entry.time.includes('-') || entry.time.includes(' to '));
+      });
     }
-    // Ensure we only process entries with valid time ranges
-    return filtered.filter(e => e.time && (e.time.includes('-') || e.time.includes(' to ')));
-  }, [userConfig, bundles, allTimetableEntries]);
+
+    return [];
+  }, [userConfig, bundles, allTimetableEntries, resultPreferences]);
 
 
 
@@ -249,4 +280,3 @@ export function DesktopTicker({ allTimetableEntries, userConfig, bundles }: Desk
     </div>
   );
 }
-
