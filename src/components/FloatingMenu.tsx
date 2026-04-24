@@ -585,10 +585,10 @@ export function FloatingMenu() {
                     pointerEvents: 'auto',
                   }}
                 >
-                  <div className={isHomeItem && isDark ? "rounded-full p-[2px] bg-gradient-to-r from-amber-500 via-yellow-200 to-amber-500 shadow-[0_0_15px_rgba(245,158,11,0.5)]" : ""}>
+                  <div className={isHomeItem ? (isDark ? "rounded-full p-[2px] bg-gradient-to-r from-amber-500 via-yellow-200 to-amber-500 shadow-[0_0_15px_rgba(245,158,11,0.5)]" : "rounded-full p-[2px] bg-gradient-to-r from-orange-600 via-orange-400 to-orange-600 shadow-[0_0_15px_rgba(234,88,12,0.5)]") : ""}>
                     <button
                       className={`fm-arc-btn${isActive ? ' active' : ''}`}
-                      style={{ backgroundColor: item.color }}
+                      style={{ backgroundColor: (isHomeItem && !isDark) ? '#2e1065' : item.color }}
                       onClick={(e) => {
                         e.stopPropagation();
                         handleNavigate(item);
