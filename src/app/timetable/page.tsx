@@ -58,6 +58,10 @@ function makeCourseKey(entry: Pick<TimetableEntry, 'department' | 'category' | '
   return `${entry.department}|${entry.category}|${entry.courseName}`;
 }
 
+function sortSectionNamesAlphabetically(sections: string[]): string[] {
+  return [...sections].sort((a, b) => a.localeCompare(b, undefined, { sensitivity: 'base' }));
+}
+
 function TimetablePageInner() {
   const params  = useSearchParams();
   const router  = useRouter();
@@ -119,13 +123,7 @@ function TimetablePageInner() {
   const courseSectionsListByKey = useMemo(() => {
     const map = new Map<CourseKey, string[]>();
     for (const [key, sectionSet] of courseSectionsByKey.entries()) {
-      map.set(
-        key,
-        [...sectionSet].sort((a, b) => {
-          if (a.length !== b.length) return a.length - b.length;
-          return a.localeCompare(b);
-        })
-      );
+      map.set(key, sortSectionNamesAlphabetically([...sectionSet]));
     }
     return map;
   }, [courseSectionsByKey]);
@@ -340,6 +338,17 @@ function TimetablePageInner() {
          map.get(e.courseName)!.push({ section: e.section, department: e.department, courseKey: makeCourseKey(e) });
       }
     });
+
+    for (const map of [g1, g2, g3, others]) {
+      for (const [courseName, items] of map.entries()) {
+        map.set(
+          courseName,
+          [...items].sort((a, b) =>
+            a.section.localeCompare(b.section, undefined, { sensitivity: 'base' })
+          )
+        );
+      }
+    }
     
     return { g1, g2, g3, others };
   }, [batch, dept, contextEntries]);
@@ -380,10 +389,7 @@ function TimetablePageInner() {
         courseName: value.courseName,
         department: value.department,
         category: value.category,
-        sections: [...value.sections].sort((a, b) => {
-          if (a.length !== b.length) return a.length - b.length;
-          return a.localeCompare(b);
-        }),
+        sections: sortSectionNamesAlphabetically([...value.sections]),
       }))
       .sort((a, b) => a.courseName.localeCompare(b.courseName));
   }, [batch, dept, contextEntries]);
