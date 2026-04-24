@@ -34,6 +34,8 @@ export function flattenTimetable(raw: RawTimetableJSON): TimetableEntry[] {
                   category,
                   rescheduled: slot.rescheduled ?? false,
                   exam: slot.exam ?? false,
+                  isElective: (slot as any).is_elective ?? false,
+                  electiveGroup: slot.elective_group ?? null,
                 });
               }
             }
@@ -73,6 +75,10 @@ export function filterTimetable(
     if (e.batch !== filter.batch) return false;
     if (!isDepartmentMatch(e.department, filter.department)) return false;
     if (!includeRepeats && e.category === 'repeat') return false;
+    
+    // Skip electives for the main section-based view
+    if (e.isElective) return false;
+
     if (e.batch === filter.batch && e.batch === '2025') {
       const normalizedSection = e.section.replace(/\d+$/, '');
       if (normalizedSection !== filter.section) return false;

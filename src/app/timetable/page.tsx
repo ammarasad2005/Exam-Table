@@ -72,6 +72,7 @@ function TimetablePageInner() {
   const [removedCourseKeys, setRemovedCourseKeys] = useState<CourseKey[]>([]);
   const [isOtherCoursesExpanded, setIsOtherCoursesExpanded] = useState(false);
   const [saveFeedback, setSaveFeedback] = useState('');
+  const [repeatPromptCourse, setRepeatPromptCourse] = useState<{ key: CourseKey, section: string } | null>(null);
 
   const preferenceScopeKey = useMemo(() => `${batch}|${dept}`, [batch, dept]);
 
@@ -79,10 +80,9 @@ function TimetablePageInner() {
     return allEntries.filter(e => {
       if (e.batch !== batch) return false;
       if (!isDepartmentMatch(e.department, dept)) return false;
-      if (!includeRepeats && e.category === 'repeat') return false;
       return true;
     });
-  }, [batch, dept, includeRepeats]);
+  }, [batch, dept]);
 
   const defaultEntries = useMemo(() => {
     return filterTimetable(allEntries, {
@@ -208,8 +208,11 @@ function TimetablePageInner() {
     for (const courseKey of activeCourseKeys) {
       if (removedSet.has(courseKey)) continue;
 
+      // If it's a repeat course and master toggle is off, skip it
+      if (courseKey.includes('|repeat|') && !includeRepeats) continue;
+
       const activeSection = effectiveSectionByCourse.get(courseKey);
-      if (!activeSection) continue;
+      if (activeSection === undefined) continue;
 
       for (const entry of contextEntries) {
         if (makeCourseKey(entry) !== courseKey) continue;
@@ -276,12 +279,18 @@ function TimetablePageInner() {
   };
 
   const toggleOtherCourse = (courseKey: CourseKey, targetSection: string) => {
+    // If it's a repeat course and master toggle is off, show the prompt
+    if (courseKey.includes('|repeat|') && !includeRepeats) {
+      setRepeatPromptCourse({ key: courseKey, section: targetSection });
+      return;
+    }
+
     setRemovedCourseKeys(prev => prev.filter(key => key !== courseKey));
 
     setManualSectionByCourse(prev => {
       const defaultSection = defaultSectionByCourse.get(courseKey);
 
-      if (defaultSection) {
+      if (defaultSection !== undefined) {
         if (defaultSection === targetSection) {
           const next = { ...prev };
           delete next[courseKey];
@@ -306,28 +315,23 @@ function TimetablePageInner() {
     const electives = contextEntries.filter(e => 
       e.batch === batch && 
       e.department === dept && 
-      (
-        e.section.includes(', G-') || e.section.includes(', Gp-') ||
-        e.section.startsWith('G-') || e.section.startsWith('Gp-') ||
-        e.section.includes('G-III') || e.section.includes('Gp-III') ||
-        // Courses with department-level "sections" or empty sections (electives)
-        e.section === '' || e.section === 'AI' || e.section === 'DS'
-      )
+      (e.isElective || e.category === 'repeat')
     );
 
     const g1 = new Map<string, { section: string, department: string, courseKey: CourseKey }[]>();
     const g2 = new Map<string, { section: string, department: string, courseKey: CourseKey }[]>();
     const g3 = new Map<string, { section: string, department: string, courseKey: CourseKey }[]>();
+    const others = new Map<string, { section: string, department: string, courseKey: CourseKey }[]>();
 
     electives.forEach(e => {
-      const sec = e.section;
-      const isG3 = sec.includes('G-III') || sec.includes('Gp-III');
-      const isG2 = !isG3 && (sec.includes('G-II') || sec.includes('Gp-II'));
-      // Default to G1 if it's G1, or if it's a department-level entry (AI/DS)
-      const isG1 = (!isG3 && !isG2 && (sec.includes('G-I') || sec.includes('Gp-I'))) || (sec === '');
+      // Logic: Repeats always go to 'others' for 2022. 
+      // Regular electives follow their group metadata (normalized to G-I, G-II, G-III).
+      const group = e.category === 'repeat' ? null : e.electiveGroup;
+      const isG1 = group === 'G-I';
+      const isG2 = group === 'G-II';
+      const isG3 = group === 'G-III';
       
-      const map = isG1 ? g1 : isG2 ? g2 : isG3 ? g3 : null;
-      if (!map) return;
+      const map = isG1 ? g1 : isG2 ? g2 : isG3 ? g3 : others;
       
       if (!map.has(e.courseName)) map.set(e.courseName, []);
       if (!map.get(e.courseName)!.some(item => item.section === e.section && item.department === e.department)) {
@@ -335,21 +339,18 @@ function TimetablePageInner() {
       }
     });
     
-    return { g1, g2, g3 };
+    return { g1, g2, g3, others };
   }, [batch, dept, contextEntries]);
 
   const otherCourseGroups = useMemo(() => {
     if (batch === '2022') return [];
 
-    // Only show courses that are not part of the selected section at all.
-    // If a course already exists in the selected section, it stays in default results
-    // and can be switched via "Change Section" directly on the course card.
-    const selectedSectionCourseKeys = new Set<CourseKey>();
-    for (const entry of contextEntries) {
-      if (isSelectedSection(batch, entry.section, section)) {
-        selectedSectionCourseKeys.add(makeCourseKey(entry));
-      }
-    }
+    // Filter electives and repeats for non-2022 batches
+    const electives = contextEntries.filter(e => 
+      e.batch === batch && 
+      e.department === dept && 
+      (e.isElective || e.category === 'repeat')
+    );
 
     const groups = new Map<CourseKey, {
       courseName: string;
@@ -358,12 +359,8 @@ function TimetablePageInner() {
       sections: Set<string>;
     }>();
 
-    for (const entry of contextEntries) {
-      if (isSelectedSection(batch, entry.section, section)) continue;
-
+    electives.forEach(entry => {
       const courseKey = makeCourseKey(entry);
-      if (selectedSectionCourseKeys.has(courseKey)) continue;
-
       if (!groups.has(courseKey)) {
         groups.set(courseKey, {
           courseName: entry.courseName,
@@ -373,7 +370,7 @@ function TimetablePageInner() {
         });
       }
       groups.get(courseKey)!.sections.add(entry.section);
-    }
+    });
 
     return [...groups.entries()]
       .map(([courseKey, value]) => ({
@@ -387,7 +384,26 @@ function TimetablePageInner() {
         }),
       }))
       .sort((a, b) => a.courseName.localeCompare(b.courseName));
-  }, [batch, contextEntries, section]);
+  }, [batch, dept, contextEntries]);
+
+  // Handle Master Toggle: When turned off, clear all selected repeat courses
+  const handleToggleRepeats = (enabled: boolean) => {
+    setIncludeRepeats(enabled);
+    if (!enabled) {
+      setManualSectionByCourse(prev => {
+        const next = { ...prev };
+        let changed = false;
+        for (const key of Object.keys(next)) {
+          // Keys are "Dept|Category|CourseName"
+          if (key.includes('|repeat|')) {
+            delete next[key];
+            changed = true;
+          }
+        }
+        return changed ? next : prev;
+      });
+    }
+  };
 
   const grouped  = useMemo(() => groupByDayTimetable(filtered), [filtered]);
   const conflicts = useMemo(() => detectConflicts(filtered, includeRepeats), [filtered, includeRepeats]);
@@ -433,11 +449,20 @@ function TimetablePageInner() {
     return result;
   }, [grouped]);
 
+  const handleEnableRepeatsFromPrompt = () => {
+    if (repeatPromptCourse) {
+      handleToggleRepeats(true);
+      setRemovedCourseKeys(prev => prev.filter(key => key !== repeatPromptCourse.key));
+      setManualSectionByCourse(prev => ({
+        ...prev,
+        [repeatPromptCourse.key]: repeatPromptCourse.section
+      }));
+      setRepeatPromptCourse(null);
+    }
+  };
+
   const accentColor = `var(--accent-${dept.toLowerCase()})`;
   const accentBg    = `var(--accent-${dept.toLowerCase()}-bg)`;
-
-  const hasPartialDays = filtered.length > 0 &&
-    grouped.length < DAYS_ORDER.length;
 
   return (
     <div className="min-h-dvh flex flex-col">
@@ -529,7 +554,7 @@ function TimetablePageInner() {
               id="sidebar-repeats-toggle"
               role="switch"
               aria-checked={includeRepeats}
-              onClick={() => setIncludeRepeats(v => !v)}
+              onClick={() => handleToggleRepeats(!includeRepeats)}
               className="flex items-center justify-between w-full h-8 px-3 rounded border font-mono text-xs font-medium transition-all duration-150 focus-visible:outline-none focus-visible:ring-2"
               style={includeRepeats ? {
                 backgroundColor: 'var(--color-text-primary)',
@@ -579,7 +604,7 @@ function TimetablePageInner() {
                 id="mobile-repeats-toggle"
                 role="switch"
                 aria-checked={includeRepeats}
-                onClick={() => setIncludeRepeats(v => !v)}
+                onClick={() => handleToggleRepeats(!includeRepeats)}
                 title={includeRepeats ? 'Exclude repeat courses' : 'Include repeat courses'}
                 className="h-9 px-2.5 rounded border font-mono text-[10px] font-medium transition-all shrink-0 focus-visible:outline-none"
                 style={includeRepeats ? {
@@ -637,13 +662,20 @@ function TimetablePageInner() {
                 onClick={() => setIsOtherCoursesExpanded(!isOtherCoursesExpanded)}
                 className="w-full flex items-center justify-between px-4 py-4 focus-visible:outline-none focus-visible:bg-[var(--color-bg-raised)] transition-colors hover:bg-[var(--color-bg-raised)]"
               >
-                <div className="flex items-center gap-3">
-                  <h2 className="font-display text-lg text-[var(--color-text-primary)]">Other Courses</h2>
-                  {selectedOtherCount > 0 && (
-                    <span className="font-mono text-[10px] px-2 py-0.5 rounded-full bg-[var(--color-text-primary)] text-[var(--color-bg)]">
-                      {selectedOtherCount} selected
-                    </span>
-                  )}
+                <div className="flex items-center gap-4">
+                  <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-blue-500/10 to-indigo-500/10 flex items-center justify-center border border-blue-500/20">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-blue-600 dark:text-blue-400">
+                      <circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/>
+                    </svg>
+                  </div>
+                  <div className="flex items-center gap-3">
+                    <span className="font-mono text-sm md:text-base text-blue-600 dark:text-blue-400 font-bold uppercase tracking-[0.3em]">Electives / Others</span>
+                    {selectedOtherCount > 0 && (
+                      <span className="font-mono text-[10px] px-2 py-0.5 rounded-full bg-[var(--color-text-primary)] text-[var(--color-bg)]">
+                        {selectedOtherCount} selected
+                      </span>
+                    )}
+                  </div>
                 </div>
                 <svg
                   width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"
@@ -655,18 +687,22 @@ function TimetablePageInner() {
               
               {isOtherCoursesExpanded && (
                 <div className="px-4 pb-6 pt-2">
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
                 {/* G-I Column */}
                 <div>
                   <h3 className="font-mono text-xs uppercase tracking-widest text-[var(--color-text-tertiary)] mb-3">Group I (G-I)</h3>
                   <div className="flex flex-col gap-4">
                     {Array.from(electiveGroups.g1.entries()).map(([courseName, items]) => (
-                      <div key={courseName} className="border-b border-[var(--color-border-strong)] pb-4 last:border-b-0">
+                      <div key={courseName} className="relative overflow-hidden border border-[var(--color-border)] rounded-md p-3 pl-5 bg-[var(--color-bg-raised)]">
+                        <span
+                          aria-hidden="true"
+                          className="absolute left-0 top-0 bottom-0 w-[4px] opacity-80"
+                          style={{ backgroundColor: `var(--accent-${items[0].department.toLowerCase()})` }}
+                        />
                         <p className="font-bold text-sm mb-2">{courseName}</p>
                         <div className="flex flex-wrap gap-2">
                           {items.map(item => {
                             const isSelected = effectiveSectionByCourse.get(item.courseKey) === item.section && !removedSet.has(item.courseKey);
-                            const label = item.section ? item.section.split(',')[0].trim() : `Dept: ${item.department}`;
                             return (
                               <button 
                                 key={`${item.courseKey}-${item.section}`}
@@ -677,13 +713,14 @@ function TimetablePageInner() {
                                     : 'bg-[var(--color-bg-subtle)] text-[var(--color-text-secondary)] border-[var(--color-border)] hover:bg-[var(--color-border)]'
                                 }`}
                               >
-                                {label}
+                                {item.section}
                               </button>
                             )
                           })}
                         </div>
                       </div>
                     ))}
+                    {electiveGroups.g1.size === 0 && <p className="font-mono text-[10px] text-[var(--color-text-tertiary)] italic">None</p>}
                   </div>
                 </div>
                 
@@ -692,12 +729,16 @@ function TimetablePageInner() {
                   <h3 className="font-mono text-xs uppercase tracking-widest text-[var(--color-text-tertiary)] mb-3">Group II (G-II)</h3>
                   <div className="flex flex-col gap-4">
                     {Array.from(electiveGroups.g2.entries()).map(([courseName, items]) => (
-                      <div key={courseName} className="border-b border-[var(--color-border-strong)] pb-4 last:border-b-0">
+                      <div key={courseName} className="relative overflow-hidden border border-[var(--color-border)] rounded-md p-3 pl-5 bg-[var(--color-bg-raised)]">
+                        <span
+                          aria-hidden="true"
+                          className="absolute left-0 top-0 bottom-0 w-[4px] opacity-80"
+                          style={{ backgroundColor: `var(--accent-${items[0].department.toLowerCase()})` }}
+                        />
                         <p className="font-bold text-sm mb-2">{courseName}</p>
                         <div className="flex flex-wrap gap-2">
                           {items.map(item => {
                             const isSelected = effectiveSectionByCourse.get(item.courseKey) === item.section && !removedSet.has(item.courseKey);
-                            const label = item.section ? item.section.split(',')[0].trim() : `Dept: ${item.department}`;
                             return (
                               <button 
                                 key={`${item.courseKey}-${item.section}`}
@@ -708,13 +749,14 @@ function TimetablePageInner() {
                                     : 'bg-[var(--color-bg-subtle)] text-[var(--color-text-secondary)] border-[var(--color-border)] hover:bg-[var(--color-border)]'
                                 }`}
                               >
-                                {label}
+                                {item.section}
                               </button>
                             )
                           })}
                         </div>
                       </div>
                     ))}
+                    {electiveGroups.g2.size === 0 && <p className="font-mono text-[10px] text-[var(--color-text-tertiary)] italic">None</p>}
                   </div>
                 </div>
                 
@@ -723,12 +765,16 @@ function TimetablePageInner() {
                   <h3 className="font-mono text-xs uppercase tracking-widest text-[var(--color-text-tertiary)] mb-3">Group III (G-III)</h3>
                   <div className="flex flex-col gap-4">
                     {Array.from(electiveGroups.g3.entries()).map(([courseName, items]) => (
-                      <div key={courseName} className="border-b border-[var(--color-border-strong)] pb-4 last:border-b-0">
+                      <div key={courseName} className="relative overflow-hidden border border-[var(--color-border)] rounded-md p-3 pl-5 bg-[var(--color-bg-raised)]">
+                        <span
+                          aria-hidden="true"
+                          className="absolute left-0 top-0 bottom-0 w-[4px] opacity-80"
+                          style={{ backgroundColor: `var(--accent-${items[0].department.toLowerCase()})` }}
+                        />
                         <p className="font-bold text-sm mb-2">{courseName}</p>
                         <div className="flex flex-wrap gap-2">
                           {items.map(item => {
                             const isSelected = effectiveSectionByCourse.get(item.courseKey) === item.section && !removedSet.has(item.courseKey);
-                            const label = item.section ? item.section.split(',')[0].trim() : `Dept: ${item.department}`;
                             return (
                               <button 
                                 key={`${item.courseKey}-${item.section}`}
@@ -739,13 +785,50 @@ function TimetablePageInner() {
                                     : 'bg-[var(--color-bg-subtle)] text-[var(--color-text-secondary)] border-[var(--color-border)] hover:bg-[var(--color-border)]'
                                 }`}
                               >
-                                {label}
+                                {item.section}
                               </button>
                             )
                           })}
                         </div>
                       </div>
                     ))}
+                    {electiveGroups.g3.size === 0 && <p className="font-mono text-[10px] text-[var(--color-text-tertiary)] italic">None</p>}
+                  </div>
+                </div>
+
+                {/* Others Column */}
+                <div>
+                  <h3 className="font-mono text-xs uppercase tracking-widest text-[var(--color-text-tertiary)] mb-3">Others</h3>
+                  <div className="flex flex-col gap-4">
+                    {Array.from(electiveGroups.others.entries()).map(([courseName, items]) => (
+                      <div key={courseName} className="relative overflow-hidden border border-[var(--color-border)] rounded-md p-3 pl-5 bg-[var(--color-bg-raised)]">
+                        <span
+                          aria-hidden="true"
+                          className="absolute left-0 top-0 bottom-0 w-[4px] opacity-80"
+                          style={{ backgroundColor: `var(--accent-${items[0].department.toLowerCase()})` }}
+                        />
+                        <p className="font-bold text-sm mb-2">{courseName}</p>
+                        <div className="flex flex-wrap gap-2">
+                          {items.map(item => {
+                            const isSelected = effectiveSectionByCourse.get(item.courseKey) === item.section && !removedSet.has(item.courseKey);
+                            return (
+                              <button 
+                                key={`${item.courseKey}-${item.section}`}
+                                onClick={() => toggleOtherCourse(item.courseKey, item.section)}
+                                className={`px-2 py-1 rounded text-xs font-mono transition-colors border ${
+                                  isSelected 
+                                    ? 'bg-[var(--color-text-primary)] text-[var(--color-bg)] border-transparent' 
+                                    : 'bg-[var(--color-bg-subtle)] text-[var(--color-text-secondary)] border-[var(--color-border)] hover:bg-[var(--color-border)]'
+                                }`}
+                              >
+                                {item.section}
+                              </button>
+                            )
+                          })}
+                        </div>
+                      </div>
+                    ))}
+                    {electiveGroups.others.size === 0 && <p className="font-mono text-[10px] text-[var(--color-text-tertiary)] italic">None</p>}
                   </div>
                 </div>
               </div></div>
@@ -759,13 +842,20 @@ function TimetablePageInner() {
                 onClick={() => setIsOtherCoursesExpanded(!isOtherCoursesExpanded)}
                 className="w-full flex items-center justify-between px-4 py-4 focus-visible:outline-none focus-visible:bg-[var(--color-bg-raised)] transition-colors hover:bg-[var(--color-bg-raised)]"
               >
-                <div className="flex items-center gap-3">
-                  <h2 className="font-display text-lg text-[var(--color-text-primary)]">Other Courses</h2>
-                  {selectedOtherCount > 0 && (
-                    <span className="font-mono text-[10px] px-2 py-0.5 rounded-full bg-[var(--color-text-primary)] text-[var(--color-bg)]">
-                      {selectedOtherCount} selected
-                    </span>
-                  )}
+                <div className="flex items-center gap-4">
+                  <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-blue-500/10 to-indigo-500/10 flex items-center justify-center border border-blue-500/20">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-blue-600 dark:text-blue-400">
+                      <circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/>
+                    </svg>
+                  </div>
+                  <div className="flex items-center gap-3">
+                    <span className="font-mono text-sm md:text-base text-blue-600 dark:text-blue-400 font-bold uppercase tracking-[0.3em]">Electives / Others</span>
+                    {selectedOtherCount > 0 && (
+                      <span className="font-mono text-[10px] px-2 py-0.5 rounded-full bg-[var(--color-text-primary)] text-[var(--color-bg)]">
+                        {selectedOtherCount} selected
+                      </span>
+                    )}
+                  </div>
                 </div>
                 <svg
                   width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"
@@ -778,11 +868,16 @@ function TimetablePageInner() {
               {isOtherCoursesExpanded && (
                 <div className="px-4 pb-6 pt-2">
                   {otherCourseGroups.length === 0 ? (
-                    <p className="font-mono text-xs text-[var(--color-text-tertiary)]">No additional courses found outside your selected section.</p>
+                    <p className="font-mono text-xs text-[var(--color-text-tertiary)]">No electives found for this batch/department.</p>
                   ) : (
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       {otherCourseGroups.map(group => (
-                        <div key={group.courseKey} className="border border-[var(--color-border)] rounded-md p-3 bg-[var(--color-bg-raised)]">
+                        <div key={group.courseKey} className="relative overflow-hidden border border-[var(--color-border)] rounded-md p-3 pl-5 bg-[var(--color-bg-raised)]">
+                          <span
+                            aria-hidden="true"
+                            className="absolute left-0 top-0 bottom-0 w-[4px] opacity-80"
+                            style={{ backgroundColor: `var(--accent-${group.department.toLowerCase()})` }}
+                          />
                           <div className="flex items-center justify-between gap-2 mb-2">
                             <p className="font-body text-sm font-medium text-[var(--color-text-primary)] leading-snug">{group.courseName}</p>
                             {group.category === 'repeat' && (
@@ -817,18 +912,40 @@ function TimetablePageInner() {
             </div>
           )}
 
-          {/* Partial data banner */}
-          {hasPartialDays && (
-            <div className="px-4 pt-3">
-              <div className="flex items-start gap-2 text-xs text-[var(--color-text-secondary)] bg-[var(--color-bg-subtle)] rounded-md px-3 py-2">
-                <span>ℹ</span>
-                <span>Showing {grouped.length} of {DAYS_ORDER.length} days. Some classes may not yet be scheduled.</span>
-              </div>
-            </div>
-          )}          {/* Result count (mobile) */}
+          {/* Result count (mobile) */}
           <p className="md:hidden px-4 pt-3 pb-1 font-mono text-xs text-[var(--color-text-tertiary)]">
             {filtered.length} class slot{filtered.length !== 1 ? 's' : ''} found
           </p>
+
+          {/* Repeat Prompt Modal */}
+          {repeatPromptCourse && (
+            <div className="fixed inset-0 z-[60] flex items-center justify-center p-6 bg-black/50 backdrop-blur-sm animate-in fade-in duration-200">
+              <div className="bg-[var(--color-bg-raised)] border border-[var(--color-border-strong)] rounded-2xl p-6 w-full max-w-sm shadow-2xl animate-in zoom-in-95 duration-300">
+                <div className="flex items-center gap-3 mb-4 text-amber-600 dark:text-amber-400">
+                  <AlertCircle size={24} />
+                  <h3 className="font-display text-xl font-bold">Repeat Courses Disabled</h3>
+                </div>
+                <p className="font-body text-sm text-[var(--color-text-secondary)] mb-6 leading-relaxed">
+                  To import this course, you need to enable the <strong>"Include Repeat Courses"</strong> master toggle at the top of the page.
+                </p>
+                <div className="flex flex-col gap-3">
+                  <button
+                    onClick={handleEnableRepeatsFromPrompt}
+                    className="h-12 w-full rounded-xl bg-[var(--color-text-primary)] text-[var(--color-bg)] font-body font-bold hover:opacity-90 transition-all active:scale-[0.98]"
+                  >
+                    Enable Repeats Now
+                  </button>
+                  <button
+                    onClick={() => setRepeatPromptCourse(null)}
+                    className="h-12 w-full rounded-xl border border-[var(--color-border-strong)] text-[var(--color-text-primary)] font-body font-medium hover:bg-[var(--color-bg-subtle)] transition-all"
+                  >
+                    Cancel
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
+
           {/* Content area */}
           <div id="print-area" className="flex-1 px-4 pb-24 md:pb-8 bg-[var(--color-bg)]">
             {filtered.length === 0 ? (
@@ -989,6 +1106,18 @@ function GridView({
     window.addEventListener('resize', checkMobile);
     return () => window.removeEventListener('resize', checkMobile);
   }, []);
+
+  const handleEnableRepeatsFromPrompt = () => {
+    if (repeatPromptCourse) {
+      handleToggleRepeats(true);
+      setRemovedCourseKeys(prev => prev.filter(key => key !== repeatPromptCourse.key));
+      setManualSectionByCourse(prev => ({
+        ...prev,
+        [repeatPromptCourse.key]: repeatPromptCourse.section
+      }));
+      setRepeatPromptCourse(null);
+    }
+  };
 
   const accentColor = `var(--accent-${dept.toLowerCase()})`;
   const accentBg    = `var(--accent-${dept.toLowerCase()}-bg)`;

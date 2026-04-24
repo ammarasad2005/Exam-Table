@@ -64,6 +64,8 @@ export interface TimetableEntry {
   category: 'regular' | 'repeat';      // from Python hierarchy key
   rescheduled?: boolean;               // flags special manual slots
   exam?: boolean;                      // flags "Mid", "Exam", or "Sessional" slots
+  isElective?: boolean;                // inferred from section range
+  electiveGroup?: string | null;       // e.g. "G-I", "Gp-II"
 }
 
 export const TIMETABLE_META_KEY = '__meta__';
@@ -82,6 +84,8 @@ export type TimetableSlot = {
   time: string;
   rescheduled?: boolean;
   exam?: boolean;
+  isElective?: boolean;
+  elective_group?: string | null;
 };
 
 export type TimetableDayMap = Record<string, TimetableSlot[]>;
