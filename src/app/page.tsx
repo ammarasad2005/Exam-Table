@@ -328,7 +328,7 @@ export default function RootPage() {
                   key={f.id}
                   onClick={() => handleFeatureClick(f.id, f.placeholder)}
                   disabled={f.placeholder}
-                  className="group relative overflow-hidden text-left rounded-2xl border bg-[var(--color-bg-raised)] p-6 flex flex-col gap-4 transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="group relative overflow-hidden text-left rounded-2xl border bg-[var(--color-bg-raised)] p-6 flex flex-col gap-3 transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 disabled:opacity-50 disabled:cursor-not-allowed"
                   style={{
                     borderColor: 'var(--color-border)',
                     boxShadow: 'var(--shadow-card), var(--border-inset)',
@@ -376,7 +376,9 @@ export default function RootPage() {
                     )}
                   </div>
                   <div>
-                    <h2 className="font-display text-lg text-[var(--color-text-primary)] mb-1">{f.title}</h2>
+                    <h2 className="mb-[5px] font-body text-[17px] font-medium leading-[1.4] tracking-[0.04em] text-[rgba(0,0,0,0.8)] dark:text-[rgba(255,255,255,0.88)]">
+                      {f.title}
+                    </h2>
                     <p className="font-body text-sm text-[var(--color-text-secondary)] leading-relaxed">{f.description}</p>
                   </div>
                 </button>
