@@ -1108,18 +1108,6 @@ function GridView({
     return () => window.removeEventListener('resize', checkMobile);
   }, []);
 
-  const handleEnableRepeatsFromPrompt = () => {
-    if (repeatPromptCourse) {
-      handleToggleRepeats(true);
-      setRemovedCourseKeys(prev => prev.filter(key => key !== repeatPromptCourse.key));
-      setManualSectionByCourse(prev => ({
-        ...prev,
-        [repeatPromptCourse.key]: repeatPromptCourse.section
-      }));
-      setRepeatPromptCourse(null);
-    }
-  };
-
   const accentColor = `var(--accent-${dept.toLowerCase()})`;
   const accentBg    = `var(--accent-${dept.toLowerCase()}-bg)`;
   const dayCount = DAYS_ORDER.length;
