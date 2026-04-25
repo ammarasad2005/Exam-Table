@@ -99,8 +99,32 @@ function CustomTimetableInner() {
 
 
 
-  // Load bundles from localStorage on mount
+  // Load bundles and PREVIEW from localStorage on mount
   useEffect(() => {
+    // Check for a preview first
+    const previewData = localStorage.getItem('fsc_timetable_preview');
+    if (previewData) {
+      try {
+        const previewRows = JSON.parse(previewData);
+        if (Array.isArray(previewRows) && previewRows.length > 0) {
+          setRows(previewRows);
+          setSaved(true); // Immediately trigger the view
+          setIsDesktopClassesExpanded(false); // Collapse the editor
+          setIsMobileClassesExpanded(false);
+          setEditingBundleId(null); // Ensure no bundle is marked as active
+        }
+      } catch (e) {
+        console.error('Failed to parse preview data', e);
+      } finally {
+        // IMPORTANT: Clean up the preview data so it's not loaded again
+        localStorage.removeItem('fsc_timetable_preview');
+      }
+      // If we loaded a preview, we don't need to load regular bundles
+      setIsLoaded(true);
+      return;
+    }
+
+    // Regular bundle loading
     const stored = localStorage.getItem('fsc_custom_bundles');
     if (stored) {
       try {
