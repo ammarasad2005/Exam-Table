@@ -41,6 +41,8 @@ interface ValidSchedule {
   totalLateClasses: number;
   totalConsecutivePenalties: number;
   customScore?: number;
+  penalty?: number;
+  fitScore?: number;
   schedule: ScheduleItem[];
 }
 
@@ -78,6 +80,9 @@ export function TimetableOptimizer() {
   };
 
   // --- State ---
+  const [inputMode, setInputMode] = useState<'default' | 'custom'>('custom');
+  const [defaultBatch, setDefaultBatch] = useState(availableYears[0] || '');
+  const [defaultDept, setDefaultDept] = useState('CS');
   const [selectedCourses, setSelectedCourses] = useState<CourseRow[]>([getDefaultRow()]);
   const [hasPreferences, setHasPreferences] = useState(false);
   const [optimizationMode, setOptimizationMode] = useState('balanced');
@@ -291,21 +296,45 @@ export function TimetableOptimizer() {
     setError('');
     setResult(null);
 
-    const validCourses = selectedCourses.filter(c => c.course !== '');
+    let coursesToOptimize: CourseRow[] = [];
 
-    if (validCourses.length === 0) {
-      setError('Please select at least one course.');
+    if (inputMode === 'custom') {
+      coursesToOptimize = selectedCourses.filter(c => c.course !== '');
+    } else {
+      // Default mode: auto-populate courses
+      const yearData = timetableData[defaultBatch];
+      if (yearData && yearData[defaultDept]) {
+        const deptData = yearData[defaultDept];
+        for (const type in deptData) {
+          // Exclude 'repeat' courses as requested
+          if (type !== 'repeat') {
+            for (const courseName in deptData[type]) {
+              coursesToOptimize.push({
+                year: defaultBatch,
+                dept: defaultDept,
+                type: type,
+                course: courseName,
+                preferredSection: '', // No preference by default
+              });
+            }
+          }
+        }
+      }
+    }
+
+    if (coursesToOptimize.length === 0) {
+      setError('Please select at least one course or a valid default batch/department.');
       return;
     }
 
-    const courseNames = validCourses.map(c => c.course);
+    const courseNames = coursesToOptimize.map(c => c.course);
     if (new Set(courseNames).size !== courseNames.length) {
-      setError('You have selected duplicate courses. Please remove them.');
+      setError('You have duplicate courses selected. Please remove them.');
       return;
     }
 
     const courseData: Record<string, any> = {};
-    for (const item of validCourses) {
+    for (const item of coursesToOptimize) {
       const data = timetableData[item.year]?.[item.dept]?.[item.type]?.[item.course];
       if (!data) {
         setError(`Data for '${item.course}' is missing.`);
@@ -317,7 +346,7 @@ export function TimetableOptimizer() {
     const allValidSchedules: ValidSchedule[] = [];
 
     const backtrack = (courseIdx: number, currentSchedule: ScheduleItem[], currentSlots: Slot[]) => {
-      if (courseIdx === validCourses.length) {
+      if (courseIdx === coursesToOptimize.length) {
         const activeDays = new Set(currentSlots.map(s => s.day));
         const metrics = calculateWorkloadMetrics(currentSlots);
         
@@ -356,7 +385,7 @@ export function TimetableOptimizer() {
         return;
       }
 
-      const currentItem = validCourses[courseIdx];
+      const currentItem = coursesToOptimize[courseIdx];
       const currentCourseName = currentItem.course;
       const sections = courseData[currentCourseName];
 
@@ -400,29 +429,34 @@ export function TimetableOptimizer() {
     if (allValidSchedules.length === 0) {
       setError('No clash-free timetable exists within the 5-day workweek. Check your locked sections or selected courses.');
     } else {
-      if (optimizationMode === 'max_off_days') {
-        allValidSchedules.sort((a, b) => {
-          if (a.activeDays !== b.activeDays) return a.activeDays - b.activeDays;
-          return a.workloadScore - b.workloadScore;
-        });
-      } else if (optimizationMode === 'min_workload') {
-        allValidSchedules.sort((a, b) => {
-          if (a.workloadScore !== b.workloadScore) return a.workloadScore - b.workloadScore;
-          return a.activeDays - b.activeDays;
-        });
-      } else if (optimizationMode === 'balanced') {
-        allValidSchedules.sort((a, b) => {
-          const balancedScoreA = a.workloadScore + (a.activeDays * 250);
-          const balancedScoreB = b.workloadScore + (b.activeDays * 250);
-          if (balancedScoreA !== balancedScoreB) return balancedScoreA - balancedScoreB;
-          return a.activeDays - b.activeDays;
-        });
-      } else if (optimizationMode === 'custom') {
-        allValidSchedules.sort((a, b) => {
-           if (a.customScore !== b.customScore) return (a.customScore || 0) - (b.customScore || 0);
-           return a.activeDays - b.activeDays;
-        });
-      }
+      // Calculate penalty for sorting
+      allValidSchedules.forEach(a => {
+        if (optimizationMode === 'max_off_days') {
+          a.penalty = (a.activeDays * 10000) + a.workloadScore;
+        } else if (optimizationMode === 'min_workload') {
+          a.penalty = (a.workloadScore * 100) + a.activeDays;
+        } else if (optimizationMode === 'balanced') {
+          a.penalty = a.workloadScore + (a.activeDays * 250);
+        } else if (optimizationMode === 'custom') {
+          a.penalty = a.customScore || 0;
+        }
+      });
+
+      // Sort by penalty
+      allValidSchedules.sort((a, b) => (a.penalty || 0) - (b.penalty || 0));
+
+      // Calculate relative Fit Score (0-100%) mapped to 60-100% range for visual positivity
+      const minPenalty = allValidSchedules[0].penalty || 0;
+      const maxPenalty = allValidSchedules[allValidSchedules.length - 1].penalty || minPenalty;
+      const penaltyRange = maxPenalty - minPenalty;
+
+      allValidSchedules.forEach(a => {
+        if (penaltyRange === 0) {
+          a.fitScore = 100;
+        } else {
+          a.fitScore = Math.round(100 - (((a.penalty || 0) - minPenalty) / penaltyRange) * 40); // Scales 100% down to 60%
+        }
+      });
 
       setResult({
         totalFound: allValidSchedules.length,
@@ -433,7 +467,7 @@ export function TimetableOptimizer() {
 
   // --- UI Render ---
   return (
-    <div className="w-full mx-auto pb-12 rounded-xl bg-[var(--color-bg)]">
+    <div className="w-full mx-auto pb-24 rounded-xl bg-[var(--color-bg)]">
       <div className="flex flex-col md:flex-row md:justify-between md:items-start mb-6">
         <div>
           <h2 className="text-2xl font-bold text-[var(--color-text-primary)]">Advanced Timetable Optimizer</h2>
@@ -447,58 +481,81 @@ export function TimetableOptimizer() {
         <div className="flex-1">
           <label className="block text-sm font-bold text-[var(--color-text-primary)] mb-3">Optimization Goal</label>
           <div className="space-y-3">
-            <label className="flex items-start gap-3 cursor-pointer p-2 rounded-md hover:bg-[var(--color-bg-raised)] transition-colors">
+            <label className={`flex items-start gap-3 cursor-pointer p-3 rounded-xl border-2 transition-all duration-200 group ${
+              optimizationMode === 'max_off_days' 
+                ? 'bg-[var(--accent-cs-bg)] border-[var(--accent-cs)] shadow-md ring-1 ring-[var(--accent-cs)]/20' 
+                : 'bg-transparent border-[var(--color-border)] hover:border-[var(--color-border-strong)] hover:bg-[var(--color-bg-raised)]'
+            }`}>
               <input
                 type="radio"
                 name="optMode"
-                className="w-4 h-4 mt-0.5 text-[var(--accent-cs)] focus:ring-[var(--accent-cs)]"
+                className="w-4 h-4 mt-1 text-[var(--accent-cs)] focus:ring-[var(--accent-cs)] border-[var(--color-border-strong)]"
                 checked={optimizationMode === 'max_off_days'}
                 onChange={() => { setOptimizationMode('max_off_days'); setResult(null); }}
               />
               <span className="text-sm text-[var(--color-text-secondary)]">
-                <strong className="text-[var(--color-text-primary)] block mb-0.5">Maximize Off-Days</strong>
+                <strong className={`block mb-0.5 transition-colors ${optimizationMode === 'max_off_days' ? 'text-[var(--accent-cs)]' : 'text-[var(--color-text-primary)]'}`}>Maximize Off-Days</strong>
                 Crams classes into fewest days possible.
               </span>
             </label>
 
-            <label className="flex items-start gap-3 cursor-pointer p-2 rounded-md hover:bg-[var(--color-bg-raised)] transition-colors bg-[var(--accent-se-bg)] border border-[var(--color-border)]">
+            <label className={`flex items-start gap-3 cursor-pointer p-3 rounded-xl border-2 transition-all duration-200 group ${
+              optimizationMode === 'balanced' 
+                ? 'bg-[var(--color-success-bg)] border-[var(--color-success)] shadow-md ring-1 ring-[var(--color-success)]/20' 
+                : 'bg-transparent border-[var(--color-border)] hover:border-[var(--color-border-strong)] hover:bg-[var(--color-bg-raised)]'
+            }`}>
               <input
                 type="radio"
                 name="optMode"
-                className="w-4 h-4 mt-0.5 text-[var(--accent-se)] focus:ring-[var(--accent-se)]"
+                className="w-4 h-4 mt-1 text-[var(--color-success)] focus:ring-[var(--color-success)] border-[var(--color-border-strong)]"
                 checked={optimizationMode === 'balanced'}
                 onChange={() => { setOptimizationMode('balanced'); setResult(null); }}
               />
               <span className="text-sm text-[var(--color-text-secondary)]">
-                <strong className="text-[var(--color-text-primary)] block mb-0.5">Balanced (Recommended)</strong>
-                Maximizes off-days, but gracefully accepts an extra campus day if it saves you from a brutal workload or missed prayers.
+                <strong className={`block mb-0.5 transition-colors ${optimizationMode === 'balanced' ? 'text-[var(--color-success)]' : 'text-[var(--color-text-primary)]'}`}>Balanced (Recommended)</strong>
+                Maximizes off-days, but gracefully accepts an extra campus day if it saves you from a brutal workload.
               </span>
             </label>
 
-            <label className={`flex items-start gap-3 cursor-pointer p-2 rounded-md hover:bg-[var(--color-bg-raised)] transition-colors ${optimizationMode === 'min_workload' ? 'bg-[var(--accent-ee-bg)] border border-[var(--color-border)]' : ''}`}>
+            <label className={`flex items-start gap-3 cursor-pointer p-3 rounded-xl border-2 transition-all duration-200 group ${
+              optimizationMode === 'min_workload' 
+                ? 'bg-[var(--accent-ai-bg)] border-[var(--accent-ai)] shadow-md ring-1 ring-[var(--accent-ai)]/20' 
+                : 'bg-transparent border-[var(--color-border)] hover:border-[var(--color-border-strong)] hover:bg-[var(--color-bg-raised)]'
+            }`}>
               <input
                 type="radio"
                 name="optMode"
-                className="w-4 h-4 mt-0.5 text-[var(--accent-ee)] focus:ring-[var(--accent-ee)]"
+                className="w-4 h-4 mt-1 text-[var(--accent-ai)] focus:ring-[var(--accent-ai)] border-[var(--color-border-strong)]"
                 checked={optimizationMode === 'min_workload'}
                 onChange={() => { setOptimizationMode('min_workload'); setResult(null); }}
               />
               <span className="text-sm text-[var(--color-text-secondary)]">
-                <strong className="text-[var(--color-text-primary)] block mb-0.5">Minimize Workload</strong>
-                Absolute priority on balanced days, avoids heavy gaps, limits back-to-back classes, and ensures time for Midday Break.
+                <strong className={`block mb-0.5 transition-colors ${optimizationMode === 'min_workload' ? 'text-[var(--accent-ai)]' : 'text-[var(--color-text-primary)]'}`}>Minimize Workload</strong>
+                Absolute priority on balanced days, avoids heavy gaps, and ensures time for Midday Break.
               </span>
             </label>
 
-            <label className={`flex items-start gap-3 cursor-pointer p-2 rounded-md hover:bg-[var(--color-bg-raised)] transition-colors ${optimizationMode === 'custom' ? 'bg-[var(--color-bg-raised)] border border-[var(--color-border-strong)]' : ''}`}>
+            <label 
+              className={`flex items-start gap-3 cursor-pointer p-3 rounded-xl transition-all duration-200 group relative ${
+                optimizationMode === 'custom' 
+                  ? 'shadow-md border-2 border-transparent' 
+                  : 'bg-transparent border-2 border-[var(--color-border)] hover:border-[var(--color-border-strong)] hover:bg-[var(--color-bg-raised)]'
+              }`}
+              style={optimizationMode === 'custom' ? {
+                backgroundImage: 'linear-gradient(var(--color-bg-raised), var(--color-bg-raised)), var(--today-border-gradient)',
+                backgroundOrigin: 'border-box',
+                backgroundClip: 'padding-box, border-box',
+              } : {}}
+            >
               <input
                 type="radio"
                 name="optMode"
-                className="w-4 h-4 mt-0.5 text-[var(--color-text-primary)] focus:ring-[var(--color-text-primary)]"
+                className="w-4 h-4 mt-1 z-10 focus:ring-offset-0 border-[var(--color-border-strong)]"
                 checked={optimizationMode === 'custom'}
                 onChange={() => { setOptimizationMode('custom'); setResult(null); }}
               />
-              <span className="text-sm text-[var(--color-text-secondary)] w-full">
-                <strong className="text-[var(--color-text-primary)] block mb-0.5">Custom Weights</strong>
+              <span className="text-sm text-[var(--color-text-secondary)] w-full z-10">
+                <strong className={`block mb-0.5 transition-colors ${optimizationMode === 'custom' ? 'text-[var(--color-text-primary)]' : 'text-[var(--color-text-primary)]'}`}>Custom Weights</strong>
                 Tune exactly how much you care about mornings, afternoons, gaps, and breaks.
               </span>
             </label>
@@ -552,100 +609,157 @@ export function TimetableOptimizer() {
           </label>
         </div>
       </div>
-
-      <div className="space-y-4 mb-6">
-        {selectedCourses.map((row, idx) => {
-          const availableDepts = ObjectKeys(timetableData[row.year]);
-          const availableTypes = ObjectKeys(timetableData[row.year]?.[row.dept]);
-          const availableCourses = ObjectKeys(timetableData[row.year]?.[row.dept]?.[row.type]);
-          const availableSections = row.course
-            ? ObjectKeys(timetableData[row.year]?.[row.dept]?.[row.type]?.[row.course])
-            : [];
-
-          return (
-            <div key={idx} className="flex flex-wrap lg:flex-nowrap gap-3 p-4 border border-[var(--color-border)] rounded-lg bg-[var(--color-bg-raised)] items-end shadow-sm">
-              <div className="flex-1 min-w-[80px]">
-                <label className="block text-xs font-medium text-[var(--color-text-tertiary)] mb-1 uppercase tracking-wider">Year</label>
-                <select
-                  className="w-full p-2 border border-[var(--color-border)] rounded-md outline-none focus:ring-2 focus:ring-[var(--accent-cs)] text-sm bg-[var(--color-bg)] text-[var(--color-text-primary)]"
-                  value={row.year} onChange={e => updateRowField(idx, 'year', e.target.value)}>
-                  {availableYears.map((y: string) => <option key={y} value={y}>{y}</option>)}
-                </select>
-              </div>
-
-              <div className="flex-1 min-w-[80px]">
-                <label className="block text-xs font-medium text-[var(--color-text-tertiary)] mb-1 uppercase tracking-wider">Dept</label>
-                <select
-                  className="w-full p-2 border border-[var(--color-border)] rounded-md outline-none focus:ring-2 focus:ring-[var(--accent-cs)] text-sm bg-[var(--color-bg)] text-[var(--color-text-primary)]"
-                  value={row.dept} onChange={e => updateRowField(idx, 'dept', e.target.value)}>
-                  {availableDepts.map((d: string) => <option key={d} value={d}>{d}</option>)}
-                </select>
-              </div>
-
-              <div className="flex-1 min-w-[80px]">
-                <label className="block text-xs font-medium text-[var(--color-text-tertiary)] mb-1 uppercase tracking-wider">Type</label>
-                <select
-                  className="w-full p-2 border border-[var(--color-border)] rounded-md outline-none focus:ring-2 focus:ring-[var(--accent-cs)] text-sm bg-[var(--color-bg)] text-[var(--color-text-primary)]"
-                  value={row.type} onChange={e => updateRowField(idx, 'type', e.target.value)}>
-                  {availableTypes.map((t: string) => <option key={t} value={t}>{t}</option>)}
-                </select>
-              </div>
-
-              <div className="flex-[2] min-w-[150px]">
-                <label className="block text-xs font-bold text-[var(--color-text-primary)] mb-1">Course</label>
-                <select
-                  className="w-full p-2 border border-[var(--color-border-strong)] rounded-md outline-none focus:ring-2 focus:ring-[var(--accent-cs)] font-medium text-sm bg-[var(--color-bg)] text-[var(--color-text-primary)]"
-                  value={row.course}
-                  onChange={e => updateRowField(idx, 'course', e.target.value)}
-                >
-                  <option value="">-- Select Course --</option>
-                  {availableCourses.map((c: string) => (
-                    <option key={c} value={c}>{c}</option>
-                  ))}
-                </select>
-              </div>
-
-              {hasPreferences && (
-                <div className="flex-1 min-w-[120px]">
-                  <label className="block text-xs font-bold text-[var(--accent-ee)] mb-1">Lock Section</label>
-                  <select
-                    disabled={!row.course}
-                    className="w-full p-2 border border-[var(--color-border)] bg-[var(--accent-ee-bg)] rounded-md outline-none focus:ring-2 focus:ring-[var(--accent-ee)] font-medium text-sm disabled:opacity-50 text-[var(--color-text-primary)]"
-                    value={row.preferredSection}
-                    onChange={e => updateRowField(idx, 'preferredSection', e.target.value)}
-                  >
-                    <option value="">Optimize Any</option>
-                    {availableSections.map((s: string) => (
-                      <option key={s} value={s}>Section {s}</option>
-                    ))}
-                  </select>
-                </div>
-              )}
-
-              <button
-                onClick={() => removeCourse(idx)}
-                className="px-4 py-2 text-red-500 hover:bg-red-500/10 bg-transparent border border-red-500/30 rounded-md font-medium transition-colors text-sm h-[38px] flex items-center justify-center"
-              >
-                Remove
-              </button>
-            </div>
-          );
-        })}
+      
+      {/* ─── Input Mode Toggle ────────────────────────────────────────────────── */}
+      <div className="mb-6 flex justify-center">
+        <div className="flex p-1 bg-[var(--color-bg-subtle)] rounded-lg border border-[var(--color-border)]">
+          {(['custom', 'default'] as const).map(mode => (
+            <button
+              key={mode}
+              onClick={() => { setInputMode(mode); setResult(null); }}
+              className={`px-6 py-1.5 rounded-md font-mono text-xs font-bold transition-colors ${
+                inputMode === mode
+                  ? 'bg-[var(--color-text-primary)] text-[var(--color-bg)] shadow-sm'
+                  : 'text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)]'
+              }`}
+            >
+              {mode === 'custom' ? 'Custom Courses' : 'Default Courses'}
+            </button>
+          ))}
+        </div>
       </div>
 
-      <button
-        onClick={addCourse}
-        className="mb-8 text-[var(--color-text-secondary)] font-bold hover:text-[var(--color-text-primary)] transition-colors flex items-center gap-1"
-      >
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
-        Add Another Course
-      </button>
+      {/* ─── Course Input Area ────────────────────────────────────────────────── */}
+      {inputMode === 'custom' ? (
+        <>
+          <div className="space-y-4 mb-6">
+            {selectedCourses.map((row, idx) => {
+              const availableDepts = ObjectKeys(timetableData[row.year]);
+              const availableTypes = ObjectKeys(timetableData[row.year]?.[row.dept]);
+              const availableCourses = ObjectKeys(timetableData[row.year]?.[row.dept]?.[row.type]);
+              const availableSections = row.course
+                ? ObjectKeys(timetableData[row.year]?.[row.dept]?.[row.type]?.[row.course])
+                : [];
+
+              return (
+                <div key={idx} className="flex flex-wrap lg:flex-nowrap gap-3 p-4 border border-[var(--color-border)] rounded-lg bg-[var(--color-bg-raised)] items-end shadow-sm">
+                  <div className="flex-1 min-w-[80px]">
+                    <label className="block text-xs font-medium text-[var(--color-text-tertiary)] mb-1 uppercase tracking-wider">Year</label>
+                    <select
+                      className="w-full p-2 border border-[var(--color-border)] rounded-md outline-none focus:ring-2 focus:ring-[var(--accent-cs)] text-sm bg-[var(--color-bg)] text-[var(--color-text-primary)]"
+                      value={row.year} onChange={e => updateRowField(idx, 'year', e.target.value)}>
+                      {availableYears.map((y: string) => <option key={y} value={y}>{y}</option>)}
+                    </select>
+                  </div>
+
+                  <div className="flex-1 min-w-[80px]">
+                    <label className="block text-xs font-medium text-[var(--color-text-tertiary)] mb-1 uppercase tracking-wider">Dept</label>
+                    <select
+                      className="w-full p-2 border border-[var(--color-border)] rounded-md outline-none focus:ring-2 focus:ring-[var(--accent-cs)] text-sm bg-[var(--color-bg)] text-[var(--color-text-primary)]"
+                      value={row.dept} onChange={e => updateRowField(idx, 'dept', e.target.value)}>
+                      {availableDepts.map((d: string) => <option key={d} value={d}>{d}</option>)}
+                    </select>
+                  </div>
+
+                  <div className="flex-1 min-w-[80px]">
+                    <label className="block text-xs font-medium text-[var(--color-text-tertiary)] mb-1 uppercase tracking-wider">Type</label>
+                    <select
+                      className="w-full p-2 border border-[var(--color-border)] rounded-md outline-none focus:ring-2 focus:ring-[var(--accent-cs)] text-sm bg-[var(--color-bg)] text-[var(--color-text-primary)]"
+                      value={row.type} onChange={e => updateRowField(idx, 'type', e.target.value)}>
+                      {availableTypes.map((t: string) => <option key={t} value={t}>{t}</option>)}
+                    </select>
+                  </div>
+
+                  <div className="flex-[2] min-w-[150px]">
+                    <label className="block text-xs font-bold text-[var(--color-text-primary)] mb-1">Course</label>
+                    <select
+                      className="w-full p-2 border border-[var(--color-border-strong)] rounded-md outline-none focus:ring-2 focus:ring-[var(--accent-cs)] font-medium text-sm bg-[var(--color-bg)] text-[var(--color-text-primary)]"
+                      value={row.course}
+                      onChange={e => updateRowField(idx, 'course', e.target.value)}
+                    >
+                      <option value="">-- Select Course --</option>
+                      {availableCourses.map((c: string) => (
+                        <option key={c} value={c}>{c}</option>
+                      ))}
+                    </select>
+                  </div>
+
+                  {hasPreferences && (
+                    <div className="flex-1 min-w-[120px]">
+                      <label className="block text-xs font-bold text-[var(--accent-ee)] mb-1">Lock Section</label>
+                      <select
+                        disabled={!row.course}
+                        className="w-full p-2 border border-[var(--color-border)] bg-[var(--accent-ee-bg)] rounded-md outline-none focus:ring-2 focus:ring-[var(--accent-ee)] font-medium text-sm disabled:opacity-50 text-[var(--color-text-primary)]"
+                        value={row.preferredSection}
+                        onChange={e => updateRowField(idx, 'preferredSection', e.target.value)}
+                      >
+                        <option value="">Optimize Any</option>
+                        {availableSections.map((s: string) => (
+                          <option key={s} value={s}>Section {s}</option>
+                        ))}
+                      </select>
+                    </div>
+                  )}
+
+                  <button
+                    onClick={() => removeCourse(idx)}
+                    className="px-4 py-2 text-red-500 hover:bg-red-500/10 bg-transparent border border-red-500/30 rounded-md font-medium transition-colors text-sm h-[38px] flex items-center justify-center"
+                  >
+                    Remove
+                  </button>
+                </div>
+              );
+            })}
+          </div>
+          <button
+            onClick={addCourse}
+            className="mb-8 text-[var(--color-text-secondary)] font-bold hover:text-[var(--color-text-primary)] transition-colors flex items-center gap-1"
+          >
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+            Add Another Course
+          </button>
+        </>
+      ) : (
+        <div className="mb-8 flex flex-col items-center gap-4">
+          <div className="flex gap-4 p-4 border border-[var(--color-border)] rounded-lg bg-[var(--color-bg-raised)] shadow-sm">
+            <div className="flex-1">
+              <label className="block text-xs font-medium text-[var(--color-text-tertiary)] mb-1 uppercase tracking-wider">Batch/Year</label>
+              <select
+                className="w-full p-2 border border-[var(--color-border-strong)] rounded-md outline-none focus:ring-2 focus:ring-[var(--accent-cs)] text-sm bg-[var(--color-bg)] text-[var(--color-text-primary)]"
+                value={defaultBatch}
+                onChange={e => { setDefaultBatch(e.target.value); setResult(null); }}
+              >
+                {availableYears.map((y: string) => <option key={y} value={y}>{y}</option>)}
+              </select>
+            </div>
+            <div className="flex-1">
+              <label className="block text-xs font-medium text-[var(--color-text-tertiary)] mb-1 uppercase tracking-wider">Department</label>
+              <select
+                className="w-full p-2 border border-[var(--color-border-strong)] rounded-md outline-none focus:ring-2 focus:ring-[var(--accent-cs)] text-sm bg-[var(--color-bg)] text-[var(--color-text-primary)]"
+                value={defaultDept}
+                onChange={e => { setDefaultDept(e.target.value); setResult(null); }}
+              >
+                {ObjectKeys(timetableData[defaultBatch] || {}).map((d: string) => <option key={d} value={d}>{d}</option>)}
+              </select>
+            </div>
+          </div>
+          <p className="text-xs text-center text-[var(--color-text-tertiary)] font-mono">
+            Automatically loads all regular and elective courses for the selected batch.
+          </p>
+        </div>
+      )}
 
       <button
         onClick={handleOptimize}
-        className={`w-full py-4 text-white rounded-lg font-bold text-lg transition-colors shadow-lg
-          ${optimizationMode === 'max_off_days' ? 'bg-[var(--accent-cs)] hover:opacity-90' :
-            optimizationMode === 'balanced' ? 'bg-[var(--accent-se)] hover:opacity-90' : 'bg-[var(--accent-ee)] hover:opacity-90'}`}
+        className={`w-full py-4 rounded-xl font-bold text-lg transition-all shadow-lg active:scale-[0.99] text-white
+          ${optimizationMode === 'max_off_days' ? 'bg-[var(--accent-cs)] shadow-[var(--accent-cs)]/20' : 
+            optimizationMode === 'balanced' ? 'bg-[var(--color-success)] shadow-[var(--color-success)]/20' : 
+            optimizationMode === 'min_workload' ? 'bg-[var(--accent-ai)] shadow-[var(--accent-ai)]/20' : 
+            ''}`}
+        style={optimizationMode === 'custom' ? { 
+          background: 'var(--today-label-bg)',
+          boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05)'
+        } : {}}
       >
         Find the Best Schedules
       </button>
@@ -692,11 +806,11 @@ export function TimetableOptimizer() {
                   borderClass = 'border-[var(--accent-cs)] bg-[var(--accent-cs-bg)]';
                   badgeClass = 'bg-[var(--accent-cs)] text-white';
                 } else if (optimizationMode === 'balanced') {
-                  borderClass = 'border-[var(--accent-se)] bg-[var(--accent-se-bg)]';
-                  badgeClass = 'bg-[var(--accent-se)] text-white';
+                  borderClass = 'border-[var(--color-success)] bg-[var(--color-success-bg)]';
+                  badgeClass = 'bg-[var(--color-success)] text-white';
                 } else {
-                  borderClass = 'border-[var(--accent-ee)] bg-[var(--accent-ee-bg)]';
-                  badgeClass = 'bg-[var(--accent-ee)] text-white';
+                  borderClass = 'border-[var(--accent-ai)] bg-[var(--accent-ai-bg)]';
+                  badgeClass = 'bg-[var(--accent-ai)] text-white';
                 }
               }
 
@@ -709,11 +823,13 @@ export function TimetableOptimizer() {
                         Rank #{optIdx + 1}
                       </span>
                       <div className="flex flex-col">
-                        <span className={`text-xl font-black ${getComfortColor(option.comfortScore)}`}>
-                          Comfort Score: {option.comfortScore}%
+                        <span className={`text-xl font-black ${isAbsoluteBest ? 'text-[var(--color-text-primary)]' : 'text-[var(--color-text-primary)] opacity-90'}`}>
+                          Fit Score: {option.fitScore}%
                         </span>
-                        <span className="text-xs text-[var(--color-text-secondary)] font-medium uppercase tracking-wider">
-                          {option.maxOffDays} Off-Days Secured
+                        <span className="text-[10px] text-[var(--color-text-secondary)] font-medium uppercase tracking-wider flex items-center gap-1.5 mt-0.5">
+                          Comfort: <span className={getComfortColor(option.comfortScore)}>{option.comfortScore}%</span> 
+                          <span className="opacity-30">·</span> 
+                          {option.maxOffDays} Off-Days
                         </span>
                       </div>
                     </div>

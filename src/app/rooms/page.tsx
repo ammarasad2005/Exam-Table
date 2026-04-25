@@ -588,7 +588,7 @@ export default function RoomsPage() {
           {viewMode === 'calendar' && <CalendarGrid onSelect={setSelectedCell} />}
 
           {/* Bottom padding for scroll-past */}
-          <div className="h-16 md:h-[136px]" />
+          <div className="h-16 md:h-[150px]" />
         </div>
       {selectedCell && (
         <RoomDetail cell={selectedCell} onClose={() => setSelectedCell(null)} />

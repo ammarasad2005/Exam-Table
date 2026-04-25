@@ -2,7 +2,7 @@
 
 import { usePathname, useRouter } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Home, CalendarDays, Users, Library, MapPin } from 'lucide-react';
+import { Home, Sliders, Users, Library, MapPin } from 'lucide-react';
 import { useTheme } from '@/lib/theme';
 
 type Tab = {
@@ -14,7 +14,7 @@ type Tab = {
 
 const TABS: Tab[] = [
   { id: 'rooms', path: '/rooms', label: 'ROOMS', icon: MapPin },
-  { id: 'events', path: '/events', label: 'EVENTS', icon: CalendarDays },
+  { id: 'optimizer', path: '/timetable/optimizer', label: 'OPTIMIZER', icon: Sliders },
   { id: 'home', path: '/home', label: 'HOME', icon: Home },
   { id: 'faculty', path: '/faculty', label: 'FACULTY', icon: Users },
   { id: 'courses', path: '/timetable/custom', label: 'COURSES', icon: Library },

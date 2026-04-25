@@ -954,7 +954,7 @@ function TimetablePageInner() {
           )}
 
           {/* Content area */}
-          <div id="print-area" className="flex-1 px-4 pb-[136px] bg-[var(--color-bg)]">
+          <div id="print-area" className="flex-1 px-4 pb-[150px] bg-[var(--color-bg)]">
             {filtered.length === 0 ? (
               <EmptyState
                 query={query}

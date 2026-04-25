@@ -58,8 +58,8 @@
   --accent-ce-bg: #F0F9FF;
 
   /* Semantic */
-  --color-success: #166534;
-  --color-success-bg: #F0FDF4;
+  --color-success: #059669;
+  --color-success-bg: #ecfdf5;
 
   /* Spacing scale */
   --space-1: 4px; --space-2: 8px; --space-3: 12px; --space-4: 16px;
@@ -129,6 +129,8 @@
   --accent-ft-bg: #2d0f3d;
   --accent-ee-bg: #3d0f1f;
   --accent-ce-bg: #0f2d4a;
+  --color-success: #4ade80;
+  --color-success-bg: #064e3b;
 
   /* Shadows (dark — cool dark, barely visible) */
   --shadow-card:    0 1px 2px rgba(0,0,0,0.30), 0 1px 4px rgba(0,0,0,0.20);
@@ -177,6 +179,8 @@
     --accent-ft-bg: #2d0f3d;
     --accent-ee-bg: #3d0f1f;
     --accent-ce-bg: #0f2d4a;
+  --color-success: #4ade80;
+  --color-success-bg: #064e3b;
 
     /* Shadows (dark — cool dark, barely visible) */
     --shadow-card:    0 1px 2px rgba(0,0,0,0.30), 0 1px 4px rgba(0,0,0,0.20);

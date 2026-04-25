@@ -8,7 +8,7 @@ import {
   MapPin,
   Users,
   FileText,
-  CalendarDays,
+  Sliders,
   Clock,
   Plus
 } from 'lucide-react';
@@ -29,13 +29,13 @@ type MenuItem = {
 };
 
 const MENU_ITEMS: MenuItem[] = [
-  { id: 'home',     path: '/home',              label: 'Home',     color: '#4f46e5',         icon: <Home size={22} /> },
-  { id: 'schedule', path: '/timetable/custom',   label: 'Schedule', color: 'var(--accent-cs)', icon: <Library size={22} /> },
-  { id: 'rooms',    path: '/rooms',             label: 'Rooms',    color: 'var(--accent-ds)', icon: <MapPin size={22} /> },
-  { id: 'faculty',  path: '/faculty',           label: 'Faculty',  color: 'var(--accent-se)', icon: <Users size={22} /> },
-  { id: 'exams',    path: '/home?feature=exams', label: 'Exams',    color: 'var(--accent-ee)', icon: <FileText size={22} /> },
-  { id: 'events',   path: '/events',            label: 'Events',   color: 'var(--accent-ba)', icon: <CalendarDays size={22} /> },
-  { id: 'semester', path: '/semester',          label: 'Semester', color: 'var(--accent-af)', icon: <Clock size={22} /> },
+  { id: 'home',      path: '/home',              label: 'Home',      color: '#4f46e5',         icon: <Home size={22} /> },
+  { id: 'schedule',  path: '/timetable/custom',   label: 'Schedule',  color: 'var(--accent-cs)', icon: <Library size={22} /> },
+  { id: 'rooms',     path: '/rooms',             label: 'Rooms',     color: 'var(--accent-ds)', icon: <MapPin size={22} /> },
+  { id: 'faculty',   path: '/faculty',           label: 'Faculty',   color: 'var(--accent-se)', icon: <Users size={22} /> },
+  { id: 'optimizer', path: '/timetable/optimizer', label: 'Optimizer', color: 'var(--accent-cy)', icon: <Sliders size={22} /> },
+  { id: 'exams',     path: '/home?feature=exams', label: 'Exams',     color: 'var(--accent-ee)', icon: <FileText size={22} /> },
+  { id: 'semester',  path: '/semester',          label: 'Semester',  color: 'var(--accent-af)', icon: <Clock size={22} /> },
 ];
 
 function computeVirtualItems(offsetAmount: number) {
