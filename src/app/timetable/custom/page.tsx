@@ -10,13 +10,13 @@ import { Header } from '@/components/Header';
 
 import { ThemeToggle } from '@/components/ThemeToggle';
 import { ShieldAlert, AlertCircle, Info } from 'lucide-react';
-import { flattenTimetable, groupByDayTimetable, detectConflicts } from '@/lib/timetable-filter';
+import { flattenTimetable, groupByDayTimetable, detectConflicts, formatTimeRange, parseTimeRange } from '@/lib/timetable-filter';
 import type { TimetableEntry, RawTimetableJSON } from '@/lib/types';
+import { DAYS_ORDER } from '@/lib/types';
 
 // eslint-disable-next-line
 const timetableRaw: RawTimetableJSON = require('../../../../public/data/timetable.json');
 const allTimetableEntries = flattenTimetable(timetableRaw);
-const timetableDayMeta = timetableRaw.__meta__?.days ?? {};
 
 // Derive available batches from data
 const availableBatches: string[] = [...new Set<string>(allTimetableEntries.map(e => e.batch))]
@@ -44,6 +44,8 @@ interface Bundle {
   name: string;
   rows: CourseRow[];
 }
+
+type ViewMode = 'list' | 'grid';
 
 
 function makeRow(id: string): CourseRow {
@@ -79,7 +81,10 @@ function CustomTimetableInner() {
   const [nextIdx, setNextIdx] = useState(1);
   const [saved, setSaved] = useState(false);
   const [query, setQuery] = useState('');
+  const [viewMode, setViewMode] = useState<ViewMode>('list');
   const [selected, setSelected] = useState<TimetableEntry|null>(null);
+  const [isMobileClassesExpanded, setIsMobileClassesExpanded] = useState(false);
+  const [isDesktopClassesExpanded, setIsDesktopClassesExpanded] = useState(false);
 
   // ── Bundle Management State ──
   const [bundles, setBundles] = useState<Bundle[]>([]);
@@ -154,7 +159,11 @@ function CustomTimetableInner() {
       return { ...r, errorBatch: eb, errorStream: es, errorCategory: ec, errorSelection: esel };
     });
     setRows(validated);
-    if (!hasError) setSaved(true);
+    if (!hasError) {
+      setSaved(true);
+      setIsMobileClassesExpanded(false);
+      setIsDesktopClassesExpanded(false);
+    }
   }
 
 
@@ -205,8 +214,12 @@ function CustomTimetableInner() {
     setEditingBundleId(bundle.id);
     if (andGenerate) {
       setSaved(true);
+      setIsMobileClassesExpanded(false);
+      setIsDesktopClassesExpanded(false);
     } else {
       setSaved(false);
+      setIsMobileClassesExpanded(true);
+      setIsDesktopClassesExpanded(true);
     }
   }
 
@@ -237,6 +250,43 @@ function CustomTimetableInner() {
 
   const grouped = useMemo(() => groupByDayTimetable(filtered), [filtered]);
   const conflicts = useMemo(() => detectConflicts(filtered), [filtered]);
+  const reorderedGrouped = useMemo(() => {
+    const today = new Date();
+    const todayName = today.toLocaleDateString('en-US', { weekday: 'long' });
+    const todayDateStr = today.toLocaleDateString('en-US', { day: 'numeric', month: 'short' });
+
+    const groupedMap = new Map(grouped.map(g => [g.day, g.entries]));
+    const result: { day: string; entries: TimetableEntry[]; isToday: boolean; dateStr: string }[] = [];
+
+    result.push({
+      day: todayName,
+      entries: groupedMap.get(todayName) || [],
+      isToday: true,
+      dateStr: todayDateStr,
+    });
+
+    for (const day of DAYS_ORDER) {
+      if (day === todayName) continue;
+      const entries = groupedMap.get(day);
+      if (entries && entries.length > 0) {
+        const dayJsIdx = (DAYS_ORDER.indexOf(day) + 1) % 7; // Mon=1 ... Sat=6
+        const todayJsIdx = today.getDay(); // Sun=0 ... Sat=6
+        const diff = dayJsIdx - todayJsIdx;
+        const d = new Date(today);
+        d.setDate(today.getDate() + diff);
+        const dateStr = d.toLocaleDateString('en-US', { day: 'numeric', month: 'short' });
+
+        result.push({
+          day,
+          entries,
+          isToday: false,
+          dateStr,
+        });
+      }
+    }
+
+    return result;
+  }, [grouped]);
 
   // ── Per-row "not found" hint ─────────────────────────────────────────────
   const rowMatches = useMemo(() =>
@@ -273,43 +323,66 @@ function CustomTimetableInner() {
         {/* ── Sidebar (desktop) ── */}
         <aside className="hidden md:flex md:w-[350px] lg:w-[400px] flex-col border-r border-[var(--color-border)] sticky top-14 h-[calc(100dvh-56px)] overflow-y-auto">
           <div className="flex-1 px-5 py-5 flex flex-col gap-4">
-
-            <div className="flex items-center justify-between">
-              <p className="font-mono text-[10px] uppercase tracking-widest text-[var(--color-text-tertiary)]">
-                Your Classes
-              </p>
-
-            </div>
-
-            {/* Row list */}
-            <div className="flex flex-col gap-3">
-              {rows.map((row, idx) => (
-                <RowEditor
-                  key={row.id}
-                  row={row}
-                  index={idx}
-                  matchCount={rowMatches.find(m => m.id === row.id)?.count ?? 0}
-                  showMatchHint={saved}
-                  onUpdate={patch => updateRow(row.id, patch)}
-                  onRemove={() => removeRow(row.id)}
-                  canRemove={rows.length > 1}
-                />
-              ))}
-            </div>
-
             <button
-              onClick={addRow}
-              className="w-full flex items-center justify-center gap-2 h-10 rounded-md border border-dashed border-[var(--color-border-strong)] font-mono text-xs text-[var(--color-text-secondary)] hover:bg-[var(--color-bg-subtle)] hover:border-[var(--color-text-tertiary)] transition-all focus-visible:outline-none"
+              onClick={() => setIsDesktopClassesExpanded(prev => !prev)}
+              aria-expanded={isDesktopClassesExpanded}
+              className="w-full flex items-center justify-between rounded-lg border border-[var(--color-border)] bg-[var(--color-bg-raised)] px-3 py-2.5 text-left transition-colors focus-visible:outline-none focus-visible:ring-2"
             >
-              <svg width="12" height="12" viewBox="0 0 12 12" fill="none" aria-hidden="true">
-                <path d="M6 1v10M1 6h10" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
+              <div className="flex flex-col gap-0.5">
+                <p className="font-mono text-[10px] uppercase tracking-widest text-[var(--color-text-tertiary)]">
+                  Your Classes
+                </p>
+                <p className="font-mono text-[10px] text-[var(--color-text-secondary)]">
+                  {isDesktopClassesExpanded ? 'Tap to collapse' : 'Expand to add courses'}
+                </p>
+              </div>
+              <svg
+                width="18"
+                height="18"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                className={`text-[var(--color-text-secondary)] transition-transform duration-200 ${isDesktopClassesExpanded ? 'rotate-0' : 'rotate-180'}`}
+                aria-hidden="true"
+              >
+                <polyline points="6 9 12 15 18 9" />
               </svg>
-              Add another course
             </button>
 
+            {isDesktopClassesExpanded && (
+              <>
+                <div className="flex flex-col gap-3">
+                  {rows.map((row, idx) => (
+                    <RowEditor
+                      key={row.id}
+                      row={row}
+                      index={idx}
+                      matchCount={rowMatches.find(m => m.id === row.id)?.count ?? 0}
+                      showMatchHint={saved}
+                      onUpdate={patch => updateRow(row.id, patch)}
+                      onRemove={() => removeRow(row.id)}
+                      canRemove={rows.length > 1}
+                    />
+                  ))}
+                </div>
 
-            {anyError && (
-              <p className="text-xs text-red-500 font-mono">Fill all highlighted fields first.</p>
+                <button
+                  onClick={addRow}
+                  className="w-full flex items-center justify-center gap-2 h-10 rounded-md border border-dashed border-[var(--color-border-strong)] font-mono text-xs text-[var(--color-text-secondary)] hover:bg-[var(--color-bg-subtle)] hover:border-[var(--color-text-tertiary)] transition-all focus-visible:outline-none"
+                >
+                  <svg width="12" height="12" viewBox="0 0 12 12" fill="none" aria-hidden="true">
+                    <path d="M6 1v10M1 6h10" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
+                  </svg>
+                  Add another course
+                </button>
+
+                {anyError && (
+                  <p className="text-xs text-red-500 font-mono">Fill all highlighted fields first.</p>
+                )}
+              </>
             )}
           </div>
 
@@ -401,64 +474,135 @@ function CustomTimetableInner() {
 
           {/* Mobile: row editor */}
           <div className="md:hidden border-b border-[var(--color-border)] px-4 py-4 bg-[var(--color-bg)] flex flex-col gap-3">
-            <div className="flex items-center justify-between">
-              <p className="font-mono text-[10px] uppercase tracking-widest text-[var(--color-text-tertiary)]">
-                Your Classes
-              </p>
-
-            </div>
-
-            <div className="flex flex-col gap-3">
-              {rows.map((row, idx) => (
-                <RowEditor
-                  key={row.id}
-                  row={row}
-                  index={idx}
-                  matchCount={rowMatches.find(m => m.id === row.id)?.count ?? 0}
-                  showMatchHint={saved}
-                  onUpdate={patch => updateRow(row.id, patch)}
-                  onRemove={() => removeRow(row.id)}
-                  canRemove={rows.length > 1}
-                />
-              ))}
-            </div>
-
             <button
-              onClick={addRow}
-              className="w-full flex items-center justify-center gap-2 h-11 rounded-md border border-dashed border-[var(--color-border-strong)] font-mono text-xs text-[var(--color-text-secondary)] hover:bg-[var(--color-bg-subtle)] transition-all focus-visible:outline-none"
+              onClick={() => setIsMobileClassesExpanded(prev => !prev)}
+              aria-expanded={isMobileClassesExpanded}
+              className="w-full flex items-center justify-between rounded-lg border border-[var(--color-border)] bg-[var(--color-bg-raised)] px-3 py-2.5 text-left transition-colors focus-visible:outline-none focus-visible:ring-2"
             >
-              <svg width="12" height="12" viewBox="0 0 12 12" fill="none" aria-hidden="true">
-                <path d="M6 1v10M1 6h10" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
+              <div className="flex flex-col gap-0.5">
+                <p className="font-mono text-[10px] uppercase tracking-widest text-[var(--color-text-tertiary)]">
+                  Your Classes
+                </p>
+                <p className="font-mono text-[10px] text-[var(--color-text-secondary)]">
+                  {isMobileClassesExpanded ? 'Tap to collapse' : 'Expand to add courses'}
+                </p>
+              </div>
+              <svg
+                width="18"
+                height="18"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                className={`text-[var(--color-text-secondary)] transition-transform duration-200 ${isMobileClassesExpanded ? 'rotate-0' : 'rotate-180'}`}
+                aria-hidden="true"
+              >
+                <polyline points="6 9 12 15 18 9" />
               </svg>
-              Add another course
             </button>
 
+            {isMobileClassesExpanded && (
+              <>
+                <div className="flex flex-col gap-3">
+                  {rows.map((row, idx) => (
+                    <RowEditor
+                      key={row.id}
+                      row={row}
+                      index={idx}
+                      matchCount={rowMatches.find(m => m.id === row.id)?.count ?? 0}
+                      showMatchHint={saved}
+                      onUpdate={patch => updateRow(row.id, patch)}
+                      onRemove={() => removeRow(row.id)}
+                      canRemove={rows.length > 1}
+                    />
+                  ))}
+                </div>
 
-            {anyError && (
-              <p className="text-xs text-red-500 font-mono mt-1">Fill all highlighted fields first.</p>
+                <button
+                  onClick={addRow}
+                  className="w-full flex items-center justify-center gap-2 h-11 rounded-md border border-dashed border-[var(--color-border-strong)] font-mono text-xs text-[var(--color-text-secondary)] hover:bg-[var(--color-bg-subtle)] transition-all focus-visible:outline-none"
+                >
+                  <svg width="12" height="12" viewBox="0 0 12 12" fill="none" aria-hidden="true">
+                    <path d="M6 1v10M1 6h10" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
+                  </svg>
+                  Add another course
+                </button>
+
+                {anyError && (
+                  <p className="text-xs text-red-500 font-mono mt-1">Fill all highlighted fields first.</p>
+                )}
+
+                <div className="grid grid-cols-2 gap-2">
+                  <button
+                    onClick={handleSave}
+                    className="h-11 rounded-md bg-[var(--color-text-primary)] text-[var(--color-bg)] font-body text-sm font-medium hover:opacity-90 active:scale-[0.98] transition-all focus-visible:outline-none focus-visible:ring-2"
+                  >
+                    {saved ? 'Update View' : 'Build Timetable'}
+                  </button>
+                  {editingBundleId ? (
+                    <button
+                      onClick={handleUpdateBundle}
+                      className="h-11 rounded-md bg-[var(--accent-cs)] text-white font-body text-sm font-medium hover:opacity-90 active:scale-[0.98] transition-all"
+                    >
+                      Update Bundle
+                    </button>
+                  ) : (
+                    <button
+                      onClick={() => setIsSaving(true)}
+                      className="h-11 rounded-md border border-[var(--color-border-strong)] text-[var(--color-text-primary)] font-body text-sm font-medium hover:bg-[var(--color-bg-subtle)] active:scale-[0.98] transition-all"
+                    >
+                      Save Bundle
+                    </button>
+                  )}
+                </div>
+              </>
             )}
 
-            <div className="grid grid-cols-2 gap-2">
-              <button
-                onClick={handleSave}
-                className="h-11 rounded-md bg-[var(--color-text-primary)] text-[var(--color-bg)] font-body text-sm font-medium hover:opacity-90 active:scale-[0.98] transition-all focus-visible:outline-none focus-visible:ring-2"
-              >
-                {saved ? 'Update View' : 'Build Timetable'}
-              </button>
-              {editingBundleId ? (
-                <button
-                  onClick={handleUpdateBundle}
-                  className="h-11 rounded-md bg-[var(--accent-cs)] text-white font-body text-sm font-medium hover:opacity-90 active:scale-[0.98] transition-all"
-                >
-                  Update Bundle
-                </button>
-              ) : (
+            <div className="mt-1 rounded-lg border border-[var(--color-border)] bg-[var(--color-bg-raised)] p-3 flex flex-col gap-3">
+              <div className="flex items-center justify-between">
+                <p className="font-mono text-[10px] uppercase tracking-widest text-[var(--color-text-tertiary)]">
+                  Saved Sets
+                </p>
                 <button
                   onClick={() => setIsSaving(true)}
-                  className="h-11 rounded-md border border-[var(--color-border-strong)] text-[var(--color-text-primary)] font-body text-sm font-medium hover:bg-[var(--color-bg-subtle)] active:scale-[0.98] transition-all"
+                  className="p-1 text-[var(--color-text-tertiary)] hover:text-[var(--color-text-primary)] transition-colors"
+                  title="Save current as bundle"
                 >
-                  Save Bundle
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                    <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/>
+                    <polyline points="17 21 17 13 7 13 7 21"/>
+                    <polyline points="7 3 7 8 15 8"/>
+                  </svg>
                 </button>
+              </div>
+
+              {bundles.length === 0 ? (
+                <p className="font-mono text-[10px] text-[var(--color-text-tertiary)] italic">No bundles yet.</p>
+              ) : (
+                <div className="flex flex-col gap-2">
+                  {bundles.map(bundle => (
+                    <BundleCard
+                      key={bundle.id}
+                      bundle={bundle}
+                      isActive={editingBundleId === bundle.id}
+                      isFocused={activeBundleId === bundle.id}
+                      renamingId={renamingId}
+                      tempName={tempName}
+                      setTempName={setTempName}
+                      onFocus={() => setActiveBundleId(activeBundleId === bundle.id ? null : bundle.id)}
+                      onRenameStart={() => {
+                        setRenamingId(bundle.id);
+                        setTempName(bundle.name);
+                      }}
+                      onRenameConfirm={() => handleRenameBundle(bundle.id, tempName)}
+                      onDelete={(e) => handleDeleteBundle(e, bundle.id)}
+                      onLoad={() => loadBundle(bundle, false)}
+                      onGenerate={() => loadBundle(bundle, true)}
+                    />
+                  ))}
+                </div>
               )}
             </div>
           </div>
@@ -467,7 +611,32 @@ function CustomTimetableInner() {
           {/* Search bar */}
           {saved && (
             <div className="sticky top-14 z-10 bg-[var(--color-bg)] px-4 py-3 border-b border-[var(--color-border)]">
-              <SearchBar value={query} onChange={setQuery} />
+              <div className="flex gap-2 items-center">
+                <div className="flex-1">
+                  <SearchBar value={query} onChange={setQuery} />
+                </div>
+                <div className="md:hidden flex gap-1">
+                  {(['list', 'grid'] as ViewMode[]).map(v => (
+                    <button
+                      key={v}
+                      onClick={() => setViewMode(v)}
+                      aria-pressed={viewMode === v}
+                      className="h-9 w-9 rounded border font-mono text-xs font-medium transition-all"
+                      style={viewMode === v ? {
+                        backgroundColor: 'var(--color-text-primary)',
+                        color: 'var(--color-bg)',
+                        borderColor: 'transparent',
+                      } : {
+                        borderColor: 'var(--color-border-strong)',
+                        color: 'var(--color-text-secondary)',
+                      }}
+                      title={v === 'list' ? 'List view' : 'Grid view'}
+                    >
+                      {v === 'list' ? '☰' : '⊞'}
+                    </button>
+                  ))}
+                </div>
+              </div>
             </div>
           )}
 
@@ -486,37 +655,66 @@ function CustomTimetableInner() {
               </div>
             ) : filtered.length === 0 ? (
               <EmptyState query={query} batch="" dept="" message="No classes found for the selected rows." />
-            ) : (
+            ) : viewMode === 'list' ? (
               <>
-                {grouped.map(({ day, entries }) => (
-                  <section key={day} className="mt-6 first:mt-4">
+                {reorderedGrouped.map(({ day, entries, isToday, dateStr }) => (
+                  <section
+                    key={day}
+                    className={`mt-6 first:mt-4 transition-all duration-500 ${
+                      isToday
+                        ? 'p-4 md:p-6 rounded-2xl relative overflow-hidden shadow-2xl ring-1 ring-[var(--color-text-primary)]/5'
+                        : ''
+                    }`}
+                    style={isToday ? {
+                      background: 'var(--color-bg-raised)',
+                      border: '3px solid transparent',
+                      backgroundImage: 'linear-gradient(var(--color-bg-raised), var(--color-bg-raised)), var(--today-border-gradient)',
+                      backgroundOrigin: 'border-box',
+                      backgroundClip: 'padding-box, border-box',
+                    } : {}}
+                  >
+                    {isToday && (
+                      <div
+                        className="absolute top-0 right-0 px-4 py-1.5 text-[var(--color-bg)] font-mono text-[10px] font-bold uppercase tracking-[0.2em] rounded-bl-xl shadow-md"
+                        style={{ background: 'var(--today-label-bg)' }}
+                      >
+                        Today
+                      </div>
+                    )}
                     <div className="mb-3 flex flex-wrap items-baseline gap-x-2 gap-y-1">
-                      <h2 className="font-mono text-[11px] uppercase tracking-widest text-[var(--color-text-tertiary)]">
-                        {day}
+                      <h2 className={`font-mono tracking-widest ${
+                        isToday
+                          ? 'text-sm font-black text-[var(--color-text-primary)]'
+                          : 'text-[11px] font-bold text-[var(--color-text-tertiary)] uppercase'
+                      }`}>
+                        {isToday ? `TODAY (${day}, ${dateStr})` : `${day.toUpperCase()} ${dateStr}`}
                       </h2>
-                      {timetableDayMeta[day]?.date && (
-                        <span className="font-mono text-[10px] uppercase tracking-widest text-[var(--color-text-secondary)]">
-                          {timetableDayMeta[day]?.date}
-                        </span>
-                      )}
                     </div>
-                    <div className="flex flex-col gap-2 md:grid md:grid-cols-2 lg:grid-cols-3 md:gap-3">
-                      {entries.map((entry, idx) => {
-                        const key = `${entry.day}|${entry.time}|${entry.courseName}|${entry.section}`;
-                        return (
-                          <TimetableCard
-                            key={`${key}-${idx}`}
-                            entry={entry}
-                            dept={entry.department}
-                            conflicting={conflicts.has(key)}
-                            onClick={() => setSelected(entry)}
-                          />
-                        );
-                      })}
-                    </div>
+                    {entries.length === 0 ? (
+                      <div className="py-12 flex flex-col items-center justify-center border-2 border-dashed border-[var(--color-border)] rounded-xl bg-[var(--color-bg-subtle)]/10">
+                        <p className="text-[var(--color-text-secondary)] font-mono text-sm italic">No classes scheduled for today</p>
+                      </div>
+                    ) : (
+                      <div className="flex flex-col gap-2 md:grid md:grid-cols-2 lg:grid-cols-3 md:gap-3">
+                        {entries.map((entry, idx) => {
+                          const key = `${entry.day}|${entry.time}|${entry.courseName}|${entry.section}`;
+                          return (
+                            <TimetableCard
+                              key={`${key}-${idx}`}
+                              entry={entry}
+                              dept={entry.department}
+                              conflicting={conflicts.has(key)}
+                              onClick={() => setSelected(entry)}
+                            />
+                          );
+                        })}
+                      </div>
+                    )}
                   </section>
                 ))}
               </>
+            ) : (
+              <GridViewCustom entries={filtered} conflicts={conflicts} onSelect={setSelected} />
             )}
           </div>
         </div>
@@ -590,6 +788,128 @@ function CustomTimetableInner() {
       )}
     </div>
 
+  );
+}
+
+
+const GRID_START = 8 * 60; // 08:00
+const GRID_END   = 18.5 * 60; // 18:30
+const PX_PER_MIN = 1.35;
+const TIME_COL_WIDTH = 56;
+
+function GridViewCustom({
+  entries,
+  conflicts,
+  onSelect,
+}: {
+  entries: TimetableEntry[];
+  conflicts: Set<string>;
+  onSelect: (e: TimetableEntry) => void;
+}) {
+  const dayCount = DAYS_ORDER.length;
+  const gridTemplateColumns = `${TIME_COL_WIDTH}px repeat(${dayCount}, minmax(0, 1fr))`;
+  const totalHeight = (GRID_END - GRID_START) * PX_PER_MIN;
+
+  const hours = [];
+  for (let m = GRID_START; m <= GRID_END; m += 60) {
+    hours.push(m);
+  }
+
+  return (
+    <div className="mt-8 overflow-x-auto select-none rounded-xl border border-[var(--color-border)] shadow-sm bg-[var(--color-bg-raised)]">
+      <div className="w-full min-w-[980px] relative flex flex-col">
+        <div
+          className="grid sticky top-0 z-20 bg-[var(--color-bg-raised)]/95 backdrop-blur-sm border-b border-[var(--color-border)]"
+          style={{ gridTemplateColumns }}
+        >
+          <div className="h-10 border-r border-[var(--color-border)] sticky left-0 z-30 bg-[var(--color-bg-raised)]" />
+          {DAYS_ORDER.map(day => (
+            <div key={day} className="text-center font-mono text-[10px] uppercase tracking-widest text-[var(--color-text-tertiary)] flex items-center justify-center border-r border-[var(--color-border)] last:border-r-0">
+              {day.slice(0, 3)}
+              <span className="hidden md:inline ml-1">{day.slice(3)}</span>
+            </div>
+          ))}
+        </div>
+
+        <div
+          className="relative grid"
+          style={{
+            height: `${totalHeight}px`,
+            gridTemplateColumns,
+          }}
+        >
+          <div className="absolute inset-0 pointer-events-none">
+            {hours.map(m => {
+              const top = (m - GRID_START) * PX_PER_MIN;
+              return (
+                <div key={m} className="absolute left-0 right-0 border-t border-[var(--color-border)] opacity-30 flex items-start" style={{ top: `${top}px` }}>
+                  <span className="sticky left-1 z-30 font-mono text-[8px] md:text-[9px] -mt-2 text-[var(--color-text-tertiary)] bg-[var(--color-bg-raised)] px-1">
+                    {Math.floor(m / 60)}:00
+                  </span>
+                </div>
+              );
+            })}
+
+            <div className="absolute inset-0 grid" style={{ gridTemplateColumns }}>
+              <div className="border-r border-[var(--color-border)] bg-[var(--color-bg-subtle)]/30 sticky left-0 z-20" />
+              {DAYS_ORDER.map(day => (
+                <div key={day} className="border-r border-[var(--color-border)] last:border-r-0" />
+              ))}
+            </div>
+          </div>
+
+          <div className="col-start-2 relative h-full" style={{ gridColumn: `2 / span ${dayCount}` }}>
+            <div className="absolute inset-0 grid h-full" style={{ gridTemplateColumns: `repeat(${dayCount}, minmax(0, 1fr))` }}>
+              {DAYS_ORDER.map(day => (
+                <div key={day} className="relative h-full px-0.5 md:px-1">
+                  {entries
+                    .filter(e => e.day === day)
+                    .map((e, idx) => {
+                      const [start, end] = parseTimeRange(e.time);
+                      const top = (start - GRID_START) * PX_PER_MIN;
+                      const height = (end - start) * PX_PER_MIN;
+                      const key = `${e.day}|${e.time}|${e.courseName}|${e.section}`;
+                      const isConflict = conflicts.has(key);
+                      const isRepeat = e.category === 'repeat';
+                      const accentColor = `var(--accent-${e.department.toLowerCase()})`;
+                      const accentBg = `var(--accent-${e.department.toLowerCase()}-bg)`;
+
+                      return (
+                        <button
+                          key={idx}
+                          onClick={() => onSelect(e)}
+                          className="absolute left-0.5 right-0.5 md:left-1 md:right-1 rounded-md text-[9px] md:text-[10px] transition-all hover:ring-1 hover:ring-[var(--color-text-tertiary)] active:scale-[0.98] focus-visible:outline-none overflow-hidden text-left flex items-center justify-center"
+                          style={{
+                            top: `${top}px`,
+                            height: `${height}px`,
+                            background: isConflict
+                              ? (isRepeat ? 'repeating-linear-gradient(45deg, #fef2f2, #fef2f2 10px, #fff1f2 10px, #fff1f2 20px)' : '#fef2f2')
+                              : (isRepeat
+                                ? 'linear-gradient(135deg, var(--color-bg-raised) 50%, color-mix(in srgb, var(--color-bg-raised) 80%, #f59e0b 20%))'
+                                : accentBg),
+                            color: isConflict ? '#dc2626' : accentColor,
+                            borderLeft: isConflict ? '2px solid #f87171' : (isRepeat ? '2px solid #f59e0b' : `2px solid ${accentColor}`),
+                            boxShadow: 'var(--shadow-card)',
+                            zIndex: isConflict ? 10 : 1,
+                          }}
+                        >
+                          <div className="flex flex-col h-full w-full justify-between gap-1 p-1 md:p-2">
+                            <div className="min-w-0">
+                              <p className="font-bold leading-tight line-clamp-2 uppercase break-words">{e.courseName}</p>
+                              <p className="mt-0.5 opacity-80 font-mono text-[8.5px] whitespace-nowrap overflow-hidden text-ellipsis">{formatTimeRange(e.time)}</p>
+                            </div>
+                            <p className="font-medium opacity-80 self-end text-[8.5px] truncate max-w-full">{e.room}</p>
+                          </div>
+                        </button>
+                      );
+                    })}
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
   );
 }
 
@@ -861,4 +1181,3 @@ function BundleCard({
     </div>
   );
 }
-
