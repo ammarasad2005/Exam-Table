@@ -344,7 +344,7 @@ export default function RootPage() {
               Features
             </p>
 
-            <div className="grid grid-cols-2 gap-4 content-start">
+            <div className="grid grid-cols-2 lg:grid-cols-3 gap-4 content-start">
               {FEATURES.map((f) => (
                 <button
                   key={f.id}

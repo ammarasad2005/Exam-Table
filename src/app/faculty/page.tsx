@@ -380,8 +380,8 @@ export default function FacultyPage() {
             </div>
           )}
 
-          {/* Bottom padding for mobile navbar */}
-          <div className="h-20 md:h-8" />
+          {/* Bottom padding for scroll-past */}
+          <div className="h-20 md:h-[136px]" />
         </div>
       </div>
 

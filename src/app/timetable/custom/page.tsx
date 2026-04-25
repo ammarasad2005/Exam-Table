@@ -665,7 +665,7 @@ function CustomTimetableInner() {
           )}
 
           {/* Results */}
-          <div id="print-area" className="flex-1 px-4 pb-24 md:pb-8 bg-[var(--color-bg)]">
+          <div id="print-area" className="flex-1 px-4 pb-[136px] bg-[var(--color-bg)]">
             {!saved ? (
               <div className="flex flex-col items-center justify-center text-center py-24 px-6">
                 <div className="text-4xl mb-4 select-none">📋</div>
