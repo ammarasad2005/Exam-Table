@@ -11,7 +11,7 @@ interface Props {
 }
 
 export function FacultyDetail({ member, onClose }: Props) {
-  const { drawerRef, handleRef } = useMobileSwipe({ onClose, defaultHeightStr: '90dvh' });
+  const { drawerRef, handleRef, backdropRef, closeDrawer } = useMobileSwipe({ onClose, defaultHeightStr: '90dvh' });
   const accent = DEPT_ACCENT[member.deptKey];
   const accentColor = `var(--accent-${accent})`;
   const accentBg = `var(--accent-${accent}-bg)`;
@@ -25,7 +25,7 @@ export function FacultyDetail({ member, onClose }: Props) {
 
   // Escape to close
   useEffect(() => {
-    const handler = (e: KeyboardEvent) => { if (e.key === 'Escape') onClose(); };
+    const handler = (e: KeyboardEvent) => { if (e.key === 'Escape') closeDrawer(); };
     window.addEventListener('keydown', handler);
     return () => window.removeEventListener('keydown', handler);
   }, [onClose]);
@@ -43,8 +43,9 @@ export function FacultyDetail({ member, onClose }: Props) {
     <>
       {/* Backdrop */}
       <div
+        ref={backdropRef}
         className="fixed inset-0 z-30 bg-black/30 md:hidden animate-in fade-in duration-300 ease-out"
-        onClick={onClose}
+        onClick={closeDrawer}
         aria-hidden="true"
       />
 
@@ -54,7 +55,7 @@ export function FacultyDetail({ member, onClose }: Props) {
         role="dialog"
         aria-modal="true"
         aria-label={`${member.name} profile`}
-        className="fixed z-40 bottom-0 left-0 right-0 rounded-t-2xl overflow-y-auto md:bottom-0 md:top-14 md:left-auto md:right-0 md:w-[400px] md:rounded-none md:rounded-l-2xl md:max-h-[calc(100dvh-56px)] animate-in slide-in-from-bottom-4 md:slide-in-from-right-4 duration-300 ease-out"
+        className="fixed z-40 bottom-0 left-0 right-0 rounded-t-2xl overflow-y-auto md:bottom-0 md:top-14 md:left-auto md:right-0 md:w-[400px] md:rounded-none md:rounded-l-2xl md:max-h-[calc(100dvh-56px)] animate-in slide-in-from-bottom-4 md:slide-in-from-right-4 duration-300 ease-out h-[90dvh] md:h-auto"
         style={{ backgroundColor: 'var(--color-bg-raised)', boxShadow: 'var(--shadow-float)' }}
       >
         {/* Mobile drag handle */}
@@ -65,7 +66,7 @@ export function FacultyDetail({ member, onClose }: Props) {
         {/* Close button */}
         <div className="flex justify-end px-5 pt-4">
           <button
-            onClick={onClose}
+            onClick={closeDrawer}
             aria-label="Close"
             className="w-8 h-8 flex items-center justify-center rounded-full border border-[var(--color-border)] text-[var(--color-text-secondary)] hover:bg-[var(--color-bg-subtle)] transition-colors focus-visible:outline-none focus-visible:ring-2"
           >

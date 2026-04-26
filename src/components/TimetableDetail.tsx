@@ -12,7 +12,7 @@ interface Props {
 }
 
 export function TimetableDetail({ entry, dept, onClose }: Props) {
-  const { drawerRef, handleRef } = useMobileSwipe({ onClose, defaultHeightStr: '85dvh' });
+  const { drawerRef, handleRef, backdropRef, closeDrawer } = useMobileSwipe({ onClose, defaultHeightStr: '85dvh' });
 
   // Lock body scroll on mobile when sheet is open
   useEffect(() => {
@@ -22,7 +22,7 @@ export function TimetableDetail({ entry, dept, onClose }: Props) {
 
   // Close on Escape
   useEffect(() => {
-    const handler = (e: KeyboardEvent) => { if (e.key === 'Escape') onClose(); };
+    const handler = (e: KeyboardEvent) => { if (e.key === 'Escape') closeDrawer(); };
     window.addEventListener('keydown', handler);
     return () => window.removeEventListener('keydown', handler);
   }, [onClose]);
@@ -45,8 +45,9 @@ export function TimetableDetail({ entry, dept, onClose }: Props) {
     <>
       {/* Backdrop — mobile only */}
       <div
+        ref={backdropRef}
         className="fixed inset-0 z-30 bg-black/30 md:hidden animate-in fade-in duration-300 ease-out"
-        onClick={onClose}
+        onClick={closeDrawer}
         aria-hidden="true"
       />
 
@@ -56,7 +57,7 @@ export function TimetableDetail({ entry, dept, onClose }: Props) {
         role="dialog"
         aria-modal="true"
         aria-label={`${entry.courseName} timetable details`}
-        className="fixed z-40 bottom-0 left-0 right-0 rounded-t-2xl overflow-y-auto md:bottom-0 md:top-14 md:left-auto md:right-0 md:w-96 md:rounded-none md:rounded-l-2xl md:max-h-[calc(100dvh-56px)] animate-in slide-in-from-bottom-4 md:slide-in-from-right-4 duration-300 ease-out"
+        className="fixed z-40 bottom-0 left-0 right-0 rounded-t-2xl overflow-y-auto md:bottom-0 md:top-14 md:left-auto md:right-0 md:w-96 md:rounded-none md:rounded-l-2xl md:max-h-[calc(100dvh-56px)] animate-in slide-in-from-bottom-4 md:slide-in-from-right-4 duration-300 ease-out h-[85dvh] md:h-auto"
         style={{
           backgroundColor: 'var(--color-bg-raised)',
           boxShadow: 'var(--shadow-float)',
@@ -79,7 +80,7 @@ export function TimetableDetail({ entry, dept, onClose }: Props) {
             <h2 className="mt-2 font-display text-xl leading-tight">{entry.courseName}</h2>
           </div>
           <button
-            onClick={onClose}
+            onClick={closeDrawer}
             aria-label="Close"
             className="ml-4 mt-1 w-8 h-8 flex items-center justify-center rounded-full border border-[var(--color-border)] text-[var(--color-text-secondary)] hover:bg-[var(--color-bg-subtle)] focus-visible:outline-none focus-visible:ring-2"
           >

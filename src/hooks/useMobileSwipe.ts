@@ -10,6 +10,7 @@ interface SwipeOptions {
 export function useMobileSwipe({ onClose, defaultHeightStr }: SwipeOptions) {
   const drawerRef = useRef<HTMLDivElement>(null);
   const handleRef = useRef<HTMLDivElement>(null);
+  const backdropRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     const drawer = drawerRef.current;
@@ -18,28 +19,47 @@ export function useMobileSwipe({ onClose, defaultHeightStr }: SwipeOptions) {
 
     let startY = 0;
     let currentY = 0;
+    let lastY = 0;
+    let lastTimestamp = 0;
+    let velocityY = 0;
     let isDragging = false;
     let state: 'default' | 'full' = 'default';
 
-    // To cleanly calculate height we need to convert defaultHeightStr to a number of pixels or just use CSS calc
-    // But since CSS calc is great, we'll use it!
+    // ── Fix #1: Set initial height synchronously before first paint ──
+    // We apply the default height immediately (no setTimeout) so the drawer
+    // never flashes at full screen. The CSS entry animation still runs because
+    // Tailwind's animate-in class handles the visual intro; we're just ensuring
+    // the height is correct from frame 0.
+    const initHeight = () => {
+      if (window.innerWidth >= 768) return;
+      drawer.style.height = defaultHeightStr;
+      drawer.style.maxHeight = 'none';
+      drawer.style.transform = 'translateY(0px)';
+    };
+    initHeight();
 
-    const setTransition = (enabled: boolean) => {
+    // ── Easing helpers ──
+    // A smooth spring-like easing that feels physical yet snappy.
+    const EASE_IN_OUT = 'cubic-bezier(0.32, 0.72, 0, 1)';
+
+    const setTransition = (enabled: boolean, durationMs = 320) => {
       drawer.style.transition = enabled
-        ? 'transform 0.3s cubic-bezier(0.25, 1, 0.5, 1), height 0.3s cubic-bezier(0.25, 1, 0.5, 1)'
+        ? `transform ${durationMs}ms ${EASE_IN_OUT}, height ${durationMs}ms ${EASE_IN_OUT}`
         : 'none';
     };
 
-    const updateHeight = () => {
+    const updateHeight = (animate = false) => {
       if (window.innerWidth >= 768) {
         drawer.style.height = '';
         drawer.style.transform = '';
         drawer.style.maxHeight = '';
+        drawer.style.transition = '';
         return;
       }
-      
-      // Remove max-height constraints during drag/expanded states to allow full height
+
       drawer.style.maxHeight = 'none';
+
+      if (animate) setTransition(true);
 
       if (state === 'default') {
         drawer.style.height = defaultHeightStr;
@@ -50,39 +70,92 @@ export function useMobileSwipe({ onClose, defaultHeightStr }: SwipeOptions) {
       }
     };
 
+    // ── Fix #4: Smooth close animation ──
+    // Instead of immediately calling onClose (which causes the component to
+    // unmount abruptly), we animate the drawer sliding off-screen and *then*
+    // call onClose after the animation completes.
+    const animateClose = () => {
+      if (window.innerWidth >= 768) {
+        onClose();
+        return;
+      }
+      drawer.style.animation = 'none';
+      void drawer.offsetHeight; // force reflow
+
+      // Slide fully off screen
+      setTransition(true, 280);
+      drawer.style.transform = `translateY(100%)`;
+      
+      if (backdropRef.current) {
+        backdropRef.current.style.animation = 'none';
+        void backdropRef.current.offsetHeight;
+        backdropRef.current.style.transition = 'opacity 280ms ease-out';
+        backdropRef.current.style.opacity = '0';
+      }
+
+      // Call parent close after animation
+      const t = setTimeout(() => {
+        onClose();
+      }, 290);
+      return t;
+    };
+
+    let closeTimer: ReturnType<typeof setTimeout> | null = null;
+
     const onTouchStart = (e: TouchEvent | MouseEvent) => {
       if (window.innerWidth >= 768) return;
+      // Cancel any in-progress close animation so re-opens don't glitch
+      if (closeTimer) {
+        clearTimeout(closeTimer);
+        closeTimer = null;
+      }
       isDragging = true;
       startY = 'touches' in e ? e.touches[0].clientY : (e as MouseEvent).clientY;
+      lastY = startY;
+      lastTimestamp = performance.now();
+      velocityY = 0;
       currentY = 0;
+      // Disable transition while finger is down for direct 1:1 tracking
       setTransition(false);
     };
 
     const onTouchMove = (e: TouchEvent | MouseEvent) => {
       if (!isDragging) return;
-      // Prevent default scrolling when dragging the handle
       if (e.cancelable) e.preventDefault();
-      
+
+      const now = performance.now();
       const y = 'touches' in e ? e.touches[0].clientY : (e as MouseEvent).clientY;
       currentY = y - startY;
 
+      // ── Fix #2 & #3: Track velocity and apply 1:1 tracking ──
+      const dt = now - lastTimestamp;
+      if (dt > 0) {
+        // Exponential moving average for smooth velocity
+        velocityY = velocityY * 0.6 + ((y - lastY) / dt) * 0.4;
+      }
+      lastY = y;
+      lastTimestamp = now;
+
       if (state === 'default') {
         if (currentY < 0) {
-          // Swiping up -> increase height
-          drawer.style.height = `calc(${defaultHeightStr} + ${-currentY}px)`;
-          drawer.style.transform = `translateY(0px)`;
+          // Swiping up → expand: rubber-band resistance above natural height
+          const expand = -currentY;
+          drawer.style.height = `calc(${defaultHeightStr} + ${expand}px)`;
+          drawer.style.transform = 'translateY(0px)';
         } else {
-          // Swiping down -> slide down via transform
+          // ── Fix #3: Downward swipe follows finger exactly ──
           drawer.style.transform = `translateY(${currentY}px)`;
+          // Keep height at default so it doesn't shrink while sliding
+          drawer.style.height = defaultHeightStr;
         }
       } else if (state === 'full') {
         if (currentY > 0) {
-          // Swiping down from full -> decrease height
+          // Swiping down from full → shrink
           drawer.style.height = `calc(100dvh - ${currentY}px)`;
-          drawer.style.transform = `translateY(0px)`;
+          drawer.style.transform = 'translateY(0px)';
         } else {
-          // Swiping up from full -> add resistance
-          drawer.style.transform = `translateY(${currentY * 0.2}px)`;
+          // Swiping up from full → gentle rubber-band
+          drawer.style.transform = `translateY(${currentY * 0.15}px)`;
         }
       }
     };
@@ -90,52 +163,59 @@ export function useMobileSwipe({ onClose, defaultHeightStr }: SwipeOptions) {
     const onTouchEnd = () => {
       if (!isDragging) return;
       isDragging = false;
-      setTransition(true);
 
-      const threshold = 60; // px
-      
+      // ── Fix #2: Lower threshold + velocity-based detection ──
+      // Use a smaller distance threshold (40px) and also check velocity.
+      // A fast flick (> 0.4 px/ms) triggers the gesture even with short travel.
+      const DISTANCE_THRESHOLD = 40; // px  (was 60)
+      const VELOCITY_THRESHOLD = 0.4; // px/ms
+
+      const isFastSwipeDown = velocityY > VELOCITY_THRESHOLD;
+      const isFastSwipeUp = velocityY < -VELOCITY_THRESHOLD;
+
       if (state === 'default') {
-        if (currentY < -threshold) {
+        if (currentY < -DISTANCE_THRESHOLD || isFastSwipeUp) {
+          // Expand to full
           state = 'full';
-        } else if (currentY > threshold) {
-          onClose();
+          updateHeight(true);
+        } else if (currentY > DISTANCE_THRESHOLD || isFastSwipeDown) {
+          // ── Fix #3 & #4: Smooth close via animation ──
+          closeTimer = animateClose() ?? null;
           return;
+        } else {
+          // Snap back to default position with a smooth spring
+          updateHeight(true);
         }
       } else if (state === 'full') {
-        if (currentY > threshold) {
+        if (currentY > DISTANCE_THRESHOLD || isFastSwipeDown) {
           state = 'default';
+          updateHeight(true);
+        } else {
+          updateHeight(true);
         }
       }
-
-      updateHeight();
     };
 
     const options = { passive: false };
-    
+
     handle.addEventListener('touchstart', onTouchStart, options);
     handle.addEventListener('touchmove', onTouchMove, options);
     handle.addEventListener('touchend', onTouchEnd);
     handle.addEventListener('mousedown', onTouchStart);
     window.addEventListener('mousemove', onTouchMove);
     window.addEventListener('mouseup', onTouchEnd);
-    window.addEventListener('resize', updateHeight);
-
-    // Initial setup
-    // Use setTimeout to avoid interfering with the entry animation
-    const initTimer = setTimeout(() => {
-        updateHeight();
-    }, 300);
+    window.addEventListener('resize', () => updateHeight(false));
 
     return () => {
-      clearTimeout(initTimer);
+      if (closeTimer) clearTimeout(closeTimer);
       handle.removeEventListener('touchstart', onTouchStart);
       handle.removeEventListener('touchmove', onTouchMove);
       handle.removeEventListener('touchend', onTouchEnd);
       handle.removeEventListener('mousedown', onTouchStart);
       window.removeEventListener('mousemove', onTouchMove);
       window.removeEventListener('mouseup', onTouchEnd);
-      window.removeEventListener('resize', updateHeight);
-      
+      window.removeEventListener('resize', () => updateHeight(false));
+
       // Cleanup styles
       drawer.style.transition = '';
       drawer.style.height = '';
@@ -144,5 +224,35 @@ export function useMobileSwipe({ onClose, defaultHeightStr }: SwipeOptions) {
     };
   }, [onClose, defaultHeightStr]);
 
-  return { drawerRef, handleRef };
+  // Expose the close animation so components can use it for close buttons/backdrop clicks
+  const closeDrawer = () => {
+    if (window.innerWidth >= 768) {
+      onClose();
+      return;
+    }
+    const drawer = drawerRef.current;
+    if (!drawer) {
+      onClose();
+      return;
+    }
+    
+    drawer.style.animation = 'none';
+    void drawer.offsetHeight;
+
+    drawer.style.transition = `transform 280ms cubic-bezier(0.32, 0.72, 0, 1), height 280ms cubic-bezier(0.32, 0.72, 0, 1)`;
+    drawer.style.transform = `translateY(100%)`;
+    
+    if (backdropRef.current) {
+      backdropRef.current.style.animation = 'none';
+      void backdropRef.current.offsetHeight;
+      backdropRef.current.style.transition = 'opacity 280ms ease-out';
+      backdropRef.current.style.opacity = '0';
+    }
+
+    setTimeout(() => {
+      onClose();
+    }, 290);
+  };
+
+  return { drawerRef, handleRef, backdropRef, closeDrawer };
 }

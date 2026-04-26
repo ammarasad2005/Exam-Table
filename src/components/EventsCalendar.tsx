@@ -43,7 +43,7 @@ function EventDayDetail({
   onClose: () => void;
 }) {
   const [mounted, setMounted] = useState(false);
-  const { drawerRef, handleRef } = useMobileSwipe({ onClose, defaultHeightStr: '85dvh' });
+  const { drawerRef, handleRef, backdropRef, closeDrawer } = useMobileSwipe({ onClose, defaultHeightStr: '85dvh' });
 
   useEffect(() => {
     setMounted(true);
@@ -55,7 +55,7 @@ function EventDayDetail({
 
   useEffect(() => {
     const handler = (event: KeyboardEvent) => {
-      if (event.key === 'Escape') onClose();
+      if (event.key === 'Escape') closeDrawer();
     };
     window.addEventListener('keydown', handler);
     return () => window.removeEventListener('keydown', handler);
@@ -74,8 +74,9 @@ function EventDayDetail({
   return createPortal(
     <>
       <div
+        ref={backdropRef}
         className="fixed inset-0 z-[60] bg-black/30 md:hidden animate-in fade-in duration-300 ease-out"
-        onClick={onClose}
+        onClick={closeDrawer}
         aria-hidden="true"
       />
 
@@ -84,7 +85,7 @@ function EventDayDetail({
         role="dialog"
         aria-modal="true"
         aria-label={`${title} events`}
-        className="fixed z-[70] bottom-0 left-0 right-0 rounded-t-2xl overflow-y-auto md:bottom-0 md:top-14 md:left-auto md:right-0 md:w-[430px] md:rounded-none md:rounded-l-2xl md:max-h-[calc(100dvh-56px)] animate-in slide-in-from-bottom-4 md:slide-in-from-right-4 duration-300 ease-out"
+        className="fixed z-[70] bottom-0 left-0 right-0 rounded-t-2xl overflow-y-auto md:bottom-0 md:top-14 md:left-auto md:right-0 md:w-[430px] md:rounded-none md:rounded-l-2xl md:max-h-[calc(100dvh-56px)] animate-in slide-in-from-bottom-4 md:slide-in-from-right-4 duration-300 ease-out h-[85dvh] md:h-auto"
         style={{
           backgroundColor: 'var(--color-bg-raised)',
           boxShadow: 'var(--shadow-float)',
@@ -108,7 +109,7 @@ function EventDayDetail({
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
             </button>
             <button
-              onClick={onClose}
+              onClick={closeDrawer}
               aria-label="Close"
               className="w-8 h-8 flex items-center justify-center rounded-full border border-[var(--color-border)] text-[var(--color-text-secondary)] hover:bg-[var(--color-bg-subtle)] focus-visible:outline-none focus-visible:ring-2"
             >

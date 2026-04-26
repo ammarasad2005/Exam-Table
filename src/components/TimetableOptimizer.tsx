@@ -58,7 +58,7 @@ export function TimetableOptimizer() {
     return { year: defaultYear, dept: defaultDept, type: defaultType, course: '', preferredSection: '' };
   };
 
-  const { drawerRef: verifyDrawerRef, handleRef: verifyHandleRef } = useMobileSwipe({ 
+  const { drawerRef: verifyDrawerRef, handleRef: verifyHandleRef, backdropRef: verifyBackdropRef, closeDrawer: verifyCloseDrawer } = useMobileSwipe({ 
     onClose: () => setIsDefaultDrawerOpen(false), 
     defaultHeightStr: '60dvh' 
   });
@@ -817,8 +817,8 @@ export function TimetableOptimizer() {
 
       {/* ─── Default Courses Verification Drawer ──────────────────────────────── */}
       {isDefaultDrawerOpen && (
-        <div className="fixed inset-0 z-50 flex items-end justify-center md:items-start md:justify-end bg-black/40 backdrop-blur-sm animate-in fade-in duration-300 ease-out">
-          <div ref={verifyDrawerRef} className="w-full md:w-96 bg-[var(--color-bg-raised)] shadow-2xl md:h-[calc(100dvh-56px)] md:mt-14 flex flex-col animate-in slide-in-from-bottom-4 md:slide-in-from-right-4 duration-300 ease-out rounded-t-3xl md:rounded-t-none md:rounded-l-2xl border-t md:border-t-0 border-l-0 md:border-l border-[var(--color-border)]">
+        <div ref={verifyBackdropRef} className="fixed inset-0 z-50 flex items-end justify-center md:items-start md:justify-end bg-black/40 backdrop-blur-sm animate-in fade-in duration-300 ease-out" onClick={(e) => { if (e.target === e.currentTarget) verifyCloseDrawer(); }}>
+          <div ref={verifyDrawerRef} className="w-full md:w-96 bg-[var(--color-bg-raised)] shadow-2xl md:h-[calc(100dvh-56px)] md:mt-14 flex flex-col animate-in slide-in-from-bottom-4 md:slide-in-from-right-4 duration-300 ease-out rounded-t-3xl md:rounded-t-none md:rounded-l-2xl border-t md:border-t-0 border-l-0 md:border-l border-[var(--color-border)] h-[60dvh]">
             <div ref={verifyHandleRef} className="md:hidden flex justify-center pt-3 pb-1 cursor-grab active:cursor-grabbing">
               <div className="w-10 h-1 rounded-full bg-[var(--color-border-strong)] pointer-events-none" />
             </div>
@@ -827,7 +827,7 @@ export function TimetableOptimizer() {
                 <h3 className="font-display text-xl">Verify Courses</h3>
                 <p className="text-xs text-[var(--color-text-secondary)] font-mono mt-1">Uncheck courses you aren&apos;t taking</p>
               </div>
-              <button onClick={() => setIsDefaultDrawerOpen(false)} className="w-8 h-8 flex items-center justify-center rounded-full hover:bg-[var(--color-border)] transition-colors text-[var(--color-text-secondary)]">
+              <button onClick={verifyCloseDrawer} className="w-8 h-8 flex items-center justify-center rounded-full hover:bg-[var(--color-border)] transition-colors text-[var(--color-text-secondary)]">
                 <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M1 1l12 12M13 1L1 13" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/></svg>
               </button>
             </div>

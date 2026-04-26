@@ -62,7 +62,7 @@ function RoomDetail({
   cell: CalendarCell;
   onClose: () => void;
 }) {
-  const { drawerRef, handleRef } = useMobileSwipe({ onClose, defaultHeightStr: '85dvh' });
+  const { drawerRef, handleRef, backdropRef, closeDrawer } = useMobileSwipe({ onClose, defaultHeightStr: '85dvh' });
 
   useEffect(() => {
     document.body.style.overflow = 'hidden';
@@ -70,18 +70,18 @@ function RoomDetail({
   }, []);
 
   useEffect(() => {
-    const handler = (e: KeyboardEvent) => { if (e.key === 'Escape') onClose(); };
+    const handler = (e: KeyboardEvent) => { if (e.key === 'Escape') closeDrawer(); };
     window.addEventListener('keydown', handler);
     return () => window.removeEventListener('keydown', handler);
   }, [onClose]);
 
   return (
     <>
-      <div className="fixed inset-0 z-30 bg-black/40 md:hidden animate-in fade-in duration-300 ease-out" onClick={onClose} />
+      <div ref={backdropRef} className="fixed inset-0 z-30 bg-black/40 md:hidden animate-in fade-in duration-300 ease-out" onClick={closeDrawer} />
       <div
         ref={drawerRef}
         role="dialog"
-        className="fixed z-40 bottom-0 left-0 right-0 rounded-t-2xl overflow-y-auto md:bottom-0 md:top-14 md:left-auto md:right-0 md:w-96 md:rounded-none md:rounded-l-2xl md:max-h-[calc(100dvh-56px)] animate-in slide-in-from-bottom-4 md:slide-in-from-right-4 duration-300 ease-out bg-[var(--color-bg-raised)] shadow-float border-l border-[var(--color-border)]"
+        className="fixed z-40 bottom-0 left-0 right-0 rounded-t-2xl overflow-y-auto md:bottom-0 md:top-14 md:left-auto md:right-0 md:w-96 md:rounded-none md:rounded-l-2xl md:max-h-[calc(100dvh-56px)] animate-in slide-in-from-bottom-4 md:slide-in-from-right-4 duration-300 ease-out bg-[var(--color-bg-raised)] shadow-float border-l border-[var(--color-border)] h-[85dvh] md:h-auto"
       >
         <div ref={handleRef} className="md:hidden flex justify-center pt-3 pb-1 cursor-grab active:cursor-grabbing">
           <div className="w-10 h-1 rounded-full bg-[var(--color-border-strong)] pointer-events-none" />
@@ -94,7 +94,7 @@ function RoomDetail({
             </p>
             <h2 className="mt-1 font-display text-2xl">Room Vacancy</h2>
           </div>
-          <button onClick={onClose} className="w-8 h-8 flex items-center justify-center rounded-full border border-[var(--color-border)] text-[var(--color-text-secondary)] hover:bg-[var(--color-bg-subtle)] transition-colors">
+          <button onClick={closeDrawer} className="w-8 h-8 flex items-center justify-center rounded-full border border-[var(--color-border)] text-[var(--color-text-secondary)] hover:bg-[var(--color-bg-subtle)] transition-colors">
             <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M1 1l12 12M13 1L1 13" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/></svg>
           </button>
         </div>
