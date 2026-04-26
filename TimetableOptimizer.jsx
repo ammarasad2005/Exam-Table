@@ -3,6 +3,9 @@
 import React, { useState } from 'react';
 import timetableData from './timetable.json'; 
 
+const AFTERNOON_START_MINUTES = 13 * 60;
+const AFTERNOON_FATIGUE_END_MINUTES = 15 * 60 + 50;
+
 export default function TimetableOptimizer() {
   const ObjectKeys = (obj) => (obj ? Object.keys(obj) : []);
   const availableYears = ObjectKeys(timetableData).filter(k => k !== "__meta__");
@@ -115,9 +118,10 @@ export default function TimetableOptimizer() {
       
       let dayBadGapMinutes = 0;
       let dhuhrBreakAchieved = false;
-      
+
       let dayConsecutiveClasses = 1;
       let dayFatiguePenalty = 0;
+      let currentStreakAfternoonClasses = daySlots[0].end > AFTERNOON_START_MINUTES ? 1 : 0;
 
       for (let i = 0; i < daySlots.length - 1; i++) {
         const gapStart = daySlots[i].end;
@@ -126,15 +130,19 @@ export default function TimetableOptimizer() {
 
         if (gapDuration <= 20) {
           dayConsecutiveClasses++;
-          
-          const isAfternoonClass = daySlots[i+1].start >= 750; 
 
-          if (isAfternoonClass) {
-            if (dayConsecutiveClasses >= 2) {
-              dayFatiguePenalty += 300; 
-              hasBackToBackPMClasses = true;
-              totalComfortDeductions += 25; // 25% penalty for afternoon drain
-            }
+          if (daySlots[i+1].end > AFTERNOON_START_MINUTES) {
+            currentStreakAfternoonClasses++;
+          }
+
+          const hasAfternoonFatigueBlock =
+            currentStreakAfternoonClasses >= 2 &&
+            daySlots[i+1].end >= AFTERNOON_FATIGUE_END_MINUTES;
+
+          if (hasAfternoonFatigueBlock) {
+            dayFatiguePenalty += 300; 
+            hasBackToBackPMClasses = true;
+            totalComfortDeductions += 25; // 25% penalty for consecutive afternoon stretch reaching 3:50 PM+
           } else {
             maxConsecutiveAMClasses = Math.max(maxConsecutiveAMClasses, dayConsecutiveClasses);
             if (dayConsecutiveClasses > 2) {
@@ -144,6 +152,7 @@ export default function TimetableOptimizer() {
           }
         } else {
           dayConsecutiveClasses = 1;
+          currentStreakAfternoonClasses = daySlots[i+1].end > AFTERNOON_START_MINUTES ? 1 : 0;
 
           const isNoonGap = gapStart >= (11 * 60 + 30) && gapStart <= (14 * 60 + 30);
           if (isNoonGap && gapDuration >= 30 && gapDuration <= 100) {
@@ -571,7 +580,7 @@ export default function TimetableOptimizer() {
                       {/* Attention Span / Fatigue Badges */}
                       {option.hasBackToBackPMClasses ? (
                          <span className="bg-red-100 text-red-800 border border-red-200 px-2.5 py-1.5 rounded-lg">
-                           ⚠️ Afternoon Drain (Back-to-back PM classes)
+                           ⚠️ Afternoon Fatigue (2+ consecutive classes reaching 3:50 PM or later)
                          </span>
                       ) : option.maxConsecutiveAMClasses > 2 ? (
                          <span className="bg-orange-100 text-orange-800 border border-orange-200 px-2.5 py-1.5 rounded-lg">

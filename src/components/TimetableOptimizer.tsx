@@ -47,6 +47,9 @@ interface ValidSchedule {
   schedule: ScheduleItem[];
 }
 
+const AFTERNOON_START_MINUTES = 13 * 60;
+const AFTERNOON_FATIGUE_END_MINUTES = 15 * 60 + 50;
+
 export function TimetableOptimizer() {
   const ObjectKeys = (obj: any) => (obj ? Object.keys(obj) : []);
   const availableYears = ObjectKeys(timetableData).filter((k: string) => k !== '__meta__');
@@ -58,9 +61,9 @@ export function TimetableOptimizer() {
     return { year: defaultYear, dept: defaultDept, type: defaultType, course: '', preferredSection: '' };
   };
 
-  const { drawerRef: verifyDrawerRef, handleRef: verifyHandleRef, backdropRef: verifyBackdropRef, closeDrawer: verifyCloseDrawer } = useMobileSwipe({ 
-    onClose: () => setIsDefaultDrawerOpen(false), 
-    defaultHeightStr: '60dvh' 
+  const { drawerRef: verifyDrawerRef, handleRef: verifyHandleRef, backdropRef: verifyBackdropRef, closeDrawer: verifyCloseDrawer } = useMobileSwipe({
+    onClose: () => setIsDefaultDrawerOpen(false),
+    defaultHeightStr: '60dvh'
   });
 
   const handlePreview = (schedule: ScheduleItem[]) => {
@@ -235,6 +238,7 @@ export function TimetableOptimizer() {
 
       let dayConsecutiveClasses = 1;
       let dayFatiguePenalty = 0;
+      let currentStreakAfternoonClasses = daySlots[0].end > AFTERNOON_START_MINUTES ? 1 : 0;
 
       for (let i = 0; i < daySlots.length - 1; i++) {
         const gapStart = daySlots[i].end;
@@ -243,16 +247,19 @@ export function TimetableOptimizer() {
 
         if (gapDuration <= 20) {
           dayConsecutiveClasses++;
+          if (daySlots[i + 1].end > AFTERNOON_START_MINUTES) {
+            currentStreakAfternoonClasses++;
+          }
 
-          const isAfternoonClass = daySlots[i + 1].start >= 750;
+          const hasAfternoonFatigueBlock =
+            currentStreakAfternoonClasses >= 2 &&
+            daySlots[i + 1].end >= AFTERNOON_FATIGUE_END_MINUTES;
 
-          if (isAfternoonClass) {
-            if (dayConsecutiveClasses >= 2) {
-              dayFatiguePenalty += 300;
-              hasBackToBackPMClasses = true;
-              totalConsecutivePenalties += 1;
-              totalComfortDeductions += 25; // 25% penalty for afternoon drain
-            }
+          if (hasAfternoonFatigueBlock) {
+            dayFatiguePenalty += 300;
+            hasBackToBackPMClasses = true;
+            totalConsecutivePenalties += 1;
+            totalComfortDeductions += 25; // 25% penalty for consecutive afternoon stretch reaching 3:50 PM+
           } else {
             maxConsecutiveAMClasses = Math.max(maxConsecutiveAMClasses, dayConsecutiveClasses);
             if (dayConsecutiveClasses > 2) {
@@ -263,6 +270,7 @@ export function TimetableOptimizer() {
           }
         } else {
           dayConsecutiveClasses = 1;
+          currentStreakAfternoonClasses = daySlots[i + 1].end > AFTERNOON_START_MINUTES ? 1 : 0;
 
           // Midday Break logic: Must start between 11:30 AM and 2:30 PM
           const isNoonGap = gapStart >= (11 * 60 + 30) && gapStart <= (14 * 60 + 30);
@@ -278,7 +286,7 @@ export function TimetableOptimizer() {
       // Midday Break Penalty Logic
       const arrivedEarly = minStart <= 11 * 60 + 30; // 11:30 AM or earlier
       const onCampusDuringMidday = maxEnd >= 13 * 60 + 30; // 1:30 PM or later
-      
+
       if (arrivedEarly && onCampusDuringMidday && !middayBreakAchieved) {
         missedMiddayBreaks += 1;
         score += 200;
@@ -379,21 +387,21 @@ export function TimetableOptimizer() {
       if (courseIdx === coursesToOptimize.length) {
         const activeDays = new Set(currentSlots.map(s => s.day));
         const metrics = calculateWorkloadMetrics(currentSlots);
-        
+
         let customScore = 0;
         if (optimizationMode === 'custom') {
-            const totalWeight = Object.values(customWeights).reduce((a, b) => a + b, 0);
-            if (totalWeight > 0) {
-                // Normalize weights so the final score is consistent regardless of scale
-                const norm = (w: number) => w / totalWeight;
-                
-                customScore += (metrics.totalEarlyClasses * norm(customWeights.earlyMorning) * 100);
-                customScore += (metrics.totalLateClasses * norm(customWeights.lateAfternoon) * 100);
-                customScore += (metrics.missedMiddayBreaks * norm(customWeights.middayBreak) * 500); // High impact
-                customScore += (metrics.totalBadGapMinutes * norm(customWeights.gaps) * 5); 
-                customScore += (metrics.totalConsecutivePenalties * norm(customWeights.consecutiveClasses) * 200);
-                customScore += (activeDays.size * norm(customWeights.daysOnCampus) * 300);
-            }
+          const totalWeight = Object.values(customWeights).reduce((a, b) => a + b, 0);
+          if (totalWeight > 0) {
+            // Normalize weights so the final score is consistent regardless of scale
+            const norm = (w: number) => w / totalWeight;
+
+            customScore += (metrics.totalEarlyClasses * norm(customWeights.earlyMorning) * 100);
+            customScore += (metrics.totalLateClasses * norm(customWeights.lateAfternoon) * 100);
+            customScore += (metrics.missedMiddayBreaks * norm(customWeights.middayBreak) * 500); // High impact
+            customScore += (metrics.totalBadGapMinutes * norm(customWeights.gaps) * 5);
+            customScore += (metrics.totalConsecutivePenalties * norm(customWeights.consecutiveClasses) * 200);
+            customScore += (activeDays.size * norm(customWeights.daysOnCampus) * 300);
+          }
         }
 
         allValidSchedules.push({
@@ -511,11 +519,10 @@ export function TimetableOptimizer() {
         <div className="flex-1">
           <label className="block text-sm font-bold text-[var(--color-text-primary)] mb-3">Optimization Goal</label>
           <div className="space-y-3">
-            <label className={`flex items-start gap-3 cursor-pointer p-3 rounded-xl border-2 transition-all duration-200 group ${
-              optimizationMode === 'max_off_days' 
-                ? 'bg-[var(--accent-cs-bg)] border-[var(--accent-cs)] shadow-md ring-1 ring-[var(--accent-cs)]/20' 
-                : 'bg-transparent border-[var(--color-border)] hover:border-[var(--color-border-strong)] hover:bg-[var(--color-bg-raised)]'
-            }`}>
+            <label className={`flex items-start gap-3 cursor-pointer p-3 rounded-xl border-2 transition-all duration-200 group ${optimizationMode === 'max_off_days'
+              ? 'bg-[var(--accent-cs-bg)] border-[var(--accent-cs)] shadow-md ring-1 ring-[var(--accent-cs)]/20'
+              : 'bg-transparent border-[var(--color-border)] hover:border-[var(--color-border-strong)] hover:bg-[var(--color-bg-raised)]'
+              }`}>
               <input
                 type="radio"
                 name="optMode"
@@ -529,11 +536,10 @@ export function TimetableOptimizer() {
               </span>
             </label>
 
-            <label className={`flex items-start gap-3 cursor-pointer p-3 rounded-xl border-2 transition-all duration-200 group ${
-              optimizationMode === 'balanced' 
-                ? 'bg-[var(--color-success-bg)] border-[var(--color-success)] shadow-md ring-1 ring-[var(--color-success)]/20' 
-                : 'bg-transparent border-[var(--color-border)] hover:border-[var(--color-border-strong)] hover:bg-[var(--color-bg-raised)]'
-            }`}>
+            <label className={`flex items-start gap-3 cursor-pointer p-3 rounded-xl border-2 transition-all duration-200 group ${optimizationMode === 'balanced'
+              ? 'bg-[var(--color-success-bg)] border-[var(--color-success)] shadow-md ring-1 ring-[var(--color-success)]/20'
+              : 'bg-transparent border-[var(--color-border)] hover:border-[var(--color-border-strong)] hover:bg-[var(--color-bg-raised)]'
+              }`}>
               <input
                 type="radio"
                 name="optMode"
@@ -547,11 +553,10 @@ export function TimetableOptimizer() {
               </span>
             </label>
 
-            <label className={`flex items-start gap-3 cursor-pointer p-3 rounded-xl border-2 transition-all duration-200 group ${
-              optimizationMode === 'min_workload' 
-                ? 'bg-[var(--accent-ai-bg)] border-[var(--accent-ai)] shadow-md ring-1 ring-[var(--accent-ai)]/20' 
-                : 'bg-transparent border-[var(--color-border)] hover:border-[var(--color-border-strong)] hover:bg-[var(--color-bg-raised)]'
-            }`}>
+            <label className={`flex items-start gap-3 cursor-pointer p-3 rounded-xl border-2 transition-all duration-200 group ${optimizationMode === 'min_workload'
+              ? 'bg-[var(--accent-ai-bg)] border-[var(--accent-ai)] shadow-md ring-1 ring-[var(--accent-ai)]/20'
+              : 'bg-transparent border-[var(--color-border)] hover:border-[var(--color-border-strong)] hover:bg-[var(--color-bg-raised)]'
+              }`}>
               <input
                 type="radio"
                 name="optMode"
@@ -565,12 +570,11 @@ export function TimetableOptimizer() {
               </span>
             </label>
 
-            <label 
-              className={`flex items-start gap-3 cursor-pointer p-3 rounded-xl transition-all duration-200 group relative ${
-                optimizationMode === 'custom' 
-                  ? 'shadow-md border-2 border-transparent' 
-                  : 'bg-transparent border-2 border-[var(--color-border)] hover:border-[var(--color-border-strong)] hover:bg-[var(--color-bg-raised)]'
-              }`}
+            <label
+              className={`flex items-start gap-3 cursor-pointer p-3 rounded-xl transition-all duration-200 group relative ${optimizationMode === 'custom'
+                ? 'shadow-md border-2 border-transparent'
+                : 'bg-transparent border-2 border-[var(--color-border)] hover:border-[var(--color-border-strong)] hover:bg-[var(--color-bg-raised)]'
+                }`}
               style={optimizationMode === 'custom' ? {
                 backgroundImage: 'linear-gradient(var(--color-bg-raised), var(--color-bg-raised)), var(--today-border-gradient)',
                 backgroundOrigin: 'border-box',
@@ -639,7 +643,7 @@ export function TimetableOptimizer() {
           </label>
         </div>
       </div>
-      
+
       {/* ─── Input Mode Toggle ────────────────────────────────────────────────── */}
       <div className="mb-6 flex justify-center">
         <div className="flex p-1 bg-[var(--color-bg-subtle)] rounded-lg border border-[var(--color-border)]">
@@ -647,11 +651,10 @@ export function TimetableOptimizer() {
             <button
               key={mode}
               onClick={() => { setInputMode(mode); setResult(null); }}
-              className={`px-6 py-1.5 rounded-md font-mono text-xs font-bold transition-colors ${
-                inputMode === mode
-                  ? 'bg-[var(--color-text-primary)] text-[var(--color-bg)] shadow-sm'
-                  : 'text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)]'
-              }`}
+              className={`px-6 py-1.5 rounded-md font-mono text-xs font-bold transition-colors ${inputMode === mode
+                ? 'bg-[var(--color-text-primary)] text-[var(--color-bg)] shadow-sm'
+                : 'text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)]'
+                }`}
             >
               {mode === 'custom' ? 'Custom Courses' : 'Default Courses'}
             </button>
@@ -757,9 +760,9 @@ export function TimetableOptimizer() {
               <select
                 className="w-full p-2 border border-[var(--color-border-strong)] rounded-md outline-none focus:ring-2 focus:ring-[var(--accent-cs)] text-sm bg-[var(--color-bg)] text-[var(--color-text-primary)]"
                 value={defaultBatch}
-                onChange={e => { 
-                  setDefaultBatch(e.target.value); 
-                  setResult(null); 
+                onChange={e => {
+                  setDefaultBatch(e.target.value);
+                  setResult(null);
                   setDefaultCoursesVerified(false);
                   setDefaultCourseSelections([]);
                 }}
@@ -772,9 +775,9 @@ export function TimetableOptimizer() {
               <select
                 className="w-full p-2 border border-[var(--color-border-strong)] rounded-md outline-none focus:ring-2 focus:ring-[var(--accent-cs)] text-sm bg-[var(--color-bg)] text-[var(--color-text-primary)]"
                 value={defaultDept}
-                onChange={e => { 
-                  setDefaultDept(e.target.value); 
-                  setResult(null); 
+                onChange={e => {
+                  setDefaultDept(e.target.value);
+                  setResult(null);
                   setDefaultCoursesVerified(false);
                   setDefaultCourseSelections([]);
                 }}
@@ -783,12 +786,12 @@ export function TimetableOptimizer() {
               </select>
             </div>
             <div className="flex items-end">
-               <button
+              <button
                 onClick={handleProceed}
                 className="h-[38px] px-6 rounded-md bg-[var(--color-text-primary)] text-[var(--color-bg)] font-body text-sm font-bold transition-all active:scale-95 whitespace-nowrap"
-               >
-                 Proceed
-               </button>
+              >
+                Proceed
+              </button>
             </div>
           </div>
           <p className="text-xs text-center text-[var(--color-text-tertiary)] font-mono">
@@ -803,11 +806,11 @@ export function TimetableOptimizer() {
         className={`w-full py-4 rounded-xl font-bold text-lg transition-all shadow-lg active:scale-[0.99] text-white
           ${(inputMode === 'default' && !defaultCoursesVerified)
             ? 'bg-[var(--color-bg-subtle)] text-[var(--color-text-tertiary)] opacity-60 cursor-not-allowed shadow-none'
-            : optimizationMode === 'max_off_days' ? 'bg-[var(--accent-cs)] shadow-[var(--accent-cs)]/20' : 
-            optimizationMode === 'balanced' ? 'bg-[var(--color-success)] shadow-[var(--color-success)]/20' : 
-            optimizationMode === 'min_workload' ? 'bg-[var(--accent-ai)] shadow-[var(--accent-ai)]/20' : 
-            ''}`}
-        style={(optimizationMode === 'custom' && !(inputMode === 'default' && !defaultCoursesVerified)) ? { 
+            : optimizationMode === 'max_off_days' ? 'bg-[var(--accent-cs)] shadow-[var(--accent-cs)]/20' :
+              optimizationMode === 'balanced' ? 'bg-[var(--color-success)] shadow-[var(--color-success)]/20' :
+                optimizationMode === 'min_workload' ? 'bg-[var(--accent-ai)] shadow-[var(--accent-ai)]/20' :
+                  ''}`}
+        style={(optimizationMode === 'custom' && !(inputMode === 'default' && !defaultCoursesVerified)) ? {
           background: 'var(--today-label-bg)',
           boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05)'
         } : {}}
@@ -828,10 +831,10 @@ export function TimetableOptimizer() {
                 <p className="text-xs text-[var(--color-text-secondary)] font-mono mt-1">Uncheck courses you aren&apos;t taking</p>
               </div>
               <button onClick={verifyCloseDrawer} className="w-8 h-8 flex items-center justify-center rounded-full hover:bg-[var(--color-border)] transition-colors text-[var(--color-text-secondary)]">
-                <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M1 1l12 12M13 1L1 13" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/></svg>
+                <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M1 1l12 12M13 1L1 13" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" /></svg>
               </button>
             </div>
-            
+
             <div className="flex-1 overflow-y-auto p-5">
               {defaultCourseSelections.length === 0 ? (
                 <p className="text-sm text-[var(--color-text-tertiary)] italic text-center py-10">No regular courses found for this selection.</p>
@@ -839,8 +842,8 @@ export function TimetableOptimizer() {
                 <div className="grid grid-cols-[repeat(auto-fit,minmax(140px,1fr))] gap-3">
                   {defaultCourseSelections.map((item, idx) => (
                     <label key={idx} className={`flex items-center gap-3 p-3 rounded-lg border cursor-pointer transition-colors ${item.selected ? 'bg-[var(--color-bg)] border-[var(--color-border-strong)]' : 'bg-transparent border-[var(--color-border)] opacity-60 hover:opacity-100'}`}>
-                      <input 
-                        type="checkbox" 
+                      <input
+                        type="checkbox"
                         className="w-5 h-5 rounded border-[var(--color-border-strong)] text-[var(--color-text-primary)] focus:ring-[var(--color-text-primary)] shrink-0"
                         checked={item.selected}
                         onChange={(e) => {
@@ -937,8 +940,8 @@ export function TimetableOptimizer() {
                           Fit Score: {option.fitScore}%
                         </span>
                         <span className="text-[10px] text-[var(--color-text-secondary)] font-medium uppercase tracking-wider flex items-center gap-1.5 mt-0.5">
-                          Comfort: <span className={getComfortColor(option.comfortScore)}>{option.comfortScore}%</span> 
-                          <span className="opacity-30">·</span> 
+                          Comfort: <span className={getComfortColor(option.comfortScore)}>{option.comfortScore}%</span>
+                          <span className="opacity-30">·</span>
                           {option.maxOffDays} Off-Days
                         </span>
                       </div>
@@ -960,11 +963,11 @@ export function TimetableOptimizer() {
                         {/* Attention Span / Fatigue Badges */}
                         {option.hasBackToBackPMClasses ? (
                           <span className="bg-rose-500/10 text-rose-700 dark:text-rose-400 border border-rose-500/20 px-2.5 py-1.5 rounded-lg">
-                            ⚠️ Afternoon Drain (Back-to-back PM classes)
+                            ⚠️ Afternoon Drain (Back-to-Back PM Classes)
                           </span>
                         ) : option.maxConsecutiveAMClasses > 2 ? (
                           <span className="bg-amber-500/10 text-amber-700 dark:text-amber-400 border border-amber-500/20 px-2.5 py-1.5 rounded-lg">
-                            ⚠️ Morning Fatigue (3+ back-to-back AM classes)
+                            ⚠️ Morning Fatigue (3+ Back-to-Back AM Classes)
                           </span>
                         ) : (
                           <span className="bg-[var(--accent-cs-bg)] text-[var(--accent-cs)] border border-[var(--accent-cs)]/20 px-2.5 py-1.5 rounded-lg flex items-center gap-1.5">
@@ -981,7 +984,7 @@ export function TimetableOptimizer() {
                           onClick={() => handlePreview(option.schedule)}
                           className="shrink-0 flex items-center justify-center gap-2 h-9 px-4 rounded-lg font-body text-[11px] font-bold transition-all border bg-[var(--color-text-primary)] text-[var(--color-bg)] border-transparent hover:opacity-90 active:scale-[0.98] shadow-sm"
                         >
-                          <span>Preview in New Tab</span>
+                          <span>Preview Timetable</span>
                           <ExternalLink size={12} strokeWidth={2.5} className="opacity-80" />
                         </a>
                       </div>
