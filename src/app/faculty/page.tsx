@@ -381,7 +381,7 @@ export default function FacultyPage() {
           )}
 
           {/* Bottom padding for scroll-past */}
-          <div className="h-20 md:h-[150px]" />
+          <div className="h-[150px]" />
         </div>
       </div>
 

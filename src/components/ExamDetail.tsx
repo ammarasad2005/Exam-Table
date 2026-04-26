@@ -3,6 +3,7 @@ import { useEffect } from 'react';
 import { generateICS } from '@/lib/export';
 import { getDaysUntil, formatDate } from '@/lib/dates';
 import type { ExamEntry } from '@/lib/types';
+import { useMobileSwipe } from '@/hooks/useMobileSwipe';
 
 interface Props {
   exam: ExamEntry;
@@ -11,6 +12,8 @@ interface Props {
 }
 
 export function ExamDetail({ exam, dept, onClose }: Props) {
+  const { drawerRef, handleRef } = useMobileSwipe({ onClose, defaultHeightStr: '85dvh' });
+
   // Lock body scroll on mobile when sheet is open
   useEffect(() => {
     document.body.style.overflow = 'hidden';
@@ -39,18 +42,18 @@ export function ExamDetail({ exam, dept, onClose }: Props) {
 
       {/* Sheet — mobile: fixed bottom; desktop: fixed right panel */}
       <div
+        ref={drawerRef}
         role="dialog"
         aria-modal="true"
         aria-label={`${exam.courseName} exam details`}
-        className="fixed z-40 bottom-0 left-0 right-0 rounded-t-2xl max-h-[85dvh] overflow-y-auto md:bottom-0 md:top-14 md:left-auto md:right-0 md:w-96 md:rounded-none md:rounded-l-2xl md:max-h-[calc(100dvh-56px)] animate-in slide-in-from-bottom-4 md:slide-in-from-right-4 duration-300 ease-out"
+        className="fixed z-40 bottom-0 left-0 right-0 rounded-t-2xl overflow-y-auto md:bottom-0 md:top-14 md:left-auto md:right-0 md:w-96 md:rounded-none md:rounded-l-2xl md:max-h-[calc(100dvh-56px)] animate-in slide-in-from-bottom-4 md:slide-in-from-right-4 duration-300 ease-out"
         style={{
           backgroundColor: 'var(--color-bg-raised)',
           boxShadow: 'var(--shadow-float)',
         }}
       >
-        {/* Drag handle (mobile only) */}
-        <div className="md:hidden flex justify-center pt-3 pb-1">
-          <div className="w-10 h-1 rounded-full bg-[var(--color-border-strong)]" />
+        <div ref={handleRef} className="md:hidden flex justify-center pt-3 pb-1 cursor-grab active:cursor-grabbing">
+          <div className="w-10 h-1 rounded-full bg-[var(--color-border-strong)] pointer-events-none" />
         </div>
 
         {/* Header */}

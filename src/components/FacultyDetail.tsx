@@ -3,6 +3,7 @@ import { useEffect, useRef, useState } from 'react';
 import { MapPin } from 'lucide-react';
 import type { FacultyMember, DeptFileKey } from '@/lib/faculty';
 import { DEPT_LABELS, DEPT_ACCENT } from '@/lib/faculty';
+import { useMobileSwipe } from '@/hooks/useMobileSwipe';
 
 interface Props {
   member: FacultyMember & { deptKey: DeptFileKey };
@@ -10,6 +11,7 @@ interface Props {
 }
 
 export function FacultyDetail({ member, onClose }: Props) {
+  const { drawerRef, handleRef } = useMobileSwipe({ onClose, defaultHeightStr: '90dvh' });
   const accent = DEPT_ACCENT[member.deptKey];
   const accentColor = `var(--accent-${accent})`;
   const accentBg = `var(--accent-${accent}-bg)`;
@@ -48,15 +50,16 @@ export function FacultyDetail({ member, onClose }: Props) {
 
       {/* Sheet */}
       <div
+        ref={drawerRef}
         role="dialog"
         aria-modal="true"
         aria-label={`${member.name} profile`}
-        className="fixed z-40 bottom-0 left-0 right-0 rounded-t-2xl max-h-[90dvh] overflow-y-auto md:bottom-0 md:top-14 md:left-auto md:right-0 md:w-[400px] md:rounded-none md:rounded-l-2xl md:max-h-[calc(100dvh-56px)] animate-in slide-in-from-bottom-4 md:slide-in-from-right-4 duration-300 ease-out"
+        className="fixed z-40 bottom-0 left-0 right-0 rounded-t-2xl overflow-y-auto md:bottom-0 md:top-14 md:left-auto md:right-0 md:w-[400px] md:rounded-none md:rounded-l-2xl md:max-h-[calc(100dvh-56px)] animate-in slide-in-from-bottom-4 md:slide-in-from-right-4 duration-300 ease-out"
         style={{ backgroundColor: 'var(--color-bg-raised)', boxShadow: 'var(--shadow-float)' }}
       >
-        {/* Drag handle (mobile) */}
-        <div className="md:hidden flex justify-center pt-3 pb-1">
-          <div className="w-10 h-1 rounded-full bg-[var(--color-border-strong)]" />
+        {/* Mobile drag handle */}
+        <div ref={handleRef} className="md:hidden flex justify-center pt-3 pb-1 cursor-grab active:cursor-grabbing">
+          <div className="w-10 h-1 rounded-full bg-[var(--color-border-strong)] pointer-events-none" />
         </div>
 
         {/* Close button */}

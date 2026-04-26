@@ -14,6 +14,7 @@ import {
   type CalendarCell,
 } from '@/lib/room-logic';
 import type { RawTimetableJSON } from '@/lib/types';
+import { useMobileSwipe } from '@/hooks/useMobileSwipe';
 
 // eslint-disable-next-line
 const timetableRaw: RawTimetableJSON = require('../../../public/data/timetable.json');
@@ -61,6 +62,8 @@ function RoomDetail({
   cell: CalendarCell;
   onClose: () => void;
 }) {
+  const { drawerRef, handleRef } = useMobileSwipe({ onClose, defaultHeightStr: '85dvh' });
+
   useEffect(() => {
     document.body.style.overflow = 'hidden';
     return () => { document.body.style.overflow = ''; };
@@ -76,11 +79,12 @@ function RoomDetail({
     <>
       <div className="fixed inset-0 z-30 bg-black/40 md:hidden animate-in fade-in duration-300 ease-out" onClick={onClose} />
       <div
+        ref={drawerRef}
         role="dialog"
-        className="fixed z-40 bottom-0 left-0 right-0 rounded-t-2xl max-h-[85dvh] overflow-y-auto md:bottom-0 md:top-14 md:left-auto md:right-0 md:w-96 md:rounded-none md:rounded-l-2xl md:max-h-[calc(100dvh-56px)] animate-in slide-in-from-bottom-4 md:slide-in-from-right-4 duration-300 ease-out bg-[var(--color-bg-raised)] shadow-float border-l border-[var(--color-border)]"
+        className="fixed z-40 bottom-0 left-0 right-0 rounded-t-2xl overflow-y-auto md:bottom-0 md:top-14 md:left-auto md:right-0 md:w-96 md:rounded-none md:rounded-l-2xl md:max-h-[calc(100dvh-56px)] animate-in slide-in-from-bottom-4 md:slide-in-from-right-4 duration-300 ease-out bg-[var(--color-bg-raised)] shadow-float border-l border-[var(--color-border)]"
       >
-        <div className="md:hidden flex justify-center pt-3 pb-1">
-          <div className="w-10 h-1 rounded-full bg-[var(--color-border-strong)]" />
+        <div ref={handleRef} className="md:hidden flex justify-center pt-3 pb-1 cursor-grab active:cursor-grabbing">
+          <div className="w-10 h-1 rounded-full bg-[var(--color-border-strong)] pointer-events-none" />
         </div>
 
         <div className="px-5 pt-4 pb-3 flex items-start justify-between">
@@ -588,7 +592,7 @@ export default function RoomsPage() {
           {viewMode === 'calendar' && <CalendarGrid onSelect={setSelectedCell} />}
 
           {/* Bottom padding for scroll-past */}
-          <div className="h-16 md:h-[150px]" />
+          <div className="h-[150px]" />
         </div>
       {selectedCell && (
         <RoomDetail cell={selectedCell} onClose={() => setSelectedCell(null)} />

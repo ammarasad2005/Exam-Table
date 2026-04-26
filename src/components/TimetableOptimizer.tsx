@@ -1,7 +1,8 @@
 'use client';
 
 import React, { useState } from 'react';
-import { ShieldAlert } from 'lucide-react';
+import { ShieldAlert, ExternalLink } from 'lucide-react';
+import { useMobileSwipe } from '@/hooks/useMobileSwipe';
 
 // eslint-disable-next-line
 const timetableData: any = require('../../public/data/timetable.json');
@@ -57,6 +58,11 @@ export function TimetableOptimizer() {
     return { year: defaultYear, dept: defaultDept, type: defaultType, course: '', preferredSection: '' };
   };
 
+  const { drawerRef: verifyDrawerRef, handleRef: verifyHandleRef } = useMobileSwipe({ 
+    onClose: () => setIsDefaultDrawerOpen(false), 
+    defaultHeightStr: '60dvh' 
+  });
+
   const handlePreview = (schedule: ScheduleItem[]) => {
     try {
       const previewRows = schedule.map((item) => {
@@ -83,6 +89,9 @@ export function TimetableOptimizer() {
   const [inputMode, setInputMode] = useState<'default' | 'custom'>('custom');
   const [defaultBatch, setDefaultBatch] = useState(availableYears[0] || '');
   const [defaultDept, setDefaultDept] = useState('CS');
+  const [defaultCoursesVerified, setDefaultCoursesVerified] = useState(false);
+  const [isDefaultDrawerOpen, setIsDefaultDrawerOpen] = useState(false);
+  const [defaultCourseSelections, setDefaultCourseSelections] = useState<{ course: string, type: string, selected: boolean }[]>([]);
   const [selectedCourses, setSelectedCourses] = useState<CourseRow[]>([getDefaultRow()]);
   const [hasPreferences, setHasPreferences] = useState(false);
   const [optimizationMode, setOptimizationMode] = useState('balanced');
@@ -99,6 +108,31 @@ export function TimetableOptimizer() {
 
   const handleWeightChange = (key: keyof typeof customWeights, newValue: number) => {
     setCustomWeights(prev => ({ ...prev, [key]: newValue }));
+  };
+
+  const loadDefaultCoursesForVerification = (batch: string, dept: string) => {
+    const yearData = timetableData[batch];
+    const courses: { course: string, type: string, selected: boolean }[] = [];
+    if (yearData && yearData[dept]) {
+      const deptData = yearData[dept];
+      for (const type in deptData) {
+        if (type !== 'repeat') {
+          for (const courseName in deptData[type]) {
+            courses.push({ course: courseName, type, selected: true });
+          }
+        }
+      }
+    }
+    setDefaultCourseSelections(courses);
+    setDefaultCoursesVerified(false);
+    setResult(null);
+  };
+
+  const handleProceed = () => {
+    if (defaultCourseSelections.length === 0) {
+      loadDefaultCoursesForVerification(defaultBatch, defaultDept);
+    }
+    setIsDefaultDrawerOpen(true);
   };
 
   // --- Row Management ---
@@ -301,23 +335,19 @@ export function TimetableOptimizer() {
     if (inputMode === 'custom') {
       coursesToOptimize = selectedCourses.filter(c => c.course !== '');
     } else {
-      // Default mode: auto-populate courses
-      const yearData = timetableData[defaultBatch];
-      if (yearData && yearData[defaultDept]) {
-        const deptData = yearData[defaultDept];
-        for (const type in deptData) {
-          // Exclude 'repeat' courses as requested
-          if (type !== 'repeat') {
-            for (const courseName in deptData[type]) {
-              coursesToOptimize.push({
-                year: defaultBatch,
-                dept: defaultDept,
-                type: type,
-                course: courseName,
-                preferredSection: '', // No preference by default
-              });
-            }
-          }
+      if (!defaultCoursesVerified) {
+        setError('Please verify the course list before optimizing.');
+        return;
+      }
+      for (const item of defaultCourseSelections) {
+        if (item.selected) {
+          coursesToOptimize.push({
+            year: defaultBatch,
+            dept: defaultDept,
+            type: item.type,
+            course: item.course,
+            preferredSection: '',
+          });
         }
       }
     }
@@ -721,13 +751,18 @@ export function TimetableOptimizer() {
         </>
       ) : (
         <div className="mb-8 flex flex-col items-center gap-4">
-          <div className="flex gap-4 p-4 border border-[var(--color-border)] rounded-lg bg-[var(--color-bg-raised)] shadow-sm">
+          <div className="flex gap-4 p-4 border border-[var(--color-border)] rounded-lg bg-[var(--color-bg-raised)] shadow-sm w-full">
             <div className="flex-1">
               <label className="block text-xs font-medium text-[var(--color-text-tertiary)] mb-1 uppercase tracking-wider">Batch/Year</label>
               <select
                 className="w-full p-2 border border-[var(--color-border-strong)] rounded-md outline-none focus:ring-2 focus:ring-[var(--accent-cs)] text-sm bg-[var(--color-bg)] text-[var(--color-text-primary)]"
                 value={defaultBatch}
-                onChange={e => { setDefaultBatch(e.target.value); setResult(null); }}
+                onChange={e => { 
+                  setDefaultBatch(e.target.value); 
+                  setResult(null); 
+                  setDefaultCoursesVerified(false);
+                  setDefaultCourseSelections([]);
+                }}
               >
                 {availableYears.map((y: string) => <option key={y} value={y}>{y}</option>)}
               </select>
@@ -737,32 +772,107 @@ export function TimetableOptimizer() {
               <select
                 className="w-full p-2 border border-[var(--color-border-strong)] rounded-md outline-none focus:ring-2 focus:ring-[var(--accent-cs)] text-sm bg-[var(--color-bg)] text-[var(--color-text-primary)]"
                 value={defaultDept}
-                onChange={e => { setDefaultDept(e.target.value); setResult(null); }}
+                onChange={e => { 
+                  setDefaultDept(e.target.value); 
+                  setResult(null); 
+                  setDefaultCoursesVerified(false);
+                  setDefaultCourseSelections([]);
+                }}
               >
                 {ObjectKeys(timetableData[defaultBatch] || {}).map((d: string) => <option key={d} value={d}>{d}</option>)}
               </select>
             </div>
+            <div className="flex items-end">
+               <button
+                onClick={handleProceed}
+                className="h-[38px] px-6 rounded-md bg-[var(--color-text-primary)] text-[var(--color-bg)] font-body text-sm font-bold transition-all active:scale-95 whitespace-nowrap"
+               >
+                 Proceed
+               </button>
+            </div>
           </div>
           <p className="text-xs text-center text-[var(--color-text-tertiary)] font-mono">
-            Automatically loads all regular and elective courses for the selected batch.
+            Select your batch and department, then click Proceed to verify courses.
           </p>
         </div>
       )}
 
       <button
         onClick={handleOptimize}
+        disabled={inputMode === 'default' && !defaultCoursesVerified}
         className={`w-full py-4 rounded-xl font-bold text-lg transition-all shadow-lg active:scale-[0.99] text-white
-          ${optimizationMode === 'max_off_days' ? 'bg-[var(--accent-cs)] shadow-[var(--accent-cs)]/20' : 
+          ${(inputMode === 'default' && !defaultCoursesVerified)
+            ? 'bg-[var(--color-bg-subtle)] text-[var(--color-text-tertiary)] opacity-60 cursor-not-allowed shadow-none'
+            : optimizationMode === 'max_off_days' ? 'bg-[var(--accent-cs)] shadow-[var(--accent-cs)]/20' : 
             optimizationMode === 'balanced' ? 'bg-[var(--color-success)] shadow-[var(--color-success)]/20' : 
             optimizationMode === 'min_workload' ? 'bg-[var(--accent-ai)] shadow-[var(--accent-ai)]/20' : 
             ''}`}
-        style={optimizationMode === 'custom' ? { 
+        style={(optimizationMode === 'custom' && !(inputMode === 'default' && !defaultCoursesVerified)) ? { 
           background: 'var(--today-label-bg)',
           boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05)'
         } : {}}
       >
-        Find the Best Schedules
+        {inputMode === 'default' && !defaultCoursesVerified ? 'Verify Courses to Proceed' : 'Find the Best Schedules'}
       </button>
+
+      {/* ─── Default Courses Verification Drawer ──────────────────────────────── */}
+      {isDefaultDrawerOpen && (
+        <div className="fixed inset-0 z-50 flex items-end justify-center md:items-start md:justify-end bg-black/40 backdrop-blur-sm animate-in fade-in duration-300 ease-out">
+          <div ref={verifyDrawerRef} className="w-full md:w-96 bg-[var(--color-bg-raised)] shadow-2xl md:h-[calc(100dvh-56px)] md:mt-14 flex flex-col animate-in slide-in-from-bottom-4 md:slide-in-from-right-4 duration-300 ease-out rounded-t-3xl md:rounded-t-none md:rounded-l-2xl border-t md:border-t-0 border-l-0 md:border-l border-[var(--color-border)]">
+            <div ref={verifyHandleRef} className="md:hidden flex justify-center pt-3 pb-1 cursor-grab active:cursor-grabbing">
+              <div className="w-10 h-1 rounded-full bg-[var(--color-border-strong)] pointer-events-none" />
+            </div>
+            <div className="p-5 pt-2 md:pt-5 border-b border-[var(--color-border)] flex items-center justify-between bg-[var(--color-bg-subtle)]/50 md:rounded-tl-2xl">
+              <div>
+                <h3 className="font-display text-xl">Verify Courses</h3>
+                <p className="text-xs text-[var(--color-text-secondary)] font-mono mt-1">Uncheck courses you aren&apos;t taking</p>
+              </div>
+              <button onClick={() => setIsDefaultDrawerOpen(false)} className="w-8 h-8 flex items-center justify-center rounded-full hover:bg-[var(--color-border)] transition-colors text-[var(--color-text-secondary)]">
+                <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M1 1l12 12M13 1L1 13" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/></svg>
+              </button>
+            </div>
+            
+            <div className="flex-1 overflow-y-auto p-5">
+              {defaultCourseSelections.length === 0 ? (
+                <p className="text-sm text-[var(--color-text-tertiary)] italic text-center py-10">No regular courses found for this selection.</p>
+              ) : (
+                <div className="grid grid-cols-[repeat(auto-fit,minmax(140px,1fr))] gap-3">
+                  {defaultCourseSelections.map((item, idx) => (
+                    <label key={idx} className={`flex items-center gap-3 p-3 rounded-lg border cursor-pointer transition-colors ${item.selected ? 'bg-[var(--color-bg)] border-[var(--color-border-strong)]' : 'bg-transparent border-[var(--color-border)] opacity-60 hover:opacity-100'}`}>
+                      <input 
+                        type="checkbox" 
+                        className="w-5 h-5 rounded border-[var(--color-border-strong)] text-[var(--color-text-primary)] focus:ring-[var(--color-text-primary)] shrink-0"
+                        checked={item.selected}
+                        onChange={(e) => {
+                          const newSelections = [...defaultCourseSelections];
+                          newSelections[idx].selected = e.target.checked;
+                          setDefaultCourseSelections(newSelections);
+                        }}
+                      />
+                      <div className="flex flex-col min-w-0">
+                        <span className={`font-bold text-sm truncate ${item.selected ? 'text-[var(--color-text-primary)]' : 'text-[var(--color-text-secondary)]'}`}>{item.course}</span>
+                        <span className="font-mono text-[10px] uppercase tracking-wider text-[var(--color-text-tertiary)] truncate">{item.type}</span>
+                      </div>
+                    </label>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            <div className="p-5 border-t border-[var(--color-border)] bg-[var(--color-bg-raised)] md:rounded-bl-2xl">
+              <button
+                onClick={() => {
+                  setDefaultCoursesVerified(true);
+                  setIsDefaultDrawerOpen(false);
+                }}
+                className="w-full py-3 rounded-lg font-body font-bold bg-[var(--color-text-primary)] text-[var(--color-bg)] hover:opacity-90 transition-all active:scale-[0.98]"
+              >
+                Verify & Continue
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Results Display */}
       {error && (
@@ -863,15 +973,16 @@ export function TimetableOptimizer() {
                         )}
                       </div>
 
-                      <div className="flex items-center gap-2">
+                      <div className="flex items-center">
                         <a
                           href="/timetable/custom"
                           target="_blank"
                           rel="noopener noreferrer"
                           onClick={() => handlePreview(option.schedule)}
-                          className="shrink-0 h-9 px-4 rounded-md font-body text-xs font-bold transition-all border bg-[var(--color-text-primary)] text-[var(--color-bg)] border-transparent hover:opacity-90 active:scale-[0.98]"
+                          className="shrink-0 flex items-center justify-center gap-2 h-9 px-4 rounded-lg font-body text-[11px] font-bold transition-all border bg-[var(--color-text-primary)] text-[var(--color-bg)] border-transparent hover:opacity-90 active:scale-[0.98] shadow-sm"
                         >
-                          Preview in New Tab
+                          <span>Preview in New Tab</span>
+                          <ExternalLink size={12} strokeWidth={2.5} className="opacity-80" />
                         </a>
                       </div>
                     </div>
