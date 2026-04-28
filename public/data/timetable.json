@@ -2530,6 +2530,18 @@
                             }
                         ]
                     },
+                    "C": {
+                        "Tuesday": [
+                            {
+                                "room": "C-402",
+                                "time": "02:30-04:15",
+                                "rescheduled": false,
+                                "is_elective": false,
+                                "elective_group": null,
+                                "exam": false
+                            }
+                        ]
+                    },
                     "A": {
                         "Wednesday": [
                             {
@@ -2570,16 +2582,6 @@
                     },
                     "C": {
                         "Monday": [
-                            {
-                                "room": "C-402",
-                                "time": "02:30-04:15",
-                                "rescheduled": false,
-                                "is_elective": false,
-                                "elective_group": null,
-                                "exam": false
-                            }
-                        ],
-                        "Tuesday": [
                             {
                                 "room": "C-402",
                                 "time": "02:30-04:15",
@@ -11407,16 +11409,6 @@
                                 "room": "D-316",
                                 "time": "02:30-03:50",
                                 "rescheduled": false,
-                                "is_elective": false,
-                                "elective_group": null,
-                                "exam": false
-                            }
-                        ],
-                        "Wednesday": [
-                            {
-                                "room": "D-401",
-                                "time": "03:55-05:15",
-                                "rescheduled": true,
                                 "is_elective": false,
                                 "elective_group": null,
                                 "exam": false
