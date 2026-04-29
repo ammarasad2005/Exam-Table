@@ -2991,6 +2991,54 @@
         },
         "CY": {
             "regular": {
+                "OOP Lab": {
+                    "A": {
+                        "Monday": [
+                            {
+                                "room": "C-Margala 1",
+                                "time": "02:30-04:00",
+                                "rescheduled": false,
+                                "is_elective": false,
+                                "elective_group": null,
+                                "exam": true
+                            }
+                        ],
+                        "Thursday": [
+                            {
+                                "room": "C-Margala 3",
+                                "time": "11:30-02:15",
+                                "rescheduled": false,
+                                "is_elective": false,
+                                "elective_group": null,
+                                "exam": false
+                            }
+                        ]
+                    },
+                    "B": {
+                        "Friday": [
+                            {
+                                "room": "D-IT Lab 2",
+                                "time": "08:30-11:15",
+                                "rescheduled": false,
+                                "is_elective": false,
+                                "elective_group": null,
+                                "exam": false
+                            }
+                        ]
+                    },
+                    "C": {
+                        "Friday": [
+                            {
+                                "room": "D-IT Lab 3",
+                                "time": "02:30-05:15",
+                                "rescheduled": false,
+                                "is_elective": false,
+                                "elective_group": null,
+                                "exam": false
+                            }
+                        ]
+                    }
+                },
                 "AP": {
                     "B": {
                         "Tuesday": [
@@ -3535,44 +3583,6 @@
                             {
                                 "room": "C-404",
                                 "time": "09:30-11:15",
-                                "rescheduled": false,
-                                "is_elective": false,
-                                "elective_group": null,
-                                "exam": false
-                            }
-                        ]
-                    }
-                },
-                "OOP Lab": {
-                    "A": {
-                        "Thursday": [
-                            {
-                                "room": "C-Margala 3",
-                                "time": "11:30-02:15",
-                                "rescheduled": false,
-                                "is_elective": false,
-                                "elective_group": null,
-                                "exam": false
-                            }
-                        ]
-                    },
-                    "B": {
-                        "Friday": [
-                            {
-                                "room": "D-IT Lab 2",
-                                "time": "08:30-11:15",
-                                "rescheduled": false,
-                                "is_elective": false,
-                                "elective_group": null,
-                                "exam": false
-                            }
-                        ]
-                    },
-                    "C": {
-                        "Friday": [
-                            {
-                                "room": "D-IT Lab 3",
-                                "time": "02:30-05:15",
                                 "rescheduled": false,
                                 "is_elective": false,
                                 "elective_group": null,
