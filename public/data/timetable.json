@@ -7211,6 +7211,18 @@
                                 "exam": false
                             }
                         ]
+                    },
+                    "A": {
+                        "Wednesday": [
+                            {
+                                "room": "C-Rawal 4",
+                                "time": "11:30-02:15",
+                                "rescheduled": false,
+                                "is_elective": false,
+                                "elective_group": null,
+                                "exam": false
+                            }
+                        ]
                     }
                 }
             },
