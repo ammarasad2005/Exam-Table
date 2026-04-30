@@ -1507,11 +1507,11 @@
                         "Monday": [
                             {
                                 "room": "D-IT Lab 4",
-                                "time": "02:30-05:15",
+                                "time": "02:30-04:00",
                                 "rescheduled": false,
                                 "is_elective": true,
                                 "elective_group": null,
-                                "exam": false
+                                "exam": true
                             }
                         ]
                     },
@@ -3593,6 +3593,42 @@
         },
         "DS": {
             "regular": {
+                "DLD Lab": {
+                    "A": {
+                        "Monday": [
+                            {
+                                "room": "B-Digital",
+                                "time": "11:30-02:15",
+                                "rescheduled": true,
+                                "is_elective": false,
+                                "elective_group": null,
+                                "exam": false
+                            }
+                        ],
+                        "Friday": [
+                            {
+                                "room": "B-Digital",
+                                "time": "02:30-05:15",
+                                "rescheduled": false,
+                                "is_elective": false,
+                                "elective_group": null,
+                                "exam": false
+                            }
+                        ]
+                    },
+                    "B": {
+                        "Friday": [
+                            {
+                                "room": "B-Digital",
+                                "time": "08:30-11:15",
+                                "rescheduled": false,
+                                "is_elective": false,
+                                "elective_group": null,
+                                "exam": false
+                            }
+                        ]
+                    }
+                },
                 "MV Calculus": {
                     "B": {
                         "Tuesday": [
@@ -3904,32 +3940,6 @@
                         "Friday": [
                             {
                                 "room": "A-Mehran 2",
-                                "time": "02:30-05:15",
-                                "rescheduled": false,
-                                "is_elective": false,
-                                "elective_group": null,
-                                "exam": false
-                            }
-                        ]
-                    }
-                },
-                "DLD Lab": {
-                    "B": {
-                        "Friday": [
-                            {
-                                "room": "B-Digital",
-                                "time": "08:30-11:15",
-                                "rescheduled": false,
-                                "is_elective": false,
-                                "elective_group": null,
-                                "exam": false
-                            }
-                        ]
-                    },
-                    "A": {
-                        "Friday": [
-                            {
-                                "room": "B-Digital",
                                 "time": "02:30-05:15",
                                 "rescheduled": false,
                                 "is_elective": false,
