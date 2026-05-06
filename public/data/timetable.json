@@ -10674,6 +10674,16 @@
                                 "exam": false
                             }
                         ],
+                        "Thursday": [
+                            {
+                                "room": "C-308",
+                                "time": "02:30-03:50",
+                                "rescheduled": true,
+                                "is_elective": false,
+                                "elective_group": null,
+                                "exam": false
+                            }
+                        ],
                         "Saturday": [
                             {
                                 "room": "C-409",
