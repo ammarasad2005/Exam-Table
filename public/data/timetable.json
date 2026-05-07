@@ -7770,6 +7770,16 @@
                                 "elective_group": null,
                                 "exam": false
                             }
+                        ],
+                        "Saturday": [
+                            {
+                                "room": "D-313",
+                                "time": "11:30-12:50",
+                                "rescheduled": true,
+                                "is_elective": false,
+                                "elective_group": null,
+                                "exam": false
+                            }
                         ]
                     },
                     "A": {
