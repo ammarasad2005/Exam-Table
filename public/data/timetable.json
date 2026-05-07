@@ -945,28 +945,6 @@
                     }
                 },
                 "Exp Writing": {
-                    "H": {
-                        "Monday": [
-                            {
-                                "room": "C-303",
-                                "time": "02:00-03:45",
-                                "rescheduled": false,
-                                "is_elective": false,
-                                "elective_group": null,
-                                "exam": false
-                            }
-                        ],
-                        "Thursday": [
-                            {
-                                "room": "C-303",
-                                "time": "02:00-03:45",
-                                "rescheduled": false,
-                                "is_elective": false,
-                                "elective_group": null,
-                                "exam": false
-                            }
-                        ]
-                    },
                     "C": {
                         "Monday": [
                             {
@@ -1028,6 +1006,18 @@
                             {
                                 "room": "C-407",
                                 "time": "11:30-01:15",
+                                "rescheduled": false,
+                                "is_elective": false,
+                                "elective_group": null,
+                                "exam": false
+                            }
+                        ]
+                    },
+                    "H": {
+                        "Thursday": [
+                            {
+                                "room": "C-303",
+                                "time": "02:00-03:45",
                                 "rescheduled": false,
                                 "is_elective": false,
                                 "elective_group": null,
