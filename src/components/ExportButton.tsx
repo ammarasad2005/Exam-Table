@@ -1,6 +1,6 @@
 'use client';
 import { useState, useRef, useEffect } from 'react';
-import { downloadCSV, downloadXLSX, downloadFullICS } from '@/lib/export';
+import { downloadCSV, downloadXLSX, downloadFullICS, downloadTimetableImage } from '@/lib/export';
 import type { ExamEntry } from '@/lib/types';
 
 interface Props {
@@ -10,6 +10,7 @@ interface Props {
 
 export function ExportButton({ entries, variant = 'header' }: Props) {
   const [open, setOpen] = useState(false);
+  const [isExporting, setIsExporting] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -44,20 +45,38 @@ export function ExportButton({ entries, variant = 'header' }: Props) {
     <div className="relative" ref={dropdownRef}>
       <button
         onClick={() => setOpen(!open)}
+        disabled={isExporting}
         aria-label="Export options"
         aria-expanded={open}
         className={variant === 'header'
-          ? "font-mono text-xs px-3 h-8 rounded border border-[var(--color-border-strong)] text-[var(--color-text-primary)] hover:bg-[var(--color-bg-subtle)] transition-colors focus-visible:outline-none focus-visible:ring-2"
-          : "w-full h-10 rounded-md border border-[var(--color-border-strong)] font-body text-sm font-medium text-[var(--color-text-primary)] hover:bg-[var(--color-bg-subtle)] transition-colors focus-visible:outline-none focus-visible:ring-2"
+          ? "font-mono text-xs px-3 h-8 rounded border border-[var(--color-border-strong)] text-[var(--color-text-primary)] hover:bg-[var(--color-bg-subtle)] transition-colors focus-visible:outline-none focus-visible:ring-2 disabled:opacity-50"
+          : "w-full h-10 rounded-md border border-[var(--color-border-strong)] font-body text-sm font-medium text-[var(--color-text-primary)] hover:bg-[var(--color-bg-subtle)] transition-colors focus-visible:outline-none focus-visible:ring-2 disabled:opacity-50"
         }
       >
-        Export ↓
+        {isExporting ? 'Generating...' : 'Export ↓'}
       </button>
 
       {open && (
         <div className={`absolute z-50 bg-[var(--color-bg-raised)] border border-[var(--color-border)] shadow-md rounded-md p-1 min-w-[140px] ${
           variant === 'header' ? 'top-full right-0 mt-1' : 'bottom-full left-0 mb-1 w-full'
         }`}>
+          <button
+            onClick={async () => {
+              setOpen(false);
+              setIsExporting(true);
+              try {
+                // @ts-ignore
+                await downloadTimetableImage(entries);
+              } catch (e) {
+                alert('Failed to generate image. Please try again.');
+              } finally {
+                setIsExporting(false);
+              }
+            }}
+            className="w-full text-left font-mono text-xs text-[var(--color-text-primary)] px-3 py-2 rounded-sm hover:bg-[var(--color-bg-subtle)] focus-visible:outline-none focus-visible:ring-2"
+          >
+            as Image (PNG)
+          </button>
           <button
             onClick={() => { downloadFullICS(entries); setOpen(false); }}
             className="w-full text-left font-mono text-xs text-[var(--color-text-primary)] px-3 py-2 rounded-sm hover:bg-[var(--color-bg-subtle)] focus-visible:outline-none focus-visible:ring-2"

@@ -316,7 +316,7 @@ export default function SetupPage() {
         {feature === 'exams'
           ? (mode === 'default'
             ? 'All exams for your batch and department automatically.'
-            : 'Enter specific course codes — for irregular credit loads.')
+            : 'Enter custom courses — for irregular credit loads.')
           : (mode === 'default'
             ? 'All classes for your batch and department automatically.'
             : 'Select specific classes — for cross-section or repeat courses.')}
@@ -555,7 +555,7 @@ export default function SetupPage() {
               ? 'View my timetable →'
               : mode === 'default'
                 ? 'View my exams →'
-                : 'Enter course codes →'}
+                : 'Enter custom courses →'}
       </button>
     </div>
   );

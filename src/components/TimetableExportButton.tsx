@@ -40,7 +40,7 @@ export function TimetableExportButton({ entries, variant = 'header' }: Props) {
         onClick={() => setOpen(!open)}
         aria-label="Export timetable"
         aria-expanded={open}
-        className={`${variant === 'header' ? baseHeader : baseSidebar} text-[var(--color-text-primary)] hover:bg-[var(--color-bg-subtle)] transition-colors focus-visible:outline-none focus-visible:ring-2`}
+        className={`${variant === 'header' ? baseHeader : baseSidebar} text-[var(--color-text-primary)] hover:bg-[var(--color-bg-subtle)] transition-colors focus-visible:outline-none focus-visible:ring-2 disabled:opacity-50`}
       >
         Export ↓
       </button>

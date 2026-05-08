@@ -281,6 +281,30 @@ export async function downloadTimetableXLSX(entries: TimetableEntry[]): Promise<
   }
 }
 
+export async function downloadTimetableImage(entries: TimetableEntry[]): Promise<void> {
+  try {
+    const { saveAs } = (await import('file-saver')).default;
+    
+    const res = await fetch('/api/export-image', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ entries }),
+    });
+
+    if (!res.ok) {
+      throw new Error(`Failed to generate image: ${res.statusText}`);
+    }
+
+    const blob = await res.blob();
+    saveAs(blob, `exam-schedule.png`);
+  } catch (err) {
+    console.error('Image export failed:', err);
+    throw err;
+  }
+}
+
 /**
  * Generates a recurring weekly .ics for a set of timetable entries.
  * Events repeat RRULE:FREQ=WEEKLY for ~16 weeks from the current date.
