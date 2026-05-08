@@ -89,9 +89,9 @@ export async function POST(req: NextRequest) {
               borderRadius: '8px 8px 0 0',
             }}
           >
-            <div style={{ display: 'flex', width: '15%' }}>Date</div>
-            <div style={{ display: 'flex', width: '15%' }}>Day</div>
-            <div style={{ display: 'flex', width: config?.isCustom ? '35%' : '50%' }}>Course</div>
+            <div style={{ display: 'flex', width: config?.isCustom ? '15%' : '20%' }}>Date</div>
+            <div style={{ display: 'flex', width: config?.isCustom ? '15%' : '20%' }}>Day</div>
+            <div style={{ display: 'flex', width: config?.isCustom ? '35%' : '40%' }}>Course</div>
             {config?.isCustom && (
               <div style={{ display: 'flex', width: '15%' }}>Dept</div>
             )}
@@ -131,9 +131,9 @@ export async function POST(req: NextRequest) {
                     borderBottomRightRadius: idx === entries.length - 1 ? '8px' : '0',
                   }}
                 >
-                  <div style={{ display: 'flex', width: '15%' }}>{displayDate}</div>
-                  <div style={{ display: 'flex', width: '15%' }}>{displayDay}</div>
-                  <div style={{ display: 'flex', width: config?.isCustom ? '35%' : '50%', paddingRight: '10px' }}>
+                  <div style={{ display: 'flex', width: config?.isCustom ? '15%' : '20%' }}>{displayDate}</div>
+                  <div style={{ display: 'flex', width: config?.isCustom ? '15%' : '20%' }}>{displayDay}</div>
+                  <div style={{ display: 'flex', width: config?.isCustom ? '35%' : '40%', paddingRight: '10px' }}>
                     {entry.courseName} {entry.section ? `(${entry.section})` : ''}
                   </div>
                   {config?.isCustom && (
