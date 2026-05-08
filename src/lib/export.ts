@@ -281,7 +281,7 @@ export async function downloadTimetableXLSX(entries: TimetableEntry[]): Promise<
   }
 }
 
-export async function downloadTimetableImage(entries: TimetableEntry[]): Promise<void> {
+export async function downloadTimetableImage(entries: TimetableEntry[], config?: any): Promise<void> {
   try {
     const { saveAs } = (await import('file-saver')).default;
     
@@ -290,7 +290,7 @@ export async function downloadTimetableImage(entries: TimetableEntry[]): Promise
       headers: {
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify({ entries }),
+      body: JSON.stringify({ entries, config }),
     });
 
     if (!res.ok) {

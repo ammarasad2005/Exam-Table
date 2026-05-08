@@ -37,10 +37,12 @@ function SchedulePageInner() {
 
   const grouped = useMemo(() => groupByDay(filtered), [filtered]);
 
+  const subtitle = dept === 'BBA' ? `BBA-${batch}` : `BS(${dept})-${batch}`;
+
   return (
     <div className="min-h-dvh flex flex-col">
       {/* Sticky header */}
-      <Header rightActions={<ExportButton entries={filtered} />}>
+      <Header rightActions={<ExportButton entries={filtered} config={{ isCustom: false, subtitle }} />}>
         <div className="flex flex-1 items-center gap-2 md:gap-3 w-full max-w-full min-w-0">
           <button
             onClick={() => router.back()}
@@ -98,7 +100,7 @@ function SchedulePageInner() {
             >
               Change filters
             </button>
-            <ExportButton entries={filtered} variant="sidebar" />
+            <ExportButton entries={filtered} variant="sidebar" config={{ isCustom: false, subtitle }} />
           </div>
         </aside>
 

@@ -234,7 +234,7 @@ function CustomPageInner() {
     <div className="min-h-dvh flex flex-col">
 
       {/* ── Sticky header ── */}
-      <Header rightActions={saved && <ExportButton entries={filtered} />}>
+      <Header rightActions={saved && <ExportButton entries={filtered} config={{ isCustom: true, subtitle: 'CUSTOM COURSES' }} />}>
         <div className="flex flex-1 items-center gap-2 md:gap-3 w-full max-w-full min-w-0">
           <button
             onClick={() => router.push('/')}
@@ -398,7 +398,7 @@ function CustomPageInner() {
             </div>
             
             {saved && (
-              <ExportButton entries={filtered} variant="sidebar" />
+              <ExportButton entries={filtered} variant="sidebar" config={{ isCustom: true, subtitle: 'CUSTOM COURSES' }} />
             )}
           </div>
         </aside>

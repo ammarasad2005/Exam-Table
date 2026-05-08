@@ -6,7 +6,9 @@ export const runtime = 'edge';
 
 export async function POST(req: NextRequest) {
   try {
-    const { entries } = (await req.json()) as { entries: TimetableEntry[] };
+    const payload = await req.json();
+    const entries = payload.entries as any[];
+    const config = payload.config as { isCustom?: boolean; subtitle?: string } | undefined;
 
     if (!entries || !Array.isArray(entries)) {
       return new Response('Invalid entries', { status: 400 });
@@ -61,6 +63,18 @@ export async function POST(req: NextRequest) {
             >
               Spring 2026 Finals
             </h2>
+            {config?.subtitle && (
+              <h3
+                style={{
+                  fontSize: '32px',
+                  fontWeight: 'normal',
+                  color: '#6b7280',
+                  margin: '10px 0 0 0',
+                }}
+              >
+                {config.subtitle}
+              </h3>
+            )}
           </div>
 
           {/* Table Header */}
@@ -77,8 +91,10 @@ export async function POST(req: NextRequest) {
           >
             <div style={{ display: 'flex', width: '15%' }}>Date</div>
             <div style={{ display: 'flex', width: '15%' }}>Day</div>
-            <div style={{ display: 'flex', width: '40%' }}>Course</div>
-            <div style={{ display: 'flex', width: '10%' }}>Dept</div>
+            <div style={{ display: 'flex', width: config?.isCustom ? '35%' : '50%' }}>Course</div>
+            {config?.isCustom && (
+              <div style={{ display: 'flex', width: '15%' }}>Dept</div>
+            )}
             <div style={{ display: 'flex', width: '20%' }}>Time</div>
           </div>
 
@@ -117,10 +133,14 @@ export async function POST(req: NextRequest) {
                 >
                   <div style={{ display: 'flex', width: '15%' }}>{displayDate}</div>
                   <div style={{ display: 'flex', width: '15%' }}>{displayDay}</div>
-                  <div style={{ display: 'flex', width: '40%', paddingRight: '10px' }}>
+                  <div style={{ display: 'flex', width: config?.isCustom ? '35%' : '50%', paddingRight: '10px' }}>
                     {entry.courseName} {entry.section ? `(${entry.section})` : ''}
                   </div>
-                  <div style={{ display: 'flex', width: '10%' }}>{entry.department}</div>
+                  {config?.isCustom && (
+                    <div style={{ display: 'flex', width: '15%' }}>
+                      {entry.department}-{entry.batch ? entry.batch.slice(-2) : ''}
+                    </div>
+                  )}
                   <div style={{ display: 'flex', width: '20%' }}>{entry.time}</div>
                 </div>
               );

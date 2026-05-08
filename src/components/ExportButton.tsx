@@ -6,9 +6,10 @@ import type { ExamEntry } from '@/lib/types';
 interface Props {
   entries: ExamEntry[];
   variant?: 'header' | 'sidebar';
+  config?: any;
 }
 
-export function ExportButton({ entries, variant = 'header' }: Props) {
+export function ExportButton({ entries, variant = 'header', config }: Props) {
   const [open, setOpen] = useState(false);
   const [isExporting, setIsExporting] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
@@ -66,7 +67,7 @@ export function ExportButton({ entries, variant = 'header' }: Props) {
               setIsExporting(true);
               try {
                 // @ts-ignore
-                await downloadTimetableImage(entries);
+                await downloadTimetableImage(entries, config);
               } catch (e) {
                 alert('Failed to generate image. Please try again.');
               } finally {
