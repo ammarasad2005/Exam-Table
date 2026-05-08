@@ -385,7 +385,7 @@ function CustomPageInner() {
                   onClick={handleUpdateBundle}
                   className="h-10 rounded-md bg-[var(--accent-cs)] text-white font-body text-[10px] sm:text-xs font-medium hover:opacity-90 active:scale-95 transition-all truncate px-1"
                 >
-                  Update "{bundles.find(b => b.id === editingBundleId)?.name.split(' ')[0]}..."
+                  Update &quot;{bundles.find(b => b.id === editingBundleId)?.name.split(' ')[0]}...&quot;
                 </button>
               ) : (
                 <button
@@ -596,7 +596,7 @@ function CustomPageInner() {
           <div className="bg-[var(--color-bg-raised)] border border-[var(--color-border-strong)] rounded-2xl p-6 w-full max-w-sm shadow-xl animate-in zoom-in-95 duration-200">
             <h3 className="font-display text-xl mb-4">Save Course Bundle</h3>
             <p className="text-xs text-[var(--color-text-secondary)] mb-4 leading-relaxed">
-              Give this set of courses a name like "Semester 6" or "Fall 2026". You can load it later with one click.
+              Give this set of courses a name like &quot;Semester 6&quot; or &quot;Fall 2026&quot;. You can load it later with one click.
             </p>
             <input
               autoFocus
