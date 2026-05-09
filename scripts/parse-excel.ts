@@ -137,6 +137,16 @@ function parseDateCell(cell: any): { date: string; day: string } | null {
       return { date: `${dd}/${mm}/${yyyy}`, day: DAY_NAMES[dt.getDay()] };
     }
 
+    const shortYearMatch = raw.match(/^(\d{2})-(\d{1,2})-(\d{1,2})$/);
+    if (shortYearMatch) {
+      const yy = shortYearMatch[1];
+      const mm = shortYearMatch[2].padStart(2, '0');
+      const dd = shortYearMatch[3].padStart(2, '0');
+      const yyyy = `20${yy}`;
+      const dt = new Date(parseInt(yyyy), parseInt(mm) - 1, parseInt(dd));
+      return { date: `${dd}/${mm}/${yyyy}`, day: DAY_NAMES[dt.getDay()] };
+    }
+
     const slashMatch = raw.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/);
     if (slashMatch) {
       const dd = slashMatch[1].padStart(2, '0');
