@@ -846,16 +846,6 @@
     "courseCode": "SS1015",
     "courseName": "Pakistan Studies",
     "batch": "2024",
-    "department": "DS",
-    "school": "FSC"
-  },
-  {
-    "date": "21/05/2026",
-    "day": "Thursday",
-    "time": "9:00 to 12:00 PM",
-    "courseCode": "SS1015",
-    "courseName": "Pakistan Studies",
-    "batch": "2024",
     "department": "CY",
     "school": "FSC"
   },
@@ -1152,16 +1142,6 @@
   {
     "date": "22/05/2026",
     "day": "Friday",
-    "time": "9:00 to 12:00 PM",
-    "courseCode": "MT1001",
-    "courseName": "Applied Calculus",
-    "batch": "2025",
-    "department": "EE",
-    "school": "FSE"
-  },
-  {
-    "date": "22/05/2026",
-    "day": "Friday",
     "time": "1:00 to 4:00 PM",
     "courseCode": "MT1008",
     "courseName": "Multivariable Calculus",
@@ -1333,16 +1313,6 @@
     "date": "23/05/2026",
     "day": "Saturday",
     "time": "9:00 to 12:00 PM",
-    "courseCode": "CS3015",
-    "courseName": "- Robotics Technology",
-    "batch": "2022",
-    "department": "CS",
-    "school": "FSC"
-  },
-  {
-    "date": "23/05/2026",
-    "day": "Saturday",
-    "time": "9:00 to 12:00 PM",
     "courseCode": "CY4052",
     "courseName": "Cloud Security",
     "batch": "2022",
@@ -1373,18 +1343,18 @@
     "date": "23/05/2026",
     "day": "Saturday",
     "time": "9:00 to 12:00 PM",
-    "courseCode": "MT1006",
-    "courseName": "Differential Equations",
-    "batch": "2025",
-    "department": "CE",
-    "school": "FSE"
+    "courseCode": "MG2011",
+    "courseName": "Environmental Science and Sustainability for Business",
+    "batch": "2024",
+    "department": "FT",
+    "school": "FSM"
   },
   {
     "date": "23/05/2026",
     "day": "Saturday",
     "time": "9:00 to 12:00 PM",
     "courseCode": "MT1006",
-    "courseName": "Differential Equations",
+    "courseName": "Differential Equations  BS(CE) -AB",
     "batch": "2025",
     "department": "EE",
     "school": "FSE"
@@ -1394,7 +1364,7 @@
     "day": "Saturday",
     "time": "9:00 to 12:00 PM",
     "courseCode": "MT1006",
-    "courseName": "Differential Equations",
+    "courseName": "Differential Equations  BS(CE) -AB",
     "batch": "2025",
     "department": "CS",
     "school": "FSE"
@@ -1587,16 +1557,6 @@
     "courseName": "Data Analysis for Business II",
     "batch": "2024",
     "department": "FT",
-    "school": "FSM"
-  },
-  {
-    "date": "01/06/2026",
-    "day": "Monday",
-    "time": "9:00 to 12:00 PM",
-    "courseCode": "MT2001",
-    "courseName": "Statistical Inference",
-    "batch": "2022",
-    "department": "AF",
     "school": "FSM"
   },
   {
@@ -1883,16 +1843,6 @@
     "date": "02/06/2026",
     "day": "Tuesday",
     "time": "1:00 to 4:00 PM",
-    "courseCode": "CS4090",
-    "courseName": "Machine Learning for Robotics",
-    "batch": "2022",
-    "department": "CS",
-    "school": "FSC"
-  },
-  {
-    "date": "02/06/2026",
-    "day": "Tuesday",
-    "time": "1:00 to 4:00 PM",
     "courseCode": "CS1001",
     "courseName": "IT in Business",
     "batch": "2025",
@@ -2037,6 +1987,16 @@
     "courseName": "Data Structures",
     "batch": "2024",
     "department": "AI",
+    "school": "FSC"
+  },
+  {
+    "date": "03/06/2026",
+    "day": "Wednesday",
+    "time": "9:00 to 12:00 PM",
+    "courseCode": "SE4011",
+    "courseName": "Software Measurement and Metrics",
+    "batch": "2022",
+    "department": "SE",
     "school": "FSC"
   },
   {
@@ -2233,6 +2193,16 @@
     "date": "04/06/2026",
     "day": "Thursday",
     "time": "9:00 to 12:00 PM",
+    "courseCode": "MG4011",
+    "courseName": "Entrepreneurship",
+    "batch": "2022",
+    "department": "SE",
+    "school": "FSC"
+  },
+  {
+    "date": "04/06/2026",
+    "day": "Thursday",
+    "time": "9:00 to 12:00 PM",
     "courseCode": "AF2002",
     "courseName": "Corporate Accounting – II",
     "batch": "2024",
@@ -2296,6 +2266,16 @@
     "courseCode": "SL1014",
     "courseName": "Expository Writing - Lab",
     "batch": "2025",
+    "department": "SE",
+    "school": "FSC"
+  },
+  {
+    "date": "04/06/2026",
+    "day": "Thursday",
+    "time": "1:00 to 4:00 PM",
+    "courseCode": "SL1014",
+    "courseName": "Expository Writing - Lab",
+    "batch": "2025",
     "department": "AI",
     "school": "FSC"
   },
@@ -2317,16 +2297,6 @@
     "courseName": "Expository Writing - Lab",
     "batch": "2025",
     "department": "CY",
-    "school": "FSC"
-  },
-  {
-    "date": "04/06/2026",
-    "day": "Thursday",
-    "time": "1:00 to 4:00 PM",
-    "courseCode": "SL1008",
-    "courseName": "Communication and Presentation Skills - Lab",
-    "batch": "2022",
-    "department": "CS",
     "school": "FSC"
   },
   {
@@ -2606,6 +2576,16 @@
     "courseCode": "CS4001",
     "courseName": "Professional Practices in IT",
     "batch": "2022",
+    "department": "SE",
+    "school": "FSC"
+  },
+  {
+    "date": "06/06/2026",
+    "day": "Saturday",
+    "time": "9:00 to 12:00 PM",
+    "courseCode": "CS4001",
+    "courseName": "Professional Practices in IT",
+    "batch": "2022",
     "department": "AI",
     "school": "FSC"
   },
@@ -2763,16 +2743,6 @@
     "date": "06/06/2026",
     "day": "Saturday",
     "time": "1:00 to 4:00 PM",
-    "courseCode": "AL2002",
-    "courseName": "Artificial Intelligence - Lab",
-    "batch": "2024",
-    "department": "CS",
-    "school": "FSC"
-  },
-  {
-    "date": "06/06/2026",
-    "day": "Saturday",
-    "time": "1:00 to 4:00 PM",
     "courseCode": "SS1015",
     "courseName": "Pakistan Studies",
     "batch": "2025",
@@ -2873,36 +2843,6 @@
     "date": "08/06/2026",
     "day": "Monday",
     "time": "9:00 to 12:00 PM",
-    "courseCode": "CS3001",
-    "courseName": "Computer Networks",
-    "batch": "2023",
-    "department": "AI",
-    "school": "FSC"
-  },
-  {
-    "date": "08/06/2026",
-    "day": "Monday",
-    "time": "9:00 to 12:00 PM",
-    "courseCode": "CS3001",
-    "courseName": "Computer Networks",
-    "batch": "2023",
-    "department": "SE",
-    "school": "FSC"
-  },
-  {
-    "date": "08/06/2026",
-    "day": "Monday",
-    "time": "9:00 to 12:00 PM",
-    "courseCode": "CS3001",
-    "courseName": "Computer Networks",
-    "batch": "2024",
-    "department": "CY",
-    "school": "FSC"
-  },
-  {
-    "date": "08/06/2026",
-    "day": "Monday",
-    "time": "9:00 to 12:00 PM",
     "courseCode": "DS2004",
     "courseName": "Fundamental of Big Data Analytics",
     "batch": "2022",
@@ -2978,26 +2918,6 @@
     "batch": "2022",
     "department": "AF",
     "school": "FSM"
-  },
-  {
-    "date": "08/06/2026",
-    "day": "Monday",
-    "time": "9:00 to 12:00 PM",
-    "courseCode": "EL1006",
-    "courseName": "Engineering Workshop - Lab",
-    "batch": "2025",
-    "department": "CE",
-    "school": "FSE"
-  },
-  {
-    "date": "08/06/2026",
-    "day": "Monday",
-    "time": "9:00 to 12:00 PM",
-    "courseCode": "EL1006",
-    "courseName": "Engineering Workshop - Lab",
-    "batch": "2025",
-    "department": "EE",
-    "school": "FSE"
   },
   {
     "date": "08/06/2026",
@@ -3147,16 +3067,6 @@
     "courseName": "Fundamentals of Financial Management",
     "batch": "2022",
     "department": "DS",
-    "school": "FSC"
-  },
-  {
-    "date": "09/06/2026",
-    "day": "Tuesday",
-    "time": "9:00 to 12:00 PM",
-    "courseCode": "SE4033",
-    "courseName": "Formal Methods in Software Engineering",
-    "batch": "2023",
-    "department": "SE",
     "school": "FSC"
   },
   {
@@ -3327,16 +3237,6 @@
     "courseName": "Artificial Intelligence",
     "batch": "2023",
     "department": "SE",
-    "school": "FSC"
-  },
-  {
-    "date": "10/06/2026",
-    "day": "Wednesday",
-    "time": "9:00 to 12:00 PM",
-    "courseCode": "AI2002",
-    "courseName": "Artificial Intelligence",
-    "batch": "2024",
-    "department": "CS",
     "school": "FSC"
   },
   {
@@ -3630,16 +3530,6 @@
     "school": "FSC"
   },
   {
-    "date": "11/06/2026",
-    "day": "Thursday",
-    "time": "1:00 to 4:00 PM",
-    "courseCode": "AL2002",
-    "courseName": "Artificial Intelligence - Lab",
-    "batch": "2023",
-    "department": "DS",
-    "school": "FSC"
-  },
-  {
     "date": "12/06/2026",
     "day": "Friday",
     "time": "9:00 to 12:00 PM",
@@ -3800,6 +3690,16 @@
     "school": "FSM"
   },
   {
+    "date": "12/06/2026",
+    "day": "Friday",
+    "time": "1:00 to 4:00 PM",
+    "courseCode": "FL3008",
+    "courseName": "Business Research and Data Mining - Lab",
+    "batch": "2023",
+    "department": "FT",
+    "school": "FSM"
+  },
+  {
     "date": "13/06/2026",
     "day": "Saturday",
     "time": "9:00 to 12:00 PM",
@@ -3848,36 +3748,6 @@
     "batch": "2024",
     "department": "FT",
     "school": "FSM"
-  },
-  {
-    "date": "13/06/2026",
-    "day": "Saturday",
-    "time": "1:00 to 4:00 PM",
-    "courseCode": "CL3001",
-    "courseName": "Computer Networks - Lab",
-    "batch": "2023",
-    "department": "AI",
-    "school": "FSC"
-  },
-  {
-    "date": "13/06/2026",
-    "day": "Saturday",
-    "time": "1:00 to 4:00 PM",
-    "courseCode": "CL3001",
-    "courseName": "Computer Networks - Lab",
-    "batch": "2023",
-    "department": "SE",
-    "school": "FSC"
-  },
-  {
-    "date": "13/06/2026",
-    "day": "Saturday",
-    "time": "1:00 to 4:00 PM",
-    "courseCode": "CL3001",
-    "courseName": "Computer Networks - Lab",
-    "batch": "2024",
-    "department": "CY",
-    "school": "FSC"
   },
   {
     "date": "13/06/2026",

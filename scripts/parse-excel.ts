@@ -275,14 +275,28 @@ function sortEntries(entries: ExamEntry[]): ExamEntry[] {
   });
 }
 
+// ── Flexible sheet lookup: match by prefix so "FSC Final" works as well as "FSC" ──
+function findSheet(wb: any, prefix: string): any | null {
+  // Exact match first
+  if (wb.Sheets[prefix]) return wb.Sheets[prefix];
+  // Then try any sheet whose name starts with the prefix (case-insensitive)
+  const key = Object.keys(wb.Sheets).find(
+    (n) => n.toUpperCase().startsWith(prefix.toUpperCase())
+  );
+  return key ? wb.Sheets[key] : null;
+}
+
 // Main
 const allRawEntries: ExamEntry[] = [];
-for (const sheetName of ['FSC', 'FSM', 'FSE']) {
-  const sheet = wb.Sheets[sheetName];
-  if (!sheet) continue;
+for (const schoolCode of ['FSC', 'FSM', 'FSE']) {
+  const sheet = findSheet(wb, schoolCode);
+  if (!sheet) {
+    console.warn(`⚠️  Sheet with prefix "${schoolCode}" not found — skipping. Available sheets: ${wb.SheetNames.join(', ')}`);
+    continue;
+  }
   const sheetRange = XLSX.utils.decode_range(sheet['!ref']);
   expandMerges(sheet);
-  const sheetEntries = buildEntries(sheet, sheetRange, sheetName);
+  const sheetEntries = buildEntries(sheet, sheetRange, schoolCode);
   allRawEntries.push(...sheetEntries);
 }
 
@@ -292,24 +306,21 @@ const output = sortEntries(allRawEntries);
 const outDir = path.join('public', 'data');
 fs.mkdirSync(outDir, { recursive: true });
 
-fs.writeFileSync(
-  path.join(outDir, 'schedule.json'),
-  JSON.stringify(output, null, 2),
-  'utf-8'
-);
+// ── Safety guard: never overwrite with an empty array ────────────────────────
+const outPath = path.join(outDir, 'schedule.json');
+if (output.length === 0) {
+  console.warn('⚠️  Zero entries parsed — schedule.json was NOT overwritten to prevent data loss.');
+  console.warn('    Check that the Excel sheet names start with FSC / FSM / FSE and that the header row is present.');
+} else {
+  fs.writeFileSync(outPath, JSON.stringify(output, null, 2), 'utf-8');
+  console.log(`✅ Wrote ${output.length} exam entries to public/data/schedule.json`);
+  console.log(`   First entry date: ${output[0].date} (${output[0].day})`);
+  console.log(`   Last  entry date: ${output[output.length-1].date} (${output[output.length-1].day})`);
+}
 
 // Fallback for timetable so the Next.js build doesn't fail on Vercel if it's missing
 const timetablePath = path.join(outDir, 'timetable.json');
 if (!fs.existsSync(timetablePath)) {
   fs.writeFileSync(timetablePath, '{}', 'utf-8');
   console.log('✅ Created empty fallback public/data/timetable.json');
-}
-
-console.log(`✅ Wrote ${output.length} exam entries to public/data/schedule.json`);
-if (output.length > 0) {
-  console.log(`   First entry date: ${output[0].date} (${output[0].day})`);
-  console.log(`   Last  entry date: ${output[output.length-1].date} (${output[output.length-1].day})`);
-}
-if (output.length === 0) {
-  console.warn('⚠️  Zero entries written — check Excel sheet structure and data format');
 }
