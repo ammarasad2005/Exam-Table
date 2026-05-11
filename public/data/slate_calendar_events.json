@@ -1,7 +1,7 @@
 {
-  "scraped_at": "2026-05-04T08:37:59.331187",
+  "scraped_at": "2026-05-11T09:52:27.646669",
   "date_range": "2026-05-01 to 2026-06-30",
-  "total_events": 39,
+  "total_events": 49,
   "events": [
     {
       "event_name": "SPM Class",
@@ -40,6 +40,18 @@
       "event_location": "MEDc-118  by Ms. Ujala"
     },
     {
+      "event_name": "Seminar FSM",
+      "date": "May 5",
+      "time": "11:00 am - 12:00 pm",
+      "event_location": "C 109 by Ms Asma Masood (FSM)"
+    },
+    {
+      "event_name": "EQ Semi Project",
+      "date": "May 5",
+      "time": "2:45 pm - 4:00 pm",
+      "event_location": "C Block C-109 by Dr. Saeed (Event of Dr. Rashid Ramzan)"
+    },
+    {
       "event_name": "Student Affairs Event",
       "date": "May 6",
       "time": "12:00 am - 10:00 pm",
@@ -50,6 +62,12 @@
       "date": "May 6",
       "time": "8:30 am - 10:00 am",
       "event_location": "Auditorium D Block by bMr. Fahad (FSC)"
+    },
+    {
+      "event_name": "ACCA Certificate distribtion Ceremony",
+      "date": "May 6",
+      "time": "9:00 am - 12:00 pm",
+      "event_location": "C 109 by Ms. Amna Farooqi"
     },
     {
       "event_name": "PPIT - Seminar",
@@ -64,22 +82,34 @@
       "event_location": "Auditorium D Block by Ms. Ujala"
     },
     {
+      "event_name": "English II",
+      "date": "May 7",
+      "time": "8:30 am - 9:45 am",
+      "event_location": "Auditorium D Block by Sumaira Abbas"
+    },
+    {
       "event_name": "Job Fair Trainings",
       "date": "May 7",
       "time": "9:00 am - 2:00 pm",
       "event_location": "Auditorium - A Block by Ms. Ujala"
     },
     {
-      "event_name": "ACCA Competition",
-      "date": "May 7",
-      "time": "9:30 am - 12:00 pm",
-      "event_location": "MEDC 117 By Ms. Fasiha FSM"
-    },
-    {
       "event_name": "Job Fair Trainings",
       "date": "May 7",
       "time": "10:00 am - 8:00 pm",
       "event_location": "MEDC-118 by Ms. Ujala"
+    },
+    {
+      "event_name": "Interviews FSM",
+      "date": "May 7",
+      "time": "10:00 am - 3:00 pm",
+      "event_location": "MEDC-117 by Ms. Laraib"
+    },
+    {
+      "event_name": "Guest Speaker Session",
+      "date": "May 7",
+      "time": "10:00 am - 1:00 pm",
+      "event_location": "Audi D Block by Aamina Siddiui"
     },
     {
       "event_name": "FSM Weekly Seminar 2",
@@ -91,7 +121,7 @@
       "event_name": "Test English",
       "date": "May 7",
       "time": "2:00 pm - 5:00 pm",
-      "event_location": "Auditorium by Ms. Kanwal"
+      "event_location": "Auditorium A Block by Ms. Kanwal"
     },
     {
       "event_name": "PHD Thesis Defense",
@@ -118,6 +148,24 @@
       "event_location": "MEDC 118 Mr. Qaiser Shafi"
     },
     {
+      "event_name": "Recruitment Drive",
+      "date": "May 11",
+      "time": "9:00 am - 3:00 pm",
+      "event_location": "C-109 by Ms. Laraib"
+    },
+    {
+      "event_name": "DDC Meetiing",
+      "date": "May 11",
+      "time": "9:00 am - 11:00 am",
+      "event_location": "MEDC 117 by Ms. Fasiha"
+    },
+    {
+      "event_name": "Recruitment test PK",
+      "date": "May 11",
+      "time": "10:00 am - 11:45 am",
+      "event_location": "Auditorium A Block by Ms. Kanwal (Humanities)"
+    },
+    {
       "event_name": "Farewell proceedings",
       "date": "May 11",
       "time": "12:00 pm - 5:00 pm",
@@ -134,6 +182,18 @@
       "date": "May 12",
       "time": "12:00 am - 11:00 pm",
       "event_location": "All Rooms reserved. No one is allowed to reserve any spot"
+    },
+    {
+      "event_name": "Class CS",
+      "date": "May 12",
+      "time": "8:00 am - 10:00 am",
+      "event_location": "Auditorium D Block by Mr. Usman"
+    },
+    {
+      "event_name": "BOF Computing Meeting",
+      "date": "May 12",
+      "time": "9:00 am - 2:00 pm",
+      "event_location": "MEDC-117 by Ms. Neelofar"
     },
     {
       "event_name": "FSM Weekly Seminar",
