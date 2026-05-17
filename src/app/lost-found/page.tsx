@@ -56,6 +56,8 @@ import {
   Archive,
   Activity,
   Building2,
+  LayoutGrid,
+  List,
 } from 'lucide-react'
 import { Header } from '@/components/Header'
 import { useToast } from '@/hooks/use-toast'
@@ -80,6 +82,7 @@ import {
 type View = 'home' | 'lost-found'
 type SubView = 'list' | 'detail' | 'report'
 type DateRange = 'all' | 'today' | 'week' | 'month'
+type ViewMode = 'grid' | 'list'
 
 interface LostFoundItem {
   id: string
@@ -791,39 +794,6 @@ function Footer({ onQuickLink }: { onQuickLink?: (action: string) => void }) {
       >
         FAST NUCES &middot; Islamabad Campus &middot; Spring 2026
       </p>
-      <p
-        className="font-mono text-[11px] uppercase tracking-[0.08em] text-center flex items-center justify-center gap-1.5"
-        style={{ color: 'var(--color-text-tertiary)' }}
-      >
-        Made with &middot;
-        <Heart width={12} height={12} style={{ color: 'var(--accent-ee)' }} fill="currentColor" />
-        &middot; by FAST students
-      </p>
-      <p
-        className="font-mono text-[9px] uppercase tracking-[0.06em] text-center mt-1"
-        style={{ color: 'var(--color-text-tertiary)', opacity: 0.6 }}
-      >
-        Lost &amp; Found v2.1
-      </p>
-      {/* Keyboard shortcuts help */}
-      <div className="flex items-center justify-center gap-3 mt-2">
-        <span className="font-mono text-[9px] flex items-center gap-1" style={{ color: 'var(--color-text-tertiary)' }}>
-          <kbd className="rounded px-1 py-0.5" style={{ backgroundColor: 'var(--color-bg-subtle)', border: '1px solid var(--color-border)', fontSize: '8px' }}>↑↓</kbd>
-          Navigate
-        </span>
-        <span className="font-mono text-[9px] flex items-center gap-1" style={{ color: 'var(--color-text-tertiary)' }}>
-          <kbd className="rounded px-1 py-0.5" style={{ backgroundColor: 'var(--color-bg-subtle)', border: '1px solid var(--color-border)', fontSize: '8px' }}>↵</kbd>
-          Open
-        </span>
-        <span className="font-mono text-[9px] flex items-center gap-1" style={{ color: 'var(--color-text-tertiary)' }}>
-          <kbd className="rounded px-1 py-0.5" style={{ backgroundColor: 'var(--color-bg-subtle)', border: '1px solid var(--color-border)', fontSize: '8px' }}>⌘K</kbd>
-          Search
-        </span>
-        <span className="font-mono text-[9px] flex items-center gap-1" style={{ color: 'var(--color-text-tertiary)' }}>
-          <kbd className="rounded px-1 py-0.5" style={{ backgroundColor: 'var(--color-bg-subtle)', border: '1px solid var(--color-border)', fontSize: '8px' }}>Esc</kbd>
-          Back
-        </span>
-      </div>
     </footer>
   )
 }
@@ -1111,6 +1081,7 @@ function ItemCard({
   viewCount,
   reward,
   onLocationFilter,
+  viewMode = 'list',
 }: {
   item: LostFoundItem
   onClick: () => void
@@ -1123,6 +1094,7 @@ function ItemCard({
   viewCount?: number
   reward?: string
   onLocationFilter?: (zone: string) => void
+  viewMode?: 'grid' | 'list'
 }) {
   const isLost = item.type === 'lost'
   const expired = isExpired(item.createdAt)
@@ -1133,131 +1105,36 @@ function ItemCard({
   const [descExpanded, setDescExpanded] = useState(false)
   const zone = getZoneForLocation(item.location)
 
+  // Reporter names placeholders (since they aren't in the DB schema yet)
+  const reporters = ['Jane D.', 'Ali R.', 'Sara K.', 'Hamza A.', 'Zoe M.', 'Usman T.']
+  const reporterName = reporters[item.id.charCodeAt(0) % reporters.length]
+
   return (
     <motion.div
       layout
-      initial={{ opacity: 0, y: 8 }}
-      animate={{ opacity: item.isResolved ? 0.55 : 1, y: 0 }}
-      exit={{ opacity: 0, y: -8 }}
-      className={`rounded-xl bg-[var(--color-bg-raised)] p-5 cursor-pointer item-card-hover group relative overflow-hidden ${item.isResolved ? 'hover:opacity-75' : ''} ${archived && !item.isResolved ? 'opacity-50' : ''}`}
-      style={{
-        boxShadow: 'var(--shadow-card)',
-        border: '1px solid var(--color-border)',
-      }}
+      initial={{ opacity: 0, scale: 0.98 }}
+      animate={{ opacity: item.isResolved ? 0.6 : 1, scale: 1 }}
+      exit={{ opacity: 0, scale: 0.98 }}
+      whileHover={{ y: -2 }}
+      className={`rounded-2xl p-4 cursor-pointer transition-all duration-200 group relative overflow-hidden bg-[var(--color-bg-raised)] border border-[var(--color-border)] hover:border-[var(--color-text-tertiary)] hover:shadow-lg ${viewMode === 'grid' ? 'flex flex-col h-full' : 'flex items-center gap-4'}`}
       onClick={onClick}
     >
-      {/* Colored left border indicator - grows on hover */}
+      {/* Type indicator vertical bar */}
       <div
-        className="absolute left-0 top-0 bottom-0 w-1 group-hover:w-1.5 rounded-l-xl transition-all duration-200"
+        className="absolute left-0 top-0 bottom-0 w-1.5"
         style={{ backgroundColor: isLost ? 'var(--accent-ee)' : 'var(--accent-af)' }}
       />
-      {/* Subtle gradient overlay on hover */}
+
+      {/* Thumbnail */}
       <div
-        className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none rounded-xl"
-        style={{
-          background: isLost
-            ? 'linear-gradient(135deg, rgba(225,29,72,0.04) 0%, transparent 60%)'
-            : 'linear-gradient(135deg, rgba(5,150,105,0.04) 0%, transparent 60%)',
-        }}
-      />
-      {/* Share icon on hover (desktop) */}
-      {onShare && !item.isResolved && (
-        <button
-          onMouseDown={(e) => onShare(e, item)}
-          className="hidden md:block absolute top-2 right-8 opacity-0 group-hover:opacity-70 hover:!opacity-100 transition-opacity duration-200 z-20 rounded-md p-1"
-          style={{ backgroundColor: 'var(--color-bg-subtle)' }}
-          title="Share item"
-        >
-          <Share2 width={12} height={12} style={{ color: 'var(--accent-lf)' }} />
-        </button>
-      )}
-      {/* Bookmark toggle (desktop) */}
-      {onToggleBookmark && !item.isResolved && (
-        <button
-          onMouseDown={(e) => onToggleBookmark(e, item.id)}
-          className="hidden md:block absolute top-2 right-2 opacity-0 group-hover:opacity-70 hover:!opacity-100 transition-opacity duration-200 z-20 rounded-md p-1"
-          style={{ backgroundColor: isBookmarked ? 'var(--accent-lf-bg)' : 'var(--color-bg-subtle)' }}
-          title={isBookmarked ? 'Remove bookmark' : 'Bookmark item'}
-        >
-          {isBookmarked ? (
-            <BookmarkCheck width={12} height={12} style={{ color: 'var(--accent-lf)' }} />
-          ) : (
-            <Bookmark width={12} height={12} style={{ color: 'var(--color-text-tertiary)' }} />
-          )}
-        </button>
-      )}
-      {/* Mobile: Quick action menu (3-dot) */}
-      {!item.isResolved && onQuickAction && (
-        <div className="md:hidden absolute top-2 right-2 z-20">
-          <button
-            onClick={(e) => { e.stopPropagation(); setShowQuickMenu(!showQuickMenu) }}
-            className="rounded-md p-1.5 active:scale-[0.98] transition-transform"
-            style={{ backgroundColor: 'var(--color-bg-subtle)' }}
-          >
-            <MoreHorizontal width={14} height={14} style={{ color: 'var(--color-text-tertiary)' }} />
-          </button>
-          <AnimatePresence>
-            {showQuickMenu && (
-              <motion.div
-                initial={{ opacity: 0, scale: 0.9, y: -4 }}
-                animate={{ opacity: 1, scale: 1, y: 0 }}
-                exit={{ opacity: 0, scale: 0.9, y: -4 }}
-                className="absolute right-0 top-8 rounded-lg shadow-lg overflow-hidden z-30 min-w-[120px]"
-                style={{
-                  backgroundColor: 'var(--color-bg-raised)',
-                  border: '1.5px solid var(--color-border)',
-                }}
-                onClick={(e) => e.stopPropagation()}
-              >
-                <button
-                  onClick={() => { onQuickAction('share', item); setShowQuickMenu(false) }}
-                  className="w-full px-3 py-2 text-[11px] font-medium text-left flex items-center gap-2 transition-colors hover:opacity-80 active:scale-[0.98]"
-                  style={{ color: 'var(--color-text-primary)', backgroundColor: 'transparent' }}
-                >
-                  <Share2 width={12} height={12} style={{ color: 'var(--accent-lf)' }} />
-                  Share
-                </button>
-                <button
-                  onClick={() => { onQuickAction('bookmark', item); setShowQuickMenu(false) }}
-                  className="w-full px-3 py-2 text-[11px] font-medium text-left flex items-center gap-2 transition-colors hover:opacity-80 active:scale-[0.98]"
-                  style={{ color: 'var(--color-text-primary)', borderTop: '1px solid var(--color-border)', backgroundColor: 'transparent' }}
-                >
-                  {isBookmarked ? <BookmarkCheck width={12} height={12} style={{ color: 'var(--accent-lf)' }} /> : <Bookmark width={12} height={12} style={{ color: 'var(--color-text-tertiary)' }} />}
-                  {isBookmarked ? 'Unsave' : 'Bookmark'}
-                </button>
-                <button
-                  onClick={() => { onQuickAction('detail', item); setShowQuickMenu(false) }}
-                  className="w-full px-3 py-2 text-[11px] font-medium text-left flex items-center gap-2 transition-colors hover:opacity-80 active:scale-[0.98]"
-                  style={{ color: 'var(--color-text-primary)', borderTop: '1px solid var(--color-border)', backgroundColor: 'transparent' }}
-                >
-                  <Eye width={12} height={12} style={{ color: 'var(--accent-cs)' }} />
-                  View Details
-                </button>
-              </motion.div>
-            )}
-          </AnimatePresence>
-        </div>
-      )}
-      {/* Always-visible bookmark indicator */}
-      {isBookmarked && !item.isResolved && (
-        <div className="absolute top-2 right-2 z-10 group-hover:opacity-0 transition-opacity md:block hidden">
-          <BookmarkCheck width={14} height={14} style={{ color: 'var(--accent-lf)' }} />
-        </div>
-      )}
-      <div className="flex items-start gap-3 relative z-10 pl-2">
-        {/* Image thumbnail or category icon */}
+        className={`shrink-0 rounded-xl overflow-hidden shadow-sm relative ${viewMode === 'grid' ? 'w-full aspect-[4/3] mb-3' : 'w-24 h-24 md:w-32 md:h-32'}`}
+        style={{ backgroundColor: 'var(--color-bg-subtle)' }}
+      >
         {item.imageUrl ? (
-          <div
-            className="w-12 h-12 rounded-lg flex items-center justify-center shrink-0 overflow-hidden"
-            style={{
-              backgroundColor: isLost ? 'var(--accent-ee-bg)' : 'var(--accent-af-bg)',
-            }}
-          >
-            <img src={item.imageUrl} alt={item.title} className="w-full h-full object-cover" onError={(e) => { (e.target as HTMLImageElement).style.display = 'none' }} />
-          </div>
+          <img src={item.imageUrl} alt={item.title} className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110" />
         ) : (
           <div
-            className="w-10 h-10 rounded-lg flex items-center justify-center shrink-0 text-lg"
+            className="w-full h-full flex items-center justify-center text-3xl"
             style={{
               background: categoryPlaceholders[item.category]?.gradient || categoryPlaceholders.Other.gradient,
             }}
@@ -1265,171 +1142,78 @@ function ItemCard({
             {categoryPlaceholders[item.category]?.emoji || categoryPlaceholders.Other.emoji}
           </div>
         )}
-        <div className="flex-1 min-w-0">
-          <div className="flex items-center gap-2 mb-1 flex-wrap">
-            <span
-              className={`category-badge ${
-                isLost ? 'type-badge-lost' : 'type-badge-found'
-              }`}
-            >
+        
+        {/* Mobile quick badges over image */}
+        <div className="absolute top-2 left-2 flex gap-1">
+           <span className={`px-2 py-0.5 rounded-md text-[8px] font-bold uppercase tracking-wider text-white shadow-sm ${isLost ? 'bg-[var(--accent-ee)]' : 'bg-[var(--accent-af)]'}`}>
+            {item.type}
+          </span>
+        </div>
+
+        {/* Bookmark button */}
+        {onToggleBookmark && (
+          <button
+            onMouseDown={(e) => { e.stopPropagation(); onToggleBookmark(e, item.id) }}
+            className="absolute top-2 right-2 p-1.5 rounded-lg bg-white/80 dark:bg-black/40 backdrop-blur-sm opacity-0 group-hover:opacity-100 transition-opacity"
+          >
+            {isBookmarked ? (
+              <BookmarkCheck width={14} height={14} className="text-[var(--accent-lf)]" />
+            ) : (
+              <Bookmark width={14} height={14} className="text-[var(--color-text-tertiary)]" />
+            )}
+          </button>
+        )}
+      </div>
+
+      {/* Content */}
+      <div className="flex-1 min-w-0 flex flex-col justify-center gap-1">
+        <div className="flex items-center justify-between gap-2">
+          <div className="flex items-center gap-2">
+            <h3 className="font-body text-[16px] md:text-lg font-bold truncate tracking-tight text-[var(--color-text-primary)]">
+              {item.title}
+            </h3>
+            <span className={`px-2 py-0.5 rounded-md text-[9px] font-bold uppercase tracking-wider hidden md:inline-block ${isLost ? 'bg-[var(--accent-ee)]/10 text-[var(--accent-ee)]' : 'bg-[var(--accent-af)]/10 text-[var(--accent-af)]'}`}>
               {item.type}
             </span>
-            <span className="category-badge" style={{
-              backgroundColor: 'var(--accent-lf-bg)',
-              color: 'var(--accent-lf)',
-            }}>
-              {item.category}
-            </span>
-            {item.isResolved && (
-              <span className="category-badge resolved-badge flex items-center gap-1">
-                <CheckCircle2 width={10} height={10} />
-                resolved
-              </span>
-            )}
-            {isMyItem && (
-              <span
-                className="category-badge flex items-center gap-0.5"
-                style={{
-                  backgroundColor: 'var(--accent-cs-bg)',
-                  color: 'var(--accent-cs)',
-                }}
-              >
-                <BookmarkCheck width={9} height={9} />
-                You
-              </span>
-            )}
-            {expiringSoon && !item.isResolved && !expired && (
-              <span
-                className="category-badge flex items-center gap-0.5"
-                style={{
-                  backgroundColor: 'rgba(217,119,6,0.1)',
-                  color: '#D97706',
-                }}
-              >
-                <AlertTriangle width={9} height={9} />
-                ⚠️ Expiring
-              </span>
-            )}
-            {expired && !item.isResolved && !archived && (
-              <span
-                className="category-badge flex items-center gap-0.5"
-                style={{
-                  backgroundColor: 'rgba(217,119,6,0.1)',
-                  color: '#D97706',
-                }}
-              >
-                <AlertTriangle width={9} height={9} />
-                30+ days
-              </span>
-            )}
-            {archived && !item.isResolved && (
-              <span
-                className="category-badge flex items-center gap-0.5"
-                style={{
-                  backgroundColor: 'rgba(107,114,128,0.1)',
-                  color: '#6B7280',
-                }}
-              >
-                <Archive width={9} height={9} />
-                Archived
-              </span>
-            )}
-            {isUrgent && !item.isResolved && (
-              <span
-                className="category-badge urgent-badge flex items-center gap-0.5"
-                style={{
-                  backgroundColor: 'rgba(225, 29, 72, 0.12)',
-                  color: 'var(--accent-ee)',
-                }}
-              >
-                <Zap width={9} height={9} />
-                URGENT
-              </span>
-            )}
           </div>
-          <h3
-            className="font-body text-[15px] font-bold truncate"
-            style={{ color: 'var(--color-text-primary)' }}
-          >
-            {item.title}
-          </h3>
-          <p
-            className={`text-xs mt-0.5 opacity-80 group-hover:opacity-100 transition-opacity ${descExpanded ? '' : 'line-clamp-2'}`}
-            style={{ color: 'var(--color-text-secondary)' }}
-          >
-            {item.description}
-          </p>
-          {!descExpanded && item.description.length > 80 && (
-            <button
-              onClick={(e) => { e.stopPropagation(); setDescExpanded(true) }}
-              className="text-[10px] font-semibold mt-0.5 hover:underline"
-              style={{ color: 'var(--accent-lf)' }}
-            >
-              Read more
-            </button>
-          )}
-          {descExpanded && (
-            <button
-              onClick={(e) => { e.stopPropagation(); setDescExpanded(false) }}
-              className="text-[10px] font-semibold mt-0.5 hover:underline"
-              style={{ color: 'var(--accent-lf)' }}
-            >
-              Show less
-            </button>
-          )}
-          {/* Reward badge */}
-          {reward && (
-            <span className="category-badge reward-badge flex items-center gap-0.5 mt-1" style={{ fontSize: '9px' }}>
-              💰 {reward}
-            </span>
-          )}
-          {/* Bottom separator line */}
-          <div className="h-px w-full my-2" style={{ backgroundColor: 'var(--color-border)', opacity: 0.5 }} />
-          <div className="flex items-center gap-3 flex-wrap">
-            <span className="flex items-center gap-1 text-[10px] font-mono uppercase tracking-wider" style={{ color: 'var(--color-text-tertiary)' }}>
-              <MapPin width={10} height={10} />
-              {item.location}
-            </span>
-            {/* Location zone tag */}
-            {zone && onLocationFilter && (
-              <button
-                onClick={(e) => { e.stopPropagation(); onLocationFilter(zone) }}
-                className="flex items-center gap-1 text-[9px] font-semibold px-1.5 py-0.5 rounded-md transition-all hover:scale-[1.05]"
-                style={{
-                  backgroundColor: zoneColors[zone]?.bg,
-                  color: zoneColors[zone]?.text,
-                  border: `1px solid ${zoneColors[zone]?.border}`,
-                }}
-                aria-label={`Filter by ${zone}`}
-              >
-                <Building2 width={8} height={8} />
-                {zone}
-              </button>
-            )}
-            <span className="flex items-center gap-1 text-[10px] font-mono uppercase tracking-wider" style={{ color: 'var(--color-text-tertiary)' }}>
-              <Clock width={10} height={10} />
-              {formatDate(item.date)}
-            </span>
-            {/* Prominent time-ago with NEW badge */}
-            <span
-              className="flex items-center gap-1 text-[11px] font-semibold px-1.5 py-0.5 rounded-md"
-              style={{
-                color: isLost ? 'var(--accent-ee)' : 'var(--accent-af)',
-                backgroundColor: isLost ? 'var(--accent-ee-bg)' : 'var(--accent-af-bg)',
-              }}
-            >
-              {isNew && (
-                <span className="new-badge-pulse text-[8px] font-bold px-1 py-0 rounded-sm" style={{ backgroundColor: 'var(--accent-ee)', color: 'white' }}>NEW</span>
+          <span className="font-mono text-[10px] text-[var(--color-text-tertiary)] shrink-0">
+            {timeAgo(item.createdAt)}
+          </span>
+        </div>
+
+        <div className="flex items-center gap-3 text-[var(--color-text-secondary)] text-[11px] font-medium">
+          <span className="flex items-center gap-1">
+            <MapPin width={12} height={12} className="text-[var(--color-text-tertiary)]" />
+            {item.location}
+          </span>
+          <span className="flex items-center gap-1">
+            <Package width={12} height={12} className="text-[var(--color-text-tertiary)]" />
+            {item.category}
+          </span>
+        </div>
+
+        <p className={`text-xs text-[var(--color-text-secondary)] mt-1 ${descExpanded ? '' : 'line-clamp-1'}`}>
+          {item.description}
+        </p>
+
+        <div className="flex items-center justify-between mt-2 pt-2 border-t border-[var(--color-border)]">
+          <div className="flex items-center gap-2">
+            <div className="w-5 h-5 rounded-full bg-[var(--color-bg-subtle)] flex items-center justify-center border border-[var(--color-border)]">
+              <User width={10} height={10} className="text-[var(--color-text-tertiary)]" />
+            </div>
+            <span className="text-[10px] font-bold text-[var(--color-text-primary)]">{reporterName}</span>
+          </div>
+          
+          <div className="flex items-center gap-2">
+             {isUrgent && !item.isResolved && (
+                <span className="flex items-center gap-0.5 text-[8px] font-black uppercase text-[var(--accent-ee)] bg-[var(--accent-ee)]/10 px-1.5 py-0.5 rounded-md animate-pulse">
+                  Urgent
+                </span>
               )}
-              {timeAgo(item.createdAt)}
-            </span>
-            {/* View count */}
-            {viewCount !== undefined && viewCount > 0 && (
-              <span className="flex items-center gap-1 text-[10px] font-mono" style={{ color: 'var(--color-text-tertiary)' }}>
-                <Eye width={10} height={10} />
-                {viewCount}
-              </span>
-            )}
+              {reward && (
+                <span className="text-[10px] font-bold text-[var(--accent-lf)]">💰 {reward}</span>
+              )}
+              <ChevronRight width={14} height={14} className="text-[var(--color-text-tertiary)] opacity-0 group-hover:opacity-100 transition-opacity" />
           </div>
         </div>
       </div>
@@ -3013,67 +2797,52 @@ function FilterSidebar({
     setCollapsedSections((prev) => ({ ...prev, [section]: !prev[section] }))
   }
 
-  return (
-    <div className="space-y-4">
-      {/* Search - Always visible */}
-      <div
-        className="flex items-center gap-2 rounded-lg px-3 py-2"
-        style={{
-          backgroundColor: 'var(--color-bg-subtle)',
-          border: '1.5px solid var(--color-border)',
-        }}
-      >
-        <Search width={14} height={14} style={{ color: 'var(--color-text-tertiary)' }} />
-        <input
-          type="text"
-          value={searchQuery}
-          onChange={(e) => setSearchQuery(e.target.value)}
-          placeholder="Search items..."
-          className="flex-1 bg-transparent text-sm outline-none focus:ring-0"
-          style={{ color: 'var(--color-text-primary)' }}
-        />
-        {searchQuery && (
-          <button onClick={() => setSearchQuery('')}>
-            <X width={14} height={14} style={{ color: 'var(--color-text-tertiary)' }} />
-          </button>
-        )}
-      </div>
+  const btnStyle = (active: boolean) => ({
+    backgroundColor: active ? 'var(--accent-lf-bg)' : 'transparent',
+    color: active ? 'var(--accent-lf)' : 'var(--color-text-secondary)',
+    fontWeight: active ? '700' : '500',
+  })
 
-      {/* Clear Filters */}
-      {hasFilters && (
-        <button
-          onClick={onClearFilters}
-          className="w-full rounded-md px-3 py-1.5 text-[10px] font-bold uppercase tracking-[0.06em] transition-all duration-150 flex items-center justify-center gap-1.5 hover:scale-[1.01] active:scale-[0.98]"
+  return (
+    <div className="space-y-6">
+      {/* Search */}
+      <div>
+        <div
+          className="flex items-center gap-2 rounded-xl px-3 py-2.5 transition-all duration-200 focus-within:ring-2 focus-within:ring-[var(--accent-lf)]/20"
           style={{
-            border: '1.5px solid var(--accent-ee)',
-            backgroundColor: 'var(--accent-ee-bg)',
-            color: 'var(--accent-ee)',
+            backgroundColor: 'var(--color-bg-subtle)',
+            border: '1.5px solid var(--color-border)',
           }}
         >
-          <X width={10} height={10} />
-          Clear All Filters
-        </button>
-      )}
+          <Search width={14} height={14} style={{ color: 'var(--color-text-tertiary)' }} />
+          <input
+            type="text"
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            placeholder="Search items..."
+            className="flex-1 bg-transparent text-sm outline-none placeholder:text-[var(--color-text-tertiary)]"
+            style={{ color: 'var(--color-text-primary)' }}
+          />
+          {searchQuery && (
+            <button onClick={() => setSearchQuery('')} className="hover:scale-110 transition-transform">
+              <X width={14} height={14} style={{ color: 'var(--color-text-tertiary)' }} />
+            </button>
+          )}
+        </div>
+      </div>
 
-      {/* Section divider */}
-      <div className="h-px w-full" style={{ backgroundColor: 'var(--color-border)' }} />
-
-      {/* Sort - Always visible */}
-      <div>
-        <label className="font-mono text-[10px] uppercase tracking-[0.1em] mb-2 flex items-center gap-1.5" style={{ color: 'var(--color-text-tertiary)' }}>
+      {/* Sort By */}
+      <div className="space-y-2.5">
+        <label className="font-mono text-[9px] uppercase tracking-[0.12em] flex items-center gap-2 text-[var(--color-text-tertiary)]">
           <ArrowUpDown width={10} height={10} />
           Sort By
         </label>
-        <div className="relative">
+        <div className="relative group">
           <select
             value={sortBy}
             onChange={(e) => setSortBy(e.target.value as SortOption)}
-            className="w-full rounded-md px-3 py-2 text-[11px] font-bold uppercase tracking-[0.06em] appearance-none cursor-pointer outline-none transition-all duration-150 focus:ring-2 focus:ring-[var(--accent-lf)]/30"
-            style={{
-              backgroundColor: 'var(--color-bg-subtle)',
-              border: '1.5px solid var(--color-border)',
-              color: 'var(--color-text-primary)',
-            }}
+            className="w-full rounded-xl px-3 py-2.5 text-[11px] font-bold uppercase tracking-[0.06em] appearance-none cursor-pointer outline-none transition-all duration-200 bg-[var(--color-bg-subtle)] border border-[var(--color-border)] hover:border-[var(--color-text-tertiary)] focus:ring-2 focus:ring-[var(--accent-lf)]/20"
+            style={{ color: 'var(--color-text-primary)' }}
           >
             {sortOptions.map((opt) => (
               <option key={opt.value} value={opt.value}>
@@ -3081,28 +2850,24 @@ function FilterSidebar({
               </option>
             ))}
           </select>
-          <ArrowUpDown width={12} height={12} className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none" style={{ color: 'var(--color-text-tertiary)' }} />
+          <ChevronDown width={12} height={12} className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none text-[var(--color-text-tertiary)] group-hover:text-[var(--color-text-primary)] transition-colors" />
         </div>
       </div>
 
-      {/* Section divider */}
-      <div className="h-px w-full" style={{ backgroundColor: 'var(--color-border)' }} />
-
-      {/* Type filter - Collapsible (default open) */}
-      <div>
+      {/* Type Filter */}
+      <div className="space-y-2">
         <button
           onClick={() => toggleSection('type')}
-          className="flex items-center justify-between w-full"
+          className="flex items-center justify-between w-full group"
         >
-          <label className="font-mono text-[10px] uppercase tracking-[0.1em] flex items-center gap-1.5" style={{ color: 'var(--color-text-tertiary)' }}>
+          <label className="font-mono text-[9px] uppercase tracking-[0.12em] flex items-center gap-2 text-[var(--color-text-tertiary)] cursor-pointer group-hover:text-[var(--color-text-primary)] transition-colors">
             <Filter width={10} height={10} />
             Type
           </label>
           <ChevronDown
             width={12}
             height={12}
-            className={`transition-transform duration-200 ${collapsedSections.type ? '' : 'rotate-180'}`}
-            style={{ color: 'var(--color-text-tertiary)' }}
+            className={`transition-transform duration-300 text-[var(--color-text-tertiary)] ${collapsedSections.type ? '' : 'rotate-180'}`}
           />
         </button>
         <AnimatePresence initial={false}>
@@ -3111,70 +2876,43 @@ function FilterSidebar({
               initial={{ height: 0, opacity: 0 }}
               animate={{ height: 'auto', opacity: 1 }}
               exit={{ height: 0, opacity: 0 }}
-              transition={{ duration: 0.2 }}
+              transition={{ duration: 0.25, ease: 'easeInOut' }}
               className="overflow-hidden"
             >
-              <div className="flex flex-col gap-1.5 mt-2 px-1">
-                {(['all', 'lost', 'found'] as const).map((t) => (
-                  <button
-                    key={t}
-                    onClick={() => setTypeFilter(t)}
-                    className="rounded-md px-3 py-2 text-[11px] font-bold uppercase tracking-[0.06em] transition-all duration-150 text-left hover:scale-[1.01] active:scale-[0.98]"
-                    style={{
-                      border: `1.5px solid ${
-                        typeFilter === t
-                          ? t === 'lost'
-                            ? 'var(--accent-ee)'
-                            : t === 'found'
-                            ? 'var(--accent-af)'
-                            : 'var(--accent-lf)'
-                          : 'var(--color-border)'
-                      }`,
-                      backgroundColor:
-                        typeFilter === t
-                          ? t === 'lost'
-                            ? 'var(--accent-ee-bg)'
-                            : t === 'found'
-                            ? 'var(--accent-af-bg)'
-                            : 'var(--accent-lf-bg)'
-                          : 'var(--color-bg-subtle)',
-                      color:
-                        typeFilter === t
-                          ? t === 'lost'
-                            ? 'var(--accent-ee)'
-                            : t === 'found'
-                            ? 'var(--accent-af)'
-                            : 'var(--accent-lf)'
-                          : 'var(--color-text-secondary)',
-                    }}
-                  >
-                    {t === 'all' ? 'All Items' : t === 'lost' ? 'Lost Items' : 'Found Items'}
-                  </button>
-                ))}
+              <div className="flex flex-col gap-1 py-1">
+                {(['all', 'lost', 'found'] as const).map((t) => {
+                  const active = typeFilter === t
+                  return (
+                    <button
+                      key={t}
+                      onClick={() => setTypeFilter(t)}
+                      className="rounded-lg px-3 py-2 text-[10px] uppercase tracking-[0.06em] transition-all duration-150 text-left hover:translate-x-1"
+                      style={btnStyle(active)}
+                    >
+                      {t === 'all' ? 'All Items' : t === 'lost' ? 'Lost' : 'Found'}
+                    </button>
+                  )
+                })}
               </div>
             </motion.div>
           )}
         </AnimatePresence>
       </div>
 
-      {/* Section divider */}
-      <div className="h-px w-full" style={{ backgroundColor: 'var(--color-border)' }} />
-
-      {/* Date Range filter - Collapsible (default open) */}
-      <div>
+      {/* Date Range */}
+      <div className="space-y-2">
         <button
           onClick={() => toggleSection('dateRange')}
-          className="flex items-center justify-between w-full"
+          className="flex items-center justify-between w-full group"
         >
-          <label className="font-mono text-[10px] uppercase tracking-[0.1em] flex items-center gap-1.5" style={{ color: 'var(--color-text-tertiary)' }}>
+          <label className="font-mono text-[9px] uppercase tracking-[0.12em] flex items-center gap-2 text-[var(--color-text-tertiary)] cursor-pointer group-hover:text-[var(--color-text-primary)] transition-colors">
             <Calendar width={10} height={10} />
             Date Range
           </label>
           <ChevronDown
             width={12}
             height={12}
-            className={`transition-transform duration-200 ${collapsedSections.dateRange ? '' : 'rotate-180'}`}
-            style={{ color: 'var(--color-text-tertiary)' }}
+            className={`transition-transform duration-300 text-[var(--color-text-tertiary)] ${collapsedSections.dateRange ? '' : 'rotate-180'}`}
           />
         </button>
         <AnimatePresence initial={false}>
@@ -3183,107 +2921,43 @@ function FilterSidebar({
               initial={{ height: 0, opacity: 0 }}
               animate={{ height: 'auto', opacity: 1 }}
               exit={{ height: 0, opacity: 0 }}
-              transition={{ duration: 0.2 }}
+              transition={{ duration: 0.25, ease: 'easeInOut' }}
               className="overflow-hidden"
             >
-              <div className="flex flex-col gap-1.5 mt-2 px-1">
-                {dateRangeOptions.map((opt) => (
-                  <button
-                    key={opt.value}
-                    onClick={() => setDateRange(opt.value)}
-                    className="rounded-md px-3 py-1.5 text-[10px] font-semibold uppercase tracking-[0.06em] transition-all duration-150 text-left hover:scale-[1.01] active:scale-[0.98]"
-                    style={{
-                      border: `1.5px solid ${dateRange === opt.value ? 'var(--accent-lf)' : 'var(--color-border)'}`,
-                      backgroundColor: dateRange === opt.value ? 'var(--accent-lf-bg)' : 'var(--color-bg-subtle)',
-                      color: dateRange === opt.value ? 'var(--accent-lf)' : 'var(--color-text-secondary)',
-                    }}
-                  >
-                    {opt.label}
-                  </button>
-                ))}
+              <div className="flex flex-col gap-1 py-1">
+                {dateRangeOptions.map((opt) => {
+                  const active = dateRange === opt.value
+                  return (
+                    <button
+                      key={opt.value}
+                      onClick={() => setDateRange(opt.value)}
+                      className="rounded-lg px-3 py-2 text-[10px] uppercase tracking-[0.06em] transition-all duration-150 text-left hover:translate-x-1"
+                      style={btnStyle(active)}
+                    >
+                      {opt.label}
+                    </button>
+                  )
+                })}
               </div>
             </motion.div>
           )}
         </AnimatePresence>
       </div>
 
-      {/* Section divider */}
-      <div className="h-px w-full" style={{ backgroundColor: 'var(--color-border)' }} />
-
-      {/* My Reports + Bookmarked - Collapsible (default closed) */}
-      <div>
-        <button
-          onClick={() => toggleSection('myItems')}
-          className="flex items-center justify-between w-full"
-        >
-          <label className="font-mono text-[10px] uppercase tracking-[0.1em]" style={{ color: 'var(--color-text-tertiary)' }}>
-            My Items
-          </label>
-          <ChevronDown
-            width={12}
-            height={12}
-            className={`transition-transform duration-200 ${collapsedSections.myItems ? '' : 'rotate-180'}`}
-            style={{ color: 'var(--color-text-tertiary)' }}
-          />
-        </button>
-        <AnimatePresence initial={false}>
-          {!collapsedSections.myItems && (
-            <motion.div
-              initial={{ height: 0, opacity: 0 }}
-              animate={{ height: 'auto', opacity: 1 }}
-              exit={{ height: 0, opacity: 0 }}
-              transition={{ duration: 0.2 }}
-              className="overflow-hidden"
-            >
-              <div className="flex flex-col gap-1.5 mt-2 px-1">
-                <button
-                  onClick={() => setShowMyReports(!showMyReports)}
-                  className="w-full rounded-md px-3 py-2 text-[11px] font-bold uppercase tracking-[0.06em] transition-all duration-150 text-left flex items-center gap-2 hover:scale-[1.01] active:scale-[0.98]"
-                  style={{
-                    border: `1.5px solid ${showMyReports ? 'var(--accent-cs)' : 'var(--color-border)'}`,
-                    backgroundColor: showMyReports ? 'var(--accent-cs-bg)' : 'var(--color-bg-subtle)',
-                    color: showMyReports ? 'var(--accent-cs)' : 'var(--color-text-secondary)',
-                  }}
-                >
-                  <BookmarkCheck width={12} height={12} />
-                  My Reports
-                </button>
-                <button
-                  onClick={() => setShowBookmarked(!showBookmarked)}
-                  className="w-full rounded-md px-3 py-2 text-[11px] font-bold uppercase tracking-[0.06em] transition-all duration-150 text-left flex items-center gap-2 hover:scale-[1.01] active:scale-[0.98]"
-                  style={{
-                    border: `1.5px solid ${showBookmarked ? 'var(--accent-lf)' : 'var(--color-border)'}`,
-                    backgroundColor: showBookmarked ? 'var(--accent-lf-bg)' : 'var(--color-bg-subtle)',
-                    color: showBookmarked ? 'var(--accent-lf)' : 'var(--color-text-secondary)',
-                  }}
-                >
-                  <Bookmark width={12} height={12} />
-                  Bookmarked
-                </button>
-              </div>
-            </motion.div>
-          )}
-        </AnimatePresence>
-      </div>
-
-      {/* Section divider */}
-      <div className="h-px w-full" style={{ backgroundColor: 'var(--color-border)' }} />
-
-      {/* Category filter - Collapsible (default open) */}
-      <div>
+      {/* Category */}
+      <div className="space-y-2">
         <button
           onClick={() => toggleSection('category')}
-          className="flex items-center justify-between w-full"
+          className="flex items-center justify-between w-full group"
         >
-          <label className="font-mono text-[10px] uppercase tracking-[0.1em] flex items-center gap-1.5" style={{ color: 'var(--color-text-tertiary)' }}>
+          <label className="font-mono text-[9px] uppercase tracking-[0.12em] flex items-center gap-2 text-[var(--color-text-tertiary)] cursor-pointer group-hover:text-[var(--color-text-primary)] transition-colors">
             <Tag width={10} height={10} />
             Category
           </label>
           <ChevronDown
             width={12}
             height={12}
-            className={`transition-transform duration-200 ${collapsedSections.category ? '' : 'rotate-180'}`}
-            style={{ color: 'var(--color-text-tertiary)' }}
+            className={`transition-transform duration-300 text-[var(--color-text-tertiary)] ${collapsedSections.category ? '' : 'rotate-180'}`}
           />
         </button>
         <AnimatePresence initial={false}>
@@ -3292,49 +2966,49 @@ function FilterSidebar({
               initial={{ height: 0, opacity: 0 }}
               animate={{ height: 'auto', opacity: 1 }}
               exit={{ height: 0, opacity: 0 }}
-              transition={{ duration: 0.2 }}
+              transition={{ duration: 0.25, ease: 'easeInOut' }}
               className="overflow-hidden"
             >
-              <div className="flex flex-col gap-1 mt-2 px-1">
-                {categories.map((cat) => (
-                  <button
-                    key={cat}
-                    onClick={() => setCategoryFilter(cat)}
-                    className="rounded-md px-3 py-1.5 text-[10px] font-semibold uppercase tracking-[0.06em] transition-transform duration-150 text-left hover:translate-x-0.5 active:scale-[0.98]"
-                    style={{
-                      border: `1.5px solid ${
-                        categoryFilter === cat ? 'var(--accent-lf)' : 'var(--color-border)'
-                      }`,
-                      backgroundColor:
-                        categoryFilter === cat ? 'var(--accent-lf-bg)' : 'var(--color-bg-subtle)',
-                      color:
-                        categoryFilter === cat
-                          ? 'var(--accent-lf)'
-                          : 'var(--color-text-secondary)',
-                    }}
-                  >
-                    {cat === 'All' ? 'All Categories' : `${categoryIcons[cat] || '\uD83D\uDCE6'} ${cat}`}
-                  </button>
-                ))}
+              <div className="flex flex-col gap-1 py-1 max-h-[200px] overflow-y-auto custom-scrollbar">
+                {categories.map((cat) => {
+                  const active = categoryFilter === cat
+                  return (
+                    <button
+                      key={cat}
+                      onClick={() => setCategoryFilter(cat)}
+                      className="rounded-lg px-3 py-2 text-[10px] uppercase tracking-[0.06em] transition-all duration-150 text-left hover:translate-x-1 flex items-center gap-2"
+                      style={btnStyle(active)}
+                    >
+                      <span>{categoryIcons[cat] || '📦'}</span>
+                      <span className="truncate">{cat}</span>
+                    </button>
+                  )
+                })}
               </div>
             </motion.div>
           )}
         </AnimatePresence>
       </div>
 
-      {/* Share Summary */}
-      <div className="pt-2">
+      <div className="pt-4 space-y-3">
+        {hasFilters && (
+          <button
+            onClick={onClearFilters}
+            className="w-full rounded-xl py-2.5 text-[10px] font-bold uppercase tracking-[0.1em] transition-all duration-200 flex items-center justify-center gap-2 hover:bg-[var(--accent-ee-bg)] hover:text-[var(--accent-ee)] border border-transparent hover:border-[var(--accent-ee)]"
+            style={{ color: 'var(--color-text-tertiary)' }}
+          >
+            <X width={12} height={12} />
+            Reset Filters
+          </button>
+        )}
+        
         <button
           onClick={onShareSummary}
-          className="w-full rounded-md px-3 py-2 text-[10px] font-semibold uppercase tracking-[0.06em] transition-all duration-150 flex items-center justify-center gap-1.5 hover:scale-[1.01] active:scale-[0.98]"
-          style={{
-            border: '1.5px solid var(--color-border)',
-            backgroundColor: 'var(--color-bg-subtle)',
-            color: 'var(--color-text-tertiary)',
-          }}
+          className="w-full rounded-xl py-2.5 text-[10px] font-bold uppercase tracking-[0.1em] transition-all duration-200 flex items-center justify-center gap-2 bg-[var(--color-bg-subtle)] border border-[var(--color-border)] hover:border-[var(--color-text-tertiary)] active:scale-[0.98]"
+          style={{ color: 'var(--color-text-primary)' }}
         >
-          <Share2 width={10} height={10} />
-          Share Summary
+          <Share2 width={12} height={12} />
+          Share Results
         </button>
       </div>
     </div>
@@ -3350,53 +3024,132 @@ function EmptyState({
   hasFilters: boolean
   onReport: () => void
 }) {
+  const commonItems = ['ID Cards', 'Bags', 'Water Bottles', 'Keys', 'Phones', 'Wallets', 'Chargers']
+
   if (hasFilters) {
     return (
-      <div className="flex flex-col items-center py-12 gap-4">
+      <div className="flex flex-col items-center py-16 gap-5 bg-[var(--color-bg-raised)]/30 rounded-3xl border border-dashed border-[var(--color-border)]">
         <motion.div
-          animate={{ y: [0, -6, 0] }}
-          transition={{ duration: 2, repeat: Infinity, ease: 'easeInOut' }}
-          className="text-5xl"
+          animate={{ scale: [1, 1.05, 1] }}
+          transition={{ duration: 3, repeat: Infinity }}
+          className="relative"
         >
-          {'\uD83D\uDD0D'}
+          <SearchX width={64} height={64} style={{ color: 'var(--color-text-tertiary)' }} strokeWidth={1} />
         </motion.div>
-        <p className="text-sm font-semibold" style={{ color: 'var(--color-text-primary)' }}>
-          No items match your filters
-        </p>
-        <p className="text-xs text-center max-w-[250px]" style={{ color: 'var(--color-text-tertiary)' }}>
-          Try adjusting your search or filter criteria to find what you&apos;re looking for.
-        </p>
+        <div className="text-center space-y-1">
+          <p className="text-base font-bold" style={{ color: 'var(--color-text-primary)' }}>
+            No matching items found
+          </p>
+          <p className="text-xs max-w-[280px] mx-auto" style={{ color: 'var(--color-text-tertiary)' }}>
+            Try broadening your search or adjusting the filters to see more results.
+          </p>
+        </div>
+        <button
+          onClick={() => { window.location.reload() }}
+          className="text-[10px] font-bold uppercase tracking-widest hover:underline"
+          style={{ color: 'var(--accent-lf)' }}
+        >
+          Reset all filters
+        </button>
       </div>
     )
   }
 
   return (
-    <div className="flex flex-col items-center py-12 gap-4">
-      <motion.div
-        animate={{ y: [0, -8, 0] }}
-        transition={{ duration: 2.5, repeat: Infinity, ease: 'easeInOut' }}
-        className="text-5xl"
-      >
-        {'\uD83C\uDF81'}
-      </motion.div>
-      <p className="text-sm font-semibold" style={{ color: 'var(--color-text-primary)' }}>
-        No items reported yet
-      </p>
-      <p className="text-xs text-center max-w-[250px]" style={{ color: 'var(--color-text-tertiary)' }}>
-        Be the first to help a fellow student! Report a lost or found item on campus.
-      </p>
-      <button
-        onClick={onReport}
-        className="rounded-lg py-2.5 px-5 text-xs font-bold uppercase tracking-[0.08em] transition-all duration-150 flex items-center gap-2 hover:scale-[1.02]"
-        style={{
-          border: '1.5px solid var(--accent-lf)',
-          backgroundColor: 'var(--accent-lf)',
-          color: 'white',
-        }}
-      >
-        <Plus width={14} height={14} />
-        Be the first to report!
-      </button>
+    <div className="space-y-6">
+      <div className="flex flex-col items-center py-16 gap-8 bg-[var(--color-bg-raised)] rounded-[2.5rem] border border-[var(--color-border)] shadow-sm overflow-hidden relative">
+        {/* Subtle background glow */}
+        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-64 h-64 bg-[var(--accent-af)]/5 blur-[100px] -z-10 rounded-full" />
+        
+        {/* Backpack Illustration */}
+        <div className="relative">
+          <motion.div
+            animate={{ y: [0, -8, 0], rotate: [0, 1, 0] }}
+            transition={{ duration: 5, repeat: Infinity, ease: 'easeInOut' }}
+            className="relative z-10"
+          >
+            <div className="w-40 h-48 bg-gradient-to-br from-amber-600/20 to-amber-700/10 rounded-3xl border-2 border-amber-600/20 flex flex-col items-center justify-center relative shadow-inner overflow-hidden">
+               <div className="absolute top-0 left-0 right-0 h-16 bg-amber-600/5 border-b border-amber-600/10" />
+               <div className="w-16 h-1.5 bg-amber-600/30 rounded-full mb-10 mt-4" />
+               <div className="w-24 h-24 bg-amber-600/5 rounded-2xl border border-amber-600/10 flex items-center justify-center">
+                  <Package width={32} height={32} className="text-amber-600/20" />
+               </div>
+            </div>
+            {/* keys and water bottle simulation */}
+            <div className="absolute -bottom-2 -right-2 w-14 h-14 bg-[var(--color-bg-raised)] rounded-full flex items-center justify-center shadow-lg border border-[var(--color-border)] rotate-12">
+              <Tag width={24} height={24} className="text-amber-500" />
+            </div>
+            <div className="absolute top-12 -left-4 w-10 h-24 bg-blue-500/10 rounded-full border border-blue-500/20 flex items-center justify-center -rotate-6">
+               <div className="w-6 h-2 bg-blue-500/20 rounded-t-sm absolute top-0" />
+            </div>
+          </motion.div>
+        </div>
+
+        <div className="text-center space-y-2 px-6">
+          <h3 className="font-body text-2xl md:text-3xl font-black tracking-tight" style={{ color: 'var(--color-text-primary)' }}>
+            No active reports right now
+          </h3>
+          <p className="text-sm font-bold flex items-center justify-center gap-1.5" style={{ color: 'var(--accent-af)' }}>
+            That&apos;s a good sign! 🎉
+          </p>
+          <p className="text-[13px] max-w-[360px] mx-auto text-[var(--color-text-secondary)] leading-relaxed">
+            Be the first to report a lost or found item and help someone get it back.
+          </p>
+        </div>
+
+        {/* Benefits contained box */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 w-full max-w-2xl px-6">
+          {[
+            { icon: Zap, label: 'Report in seconds', desc: 'Add details & photos', color: 'var(--accent-lf)' },
+            { icon: Handshake, label: 'Help your peers', desc: 'Reunite belongings', color: 'var(--accent-se)' },
+            { icon: Heart, label: 'Make campus better', desc: 'Stronger community', color: 'var(--accent-af)' },
+          ].map((benefit) => (
+            <div key={benefit.label} className="bg-[var(--color-bg-subtle)]/50 rounded-2xl p-4 flex flex-col items-center text-center gap-2 border border-[var(--color-border)] transition-all hover:bg-[var(--color-bg-subtle)]">
+              <div className="w-10 h-10 rounded-xl bg-white dark:bg-black/20 flex items-center justify-center border border-[var(--color-border)] shadow-sm">
+                <benefit.icon width={18} height={18} style={{ color: benefit.color }} />
+              </div>
+              <div className="space-y-0.5">
+                <p className="text-[11px] font-black uppercase tracking-wide" style={{ color: 'var(--color-text-primary)' }}>{benefit.label}</p>
+                <p className="text-[10px] text-[var(--color-text-tertiary)] font-medium">{benefit.desc}</p>
+              </div>
+            </div>
+          ))}
+        </div>
+
+        <div className="flex flex-col items-center gap-5 pt-4">
+          <button
+            onClick={onReport}
+            className="rounded-xl py-3.5 px-10 text-xs font-black uppercase tracking-[0.12em] transition-all duration-200 flex items-center gap-2 hover:scale-[1.05] active:scale-[0.98] shadow-md hover:shadow-xl btn-shimmer"
+            style={{
+              backgroundColor: 'var(--accent-lf)',
+              color: 'white',
+            }}
+          >
+            <Plus width={18} height={18} strokeWidth={3} />
+            Report an Item
+          </button>
+          <button className="text-[11px] font-bold text-[var(--color-text-tertiary)] flex items-center gap-1.5 hover:text-[var(--color-text-primary)] transition-colors group">
+            Or browse previously found items <ChevronRight width={14} height={14} className="group-hover:translate-x-1 transition-transform" />
+          </button>
+        </div>
+      </div>
+
+      {/* Commonly Lost Items Section - Separate Card */}
+      <div className="rounded-[1.5rem] p-6 bg-[var(--color-bg-raised)] border border-[var(--color-border)] shadow-sm">
+        <p className="font-mono text-[10px] uppercase tracking-[0.12em] font-black mb-4 text-[var(--color-text-tertiary)]">
+          Commonly Lost Items
+        </p>
+        <div className="flex flex-wrap gap-2">
+          {commonItems.map((chip) => (
+            <span
+              key={chip}
+              className="px-4 py-2 rounded-xl text-[10px] font-bold border border-[var(--color-border)] bg-[var(--color-bg-subtle)] text-[var(--color-text-secondary)] hover:bg-[var(--color-bg-raised)] hover:border-[var(--color-text-tertiary)] transition-all cursor-default"
+            >
+              {chip}
+            </span>
+          ))}
+        </div>
+      </div>
     </div>
   )
 }
@@ -3629,180 +3382,97 @@ function StatsDashboard({ items }: { items: LostFoundItem[] }) {
 
   const stats = [
     {
-      label: 'Active Items',
+      label: 'ACTIVE ITEMS',
       value: totalActive,
-      icon: Package,
-      gradient: 'linear-gradient(135deg, var(--accent-lf-bg), transparent)',
       accent: 'var(--accent-lf)',
       trend: 0,
-      sparkData: getSparklineData('all'),
     },
     {
-      label: 'Lost This Week',
+      label: 'LOST THIS WEEK',
       value: lostThisWeek,
-      icon: AlertCircle,
-      gradient: 'linear-gradient(135deg, var(--accent-ee-bg), transparent)',
       accent: 'var(--accent-ee)',
       trend: lostTrend,
-      sparkData: getSparklineData('lost'),
     },
     {
-      label: 'Found This Week',
+      label: 'FOUND THIS WEEK',
       value: foundThisWeek,
-      icon: Eye,
-      gradient: 'linear-gradient(135deg, var(--accent-af-bg), transparent)',
       accent: 'var(--accent-af)',
       trend: foundTrend,
-      sparkData: getSparklineData('found'),
     },
   ]
 
-  // Category distribution mini chart
-  const categoryCounts: Record<string, number> = {}
-  activeItems.forEach((item) => {
-    categoryCounts[item.category] = (categoryCounts[item.category] || 0) + 1
-  })
-  const topCategories = Object.entries(categoryCounts)
-    .sort((a, b) => b[1] - a[1])
-    .slice(0, 4)
-  const maxCount = topCategories.length > 0 ? topCategories[0][1] : 1
-
-  // Most common category
-  const mostCommonCat = topCategories.length > 0 ? topCategories[0] : null
-
   return (
-    <div className="space-y-3">
-      {/* Stats header */}
-      <p className="stats-header flex items-center gap-1.5">
-        <TrendingUp width={10} height={10} />
-        Quick Stats
-      </p>
-      <div className="grid grid-cols-3 gap-3">
+    <div className="space-y-4">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         {stats.map((stat) => {
-          const StatIcon = stat.icon
           return (
             <div
               key={stat.label}
-              className="rounded-xl p-3 flex flex-col items-center gap-1.5 relative stat-card-hover"
-              style={{
-                background: stat.gradient,
-                border: `1.5px solid ${stat.accent}22`,
-                boxShadow: `inset 0 1px 0 ${stat.accent}15`,
+              className="rounded-2xl p-6 flex flex-col items-center justify-center gap-1 relative transition-all duration-300 hover:shadow-lg hover:scale-[1.02] group"
+              style={{ 
+                backgroundColor: `color-mix(in srgb, ${stat.accent}, transparent 92%)`, 
+                border: `1px solid color-mix(in srgb, ${stat.accent}, transparent 75%)`,
+                boxShadow: `0 4px 12px -2px color-mix(in srgb, ${stat.accent}, transparent 94%), 0 2px 4px -1px color-mix(in srgb, ${stat.accent}, transparent 96%)`
               }}
             >
-              {/* Colored dot indicator */}
-              <div
-                className="absolute top-2 left-2 w-2 h-2 rounded-full"
-                style={{ backgroundColor: stat.accent }}
-              />
-              <StatIcon width={16} height={16} style={{ color: stat.accent }} />
-              <div className="flex items-center gap-1">
-                <span className="text-3xl font-bold stat-number stat-glow" style={{ color: stat.accent }}>
+              <div className="flex flex-col items-center">
+                <span className="text-4xl font-black tracking-tighter" style={{ color: stat.accent }}>
                   <AnimatedCounter target={stat.value} />
                 </span>
-                {/* Trend indicator */}
-                {stat.trend !== 0 && (
-                  <span className="flex items-center text-[9px] font-bold" style={{ color: stat.trend > 0 ? 'var(--accent-ee)' : 'var(--accent-af)' }}>
-                    {stat.trend > 0 ? <ArrowUp width={8} height={8} /> : <ArrowDown width={8} height={8} />}
-                    {Math.abs(stat.trend)}
-                  </span>
+                <span className="text-[10px] font-black text-[var(--color-text-secondary)] uppercase tracking-[0.15em] mt-1 text-center">
+                  {stat.label}
+                </span>
+              </div>
+              
+              <div className="mt-2">
+                {stat.trend !== 0 ? (
+                  <div 
+                    className="flex items-center gap-1 px-2 py-0.5 rounded-full bg-white/50 dark:bg-black/20 border border-[var(--color-border)]"
+                  >
+                    <span 
+                      className="text-[10px] font-bold flex items-center gap-0.5"
+                      style={{ color: stat.trend > 0 && stat.label.includes('LOST') ? 'var(--accent-ee)' : 'var(--accent-af)' }}
+                    >
+                      {stat.trend > 0 ? <ArrowUp width={10} height={10} /> : <ArrowDown width={10} height={10} />}
+                      {Math.abs(stat.trend)}
+                    </span>
+                    <span className="text-[9px] font-bold text-[var(--color-text-tertiary)] uppercase tracking-wider">Change</span>
+                  </div>
+                ) : (
+                  <span className="text-[9px] font-bold text-[var(--color-text-tertiary)] uppercase tracking-widest opacity-60">No change</span>
                 )}
               </div>
-              {/* Sparkline mini chart */}
-              {stat.sparkData && <SparklineChart data={stat.sparkData} color={stat.accent.includes('lf') ? '#EA580C' : stat.accent.includes('ee') ? '#E11D48' : '#059669'} />}
-              <span
-                className="font-mono text-[9px] uppercase tracking-[0.08em] text-center leading-tight"
-                style={{ color: 'var(--color-text-tertiary)' }}
-              >
-                {stat.label}
-              </span>
             </div>
           )
         })}
       </div>
 
-      {/* Lost/Found Percentage Split Bar */}
+      {/* Activity Breakdown Split Bar */}
       {totalActive > 0 && (
         <div
-          className="rounded-xl p-3"
-          style={{
-            backgroundColor: 'var(--color-bg-raised)',
-            border: '1px solid var(--color-border)',
-          }}
+          className="rounded-2xl p-4 border border-[var(--color-border)] bg-[var(--color-bg-raised)]/50"
         >
-          <div className="flex items-center justify-between mb-2">
-            <span className="font-mono text-[9px] uppercase tracking-[0.1em]" style={{ color: 'var(--color-text-tertiary)' }}>
-              Lost vs Found
+          <div className="flex items-center justify-between mb-2.5">
+            <span className="font-mono text-[10px] uppercase tracking-[0.12em] font-bold text-[var(--color-text-tertiary)]">
+              Live Activity Breakdown
             </span>
-            <span className="text-[10px] font-semibold">
-              <span style={{ color: 'var(--accent-ee)' }}>{lostPct}% Lost</span>
-              <span style={{ color: 'var(--color-text-tertiary)' }}> / </span>
-              <span style={{ color: 'var(--accent-af)' }}>{foundPct}% Found</span>
-            </span>
-          </div>
-          <div className="stats-split-bar">
-            <div className="stats-split-bar-lost" style={{ width: `${lostPct}%` }} />
-            <div className="stats-split-bar-found" style={{ width: `${foundPct}%` }} />
-          </div>
-          {/* Most common category */}
-          {mostCommonCat && (
-            <div className="flex items-center gap-1.5 mt-2">
-              <Tag width={10} height={10} style={{ color: categoryAccentColors[mostCommonCat[0]] || '#6B7280' }} />
-              <span className="text-[9px]" style={{ color: 'var(--color-text-tertiary)' }}>Most common:</span>
-              <span className="text-[10px] font-semibold" style={{ color: categoryAccentColors[mostCommonCat[0]] || 'var(--color-text-primary)' }}>
-                {categoryIcons[mostCommonCat[0]] || '📦'} {mostCommonCat[0]} ({mostCommonCat[1]})
-              </span>
+            <div className="flex items-center gap-3 text-[10px] font-bold">
+              <div className="flex items-center gap-1.5">
+                <div className="w-2 h-2 rounded-full" style={{ backgroundColor: 'var(--accent-ee)' }} />
+                <span style={{ color: 'var(--color-text-primary)' }}>{lostPct}% Lost</span>
+              </div>
+              <div className="flex items-center gap-1.5">
+                <div className="w-2 h-2 rounded-full" style={{ backgroundColor: 'var(--accent-af)' }} />
+                <span style={{ color: 'var(--color-text-primary)' }}>{foundPct}% Found</span>
+              </div>
             </div>
-          )}
-        </div>
-      )}
-
-      {/* Category Distribution Mini Chart */}
-      {topCategories.length > 0 && (
-        <div
-          className="rounded-xl p-3"
-          style={{
-            backgroundColor: 'var(--color-bg-raised)',
-            border: '1px solid var(--color-border)',
-          }}
-        >
-          <p
-            className="font-mono text-[9px] uppercase tracking-[0.1em] mb-2"
-            style={{ color: 'var(--color-text-tertiary)' }}
-          >
-            Category Distribution
-          </p>
-          <div className="space-y-1.5">
-            {topCategories.map(([cat, count]) => {
-              const barWidth = Math.max((count / maxCount) * 100, 15)
-              const catColor = categoryAccentColors[cat] || '#6B7280'
-              return (
-                <div key={cat} className="flex items-center gap-2">
-                  <span className="text-xs shrink-0 w-5 text-center">{categoryIcons[cat] || '\uD83D\uDCE6'}</span>
-                  <span className="text-[9px] font-medium shrink-0 w-16 truncate" style={{ color: 'var(--color-text-secondary)' }}>
-                    {cat}
-                  </span>
-                  <div className="flex-1 h-2.5 rounded-full overflow-hidden" style={{ backgroundColor: 'var(--color-bg-subtle)' }}>
-                    <div
-                      className="h-full rounded-full transition-all duration-500"
-                      style={{
-                        width: `${barWidth}%`,
-                        backgroundColor: catColor,
-                        opacity: 0.6 + (count / maxCount) * 0.4,
-                      }}
-                    />
-                  </div>
-                  <span className="text-[9px] font-bold shrink-0 w-4 text-right" style={{ color: 'var(--color-text-tertiary)' }}>
-                    {count}
-                  </span>
-                </div>
-              )
-            })}
+          </div>
+          <div className="h-2 w-full rounded-full overflow-hidden flex bg-[var(--color-bg-subtle)] border border-[var(--color-border)]">
+            <div className="h-full transition-all duration-1000" style={{ width: `${lostPct}%`, backgroundColor: 'var(--accent-ee)' }} />
+            <div className="h-full transition-all duration-1000" style={{ width: `${foundPct}%`, backgroundColor: 'var(--accent-af)' }} />
           </div>
         </div>
       )}
-      {/* Divider between stats and item list */}
-      <div className="h-px w-full" style={{ backgroundColor: 'var(--color-border)' }} />
     </div>
   )
 }
@@ -3846,6 +3516,7 @@ function LostFoundView({
   const [bookmarkedIds, setBookmarkedIds] = useState<string[]>([])
   const [urgentIds, setUrgentIds] = useState<string[]>([])
   const [viewCounts, setViewCounts] = useState<Record<string, number>>({})
+  const [viewMode, setViewMode] = useState<ViewMode>('list')
   const [showOnboarding, setShowOnboarding] = useState(false)
   const [newSinceVisit, setNewSinceVisit] = useState(0)
   const [focusedItemIndex, setFocusedItemIndex] = useState(-1)
@@ -4850,28 +4521,34 @@ function LostFoundView({
           <EmptyState hasFilters={hasFilters} onReport={() => onSubViewChange('report')} />
         ) : (
           <AnimatePresence>
-            {activeItems.map((item, idx) => (
-              <div
-                key={item.id}
-                className={`relative ${focusedItemIndex === idx ? 'kb-focused-item rounded-xl' : ''}`}
-              >
-                <ItemCard
-                  item={item}
-                  onClick={() => openDetail(item)}
-                  onShare={handleShareItem}
-                  isMyItem={myReportedIds.includes(item.id)}
-                  isBookmarked={bookmarkedIds.includes(item.id)}
-                  onToggleBookmark={handleToggleBookmark}
-                  onQuickAction={handleQuickAction}
-                  isUrgent={urgentIds.includes(item.id)}
-                  viewCount={viewCounts[item.id] || 0}
-                  onLocationFilter={handleLocationFilter}
-                />
-                {focusedItemIndex === idx && (
-                  <div className="kb-focused-tooltip">Press Enter to view</div>
-                )}
-              </div>
-            ))}
+            <motion.div 
+              layout
+              className={viewMode === 'grid' ? 'grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4' : 'space-y-4'}
+            >
+              {activeItems.map((item, idx) => (
+                <div
+                  key={item.id}
+                  className={`relative ${focusedItemIndex === idx ? 'kb-focused-item rounded-xl' : ''}`}
+                >
+                  <ItemCard
+                    item={item}
+                    onClick={() => openDetail(item)}
+                    onShare={handleShareItem}
+                    isMyItem={myReportedIds.includes(item.id)}
+                    isBookmarked={bookmarkedIds.includes(item.id)}
+                    onToggleBookmark={handleToggleBookmark}
+                    onQuickAction={handleQuickAction}
+                    isUrgent={urgentIds.includes(item.id)}
+                    viewCount={viewCounts[item.id] || 0}
+                    onLocationFilter={handleLocationFilter}
+                    viewMode={viewMode}
+                  />
+                  {focusedItemIndex === idx && (
+                    <div className="kb-focused-tooltip">Press Enter to view</div>
+                  )}
+                </div>
+              ))}
+            </motion.div>
           </AnimatePresence>
         )}
 
@@ -4975,41 +4652,42 @@ function LostFoundView({
   }
 
   return (
-    <div className="flex flex-col flex-1 min-h-0">
+    <div className="flex flex-col flex-1 min-h-0 max-w-5xl mx-auto w-full">
       {subView === 'list' && (
         <motion.div
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
-          className="space-y-4"
+          className="space-y-6"
         >
           {/* Section title & description */}
-          <div>
-            <p
-              className="font-mono text-[10px] uppercase tracking-[0.1em] mb-2"
-              style={{ color: 'var(--accent-lf)' }}
-            >
-              Lost & Found
-            </p>
-            <h2
-              className="font-body text-xl md:text-2xl font-bold leading-tight mb-2"
-              style={{ color: 'var(--color-text-primary)' }}
-            >
-              Reunite students with their belongings
-            </h2>
-            <p className="text-sm leading-relaxed" style={{ color: 'var(--color-text-secondary)' }}>
-              Report items you&apos;ve lost or found on campus. Help fellow students recover their belongings quickly.
-            </p>
-            {/* Hero CTA Button */}
+          <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+            <div className="flex-1">
+              <p
+                className="font-mono text-[10px] uppercase tracking-[0.1em] mb-2"
+                style={{ color: 'var(--accent-lf)' }}
+              >
+                Lost & Found
+              </p>
+              <h2
+                className="font-body text-2xl md:text-3xl font-bold leading-tight mb-2 tracking-tight"
+                style={{ color: 'var(--color-text-primary)' }}
+              >
+                Reunite students with their belongings
+              </h2>
+              <p className="text-sm leading-relaxed max-w-2xl" style={{ color: 'var(--color-text-secondary)' }}>
+                Report items you&apos;ve lost or found on campus. Help fellow students recover their belongings quickly.
+              </p>
+            </div>
+            {/* Top Right Primary CTA */}
             <button
               onClick={() => { onSubViewChange('report'); window.scrollTo({ top: 0, behavior: 'smooth' }) }}
-              className="mt-4 rounded-xl py-3 px-6 text-xs font-bold uppercase tracking-[0.1em] transition-all duration-150 flex items-center gap-2 hover:scale-[1.02] active:scale-[0.98] cta-pulse-btn"
+              className="shrink-0 rounded-xl py-3 px-6 text-xs font-bold uppercase tracking-[0.1em] transition-all duration-150 flex items-center justify-center gap-2 hover:scale-[1.05] active:scale-[0.98] cta-pulse-btn shadow-md hover:shadow-lg"
               style={{
-                border: '1.5px solid var(--accent-lf)',
                 backgroundColor: 'var(--accent-lf)',
                 color: 'white',
               }}
             >
-              <Plus width={14} height={14} />
+              <Plus width={16} height={16} strokeWidth={3} />
               Report an Item
             </button>
           </div>
@@ -5019,40 +4697,41 @@ function LostFoundView({
 
           <SectionDivider />
 
-          {/* Mobile: Search, Sort & Filter Bar */}
-          <div className="flex gap-2 md:hidden">
+          {/* Search, Sort & Filter Bar */}
+          <div className="flex flex-col sm:flex-row gap-3">
             <div
-              className="flex-1 flex items-center gap-2 rounded-lg px-3 py-2"
+              className="flex-1 flex items-center gap-2 rounded-xl px-4 py-3 transition-all duration-200 focus-within:ring-2 focus-within:ring-[var(--accent-lf)]/20"
               style={{
-                backgroundColor: 'var(--color-bg-subtle)',
+                backgroundColor: 'var(--color-bg-raised)',
                 border: '1.5px solid var(--color-border)',
               }}
             >
-              <Search width={14} height={14} style={{ color: 'var(--color-text-tertiary)' }} />
+              <Search width={16} height={16} style={{ color: 'var(--color-text-tertiary)' }} />
               <input
                 type="text"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                placeholder="Search items..."
-                className="flex-1 bg-transparent text-sm outline-none focus:ring-0"
+                placeholder="Search lost or found items..."
+                className="flex-1 bg-transparent text-sm outline-none placeholder:text-[var(--color-text-tertiary)]"
                 style={{ color: 'var(--color-text-primary)' }}
               />
               {searchQuery && (
-                <button onClick={() => setSearchQuery('')}>
-                  <X width={14} height={14} style={{ color: 'var(--color-text-tertiary)' }} />
+                <button onClick={() => setSearchQuery('')} className="hover:scale-110 transition-transform">
+                  <X width={16} height={16} style={{ color: 'var(--color-text-tertiary)' }} />
                 </button>
               )}
             </div>
             <button
               onClick={() => setShowFilters(!showFilters)}
-              className="relative rounded-lg px-3 py-2 transition-all duration-150 active:scale-[0.98]"
+              className="md:hidden relative rounded-xl px-4 py-3 transition-all duration-150 active:scale-[0.98] flex items-center justify-center gap-2 font-bold text-xs uppercase tracking-widest"
               style={{
-                backgroundColor: showFilters ? 'var(--accent-lf-bg)' : 'var(--color-bg-subtle)',
+                backgroundColor: showFilters ? 'var(--accent-lf-bg)' : 'var(--color-bg-raised)',
                 border: `1.5px solid ${showFilters ? 'var(--accent-lf)' : 'var(--color-border)'}`,
                 color: showFilters ? 'var(--accent-lf)' : 'var(--color-text-secondary)',
               }}
             >
               <Filter width={14} height={14} />
+              Filters
               {hasFilters && filterCount > 0 && (
                 <span
                   className="absolute -top-1 -right-1 w-4 h-4 rounded-full flex items-center justify-center text-white text-[8px] font-bold"
@@ -5133,6 +4812,30 @@ function LostFoundView({
 
             {/* Desktop Main Content */}
             <div className="flex-1 min-w-0 space-y-4">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <span className="text-sm font-bold text-[var(--color-text-primary)]">
+                    {activeItems.length} Active Items
+                  </span>
+                  <span className="text-[10px] text-[var(--color-text-tertiary)] uppercase font-medium">Browsing all items</span>
+                </div>
+                <div className="flex items-center gap-1 bg-[var(--color-bg-subtle)] p-1 rounded-lg border border-[var(--color-border)]">
+                  <button
+                    onClick={() => setViewMode('grid')}
+                    className={`p-1.5 rounded-md transition-all ${viewMode === 'grid' ? 'bg-[var(--color-bg-raised)] text-[var(--accent-lf)] shadow-sm' : 'text-[var(--color-text-tertiary)] hover:text-[var(--color-text-primary)]'}`}
+                    title="Grid View"
+                  >
+                    <LayoutGrid width={14} height={14} />
+                  </button>
+                  <button
+                    onClick={() => setViewMode('list')}
+                    className={`p-1.5 rounded-md transition-all ${viewMode === 'list' ? 'bg-[var(--color-bg-raised)] text-[var(--accent-lf)] shadow-sm' : 'text-[var(--color-text-tertiary)] hover:text-[var(--color-text-primary)]'}`}
+                    title="List View"
+                  >
+                    <List width={14} height={14} />
+                  </button>
+                </div>
+              </div>
               {renderItemsList(false)}
             </div>
           </div>
@@ -5605,7 +5308,7 @@ export default function LostFoundPage() {
 
       <div
         id="main-content"
-        className="flex flex-col flex-1 px-5 pt-4 pb-4 max-w-lg md:max-w-5xl lg:max-w-6xl mx-auto w-full"
+        className="flex flex-col flex-1 px-5 pt-4 pb-4 max-w-5xl mx-auto w-full"
         style={{ color: 'var(--color-text-primary)' }}
       >
         <LostFoundView
@@ -5614,18 +5317,20 @@ export default function LostFoundPage() {
           onSubViewChange={setSubView}
           autoSelectItemId={searchSelectedItemId}
         />
-        <Footer onQuickLink={(action) => {
-          if (action === 'report') {
-            setSubView('report')
-            window.scrollTo({ top: 0, behavior: 'smooth' })
-          } else if (action === 'browse-found' || action === 'browse-lost') {
-            setSubView('list')
-            window.scrollTo({ top: 0, behavior: 'smooth' })
-          }
-        }} />
+        <div className="mt-12">
+          <Footer onQuickLink={(action) => {
+            if (action === 'report') {
+              setSubView('report')
+              window.scrollTo({ top: 0, behavior: 'smooth' })
+            } else if (action === 'browse-found' || action === 'browse-lost') {
+              setSubView('list')
+              window.scrollTo({ top: 0, behavior: 'smooth' })
+            }
+          }} />
+        </div>
         
         {/* Bottom padding for scroll-past nav bar */}
-        <div className="h-[180px] shrink-0" />
+        <div className="h-[120px] shrink-0" />
       </div>
     </div>
   )
