@@ -64,3 +64,12 @@ logs/timetable.log
 __pycache__/
 *.py[cod]
 
+# Project Context (Local only)
+/GEMINI.md
+
+# Local temporary files and screenshots
+/*.png
+/*.jpg
+/*.jpeg
+/lint.txt
+
