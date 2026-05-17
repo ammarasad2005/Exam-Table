@@ -153,16 +153,6 @@
     "date": "18/05/2026",
     "day": "Monday",
     "time": "9:00 to 12:00 PM",
-    "courseCode": "BA3005",
-    "courseName": "Database Systems for Business",
-    "batch": "2023",
-    "department": "BA",
-    "school": "FSM"
-  },
-  {
-    "date": "18/05/2026",
-    "day": "Monday",
-    "time": "9:00 to 12:00 PM",
     "courseCode": "AF3008",
     "courseName": "Business Research and Data Mining",
     "batch": "2023",
@@ -283,16 +273,6 @@
     "date": "18/05/2026",
     "day": "Monday",
     "time": "1:00 to 4:00 PM",
-    "courseCode": "CY3004",
-    "courseName": "Fundamentals of Malware Analysis",
-    "batch": "2023",
-    "department": "CY",
-    "school": "FSC"
-  },
-  {
-    "date": "18/05/2026",
-    "day": "Monday",
-    "time": "1:00 to 4:00 PM",
     "courseCode": "AF1002",
     "courseName": "Financial Accounting",
     "batch": "2025",
@@ -403,16 +383,6 @@
     "date": "19/05/2026",
     "day": "Tuesday",
     "time": "9:00 to 12:00 PM",
-    "courseCode": "EE3009",
-    "courseName": "Computer Architecture",
-    "batch": "2023",
-    "department": "CS",
-    "school": "FSC"
-  },
-  {
-    "date": "19/05/2026",
-    "day": "Tuesday",
-    "time": "9:00 to 12:00 PM",
     "courseCode": "CS2009",
     "courseName": "Design and Analysis of Algorithms",
     "batch": "2024",
@@ -507,6 +477,16 @@
     "courseName": "Fundamentals of Data Visualization",
     "batch": "2022",
     "department": "CS",
+    "school": "FSC"
+  },
+  {
+    "date": "19/05/2026",
+    "day": "Tuesday",
+    "time": "1:00 to 4:00 PM",
+    "courseCode": "CY3004",
+    "courseName": "Fundamentals of Malware Analysis",
+    "batch": "2023",
+    "department": "CY",
     "school": "FSC"
   },
   {
@@ -853,9 +833,9 @@
     "date": "21/05/2026",
     "day": "Thursday",
     "time": "9:00 to 12:00 PM",
-    "courseCode": "CY2002",
+    "courseCode": "CY3006",
     "courseName": "Digital Forensics",
-    "batch": "2022",
+    "batch": "2023",
     "department": "CY",
     "school": "FSC"
   },
@@ -863,9 +843,9 @@
     "date": "21/05/2026",
     "day": "Thursday",
     "time": "9:00 to 12:00 PM",
-    "courseCode": "CY3006",
+    "courseCode": "CY2002",
     "courseName": "Digital Forensics",
-    "batch": "2023",
+    "batch": "2022",
     "department": "CY",
     "school": "FSC"
   },
@@ -1563,6 +1543,16 @@
     "date": "01/06/2026",
     "day": "Monday",
     "time": "9:00 to 12:00 PM",
+    "courseCode": "MT2001",
+    "courseName": "Statistical Inference",
+    "batch": "2022",
+    "department": "AF",
+    "school": "FSM"
+  },
+  {
+    "date": "01/06/2026",
+    "day": "Monday",
+    "time": "9:00 to 12:00 PM",
     "courseCode": "MG4522",
     "courseName": "Islamic Banking and Finance",
     "batch": "2023",
@@ -1898,26 +1888,6 @@
     "batch": "2022",
     "department": "BBA",
     "school": "FSM"
-  },
-  {
-    "date": "02/06/2026",
-    "day": "Tuesday",
-    "time": "1:00 to 4:00 PM",
-    "courseCode": "EL4031",
-    "courseName": "Computer Architecture - Lab",
-    "batch": "2023",
-    "department": "EE",
-    "school": "FSE"
-  },
-  {
-    "date": "02/06/2026",
-    "day": "Tuesday",
-    "time": "1:00 to 4:00 PM",
-    "courseCode": "EL3031",
-    "courseName": "Digital Signal Processing - Lab",
-    "batch": "2023",
-    "department": "EE",
-    "school": "FSE"
   },
   {
     "date": "03/06/2026",
@@ -2303,6 +2273,16 @@
     "date": "04/06/2026",
     "day": "Thursday",
     "time": "1:00 to 4:00 PM",
+    "courseCode": "SL1008",
+    "courseName": "Communication and Presentation Skills - Lab",
+    "batch": "2022",
+    "department": "CS",
+    "school": "FSC"
+  },
+  {
+    "date": "04/06/2026",
+    "day": "Thursday",
+    "time": "1:00 to 4:00 PM",
     "courseCode": "AL4002",
     "courseName": "Computer Vision - Lab",
     "batch": "2023",
@@ -2483,18 +2463,8 @@
     "date": "05/06/2026",
     "day": "Friday",
     "time": "9:00 to 12:00 PM",
-    "courseCode": "BA4006",
-    "courseName": "Contextual Marketing and Product Analytics",
-    "batch": "2022",
-    "department": "BA",
-    "school": "FSM"
-  },
-  {
-    "date": "05/06/2026",
-    "day": "Friday",
-    "time": "9:00 to 12:00 PM",
-    "courseCode": "EE3032",
-    "courseName": "Power Electronics",
+    "courseCode": "EE4031",
+    "courseName": "Computer Architecture",
     "batch": "2023",
     "department": "EE",
     "school": "FSE"
@@ -2503,8 +2473,8 @@
     "date": "05/06/2026",
     "day": "Friday",
     "time": "9:00 to 12:00 PM",
-    "courseCode": "EE4031",
-    "courseName": "Computer Architecture",
+    "courseCode": "EE3032",
+    "courseName": "Power Electronics",
     "batch": "2023",
     "department": "EE",
     "school": "FSE"
@@ -2793,6 +2763,16 @@
     "date": "06/06/2026",
     "day": "Saturday",
     "time": "1:00 to 4:00 PM",
+    "courseCode": "BA3005",
+    "courseName": "Database Systems for Business",
+    "batch": "2023",
+    "department": "BA",
+    "school": "FSM"
+  },
+  {
+    "date": "06/06/2026",
+    "day": "Saturday",
+    "time": "1:00 to 4:00 PM",
     "courseCode": "CL2013",
     "courseName": "Introduction to Database Systems - Lab",
     "batch": "2024",
@@ -2813,9 +2793,9 @@
     "date": "06/06/2026",
     "day": "Saturday",
     "time": "1:00 to 4:00 PM",
-    "courseCode": "EL2015",
-    "courseName": "Electro-Mechanical Systems - Lab",
-    "batch": "2024",
+    "courseCode": "EL2010",
+    "courseName": "Electro-Mechanical Systems Lab",
+    "batch": "2023",
     "department": "EE",
     "school": "FSE"
   },
@@ -2823,9 +2803,9 @@
     "date": "06/06/2026",
     "day": "Saturday",
     "time": "1:00 to 4:00 PM",
-    "courseCode": "EL2010",
-    "courseName": "Electro-Mechanical Systems Lab",
-    "batch": "2023",
+    "courseCode": "EL2015",
+    "courseName": "Electro-Mechanical Systems - Lab",
+    "batch": "2024",
     "department": "EE",
     "school": "FSE"
   },
@@ -2838,6 +2818,16 @@
     "batch": "2024",
     "department": "EE",
     "school": "FSE"
+  },
+  {
+    "date": "06/06/2026",
+    "day": "Saturday",
+    "time": "5:00 to 8:00 PM",
+    "courseCode": "BA4006",
+    "courseName": "Contextual Marketing and Product Analytics",
+    "batch": "2022",
+    "department": "BA",
+    "school": "FSM"
   },
   {
     "date": "08/06/2026",
@@ -2918,6 +2908,16 @@
     "batch": "2022",
     "department": "AF",
     "school": "FSM"
+  },
+  {
+    "date": "08/06/2026",
+    "day": "Monday",
+    "time": "1:00 to 4:00 PM",
+    "courseCode": "EE3009",
+    "courseName": "Computer Architecture",
+    "batch": "2023",
+    "department": "CS",
+    "school": "FSC"
   },
   {
     "date": "08/06/2026",
@@ -3013,16 +3013,6 @@
     "date": "08/06/2026",
     "day": "Monday",
     "time": "1:00 to 4:00 PM",
-    "courseCode": "EL3034",
-    "courseName": "VLSI - Lab",
-    "batch": "2022",
-    "department": "EE",
-    "school": "FSE"
-  },
-  {
-    "date": "08/06/2026",
-    "day": "Monday",
-    "time": "1:00 to 4:00 PM",
     "courseCode": "EL1005",
     "courseName": "Digital Logic Design - Lab",
     "batch": "2024",
@@ -3036,6 +3026,16 @@
     "courseCode": "EL1005",
     "courseName": "Digital Logic Design - Lab",
     "batch": "2024",
+    "department": "EE",
+    "school": "FSE"
+  },
+  {
+    "date": "08/06/2026",
+    "day": "Monday",
+    "time": "1:00 to 4:00 PM",
+    "courseCode": "EL3034",
+    "courseName": "VLSI - Lab",
+    "batch": "2022",
     "department": "EE",
     "school": "FSE"
   },
@@ -3493,9 +3493,9 @@
     "date": "11/06/2026",
     "day": "Thursday",
     "time": "9:00 to 12:00 PM",
-    "courseCode": "EL4033",
-    "courseName": "Industrial Processes Control - Lab",
-    "batch": "2022",
+    "courseCode": "CL1009",
+    "courseName": "Applications of Information Communication Technologies - Lab",
+    "batch": "2025",
     "department": "EE",
     "school": "FSE"
   },
@@ -3503,9 +3503,9 @@
     "date": "11/06/2026",
     "day": "Thursday",
     "time": "9:00 to 12:00 PM",
-    "courseCode": "CL1009",
-    "courseName": "Applications of Information Communication Technologies - Lab",
-    "batch": "2025",
+    "courseCode": "EL4033",
+    "courseName": "Industrial Processes Control - Lab",
+    "batch": "2022",
     "department": "EE",
     "school": "FSE"
   },
@@ -3700,6 +3700,26 @@
     "school": "FSM"
   },
   {
+    "date": "12/06/2026",
+    "day": "Friday",
+    "time": "1:00 to 4:00 PM",
+    "courseCode": "EL4031",
+    "courseName": "Computer Architecture - Lab",
+    "batch": "2023",
+    "department": "EE",
+    "school": "FSE"
+  },
+  {
+    "date": "12/06/2026",
+    "day": "Friday",
+    "time": "1:00 to 4:00 PM",
+    "courseCode": "EL3031",
+    "courseName": "Digital Signal Processing - Lab",
+    "batch": "2023",
+    "department": "EE",
+    "school": "FSE"
+  },
+  {
     "date": "13/06/2026",
     "day": "Saturday",
     "time": "9:00 to 12:00 PM",
@@ -3747,6 +3767,16 @@
     "courseName": "Data Analysis for Business II - Lab",
     "batch": "2024",
     "department": "FT",
+    "school": "FSM"
+  },
+  {
+    "date": "13/06/2026",
+    "day": "Saturday",
+    "time": "9:00 to 12:00 PM",
+    "courseCode": "ML2001",
+    "courseName": "Statistical Inference  Lab",
+    "batch": "2022",
+    "department": "AF",
     "school": "FSM"
   },
   {
