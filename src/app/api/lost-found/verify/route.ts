@@ -10,10 +10,10 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'Both images are required' }, { status: 400 })
     }
 
-    const token = process.env.GITHUB_TOKEN
-    if (!token) {
-      console.error('GITHUB_TOKEN is not set')
-      return NextResponse.json({ match: false, confidence: 0, error: 'GitHub token not configured' })
+    const apiKey = process.env.OPENROUTER_API_KEY
+    if (!apiKey) {
+      console.error('OPENROUTER_API_KEY is not set')
+      return NextResponse.json({ match: false, confidence: 0, error: 'OpenRouter key not configured' })
     }
 
     // 1. Fetch original image
@@ -42,14 +42,16 @@ export async function POST(request: Request) {
       "reasoning": string
     }`
 
-    const response = await fetch("https://models.github.ai/inference/chat/completions", {
+    const response = await fetch("https://openrouter.ai/api/v1/chat/completions", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        "Authorization": `Bearer ${token}`
+        "Authorization": `Bearer ${apiKey}`,
+        "HTTP-Referer": "https://fast-exams.vercel.app",
+        "X-Title": "FAST Schedule Platform"
       },
       body: JSON.stringify({
-        model: "gpt-4o-mini",
+        model: "qwen/qwen-3.6-plus:free",
         messages: [
           {
             role: "user",
@@ -58,15 +60,13 @@ export async function POST(request: Request) {
               {
                 type: "image_url",
                 image_url: {
-                  url: `data:image/jpeg;base64,${originalBase64}`,
-                  detail: "low"
+                  url: `data:image/jpeg;base64,${originalBase64}`
                 },
               },
               {
                 type: "image_url",
                 image_url: {
-                  url: `data:image/jpeg;base64,${cleanClaimantBase64}`,
-                  detail: "low"
+                  url: `data:image/jpeg;base64,${cleanClaimantBase64}`
                 },
               },
             ],
@@ -79,18 +79,18 @@ export async function POST(request: Request) {
 
     if (!response.ok) {
       const errorText = await response.text()
-      throw new Error(`GitHub Vision API Error: ${errorText}`)
+      throw new Error(`OpenRouter Vision API Error: ${errorText}`)
     }
 
     const data = await response.json()
     const content = data.choices[0]?.message?.content
-    if (!content) throw new Error('Empty response from GitHub Vision')
+    if (!content) throw new Error('Empty response from OpenRouter Vision')
     
     const parsed = JSON.parse(content)
     return NextResponse.json(parsed)
 
   } catch (error: any) {
-    console.error('GitHub Verify API error:', error)
+    console.error('OpenRouter Verify API error:', error)
     return NextResponse.json({ 
       error: error.message || 'AI verification failed', 
       confidence: 0, 
