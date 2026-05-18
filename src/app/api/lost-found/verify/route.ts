@@ -17,60 +17,78 @@ export async function POST(request: Request) {
       return NextResponse.json({ match: false, confidence: 0, error: 'AI key not configured' })
     }
 
-    try {
-      const genAI = new GoogleGenerativeAI(apiKey)
-      const model = genAI.getGenerativeModel({ 
-        model: 'gemini-1.5-flash',
-        generationConfig: { responseMimeType: "application/json" }
-      })
-
-      // Fetch original image as bytes
-      const originalImageResp = await fetch(originalImageUrl)
-      const originalImageBuffer = await originalImageResp.arrayBuffer()
-      
-      const prompt = `You are an Owner Verification AI for a university Lost & Found platform. 
-      Compare the original photo of a found item (Image 1) with a "proof of possession" photo (Image 2) taken by someone claiming to be the owner.
-      
-      STRICT INSTRUCTIONS:
-      1. IGNORE the background, bedsheets, flooring, or hands holding the item.
-      2. FOCUS on the object's identity: brand name, specific scratches, unique stickers, color shades, and physical geometry.
-      3. BE FORGIVING of minor camera blur, different angles, or lighting shadows.
-      4. If the objects look like the EXACT SAME physical unit (not just the same model, but the same specific item), return match: true.
-      
-      Return a JSON object with:
-      "match": (boolean),
-      "confidence": (number 0-100),
-      "reasoning": (a very short sentence explaining what you saw)`
-
-      const result = await model.generateContent([
-        prompt,
-        {
-          inlineData: {
-            data: Buffer.from(originalImageBuffer).toString('base64'),
-            mimeType: 'image/jpeg'
-          }
-        },
-        {
-          inlineData: {
-            data: resolutionImageBase64,
-            mimeType: 'image/jpeg'
-          }
-        }
-      ])
-
-      const content = result.response.text()
-      if (content) {
-        const parsed = JSON.parse(content)
-        return NextResponse.json(parsed)
+    const genAI = new GoogleGenerativeAI(apiKey)
+    const model = genAI.getGenerativeModel({ 
+      model: 'gemini-1.5-flash',
+      generationConfig: { 
+        responseMimeType: "application/json",
+        temperature: 0.1 
       }
-    } catch (error) {
-      console.error('Vision matching failed:', error)
-      return NextResponse.json({ error: 'AI verification failed', confidence: 0, match: false }, { status: 500 })
-    }
+    })
 
-    return NextResponse.json({ match: false, confidence: 0 })
-  } catch (error) {
+    // 1. Fetch original image
+    console.log('Fetching original image:', originalImageUrl)
+    const originalImageResp = await fetch(originalImageUrl)
+    if (!originalImageResp.ok) {
+      throw new Error(`Failed to fetch original image: ${originalImageResp.statusText}`)
+    }
+    const originalImageBuffer = await originalImageResp.arrayBuffer()
+    const originalBase64 = Buffer.from(originalImageBuffer).toString('base64')
+
+    // 2. Validate claimant image (should be pure base64)
+    const cleanClaimantBase64 = resolutionImageBase64.replace(/^data:image\/\w+;base64,/, '')
+
+    console.log('Original Base64 length:', originalBase64.length)
+    console.log('Claimant Base64 length:', cleanClaimantBase64.length)
+
+    const prompt = `You are a high-accuracy Owner Verification System. 
+    Analyze two images of a university lost & found item. 
+    Image 1: Original photo from the person who found it.
+    Image 2: Verification photo from the person claiming to be the owner.
+
+    TASK: 
+    - Determine if Image 2 shows the EXACT physical item shown in Image 1.
+    - LOOK FOR: Specific scratches, unique wear patterns, brand logo placement, cable twists, or distinct geometry.
+    - IGNORE: Backgrounds, bedsheets, hands, lighting shadows, and different photo angles.
+    - BE FORGIVING: If they look like the same unit but the second photo is slightly blurry or at a different angle, be helpful.
+
+    JSON SCHEMA:
+    {
+      "match": boolean,
+      "confidence": number (0-100),
+      "reasoning": string (explain why it is or isn't a match based on specific physical markers)
+    }`
+
+    const result = await model.generateContent([
+      {
+        inlineData: {
+          data: originalBase64,
+          mimeType: 'image/jpeg'
+        }
+      },
+      {
+        inlineData: {
+          data: cleanClaimantBase64,
+          mimeType: 'image/jpeg'
+        }
+      },
+      prompt
+    ])
+
+    const response = await result.response
+    const text = response.text()
+    console.log('AI Response:', text)
+
+    const parsed = JSON.parse(text)
+    return NextResponse.json(parsed)
+
+  } catch (error: any) {
     console.error('Verify API error:', error)
-    return NextResponse.json({ error: 'Failed to verify images' }, { status: 500 })
+    return NextResponse.json({ 
+      error: error.message || 'AI verification failed', 
+      confidence: 0, 
+      match: false,
+      reasoning: 'Technical error during verification process'
+    }, { status: 500 })
   }
 }
