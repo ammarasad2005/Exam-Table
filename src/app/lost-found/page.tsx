@@ -2076,7 +2076,7 @@ function ItemDetail({
       const result = await verifyRes.json()
       setVerificationResult(result)
 
-      if (result.match && result.confidence > 80) {
+      if (result.match && result.confidence >= 75) {
         // 3. Upload resolution image to storage
         const fileExt = compressed.name.split('.').pop()
         const fileName = `resolved-${item.id}-${Date.now()}.${fileExt}`
@@ -2084,7 +2084,7 @@ function ItemDetail({
         if (uploadError) throw new Error('Upload failed')
         const { data: { publicUrl } } = supabase.storage.from('lost_found_images').getPublicUrl(fileName)
 
-        toast({ title: 'Verification Success!', description: 'AI confirmed possession. Marking as resolved.' })
+        toast({ title: 'Verification Success!', description: result.reasoning || 'AI confirmed possession. Marking as resolved.' })
         onResolve(item.id, publicUrl)
         setShowVerifyFlow(false)
       } else {

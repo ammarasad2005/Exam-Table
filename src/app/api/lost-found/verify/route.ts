@@ -28,15 +28,19 @@ export async function POST(request: Request) {
       const originalImageResp = await fetch(originalImageUrl)
       const originalImageBuffer = await originalImageResp.arrayBuffer()
       
-      const prompt = `You are a visual verification system for a university Lost & Found platform. 
-      Compare the original photo of a found item (Image 1) with a "proof of possession" photo provided by a claimant (Image 2).
+      const prompt = `You are an Owner Verification AI for a university Lost & Found platform. 
+      Compare the original photo of a found item (Image 1) with a "proof of possession" photo (Image 2) taken by someone claiming to be the owner.
       
-      Determine if they are the EXACT SAME physical object. Look for unique scratches, brand markings, colors, and specific wear patterns.
+      STRICT INSTRUCTIONS:
+      1. IGNORE the background, bedsheets, flooring, or hands holding the item.
+      2. FOCUS on the object's identity: brand name, specific scratches, unique stickers, color shades, and physical geometry.
+      3. BE FORGIVING of minor camera blur, different angles, or lighting shadows.
+      4. If the objects look like the EXACT SAME physical unit (not just the same model, but the same specific item), return match: true.
       
       Return a JSON object with:
       "match": (boolean),
       "confidence": (number 0-100),
-      "reasoning": (short string explaining the decision)`
+      "reasoning": (a very short sentence explaining what you saw)`
 
       const result = await model.generateContent([
         prompt,
