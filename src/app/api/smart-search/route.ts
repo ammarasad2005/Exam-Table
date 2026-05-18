@@ -53,19 +53,17 @@ export async function POST(request: NextRequest) {
     const categories = [...new Set(scored.slice(0, 10).map((i: { category?: string }) => i.category))]
     const alternatives: string[] = categories.slice(0, 4).filter(Boolean) as string[]
 
-    const apiKey = process.env.OPENROUTER_API_KEY
-    if (apiKey) {
+    const token = process.env.GITHUB_TOKEN
+    if (token) {
       try {
-        const response = await fetch("https://openrouter.ai/api/v1/chat/completions", {
+        const response = await fetch("https://models.github.io/inference/chat/completions", {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
-            "Authorization": `Bearer ${apiKey}`,
-            "HTTP-Referer": "https://fast-exams.vercel.app",
-            "X-Title": "FAST Schedule Platform"
+            "Authorization": `Bearer ${token}`
           },
           body: JSON.stringify({
-            model: "qwen/qwen3.6-plus:free",
+            model: "gpt-4o-mini",
             messages: [
               {
                 role: "system",
@@ -91,7 +89,7 @@ export async function POST(request: NextRequest) {
           })
         }
       } catch (err) {
-        console.error('OpenRouter Smart Search failed:', err)
+        console.error('GitHub Smart Search failed:', err)
       }
     }
 
