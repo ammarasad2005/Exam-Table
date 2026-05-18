@@ -35,19 +35,25 @@ export async function POST(request: Request) {
         messages: [
           {
             role: "system",
-            content: `You are a campus information assistant. Analyze a "handoff note" for a lost & found item and extract structured location data.
+            content: `You are a campus information assistant. Analyze a "location note" for a lost & found item and extract structured data.
+            Differentiate between WHERE the item was originally discovered (Found At) and WHERE it is currently held (Submitted At).
+            
             Return ONLY a JSON object with this exact schema:
             {
-              "custodian": string (e.g., "Academic Office", "Guard", "None"),
-              "building": string (e.g., "EE", "CS", "Cafeteria", "Main Gate", "Unknown"),
-              "floor": string (e.g., "Ground", "1st", "None"),
-              "specific_area": string (e.g., "Near the stairs", "On the desk"),
-              "status": "static" | "custodial"
+              "discovered_at": {
+                "building": string (e.g., "EE", "CS", "Cafeteria", "Main Gate", "Unknown"),
+                "area": string (e.g., "Near the stairs", "In Lab 4", "Bench outside")
+              },
+              "currently_held_at": {
+                "custodian": string (e.g., "Academic Office", "Guard", "None"),
+                "building": string (e.g., "EE", "CS", "Main Gate", "Unknown"),
+                "area": string (e.g., "On the desk", "In drawer")
+              }
             }`
           },
           {
             role: "user",
-            content: `Handoff note: "${note}"`
+            content: `Location note: "${note}"`
           }
         ],
         response_format: { type: "json_object" }
@@ -63,7 +69,21 @@ export async function POST(request: Request) {
     const content = data.choices[0]?.message?.content
     if (!content) throw new Error('Empty response from GitHub Models')
     
-    const structured = JSON.parse(content)
+    const parsed = JSON.parse(content)
+    
+    // Map snake_case to camelCase for the frontend
+    const structured = {
+      discoveredAt: {
+        building: parsed.discovered_at?.building || 'Unknown',
+        area: parsed.discovered_at?.area || 'Unknown'
+      },
+      currentlyHeldAt: {
+        custodian: parsed.currently_held_at?.custodian || 'None',
+        building: parsed.currently_held_at?.building || 'Unknown',
+        area: parsed.currently_held_at?.area || 'Unknown'
+      }
+    }
+
     return NextResponse.json({ structured })
 
   } catch (error: any) {

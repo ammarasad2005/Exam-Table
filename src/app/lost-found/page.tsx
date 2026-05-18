@@ -94,11 +94,8 @@ interface LostFoundItem {
   location: string
   handoffNote?: string
   structuredLocation?: {
-    custodian: string
-    building: string
-    floor: string
-    specific_area: string
-    status: 'static' | 'custodial'
+    discoveredAt: { building: string; area: string }
+    currentlyHeldAt: { custodian: string; building: string; area: string }
   }
   date: string
   contactInfo: string
@@ -2362,55 +2359,75 @@ function ItemDetail({
           </p>
         </div>
 
-        {/* AI Structured Location */}
-        {item.handoffNote && (
-          <div className="pt-2 border-t border-[var(--color-border)]">
-            <label className="font-mono text-[10px] uppercase tracking-[0.1em] block mb-2" style={{ color: 'var(--accent-lf)' }}>
-              AI Location Handoff Note
-            </label>
-            <p className="text-xs italic mb-2" style={{ color: 'var(--color-text-secondary)' }}>
-              &quot;{item.handoffNote}&quot;
-            </p>
-            {item.structuredLocation && (
-              <div className="flex flex-wrap gap-2">
-                {item.structuredLocation.custodian !== 'None' && (
-                  <span className="px-2 py-1 rounded-md text-[9px] font-bold uppercase tracking-wider bg-[var(--accent-af-bg)] text-[var(--accent-af)] border border-[var(--accent-af)]/20">
-                    Custodian: {item.structuredLocation.custodian}
-                  </span>
-                )}
-                {item.structuredLocation.building !== 'None' && (
-                  <span className="px-2 py-1 rounded-md text-[9px] font-bold uppercase tracking-wider bg-[var(--accent-ee-bg)] text-[var(--accent-ee)] border border-[var(--accent-ee)]/20">
-                    Building: {item.structuredLocation.building}
-                  </span>
-                )}
-                {item.structuredLocation.specific_area !== 'None' && (
-                  <span className="px-2 py-1 rounded-md text-[9px] font-bold uppercase tracking-wider bg-[var(--color-bg-subtle)] text-[var(--color-text-primary)] border border-[var(--color-border)]">
-                    Area: {item.structuredLocation.specific_area}
-                  </span>
-                )}
+        {/* Precise Location Sections */}
+        <div className="pt-2 border-t border-[var(--color-border)] space-y-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {/* Found At / Lost At */}
+            <div className="space-y-1.5">
+              <label className="font-mono text-[10px] uppercase tracking-[0.1em] block" style={{ color: 'var(--accent-lf)' }}>
+                {isLost ? 'Lost At' : 'Found At'}
+              </label>
+              <div className="flex items-start gap-2">
+                <div className="w-8 h-8 rounded-lg bg-[var(--color-bg-subtle)] flex items-center justify-center shrink-0 border border-[var(--color-border)]">
+                  <MapPin width={14} height={14} style={{ color: 'var(--accent-lf)' }} />
+                </div>
+                <div>
+                  <p className="text-sm font-bold" style={{ color: 'var(--color-text-primary)' }}>
+                    {item.structuredLocation?.discoveredAt.building !== 'Unknown' 
+                      ? item.structuredLocation?.discoveredAt.building 
+                      : item.location}
+                  </p>
+                  <p className="text-[11px]" style={{ color: 'var(--color-text-tertiary)' }}>
+                    {item.structuredLocation?.discoveredAt.area !== 'Unknown' 
+                      ? item.structuredLocation?.discoveredAt.area 
+                      : 'Exact spot not specified'}
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            {/* Submitted At (Only for Found items) */}
+            {!isLost && (
+              <div className="space-y-1.5">
+                <label className="font-mono text-[10px] uppercase tracking-[0.1em] block" style={{ color: '#16a34a' }}>
+                  Submitted At
+                </label>
+                <div className="flex items-start gap-2">
+                  <div className="w-8 h-8 rounded-lg bg-[#16a34a]/10 flex items-center justify-center shrink-0 border border-[#16a34a]/20">
+                    <ShieldCheck width={14} height={14} style={{ color: '#16a34a' }} />
+                  </div>
+                  <div>
+                    <p className="text-sm font-bold" style={{ color: '#16a34a' }}>
+                      {item.structuredLocation?.currentlyHeldAt.custodian !== 'None' 
+                        ? item.structuredLocation?.currentlyHeldAt.custodian 
+                        : 'In Safekeeping'}
+                    </p>
+                    <p className="text-[11px]" style={{ color: 'var(--color-text-tertiary)' }}>
+                      {item.structuredLocation?.currentlyHeldAt.building !== 'Unknown' 
+                        ? `${item.structuredLocation?.currentlyHeldAt.building} (${item.structuredLocation?.currentlyHeldAt.area})`
+                        : 'Handed over to authorities'}
+                    </p>
+                  </div>
+                </div>
               </div>
             )}
           </div>
-        )}
 
-        <div className="grid grid-cols-2 gap-3 pt-2 border-t border-[var(--color-border)]">
-          <div>
-            <label className="font-mono text-[10px] uppercase tracking-[0.1em] block mb-1" style={{ color: 'var(--color-text-tertiary)' }}>
-              Location
-            </label>
-            <p className="text-sm flex items-center gap-1" style={{ color: 'var(--color-text-primary)' }}>
-              <span className="mappin-bounce"><MapPin width={12} height={12} style={{ color: 'var(--accent-lf)' }} /></span>
-              {item.location}
-            </p>
-          </div>
-          <div>
-            <label className="font-mono text-[10px] uppercase tracking-[0.1em] block mb-1" style={{ color: 'var(--color-text-tertiary)' }}>
-              Date {item.type === 'lost' ? 'Lost' : 'Found'}
-            </label>
-            <p className="text-sm flex items-center gap-1" style={{ color: 'var(--color-text-primary)' }}>
-              <Clock width={12} height={12} style={{ color: 'var(--accent-lf)' }} />
-              {formatDate(item.date)}
-            </p>
+          <div className="pt-2 border-t border-[var(--color-border)] flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <Clock width={12} height={12} style={{ color: 'var(--color-text-tertiary)' }} />
+              <span className="text-[11px] font-medium" style={{ color: 'var(--color-text-secondary)' }}>
+                {isLost ? 'Lost on' : 'Found on'} {formatDate(item.date)}
+              </span>
+            </div>
+            {viewCount > 0 && (
+              <div className="flex items-center gap-1">
+                <Eye width={10} height={10} style={{ color: 'var(--color-text-tertiary)' }} />
+                <span className="text-[10px] font-mono" style={{ color: 'var(--color-text-tertiary)' }}>
+                  {viewCount} view{viewCount !== 1 ? 's' : ''}
+                </span>
+              </div>
+            )}
           </div>
         </div>
       </div>
