@@ -1306,8 +1306,8 @@ function ReportForm({
   const getStep = () => {
     if (!type) return 1
     if (!category) return 2
-    if (!title.trim() || !description.trim() || (type === 'lost' && !location.trim()) || (type === 'found' && !handoffNote.trim()) || !date) return 3
-    if (!contactInfo.trim()) return 4
+    if (!title.trim() || !description.trim() || !date) return 3
+    if (type === 'found' && (!location.trim() || !handoffNote.trim())) return 3
     return 4
   }
   const currentStep = getStep()
@@ -1322,10 +1322,11 @@ function ReportForm({
     const e: Record<string, string> = {}
     if (title.trim().length < 3) e.title = 'Title must be at least 3 characters'
     if (description.trim().length < 5) e.description = 'Description must be at least 5 characters'
-    if (type === 'found' && !handoffNote.trim()) e.handoffNote = 'Please tell us where the item is now'
-    if (type === 'lost' && !location.trim()) e.location = 'Location is required'
+    if (type === 'found') {
+      if (!location.trim()) e.location = 'Where you found it is required'
+      if (!handoffNote.trim()) e.handoffNote = 'Where you submitted it is required'
+    }
     if (!date) e.date = 'Date is required'
-    if (contactInfo.trim().length < 3) e.contactInfo = 'Contact info is required'
     setErrors(e)
     return Object.keys(e).length === 0
   }
@@ -1335,17 +1336,20 @@ function ReportForm({
     if (!validate()) return
     setSubmitting(true)
 
-    let finalLocation = location.trim()
+    let finalLocation = location.trim() || 'Unknown'
     let finalStructured = structuredLocation
 
-    // If it's a found item, process the handoff note with AI
-    if (type === 'found' && handoffNote.trim()) {
+    const noteToProcess = type === 'found' 
+      ? `Found at: ${location.trim()}. Submitted to: ${handoffNote.trim()}`
+      : location.trim()
+
+    if (noteToProcess) {
       setProcessingLocation(true)
       try {
         const res = await fetch('/api/lost-found/handoff', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ note: handoffNote }),
+          body: JSON.stringify({ note: noteToProcess }),
         })
         const data = await res.json()
         if (data.structured) {
@@ -1356,7 +1360,7 @@ function ReportForm({
         }
       } catch (err) {
         console.error('AI processing failed:', err)
-        finalLocation = 'Campus (Handed over)'
+        finalLocation = type === 'found' ? 'Campus (Handed over)' : 'Campus'
       } finally {
         setProcessingLocation(false)
       }
@@ -1412,7 +1416,7 @@ function ReportForm({
         handoffNote: handoffNote.trim() || undefined,
         structuredLocation: finalStructured,
         date: new Date(date).toISOString(),
-        contactInfo: contactInfo.trim(),
+        contactInfo: contactInfo.trim() || 'Not provided',
         imageUrl: finalImageUrl,
       })
       
@@ -1681,51 +1685,78 @@ function ReportForm({
       </div>
 
       {/* Location / Handoff Note */}
-      <div>
-        <label className="font-mono text-[10px] uppercase tracking-[0.1em] mb-2 block" style={{ color: 'var(--color-text-tertiary)' }}>
-          {type === 'lost' ? 'Where was it lost?' : 'Where is the item now?'}
-        </label>
+      <div className="space-y-4">
         {type === 'lost' ? (
-          <>
-            <input
-              type="text"
-              value={location}
-              onChange={(e) => setLocation(e.target.value)}
-              placeholder="e.g., Cafeteria, Library, LRC, C303 etc"
-              list="campus-locations"
-              className={inputCls}
-              style={inputStyle}
-            />
-            <datalist id="campus-locations">
-              {campusLocations.map((loc) => (
-                <option key={loc} value={loc} />
-              ))}
-            </datalist>
-            {errors.location && <p className="text-xs mt-1" style={{ color: 'var(--accent-ee)' }}>{errors.location}</p>}
-          </>
-        ) : (
-          <div className="space-y-1">
-            <textarea
-              value={handoffNote}
-              onChange={(e) => setHandoffNote(e.target.value)}
-              placeholder="e.g., I gave it to the guard at the back gate, or Left it at the EE office counter"
-              rows={2}
-              className={inputCls + ' resize-none'}
-              style={inputStyle}
-            />
-            <div className="flex items-center justify-between">
-              <p className="text-[10px] opacity-70" style={{ color: 'var(--color-text-tertiary)' }}>
-                Write in natural language. AI will extract structured location.
-              </p>
-              {processingLocation && (
-                <div className="flex items-center gap-1 text-[9px] font-bold text-[var(--accent-lf)] animate-pulse">
-                  <Loader2 width={10} height={10} className="animate-spin" />
-                  AI Processing...
-                </div>
-              )}
+          <div>
+            <label className="font-mono text-[10px] uppercase tracking-[0.1em] mb-2 block" style={{ color: 'var(--color-text-tertiary)' }}>
+              Where did you lose it? <span style={{ color: 'var(--color-text-tertiary)' }}>(Optional)</span>
+            </label>
+            <div className="space-y-1">
+              <textarea
+                value={location}
+                onChange={(e) => setLocation(e.target.value)}
+                placeholder="e.g., Near the cafeteria, or left it in CS Lab 4"
+                rows={2}
+                className={inputCls + ' resize-none'}
+                style={inputStyle}
+              />
+              <div className="flex items-center justify-between">
+                <p className="text-[10px] opacity-70" style={{ color: 'var(--color-text-tertiary)' }}>
+                  Write in natural language. If you don&apos;t know, leave it blank.
+                </p>
+                {processingLocation && (
+                  <div className="flex items-center gap-1 text-[9px] font-bold text-[var(--accent-lf)] animate-pulse">
+                    <Loader2 width={10} height={10} className="animate-spin" />
+                    AI Processing...
+                  </div>
+                )}
+              </div>
             </div>
-            {errors.handoffNote && <p className="text-xs mt-1" style={{ color: 'var(--accent-ee)' }}>{errors.handoffNote}</p>}
           </div>
+        ) : (
+          <>
+            <div>
+              <label className="font-mono text-[10px] uppercase tracking-[0.1em] mb-2 block" style={{ color: 'var(--color-text-tertiary)' }}>
+                Where did you find it?
+              </label>
+              <textarea
+                value={location}
+                onChange={(e) => setLocation(e.target.value)}
+                placeholder="e.g., On a bench outside the library"
+                rows={2}
+                className={inputCls + ' resize-none'}
+                style={inputStyle}
+              />
+              {errors.location && <p className="text-xs mt-1" style={{ color: 'var(--accent-ee)' }}>{errors.location}</p>}
+            </div>
+            <div>
+              <label className="font-mono text-[10px] uppercase tracking-[0.1em] mb-2 block" style={{ color: 'var(--color-text-tertiary)' }}>
+                Where did you submit/hand it over?
+              </label>
+              <div className="space-y-1">
+                <textarea
+                  value={handoffNote}
+                  onChange={(e) => setHandoffNote(e.target.value)}
+                  placeholder="e.g., I gave it to the guard at the back gate, or Academic Office"
+                  rows={2}
+                  className={inputCls + ' resize-none'}
+                  style={inputStyle}
+                />
+                <div className="flex items-center justify-between">
+                  <p className="text-[10px] opacity-70" style={{ color: 'var(--color-text-tertiary)' }}>
+                    Write in natural language. AI will extract structured location.
+                  </p>
+                  {processingLocation && (
+                    <div className="flex items-center gap-1 text-[9px] font-bold text-[var(--accent-lf)] animate-pulse">
+                      <Loader2 width={10} height={10} className="animate-spin" />
+                      AI Processing...
+                    </div>
+                  )}
+                </div>
+                {errors.handoffNote && <p className="text-xs mt-1" style={{ color: 'var(--accent-ee)' }}>{errors.handoffNote}</p>}
+              </div>
+            </div>
+          </>
         )}
       </div>
 
@@ -1747,7 +1778,7 @@ function ReportForm({
       {/* Contact Info */}
       <div>
         <label className="font-mono text-[10px] uppercase tracking-[0.1em] mb-2 block" style={{ color: 'var(--color-text-tertiary)' }}>
-          Contact Info
+          Contact Info <span style={{ color: 'var(--color-text-tertiary)' }}>(Recommended)</span>
         </label>
         <input
           type="text"

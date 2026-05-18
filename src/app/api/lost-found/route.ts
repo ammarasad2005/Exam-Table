@@ -127,13 +127,6 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    if (!contactInfo || contactInfo.trim().length < 3) {
-      return NextResponse.json(
-        { error: "Contact info is required" },
-        { status: 400 }
-      );
-    }
-
     const validCategories = [
       "Electronics",
       "Documents",
