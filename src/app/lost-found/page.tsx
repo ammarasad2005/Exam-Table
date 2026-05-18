@@ -493,23 +493,6 @@ function addComment(itemId: string, text: string) {
   } catch { /* ignore */ }
 }
 
-// Reward helpers
-function getReward(itemId: string): string | null {
-  if (typeof window === 'undefined') return null
-  try {
-    return localStorage.getItem(`lf-item-reward-${itemId}`)
-  } catch {
-    return null
-  }
-}
-
-function setReward(itemId: string, reward: string) {
-  if (typeof window === 'undefined') return
-  try {
-    localStorage.setItem(`lf-item-reward-${itemId}`, reward)
-  } catch { /* ignore */ }
-}
-
 // Activity feed helpers
 interface ActivityItem {
   id: string
@@ -1314,8 +1297,6 @@ function ReportForm({
   const [imageFile, setImageFile] = useState<File | null>(null)
   const [imageUrl, setImageUrl] = useState('')
   const [isUrgent, setUrgent] = useState(false)
-  const [offerReward, setOfferReward] = useState(false)
-  const [rewardAmount, setRewardAmount] = useState('')
   const [errors, setErrors] = useState<Record<string, string>>({})
   const [submitting, setSubmitting] = useState(false)
   const [submitted, setSubmitted] = useState(false)
@@ -1434,13 +1415,7 @@ function ReportForm({
         contactInfo: contactInfo.trim(),
         imageUrl: finalImageUrl,
       })
-      // Note: urgent flag is handled by parent via onUrgentCreated
-      // Store reward in localStorage after item is created
-      if (offerReward && rewardAmount.trim()) {
-        try {
-          localStorage.setItem('lf-pending-reward', rewardAmount.trim())
-        } catch { /* ignore */ }
-      }
+      
       setSubmitted(true)
       toast({
         title: 'Item reported!',
@@ -1785,24 +1760,40 @@ function ReportForm({
         {errors.contactInfo && <p className="text-xs mt-1" style={{ color: 'var(--accent-ee)' }}>{errors.contactInfo}</p>}
       </div>
 
-      {/* Image Upload (optional) */}
+      {/* Image Upload (with Camera) */}
       <div>
         <label className="font-mono text-[10px] uppercase tracking-[0.1em] mb-2 block" style={{ color: 'var(--color-text-tertiary)' }}>
-          Image <span style={{ color: 'var(--color-text-tertiary)' }}>(optional)</span>
+          Image / Snapshot <span style={{ color: 'var(--color-text-tertiary)' }}>(optional)</span>
         </label>
-        <div className="flex gap-2">
-          <input
-            type="file"
-            accept="image/*"
-            onChange={(e) => {
-              if (e.target.files && e.target.files[0]) {
-                setImageFile(e.target.files[0])
-              }
-            }}
-            className={inputCls}
-            style={inputStyle}
-          />
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+          <label className="flex items-center justify-center gap-2 rounded-xl py-2.5 px-4 text-[10px] font-bold uppercase tracking-wider cursor-pointer transition-all border border-[var(--color-border)] bg-[var(--color-bg-subtle)] hover:bg-black/5" style={{ color: 'var(--color-text-secondary)' }}>
+            <Camera width={14} height={14} />
+            Take a Photo
+            <input
+              type="file"
+              accept="image/*"
+              capture="environment"
+              onChange={(e) => { if (e.target.files?.[0]) setImageFile(e.target.files[0]) }}
+              className="hidden"
+            />
+          </label>
+          <label className="flex items-center justify-center gap-2 rounded-xl py-2.5 px-4 text-[10px] font-bold uppercase tracking-wider cursor-pointer transition-all border border-[var(--color-border)] bg-[var(--color-bg-subtle)] hover:bg-black/5" style={{ color: 'var(--color-text-secondary)' }}>
+            <Search width={14} height={14} />
+            Browse Gallery
+            <input
+              type="file"
+              accept="image/*"
+              onChange={(e) => { if (e.target.files?.[0]) setImageFile(e.target.files[0]) }}
+              className="hidden"
+            />
+          </label>
         </div>
+        {imageFile && (
+          <p className="text-[9px] mt-2 font-bold text-[var(--accent-lf)] flex items-center gap-1">
+            <CheckCircle2 width={10} height={10} />
+            Selected: {imageFile.name.slice(0, 20)}...
+          </p>
+        )}
       </div>
 
       {/* Urgent toggle */}
@@ -1840,52 +1831,6 @@ function ReportForm({
             style={{
               left: isUrgent ? '20px' : '2px',
               backgroundColor: isUrgent ? 'white' : 'var(--color-text-tertiary)',
-            }}
-          />
-        </button>
-      </div>
-
-      {/* Reward toggle */}
-      <div
-        className="rounded-lg p-3 flex items-center gap-3"
-        style={{
-          backgroundColor: offerReward ? 'rgba(217, 119, 6, 0.08)' : 'var(--color-bg-subtle)',
-          border: `1.5px solid ${offerReward ? '#D97706' : 'var(--color-border)'}`,
-        }}
-      >
-        <span className="text-base">💰</span>
-        <div className="flex-1">
-          <span className="text-xs font-semibold" style={{ color: offerReward ? '#D97706' : 'var(--color-text-primary)' }}>
-            Offer a Reward?
-          </span>
-          <p className="text-[10px]" style={{ color: 'var(--color-text-tertiary)' }}>
-            Incentivize people to help find your item
-          </p>
-          {offerReward && (
-            <input
-              type="text"
-              value={rewardAmount}
-              onChange={(e) => setRewardAmount(e.target.value)}
-              placeholder="e.g., Rs. 500"
-              className="mt-2 w-full rounded-md px-3 py-1.5 text-xs outline-none transition-all duration-150 focus:ring-2 focus:ring-[#D97706]/30"
-              style={{ backgroundColor: 'var(--color-bg-subtle)', border: '1.5px solid rgba(217,119,6,0.3)', color: 'var(--color-text-primary)' }}
-            />
-          )}
-        </div>
-        <button
-          type="button"
-          onClick={() => setOfferReward(!offerReward)}
-          className="shrink-0 relative w-10 h-5 rounded-full transition-colors duration-200"
-          style={{
-            backgroundColor: offerReward ? '#D97706' : 'var(--color-bg-subtle)',
-            border: `1.5px solid ${offerReward ? '#D97706' : 'var(--color-border)'}`,
-          }}
-        >
-          <div
-            className="absolute top-0.5 w-3.5 h-3.5 rounded-full transition-all duration-200"
-            style={{
-              left: offerReward ? '20px' : '2px',
-              backgroundColor: offerReward ? 'white' : 'var(--color-text-tertiary)',
             }}
           />
         </button>
@@ -2034,7 +1979,6 @@ function ItemDetail({
   const [showAllComments, setShowAllComments] = useState(false)
   const { toast } = useToast()
   const itemIdShort = item.id.slice(-8).toUpperCase()
-  const itemReward = getReward(item.id)
   
   const myId = typeof window !== 'undefined' ? (localStorage.getItem('lf-user-id') || 'anon-' + Math.random().toString(36).slice(2, 9)) : ''
   const isClaimant = claims.some(c => c.claimer_id === myId)
@@ -2862,16 +2806,6 @@ function ItemDetail({
           </div>
         )}
       </div>
-
-      {/* Reward badge display */}
-      {itemReward && (
-        <div className="rounded-xl p-3 flex items-center gap-2 no-print" style={{ backgroundColor: 'var(--color-bg-raised)', border: '1px solid var(--color-border)' }}>
-          <span className="category-badge reward-badge flex items-center gap-1" style={{ fontSize: '10px' }}>
-            💰 {itemReward}
-          </span>
-          <span className="text-[10px]" style={{ color: 'var(--color-text-tertiary)' }}>Reward offered</span>
-        </div>
-      )}
 
       {/* Print reference */}
       <div className="print-area hidden">
@@ -3925,12 +3859,6 @@ function LostFoundView({
               setUrgentIds(getUrgentItems())
               localStorage.removeItem('lf-pending-urgent')
             }
-            // Check for pending reward
-            const pendingReward = localStorage.getItem('lf-pending-reward')
-            if (pendingReward) {
-              setReward(result.item.id, pendingReward)
-              localStorage.removeItem('lf-pending-reward')
-            }
           } catch { /* ignore */ }
         }
         onSubViewChange('list')
@@ -4472,7 +4400,6 @@ function LostFoundView({
               <div className="flex gap-3 overflow-x-auto carousel-scroll pb-2">
                 {recentlyAddedItems.map((item) => {
                   const isLost = item.type === 'lost'
-                  const itemReward = getReward(item.id)
                   return (
                     <button
                       key={item.id}
@@ -4494,9 +4421,6 @@ function LostFoundView({
                         <span className={`category-badge ${isLost ? 'type-badge-lost' : 'type-badge-found'}`} style={{ fontSize: '8px', padding: '1px 4px' }}>
                           {item.type}
                         </span>
-                        {itemReward && (
-                          <span className="category-badge reward-badge" style={{ fontSize: '7px', padding: '1px 3px' }}>💰</span>
-                        )}
                         <span className="text-[8px] font-mono ml-auto shrink-0" style={{ color: 'var(--color-text-tertiary)' }}>
                           {timeAgo(item.createdAt)}
                         </span>
