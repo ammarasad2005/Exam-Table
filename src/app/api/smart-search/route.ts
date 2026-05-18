@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { GoogleGenerativeAI } from '@google/generative-ai'
 
 export async function POST(request: NextRequest) {
   try {
@@ -39,17 +40,6 @@ export async function POST(request: NextRequest) {
           if (descLower.includes(queryLower)) score += 3
         }
 
-        // Simple Levenshtein-like similarity for short queries
-        if (queryWords.length === 1 && queryLower.length >= 3) {
-          const word = queryWords[0]
-          const titleWords = titleLower.split(/\s+/)
-          for (const tw of titleWords) {
-            if (tw.length >= 3 && levenshtein(word, tw) <= 3) {
-              score += 2
-            }
-          }
-        }
-
         return { ...item, score }
       })
       .filter((item: { score: number }) => item.score > 0)
@@ -73,15 +63,43 @@ export async function POST(request: NextRequest) {
     if (categories.length > 0) alternatives.push(...(categories.slice(0, 2).filter(Boolean) as string[]))
     if (locations.length > 0) alternatives.push(...(locations.slice(0, 2).filter(Boolean) as string[]))
 
-    // Try to use LLM if available
-    try {
-      const ZAI = (await import('z-ai-web-dev-sdk')).default
-      const llmSuggestions = await generateAISuggestions(ZAI, query, suggestions, alternatives)
-      if (llmSuggestions) {
-        return NextResponse.json(llmSuggestions)
+    // Try to use Gemini for AI fallback
+    const apiKey = process.env.GOOGLE_GENAI_API_KEY
+    if (apiKey) {
+      try {
+        const genAI = new GoogleGenerativeAI(apiKey)
+        const model = genAI.getGenerativeModel({ 
+          model: 'gemini-1.5-flash',
+          generationConfig: { responseMimeType: "application/json" }
+        })
+
+        const prompt = `You are a helpful assistant for a university Lost & Found system. 
+        Given a user's search query and some local results, suggest alternative search terms that might help them find their belongings. 
+        Be concise.
+        
+        User searched for: "${query}"
+        Local results found: ${suggestions.length}
+        Categories present: ${alternatives.join(', ')}
+        
+        Return a JSON object with:
+        "alternatives": (array of 3-5 short search phrases),
+        "suggestion": (a single brief helpful tip string)`
+
+        const result = await model.generateContent(prompt)
+        const content = result.response.text()
+        
+        if (content) {
+          const parsed = JSON.parse(content)
+          return NextResponse.json({
+            suggestions,
+            alternatives: parsed.alternatives || alternatives.slice(0, 4),
+            aiSuggestion: parsed.suggestion || null,
+            source: 'ai',
+          })
+        }
+      } catch (err) {
+        console.error('Gemini Smart Search failed:', err)
       }
-    } catch {
-      // LLM not available, use rule-based results
     }
 
     return NextResponse.json({
@@ -93,74 +111,4 @@ export async function POST(request: NextRequest) {
     console.error('Smart search error:', error)
     return NextResponse.json({ error: 'Smart search failed' }, { status: 500 })
   }
-}
-
-async function generateAISuggestions(
-  ZAI: unknown,
-  query: string,
-  localSuggestions: unknown[],
-  localAlternatives: string[]
-) {
-  try {
-    // @ts-expect-error - dynamic import
-    const response = await ZAI.chat.completions.create({
-      model: 'deepseek-ai/DeepSeek-V3',
-      messages: [
-        {
-          role: 'system',
-          content: `You are a helpful assistant for a university Lost & Found system. Given a search query and some local results, suggest alternative search terms that might help the user find what they're looking for. Be concise. Return JSON with "alternatives" (array of 3-5 short search phrases) and "suggestion" (a brief helpful tip).`,
-        },
-        {
-          role: 'user',
-          content: `User searched for: "${query}". Local results found: ${localSuggestions.length}. Some categories seen: ${localAlternatives.join(', ')}. Suggest alternative search terms.`,
-        },
-      ],
-      max_tokens: 200,
-      temperature: 0.7,
-    })
-
-    const content = response.choices?.[0]?.message?.content
-    if (content) {
-      try {
-        const parsed = JSON.parse(content)
-        return {
-          suggestions: localSuggestions,
-          alternatives: parsed.alternatives || localAlternatives.slice(0, 4),
-          aiSuggestion: parsed.suggestion || null,
-          source: 'ai',
-        }
-      } catch {
-        // Not valid JSON, return with raw AI suggestion
-        return {
-          suggestions: localSuggestions,
-          alternatives: localAlternatives.slice(0, 4),
-          aiSuggestion: content.slice(0, 150),
-          source: 'ai',
-        }
-      }
-    }
-  } catch {
-    // AI call failed
-  }
-  return null
-}
-
-function levenshtein(a: string, b: string): number {
-  const matrix: number[][] = []
-  for (let i = 0; i <= b.length; i++) matrix[i] = [i]
-  for (let j = 0; j <= a.length; j++) matrix[0][j] = j
-  for (let i = 1; i <= b.length; i++) {
-    for (let j = 1; j <= a.length; j++) {
-      if (b[i - 1] === a[j - 1]) {
-        matrix[i][j] = matrix[i - 1][j - 1]
-      } else {
-        matrix[i][j] = Math.min(
-          matrix[i - 1][j - 1] + 1,
-          matrix[i][j - 1] + 1,
-          matrix[i - 1][j] + 1
-        )
-      }
-    }
-  }
-  return matrix[b.length][a.length]
 }

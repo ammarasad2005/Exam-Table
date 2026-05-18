@@ -16,6 +16,7 @@ import {
   ArrowLeft,
   Filter,
   X,
+  ShieldCheck,
   CheckCircle2,
   AlertCircle,
   ChevronRight,
@@ -91,10 +92,20 @@ interface LostFoundItem {
   title: string
   description: string
   location: string
+  handoffNote?: string
+  structuredLocation?: {
+    custodian: string
+    building: string
+    floor: string
+    specific_area: string
+    status: 'static' | 'custodial'
+  }
   date: string
   contactInfo: string
   isResolved: boolean
+  resolvedBy?: string
   imageUrl: string | null
+  resolutionImageUrl?: string | null
   createdAt: string
   updatedAt: string
 }
@@ -1284,6 +1295,9 @@ function ReportForm({
   const [title, setTitle] = useState('')
   const [description, setDescription] = useState('')
   const [location, setLocation] = useState('')
+  const [handoffNote, setHandoffNote] = useState('')
+  const [processingLocation, setProcessingLocation] = useState(false)
+  const [structuredLocation, setStructuredLocation] = useState<LostFoundItem['structuredLocation']>(undefined)
   const [date, setDate] = useState(new Date().toISOString().split('T')[0])
   const [contactInfo, setContactInfo] = useState('')
   const [imageFile, setImageFile] = useState<File | null>(null)
@@ -1300,7 +1314,7 @@ function ReportForm({
   const getStep = () => {
     if (!type) return 1
     if (!category) return 2
-    if (!title.trim() || !description.trim() || !location.trim() || !date) return 3
+    if (!title.trim() || !description.trim() || (type === 'lost' && !location.trim()) || (type === 'found' && !handoffNote.trim()) || !date) return 3
     if (!contactInfo.trim()) return 4
     return 4
   }
@@ -1316,7 +1330,8 @@ function ReportForm({
     const e: Record<string, string> = {}
     if (title.trim().length < 3) e.title = 'Title must be at least 3 characters'
     if (description.trim().length < 5) e.description = 'Description must be at least 5 characters'
-    if (location.trim().length < 2) e.location = 'Location is required'
+    if (type === 'found' && !handoffNote.trim()) e.handoffNote = 'Please tell us where the item is now'
+    if (type === 'lost' && !location.trim()) e.location = 'Location is required'
     if (!date) e.date = 'Date is required'
     if (contactInfo.trim().length < 3) e.contactInfo = 'Contact info is required'
     setErrors(e)
@@ -1327,6 +1342,34 @@ function ReportForm({
     e.preventDefault()
     if (!validate()) return
     setSubmitting(true)
+
+    let finalLocation = location.trim()
+    let finalStructured = structuredLocation
+
+    // If it's a found item, process the handoff note with AI
+    if (type === 'found' && handoffNote.trim()) {
+      setProcessingLocation(true)
+      try {
+        const res = await fetch('/api/lost-found/handoff', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ note: handoffNote }),
+        })
+        const data = await res.json()
+        if (data.structured) {
+          finalStructured = data.structured
+          // Construct a human-readable location string from AI results
+          const s = data.structured
+          finalLocation = `${s.custodian !== 'None' ? s.custodian : ''} ${s.building !== 'None' ? `at ${s.building}` : ''} ${s.specific_area !== 'None' ? `(${s.specific_area})` : ''}`.trim() || 'Campus'
+        }
+      } catch (err) {
+        console.error('AI processing failed:', err)
+        finalLocation = 'Campus (Handed over)'
+      } finally {
+        setProcessingLocation(false)
+      }
+    }
+
     try {
       let finalImageUrl = imageUrl.trim() || null
 
@@ -1373,7 +1416,9 @@ function ReportForm({
         category,
         title: title.trim(),
         description: description.trim(),
-        location: location.trim(),
+        location: finalLocation,
+        handoffNote: handoffNote.trim() || undefined,
+        structuredLocation: finalStructured,
         date: new Date(date).toISOString(),
         contactInfo: contactInfo.trim(),
         imageUrl: finalImageUrl,
@@ -1641,26 +1686,53 @@ function ReportForm({
         {errors.description && <p className="text-xs mt-1" style={{ color: 'var(--accent-ee)' }}>{errors.description}</p>}
       </div>
 
-      {/* Location */}
+      {/* Location / Handoff Note */}
       <div>
         <label className="font-mono text-[10px] uppercase tracking-[0.1em] mb-2 block" style={{ color: 'var(--color-text-tertiary)' }}>
-          Location
+          {type === 'lost' ? 'Where was it lost?' : 'Where is the item now?'}
         </label>
-        <input
-          type="text"
-          value={location}
-          onChange={(e) => setLocation(e.target.value)}
-          placeholder="e.g., Room 302, Cafeteria, Parking Lot B, Library 2nd Floor"
-          list="campus-locations"
-          className={inputCls}
-          style={inputStyle}
-        />
-        <datalist id="campus-locations">
-          {campusLocations.map((loc) => (
-            <option key={loc} value={loc} />
-          ))}
-        </datalist>
-        {errors.location && <p className="text-xs mt-1" style={{ color: 'var(--accent-ee)' }}>{errors.location}</p>}
+        {type === 'lost' ? (
+          <>
+            <input
+              type="text"
+              value={location}
+              onChange={(e) => setLocation(e.target.value)}
+              placeholder="e.g., Cafeteria, Library, LRC, C303 etc"
+              list="campus-locations"
+              className={inputCls}
+              style={inputStyle}
+            />
+            <datalist id="campus-locations">
+              {campusLocations.map((loc) => (
+                <option key={loc} value={loc} />
+              ))}
+            </datalist>
+            {errors.location && <p className="text-xs mt-1" style={{ color: 'var(--accent-ee)' }}>{errors.location}</p>}
+          </>
+        ) : (
+          <div className="space-y-1">
+            <textarea
+              value={handoffNote}
+              onChange={(e) => setHandoffNote(e.target.value)}
+              placeholder="e.g., I gave it to the guard at the back gate, or Left it at the EE office counter"
+              rows={2}
+              className={inputCls + ' resize-none'}
+              style={inputStyle}
+            />
+            <div className="flex items-center justify-between">
+              <p className="text-[10px] opacity-70" style={{ color: 'var(--color-text-tertiary)' }}>
+                Write in natural language. AI will extract structured location.
+              </p>
+              {processingLocation && (
+                <div className="flex items-center gap-1 text-[9px] font-bold text-[var(--accent-lf)] animate-pulse">
+                  <Loader2 width={10} height={10} className="animate-spin" />
+                  AI Processing...
+                </div>
+              )}
+            </div>
+            {errors.handoffNote && <p className="text-xs mt-1" style={{ color: 'var(--accent-ee)' }}>{errors.handoffNote}</p>}
+          </div>
+        )}
       </div>
 
       {/* Date */}
@@ -1687,7 +1759,7 @@ function ReportForm({
           type="text"
           value={contactInfo}
           onChange={(e) => setContactInfo(e.target.value)}
-          placeholder="e.g., fa22-bcs-123@isb.nu.edu.pk, or your Instagram @handle"
+          placeholder="e.g., i23xxxx@isb.nu.edu.pk or +92 xxx-xxxxxxx"
           className={inputCls}
           style={inputStyle}
         />
@@ -1921,7 +1993,7 @@ function ItemDetail({
 }: {
   item: LostFoundItem
   onBack: () => void
-  onResolve: (id: string) => void
+  onResolve: (id: string, resolutionImageUrl?: string) => void
   isBookmarked?: boolean
   onToggleBookmark?: (id: string) => void
   similarItems?: LostFoundItem[]
@@ -1930,23 +2002,119 @@ function ItemDetail({
   const isLost = item.type === 'lost'
   const [resolveDialogOpen, setResolveDialogOpen] = useState(false)
   const [lightboxOpen, setLightboxOpen] = useState(false)
-  const initialViewCount = typeof window !== 'undefined' ? getViewCount(item.id) : 0
-  const [viewCount, setViewCount] = useState(initialViewCount)
-  const initialFeedback = typeof window !== 'undefined' ? getFeedback()[item.id] : null
-  const [feedbackGiven, setFeedbackGiven] = useState<'helpful' | 'not-helpful' | null>(initialFeedback as 'helpful' | 'not-helpful' | null)
-  const [claimModalOpen, setClaimModalOpen] = useState(false)
-  const [claimDescription, setClaimDescription] = useState('')
-  const [claimContact, setClaimContact] = useState('')
-  const [claims, setClaims] = useState(getClaims(item.id))
+  const [viewCount, setViewCount] = useState(0)
+  const [feedbackGiven, setFeedbackGiven] = useState<'helpful' | 'not-helpful' | null>(null)
+  const [claims, setClaims] = useState<{ id: string; claimer_id: string; created_at: string }[]>([])
+  const [claiming, setClaiming] = useState(false)
+  const [verifying, setVerifying] = useState(false)
+  const [verificationImage, setVerificationImage] = useState<File | null>(null)
+  const [verificationResult, setVerificationResult] = useState<{ match: boolean; confidence: number; reasoning?: string } | null>(null)
+  const [showVerifyFlow, setShowVerifyFlow] = useState(false)
   const [comments, setComments] = useState(getComments(item.id))
   const [commentText, setCommentText] = useState('')
   const [showAllComments, setShowAllComments] = useState(false)
-  const itemReward = getReward(item.id)
   const { toast } = useToast()
   const itemIdShort = item.id.slice(-8).toUpperCase()
+  const itemReward = getReward(item.id)
+  
+  const myId = typeof window !== 'undefined' ? (localStorage.getItem('lf-user-id') || 'anon-' + Math.random().toString(36).slice(2, 9)) : ''
+  const isClaimant = claims.some(c => c.claimer_id === myId)
+  const isReporter = typeof window !== 'undefined' && getMyReportedItems().includes(item.id)
+
+  const fetchClaims = useCallback(async () => {
+    try {
+      const res = await fetch(`/api/lost-found/${item.id}`)
+      const data = await res.json()
+      // In the real app, data.item.claims would be populated via Supabase join
+      if (data.item?.claims) setClaims(data.item.claims)
+    } catch (err) { console.error('Failed to fetch claims:', err) }
+  }, [item.id])
+
+  useEffect(() => {
+    fetchClaims()
+    if (typeof window !== 'undefined') {
+      const counts = JSON.parse(localStorage.getItem('lf-view-counts') || '{}')
+      setViewCount(counts[item.id] || 0)
+      if (!localStorage.getItem('lf-user-id')) localStorage.setItem('lf-user-id', myId)
+      const feedback = getFeedback()
+      setFeedbackGiven(feedback[item.id] as 'helpful' | 'not-helpful' | null)
+    }
+  }, [item.id, fetchClaims, myId])
+
+  const handleClaim = async () => {
+    setClaiming(true)
+    try {
+      const res = await fetch(`/api/lost-found/${item.id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ claimerId: myId, action: 'claim' }),
+      })
+      if (res.ok) {
+        toast({ title: 'Collection Scheduled!', description: 'You are now marked as a claimant. Please pick up the item and verify possession.' })
+        fetchClaims()
+      }
+    } catch {
+      toast({ title: 'Error', description: 'Failed to register claim.', variant: 'destructive' })
+    } finally {
+      setClaiming(false)
+    }
+  }
+
+  const handleVerifyAndResolve = async () => {
+    if (!verificationImage) return
+    setVerifying(true)
+    try {
+      // 1. Compress and prepare image
+      const compressionOptions = { maxSizeMB: 0.5, maxWidthOrHeight: 800, useWebWorker: true }
+      const compressed = await imageCompression(verificationImage, compressionOptions)
+      const base64 = await fileToBase64(compressed)
+
+      // 2. Call AI Verify API
+      const verifyRes = await fetch('/api/lost-found/verify', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ 
+          originalImageUrl: item.imageUrl, 
+          resolutionImageBase64: base64 
+        }),
+      })
+      
+      const result = await verifyRes.json()
+      setVerificationResult(result)
+
+      if (result.match && result.confidence > 80) {
+        // 3. Upload resolution image to storage
+        const fileExt = compressed.name.split('.').pop()
+        const fileName = `resolved-${item.id}-${Date.now()}.${fileExt}`
+        const { error: uploadError } = await supabase.storage.from('lost_found_images').upload(fileName, compressed)
+        if (uploadError) throw new Error('Upload failed')
+        const { data: { publicUrl } } = supabase.storage.from('lost_found_images').getPublicUrl(fileName)
+
+        toast({ title: 'Verification Success!', description: 'AI confirmed possession. Marking as resolved.' })
+        onResolve(item.id, publicUrl)
+        setShowVerifyFlow(false)
+      } else {
+        toast({ title: 'Verification Failed', description: result.reasoning || 'Item does not match original report.', variant: 'destructive' })
+      }
+    } catch (err) {
+      console.error(err)
+      toast({ title: 'Error', description: 'Verification process failed.', variant: 'destructive' })
+    } finally {
+      setVerifying(false)
+    }
+  }
+
+  const fileToBase64 = (file: File): Promise<string> => {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader()
+      reader.readAsDataURL(file)
+      reader.onload = () => resolve((reader.result as string).split(',')[1])
+      reader.onerror = error => reject(error)
+    })
+  }
 
   const handleShare = async () => {
-    const text = `\u{1F50D} [${item.type.toUpperCase()}] ${item.title}\n\u{1F4CD} ${item.location}\n\u{1F4C5} ${formatDate(item.date)}\n\u{1F4DD} ${item.description}\n\u{1F4DE} Contact: ${item.contactInfo}\n\nReported on FAST Isb Lost & Found`
+    const text = `🔍 [${item.type.toUpperCase()}] ${item.title}\n📍 ${item.location}\n📅 ${formatDate(item.date)}\n📝 ${item.description}\n📞 Contact: ${item.contactInfo}\n\nReported on FAST Isb Lost & Found`
     try {
       await navigator.clipboard.writeText(text)
       toast({
@@ -1994,19 +2162,6 @@ function ItemDetail({
       title: type === 'helpful' ? 'Thanks for your feedback!' : 'Feedback noted',
       description: type === 'helpful' ? 'Glad this was helpful!' : 'We\'ll work to improve this.',
     })
-  }
-
-  const handleClaimSubmit = () => {
-    if (!claimDescription.trim() || !claimContact.trim()) {
-      toast({ title: 'Missing info', description: 'Please fill in all fields.', variant: 'destructive' })
-      return
-    }
-    addClaim(item.id, { description: claimDescription.trim(), contact: claimContact.trim(), timestamp: Date.now() })
-    setClaims(getClaims(item.id))
-    setClaimDescription('')
-    setClaimContact('')
-    setClaimModalOpen(false)
-    toast({ title: 'Claim submitted!', description: 'The reporter will see your claim.' })
   }
 
   const handleCommentSubmit = () => {
@@ -2194,7 +2349,7 @@ function ItemDetail({
 
       {/* Details */}
       <div
-        className="rounded-xl p-4 space-y-3 print-area"
+        className="rounded-xl p-4 space-y-4 print-area"
         style={{
           backgroundColor: 'var(--color-bg-raised)',
           border: '1px solid var(--color-border)',
@@ -2208,7 +2363,39 @@ function ItemDetail({
             {item.description}
           </p>
         </div>
-        <div className="grid grid-cols-2 gap-3">
+
+        {/* AI Structured Location */}
+        {item.handoffNote && (
+          <div className="pt-2 border-t border-[var(--color-border)]">
+            <label className="font-mono text-[10px] uppercase tracking-[0.1em] block mb-2" style={{ color: 'var(--accent-lf)' }}>
+              AI Location Handoff Note
+            </label>
+            <p className="text-xs italic mb-2" style={{ color: 'var(--color-text-secondary)' }}>
+              &quot;{item.handoffNote}&quot;
+            </p>
+            {item.structuredLocation && (
+              <div className="flex flex-wrap gap-2">
+                {item.structuredLocation.custodian !== 'None' && (
+                  <span className="px-2 py-1 rounded-md text-[9px] font-bold uppercase tracking-wider bg-[var(--accent-af-bg)] text-[var(--accent-af)] border border-[var(--accent-af)]/20">
+                    Custodian: {item.structuredLocation.custodian}
+                  </span>
+                )}
+                {item.structuredLocation.building !== 'None' && (
+                  <span className="px-2 py-1 rounded-md text-[9px] font-bold uppercase tracking-wider bg-[var(--accent-ee-bg)] text-[var(--accent-ee)] border border-[var(--accent-ee)]/20">
+                    Building: {item.structuredLocation.building}
+                  </span>
+                )}
+                {item.structuredLocation.specific_area !== 'None' && (
+                  <span className="px-2 py-1 rounded-md text-[9px] font-bold uppercase tracking-wider bg-[var(--color-bg-subtle)] text-[var(--color-text-primary)] border border-[var(--color-border)]">
+                    Area: {item.structuredLocation.specific_area}
+                  </span>
+                )}
+              </div>
+            )}
+          </div>
+        )}
+
+        <div className="grid grid-cols-2 gap-3 pt-2 border-t border-[var(--color-border)]">
           <div>
             <label className="font-mono text-[10px] uppercase tracking-[0.1em] block mb-1" style={{ color: 'var(--color-text-tertiary)' }}>
               Location
@@ -2228,143 +2415,140 @@ function ItemDetail({
             </p>
           </div>
         </div>
-        <div>
-          <div className="flex items-center gap-2">
-            <label className="font-mono text-[10px] uppercase tracking-[0.1em] block mb-1" style={{ color: 'var(--color-text-tertiary)' }}>
-              Contact Info
-            </label>
-            <button
-              onClick={handleCopyContact}
-              className="mb-1 rounded-md p-0.5 transition-colors hover:opacity-70 no-print"
-              style={{ color: 'var(--accent-lf)' }}
-              title="Copy contact info"
-            >
-              <Copy width={10} height={10} />
-            </button>
-          </div>
-          <p className="text-sm font-medium" style={{ color: 'var(--accent-lf)' }}>
-            {item.contactInfo}
-          </p>
-        </div>
-        <div>
-          <label className="font-mono text-[10px] uppercase tracking-[0.1em] block mb-1" style={{ color: 'var(--color-text-tertiary)' }}>
-            Reported
-          </label>
-          <p className="text-xs" style={{ color: 'var(--color-text-tertiary)' }}>
-            {timeAgo(item.createdAt)} &middot; {formatDate(item.createdAt)}
-          </p>
-        </div>
-        {/* View count */}
-        {viewCount > 0 && (
-          <div className="flex items-center gap-1">
-            <Eye width={10} height={10} style={{ color: 'var(--color-text-tertiary)' }} />
-            <span className="text-[10px] font-mono" style={{ color: 'var(--color-text-tertiary)' }}>
-              {viewCount} view{viewCount !== 1 ? 's' : ''}
-            </span>
-          </div>
-        )}
       </div>
 
       {/* Action buttons */}
       {!item.isResolved && (
-        <>
-          <div className="flex gap-3 no-print">
-            {/* Claim button for found items */}
+        <div className="space-y-4 no-print">
+          <div className="flex flex-wrap gap-2">
+            {/* Primary Action: Claim/Verify for Found items */}
             {item.type === 'found' && (
-              <button
-                onClick={() => setClaimModalOpen(true)}
-                className="flex-1 rounded-lg py-3 text-xs font-bold uppercase tracking-[0.08em] transition-all duration-150 flex items-center justify-center gap-2 hover:scale-[1.02] active:scale-[0.98]"
-                style={{
-                  border: '1.5px solid #16a34a',
-                  backgroundColor: 'rgba(22, 163, 74, 0.1)',
-                  color: '#16a34a',
-                }}
-              >
-                <Handshake width={14} height={14} />
-                Claim
-                {claims.length > 0 && (
-                  <span className="ml-1 min-w-[18px] h-4 rounded-full flex items-center justify-center px-1 text-[8px] font-bold text-white" style={{ backgroundColor: '#16a34a' }}>
-                    {claims.length}
-                  </span>
+              <>
+                {!isClaimant ? (
+                  <button
+                    onClick={handleClaim}
+                    disabled={claiming}
+                    className="flex-1 rounded-xl py-3.5 text-xs font-black uppercase tracking-[0.12em] transition-all duration-200 flex items-center justify-center gap-2 hover:scale-[1.02] active:scale-[0.98] shadow-md hover:shadow-xl"
+                    style={{ backgroundColor: 'var(--accent-lf)', color: 'white' }}
+                  >
+                    {claiming ? <Loader2 className="animate-spin" width={14} height={14} /> : <Handshake width={14} height={14} />}
+                    Schedule Collection (Claim)
+                    {claims.length > 0 && (
+                      <span className="ml-1 bg-white/20 px-1.5 py-0.5 rounded-md text-[9px]">
+                        {claims.length}
+                      </span>
+                    )}
+                  </button>
+                ) : (
+                  <button
+                    onClick={() => setShowVerifyFlow(true)}
+                    className="flex-1 rounded-xl py-3.5 text-xs font-black uppercase tracking-[0.12em] transition-all duration-200 flex items-center justify-center gap-2 hover:scale-[1.02] active:scale-[0.98] shadow-md hover:shadow-xl btn-shimmer"
+                    style={{ backgroundColor: '#16a34a', color: 'white' }}
+                  >
+                    <CheckCircle2 width={14} height={14} />
+                    Verify & Mark as Resolved
+                  </button>
                 )}
+              </>
+            )}
+
+            {/* Reporter's resolve button */}
+            {isReporter && (
+              <button
+                onClick={() => setResolveDialogOpen(true)}
+                className="flex-1 rounded-xl py-3.5 text-xs font-black uppercase tracking-[0.12em] transition-all duration-200 flex items-center justify-center gap-2 hover:scale-[1.02] active:scale-[0.98] border-2"
+                style={{ borderColor: '#16a34a', color: '#16a34a', backgroundColor: 'rgba(22,163,74,0.05)' }}
+              >
+                <ShieldCheck width={14} height={14} />
+                Admin Resolve
               </button>
             )}
+          </div>
+
+          <div className="flex gap-2">
             <button
               onClick={handleShare}
-              className="rounded-lg py-3 px-4 text-xs font-bold uppercase tracking-[0.08em] transition-all duration-150 flex items-center justify-center gap-2 hover:scale-[1.02] active:scale-[0.98]"
-              style={{
-                border: '1.5px solid var(--color-border)',
-                backgroundColor: 'var(--color-bg-subtle)',
-                color: 'var(--color-text-secondary)',
-              }}
+              className="flex-1 rounded-lg py-3 text-[10px] font-bold uppercase tracking-[0.1em] transition-all border border-[var(--color-border)] bg-[var(--color-bg-subtle)]"
+              style={{ color: 'var(--color-text-secondary)' }}
             >
-              <Share2 width={14} height={14} />
               Share
-            </button>
-            {/* WhatsApp share button */}
-            <button
-              onClick={handleWhatsAppShare}
-              className="rounded-lg py-3 px-4 text-xs font-bold uppercase tracking-[0.08em] transition-all duration-150 flex items-center justify-center gap-2 hover:scale-[1.02] active:scale-[0.98]"
-              style={{
-                border: '1.5px solid #25D366',
-                backgroundColor: 'rgba(37, 211, 102, 0.1)',
-                color: '#25D366',
-              }}
-              title="Share on WhatsApp"
-            >
-              <MessageCircle width={14} height={14} />
-              <span className="hidden sm:inline">WhatsApp</span>
-            </button>
-            {/* Print button */}
-            <button
-              onClick={handlePrint}
-              className="rounded-lg py-3 px-4 text-xs font-bold uppercase tracking-[0.08em] transition-all duration-150 flex items-center justify-center gap-2 hover:scale-[1.02] active:scale-[0.98]"
-              style={{
-                border: '1.5px solid var(--color-border)',
-                backgroundColor: 'var(--color-bg-subtle)',
-                color: 'var(--color-text-secondary)',
-              }}
-            >
-              <Printer width={14} height={14} />
-              Print
             </button>
             {onToggleBookmark && (
               <button
                 onClick={() => onToggleBookmark(item.id)}
-                className="rounded-lg py-3 px-4 text-xs font-bold uppercase tracking-[0.08em] transition-all duration-150 flex items-center justify-center gap-2 hover:scale-[1.02] active:scale-[0.98]"
+                className="flex-1 rounded-lg py-3 text-[10px] font-bold uppercase tracking-[0.1em] transition-all border"
                 style={{
-                  border: `1.5px solid ${isBookmarked ? 'var(--accent-lf)' : 'var(--color-border)'}`,
+                  borderColor: isBookmarked ? 'var(--accent-lf)' : 'var(--color-border)',
                   backgroundColor: isBookmarked ? 'var(--accent-lf-bg)' : 'var(--color-bg-subtle)',
                   color: isBookmarked ? 'var(--accent-lf)' : 'var(--color-text-secondary)',
                 }}
               >
-                {isBookmarked ? <BookmarkCheck width={14} height={14} /> : <Bookmark width={14} height={14} />}
                 {isBookmarked ? 'Saved' : 'Save'}
               </button>
             )}
             <button
-              onClick={() => setResolveDialogOpen(true)}
-              className="flex-1 rounded-lg py-3 text-xs font-bold uppercase tracking-[0.08em] transition-all duration-150 flex items-center justify-center gap-2 hover:scale-[1.02] active:scale-[0.98]"
-              style={{
-                border: '1.5px solid #16a34a',
-                backgroundColor: 'rgba(22, 163, 74, 0.1)',
-                color: '#16a34a',
-              }}
+              onClick={handlePrint}
+              className="px-4 rounded-lg py-3 border border-[var(--color-border)] bg-[var(--color-bg-subtle)]"
+              style={{ color: 'var(--color-text-secondary)' }}
             >
-              <CheckCircle2 width={14} height={14} />
-              Resolve
+              <Printer width={14} height={14} />
             </button>
           </div>
-          <ResolveDialog
-            open={resolveDialogOpen}
-            onOpenChange={setResolveDialogOpen}
-            onConfirm={() => {
-              onResolve(item.id)
-              setResolveDialogOpen(false)
-            }}
-            itemName={item.title}
-          />
-        </>
+
+          {/* Vision Verification Flow */}
+          <AnimatePresence>
+            {showVerifyFlow && (
+              <motion.div
+                initial={{ opacity: 0, height: 0 }}
+                animate={{ opacity: 1, height: 'auto' }}
+                exit={{ opacity: 0, height: 0 }}
+                className="rounded-2xl p-5 space-y-4 border-2 border-dashed"
+                style={{ borderColor: '#16a34a', backgroundColor: 'rgba(22,163,74,0.02)' }}
+              >
+                <div className="flex items-center justify-between">
+                  <h4 className="text-xs font-black uppercase tracking-wider" style={{ color: '#16a34a' }}>
+                    Final Verification
+                  </h4>
+                  <button onClick={() => setShowVerifyFlow(false)}>
+                    <X width={14} height={14} style={{ color: 'var(--color-text-tertiary)' }} />
+                  </button>
+                </div>
+                <p className="text-[11px]" style={{ color: 'var(--color-text-secondary)' }}>
+                  To mark this as resolved, please upload a photo of the item in your possession. Our AI will verify it matches the original report.
+                </p>
+                
+                {!verificationImage ? (
+                  <label className="flex flex-col items-center justify-center h-32 rounded-xl border-2 border-dashed transition-colors cursor-pointer hover:bg-black/5" style={{ borderColor: 'var(--color-border)' }}>
+                    <Camera width={24} height={24} style={{ color: 'var(--color-text-tertiary)' }} />
+                    <span className="text-[10px] font-bold mt-2" style={{ color: 'var(--color-text-tertiary)' }}>Click to take/upload photo</span>
+                    <input type="file" accept="image/*" capture="environment" className="hidden" onChange={(e) => setVerificationImage(e.target.files?.[0] || null)} />
+                  </label>
+                ) : (
+                  <div className="relative rounded-xl overflow-hidden h-32 border border-[var(--color-border)]">
+                    <img src={URL.createObjectURL(verificationImage)} className="w-full h-full object-cover" alt="Verification" />
+                    <button onClick={() => setVerificationImage(null)} className="absolute top-2 right-2 w-6 h-6 rounded-full bg-black/50 text-white flex items-center justify-center">
+                      <X width={12} height={12} />
+                    </button>
+                  </div>
+                )}
+
+                <button
+                  onClick={handleVerifyAndResolve}
+                  disabled={!verificationImage || verifying}
+                  className="w-full rounded-xl py-3 text-xs font-black uppercase tracking-widest transition-all shadow-md disabled:opacity-50"
+                  style={{ backgroundColor: '#16a34a', color: 'white' }}
+                >
+                  {verifying ? (
+                    <div className="flex items-center justify-center gap-2">
+                      <Loader2 className="animate-spin" width={14} height={14} />
+                      AI Verifying...
+                    </div>
+                  ) : 'Verify & Resolve'}
+                </button>
+              </motion.div>
+            )}
+          </AnimatePresence>
+        </div>
       )}
 
       {/* Share button for resolved items */}
@@ -2554,35 +2738,41 @@ function ItemDetail({
         </div>
       )}
 
-      {/* Claims Section */}
+      {/* Claims Section (Queue) */}
       {claims.length > 0 && (
-        <div className="no-print">
-          <div className="flex items-center gap-1.5 mb-2">
+        <div className="no-print pt-4 border-t border-[var(--color-border)]">
+          <div className="flex items-center gap-1.5 mb-3">
             <Handshake width={12} height={12} style={{ color: '#16a34a' }} />
             <span className="font-mono text-[10px] uppercase tracking-[0.1em]" style={{ color: '#16a34a' }}>
-              Claims ({claims.length})
+              Pending Collection Queue ({claims.length})
             </span>
           </div>
-          <div className="space-y-2 max-h-40 overflow-y-auto custom-scrollbar">
+          <div className="flex flex-wrap gap-2">
             {claims.map((claim, idx) => (
               <div
-                key={idx}
-                className="rounded-lg p-3"
-                style={{ backgroundColor: 'var(--color-bg-raised)', border: '1px solid var(--color-border)' }}
+                key={claim.id}
+                className="rounded-lg px-3 py-2 flex items-center gap-2 bg-[var(--color-bg-subtle)] border border-[var(--color-border)]"
               >
-                <p className="text-xs" style={{ color: 'var(--color-text-primary)' }}>{claim.description}</p>
-                <div className="flex items-center gap-2 mt-1.5">
-                  <span className="text-[10px] font-mono" style={{ color: 'var(--accent-lf)' }}>{claim.contact}</span>
-                  <span className="text-[9px]" style={{ color: 'var(--color-text-tertiary)' }}>{timeAgo(new Date(claim.timestamp).toISOString())}</span>
+                <div className="w-5 h-5 rounded-full bg-[#16a34a]/10 flex items-center justify-center text-[10px] font-bold text-[#16a34a]">
+                  {idx + 1}
                 </div>
+                <span className="text-[10px] font-medium" style={{ color: 'var(--color-text-secondary)' }}>
+                  Claimant {claim.claimer_id.slice(-4).toUpperCase()}
+                </span>
+                <span className="text-[9px]" style={{ color: 'var(--color-text-tertiary)' }}>
+                  &middot; {timeAgo(claim.created_at)}
+                </span>
               </div>
             ))}
           </div>
+          <p className="text-[9px] mt-3 opacity-70" style={{ color: 'var(--color-text-tertiary)' }}>
+            Multiple students are attempting to collect this item. If you have received it, use the &quot;Verify & Resolve&quot; button above.
+          </p>
         </div>
       )}
 
       {/* Comments Section */}
-      <div className="no-print">
+      <div className="no-print pt-4 border-t border-[var(--color-border)]">
         <div className="flex items-center gap-1.5 mb-2">
           <MessageCircle width={12} height={12} style={{ color: 'var(--accent-cs)' }} />
           <span className="font-mono text-[10px] uppercase tracking-[0.1em]" style={{ color: 'var(--accent-cs)' }}>
@@ -2653,80 +2843,6 @@ function ItemDetail({
           </div>
         )}
       </div>
-
-      {/* Claim Modal */}
-      <AnimatePresence>
-        {claimModalOpen && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className="fixed inset-0 z-[60] flex items-center justify-center p-4"
-            onClick={() => setClaimModalOpen(false)}
-          >
-            <div className="absolute inset-0 claim-modal-backdrop" />
-            <motion.div
-              initial={{ scale: 0.9, opacity: 0 }}
-              animate={{ scale: 1, opacity: 1 }}
-              exit={{ scale: 0.9, opacity: 0 }}
-              className="relative w-full max-w-md rounded-2xl p-5"
-              style={{ backgroundColor: 'var(--color-bg-raised)', border: '1.5px solid var(--color-border)', boxShadow: 'var(--shadow-float)' }}
-              onClick={(e) => e.stopPropagation()}
-            >
-              <div className="flex items-center gap-2 mb-4">
-                <Handshake width={18} height={18} style={{ color: '#16a34a' }} />
-                <h3 className="font-body text-sm font-bold" style={{ color: 'var(--color-text-primary)' }}>
-                  Claim This Item
-                </h3>
-              </div>
-              <div className="space-y-3">
-                <div>
-                  <label className="font-mono text-[10px] uppercase tracking-[0.1em] mb-1.5 block" style={{ color: 'var(--color-text-tertiary)' }}>
-                    How can you identify this item?
-                  </label>
-                  <textarea
-                    value={claimDescription}
-                    onChange={(e) => setClaimDescription(e.target.value)}
-                    placeholder="Describe identifying details only you would know..."
-                    rows={3}
-                    className="w-full rounded-lg px-3 py-2 text-sm outline-none resize-none transition-all duration-150 focus:ring-2 focus:ring-[#16a34a]/30"
-                    style={{ backgroundColor: 'var(--color-bg-subtle)', border: '1.5px solid var(--color-border)', color: 'var(--color-text-primary)' }}
-                  />
-                </div>
-                <div>
-                  <label className="font-mono text-[10px] uppercase tracking-[0.1em] mb-1.5 block" style={{ color: 'var(--color-text-tertiary)' }}>
-                    Your contact info
-                  </label>
-                  <input
-                    type="text"
-                    value={claimContact}
-                    onChange={(e) => setClaimContact(e.target.value)}
-                    placeholder="Email or phone number"
-                    className="w-full rounded-lg px-3 py-2 text-sm outline-none transition-all duration-150 focus:ring-2 focus:ring-[#16a34a]/30"
-                    style={{ backgroundColor: 'var(--color-bg-subtle)', border: '1.5px solid var(--color-border)', color: 'var(--color-text-primary)' }}
-                  />
-                </div>
-                <div className="flex gap-3 pt-1">
-                  <button
-                    onClick={() => setClaimModalOpen(false)}
-                    className="flex-1 rounded-lg py-2.5 text-xs font-bold uppercase tracking-[0.08em] transition-all hover:scale-[1.02]"
-                    style={{ border: '1.5px solid var(--color-border)', backgroundColor: 'var(--color-bg-subtle)', color: 'var(--color-text-secondary)' }}
-                  >
-                    Cancel
-                  </button>
-                  <button
-                    onClick={handleClaimSubmit}
-                    className="flex-1 rounded-lg py-2.5 text-xs font-bold uppercase tracking-[0.08em] transition-all hover:scale-[1.02]"
-                    style={{ border: '1.5px solid #16a34a', backgroundColor: '#16a34a', color: 'white' }}
-                  >
-                    Submit Claim
-                  </button>
-                </div>
-              </div>
-            </motion.div>
-          </motion.div>
-        )}
-      </AnimatePresence>
 
       {/* Reward badge display */}
       {itemReward && (
@@ -3828,12 +3944,16 @@ function LostFoundView({
     }
   }
 
-  const handleResolve = async (id: string) => {
+  const handleResolve = async (id: string, resolutionImageUrl?: string) => {
     try {
       const res = await fetch(`/api/lost-found/${id}`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ isResolved: true }),
+        body: JSON.stringify({ 
+          isResolved: true,
+          resolvedBy: typeof window !== 'undefined' ? localStorage.getItem('lf-user-id') : undefined,
+          resolutionImageUrl
+        }),
       })
       if (res.ok) {
         if (selectedItem?.id === id) {

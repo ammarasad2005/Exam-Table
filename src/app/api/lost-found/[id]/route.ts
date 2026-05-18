@@ -1,7 +1,54 @@
 import { NextRequest, NextResponse } from "next/server";
 import { supabase } from "@/lib/supabase";
 
-// PATCH /api/lost-found/[id] - Update a lost/found item (e.g., mark as resolved)
+export const dynamic = 'force-dynamic';
+
+// GET /api/lost-found/[id] - Get item details with claims
+export async function GET(
+  _request: NextRequest,
+  { params }: { params: { id: string } }
+) {
+  try {
+    const { id } = params;
+
+    const { data: item, error } = await supabase
+      .from("lost_found_items")
+      .select("*, lost_found_claims(*)")
+      .eq("id", id)
+      .single();
+
+    if (error || !item) {
+      return NextResponse.json({ error: "Item not found" }, { status: 404 });
+    }
+
+    const mappedItem = {
+      id: item.id,
+      type: item.type,
+      category: item.category,
+      title: item.title,
+      description: item.description,
+      location: item.location,
+      handoffNote: item.handoff_note,
+      structuredLocation: item.structured_location,
+      date: item.date,
+      contactInfo: item.contact_info,
+      isResolved: item.is_resolved,
+      resolvedBy: item.resolved_by,
+      imageUrl: item.image_url,
+      resolutionImageUrl: item.resolution_image_url,
+      createdAt: item.created_at,
+      updatedAt: item.updated_at,
+      claims: item.lost_found_claims || [],
+    };
+
+    return NextResponse.json({ item: mappedItem });
+  } catch (error) {
+    console.error("Error fetching item details:", error);
+    return NextResponse.json({ error: "Failed to fetch item" }, { status: 500 });
+  }
+}
+
+// PATCH /api/lost-found/[id] - Update a lost/found item (e.g., mark as resolved, register claim)
 export async function PATCH(
   request: NextRequest,
   { params }: { params: { id: string } }
@@ -9,6 +56,16 @@ export async function PATCH(
   try {
     const { id } = params;
     const body = await request.json();
+
+    // Handle "claim" action
+    if (body.action === 'claim' && body.claimerId) {
+      const { error: claimError } = await supabase
+        .from('lost_found_claims')
+        .insert({ item_id: id, claimer_id: body.claimerId });
+      
+      if (claimError) throw claimError;
+      return NextResponse.json({ success: true });
+    }
 
     const { data: existingItem, error: fetchError } = await supabase
       .from("lost_found_items")
@@ -29,6 +86,8 @@ export async function PATCH(
     if (body.category !== undefined) updateData.category = body.category;
     if (body.imageUrl !== undefined) updateData.image_url = body.imageUrl?.trim() || null;
     if (body.isResolved !== undefined) updateData.is_resolved = body.isResolved;
+    if (body.resolvedBy !== undefined) updateData.resolved_by = body.resolvedBy;
+    if (body.resolutionImageUrl !== undefined) updateData.resolution_image_url = body.resolutionImageUrl;
     if (body.date !== undefined) updateData.date = new Date(body.date).toISOString();
 
     const { data: item, error: updateError } = await supabase
@@ -39,6 +98,11 @@ export async function PATCH(
       .single();
 
     if (updateError) throw updateError;
+
+    // If resolved, cleanup all claims for this item
+    if (body.isResolved) {
+      await supabase.from('lost_found_claims').delete().eq('item_id', id);
+    }
 
     const mappedItem = {
       id: item.id,
