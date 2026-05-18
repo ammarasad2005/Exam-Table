@@ -2084,11 +2084,15 @@ function ItemDetail({
         if (uploadError) throw new Error('Upload failed')
         const { data: { publicUrl } } = supabase.storage.from('lost_found_images').getPublicUrl(fileName)
 
-        toast({ title: 'Verification Success!', description: result.reasoning || 'AI confirmed possession. Marking as resolved.' })
+        toast({ title: 'Verification Success!', description: result.reasoning || `AI confirmed possession (${result.confidence}%). Marking as resolved.` })
         onResolve(item.id, publicUrl)
         setShowVerifyFlow(false)
       } else {
-        toast({ title: 'Verification Failed', description: result.reasoning || 'Item does not match original report.', variant: 'destructive' })
+        toast({ 
+          title: 'Verification Failed', 
+          description: `${result.reasoning || 'Item does not match original report.'} (Confidence: ${result.confidence}%)`, 
+          variant: 'destructive' 
+        })
       }
     } catch (err) {
       console.error(err)
