@@ -88,7 +88,7 @@ export async function POST(request: Request) {
       error: error.message || 'AI verification failed', 
       confidence: 0, 
       match: false,
-      reasoning: 'Technical error during verification process'
+      reasoning: `Technical Error: ${error.message || 'Unknown error'}`
     }, { status: 500 })
   }
 }
