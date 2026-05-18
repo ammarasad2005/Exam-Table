@@ -1,8 +1,8 @@
 {
-  "filtered_at": "2026-05-11T09:52:27.646669",
+  "filtered_at": "2026-05-18T10:17:32.512971",
   "date_range": "2026-05-01 to 2026-06-30",
-  "total_original": 49,
-  "total_filtered": 37,
+  "total_original": 67,
+  "total_filtered": 38,
   "events": [
     {
       "event_name": "Job Fair Trainings",
@@ -21,12 +21,6 @@
       "date": "May 5",
       "time": "10:00 am - 1:00 pm",
       "event_location": "Auditorium by Mr. Afaq"
-    },
-    {
-      "event_name": "Job Fair Trainings",
-      "date": "May 5",
-      "time": "10:00 am - 8:00 pm",
-      "event_location": "MEDc-118  by Ms. Ujala"
     },
     {
       "event_name": "Seminar FSM",
@@ -71,16 +65,16 @@
       "event_location": "Auditorium - A Block by Ms. Ujala"
     },
     {
-      "event_name": "Job Fair Trainings",
-      "date": "May 7",
-      "time": "10:00 am - 8:00 pm",
-      "event_location": "MEDC-118 by Ms. Ujala"
-    },
-    {
       "event_name": "Interviews FSM",
       "date": "May 7",
       "time": "10:00 am - 3:00 pm",
       "event_location": "MEDC-117 by Ms. Laraib"
+    },
+    {
+      "event_name": "Job Fair Trainings",
+      "date": "May 7",
+      "time": "10:00 am - 8:00 pm",
+      "event_location": "MEDC-118 by Ms. Ujala"
     },
     {
       "event_name": "Guest Speaker Session",
@@ -191,10 +185,10 @@
       "event_location": "MEDc-117 & 118 by Mr. Afaq"
     },
     {
-      "event_name": "Interviews FSM",
+      "event_name": "Hiring Test",
       "date": "May 18",
-      "time": "9:00 am - 6:00 pm",
-      "event_location": "MEDc-117 & 118 by Mr. Afaq"
+      "time": "8:00 am - 4:00 pm",
+      "event_location": "Auditorium A Block by Mr. Adnan Shafqat"
     },
     {
       "event_name": "AtomCamp Seminar",
@@ -203,10 +197,16 @@
       "event_location": "Auditorium D Block by Ms. Laraib"
     },
     {
-      "event_name": "Interviews FSM",
+      "event_name": "Event Assesment",
+      "date": "May 18",
+      "time": "9:00 am - 12:00 pm",
+      "event_location": "CMR by Mr. Junaid"
+    },
+    {
+      "event_name": "Hiring Test",
       "date": "May 19",
-      "time": "9:00 am - 6:00 pm",
-      "event_location": "MEDc-117 & 118 by Mr. Afaq"
+      "time": "8:00 am - 6:00 pm",
+      "event_location": "Auditorium by Mr. Adnan Shafaqat"
     },
     {
       "event_name": "AtomCamp Seminar",
@@ -215,16 +215,22 @@
       "event_location": "Auditorium D Block by Ms. Laraib"
     },
     {
-      "event_name": "Interviews FSM",
+      "event_name": "HR Test",
       "date": "May 20",
-      "time": "9:00 am - 6:00 pm",
-      "event_location": "MEDc-117 & 118 by Mr. Afaq"
+      "time": "9:00 am - 7:00 pm",
+      "event_location": "Auditorium A Block by Mr. Adnan Shafqat"
     },
     {
-      "event_name": "Interviews FSM",
-      "date": "May 21",
+      "event_name": "Hackthon",
+      "date": "June 16",
       "time": "9:00 am - 6:00 pm",
-      "event_location": "MEDc-117 & 118 by Mr. Afaq"
+      "event_location": "Auditorium D Block by Ms. laraib"
+    },
+    {
+      "event_name": "Hackthon",
+      "date": "June 17",
+      "time": "9:00 am - 6:00 pm",
+      "event_location": "Auditorium D Block by Ms. laraib"
     }
   ]
 }

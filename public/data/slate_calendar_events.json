@@ -1,7 +1,7 @@
 {
-  "scraped_at": "2026-05-11T09:52:27.646669",
+  "scraped_at": "2026-05-18T10:17:32.512971",
   "date_range": "2026-05-01 to 2026-06-30",
-  "total_events": 49,
+  "total_events": 67,
   "events": [
     {
       "event_name": "SPM Class",
@@ -94,16 +94,16 @@
       "event_location": "Auditorium - A Block by Ms. Ujala"
     },
     {
-      "event_name": "Job Fair Trainings",
-      "date": "May 7",
-      "time": "10:00 am - 8:00 pm",
-      "event_location": "MEDC-118 by Ms. Ujala"
-    },
-    {
       "event_name": "Interviews FSM",
       "date": "May 7",
       "time": "10:00 am - 3:00 pm",
       "event_location": "MEDC-117 by Ms. Laraib"
+    },
+    {
+      "event_name": "Job Fair Trainings",
+      "date": "May 7",
+      "time": "10:00 am - 8:00 pm",
+      "event_location": "MEDC-118 by Ms. Ujala"
     },
     {
       "event_name": "Guest Speaker Session",
@@ -202,6 +202,12 @@
       "event_location": "Auditorium by Mr. Afaq"
     },
     {
+      "event_name": "GSC Meeting",
+      "date": "May 12",
+      "time": "10:00 am - 11:00 am",
+      "event_location": "C-109 by Mr. Shakeel"
+    },
+    {
       "event_name": "JOB Fair- CSO",
       "date": "May 13",
       "time": "12:00 am - 11:00 pm",
@@ -250,6 +256,24 @@
       "event_location": "MEDc-117 & 118 by Mr. Afaq"
     },
     {
+      "event_name": "Hiring Test",
+      "date": "May 18",
+      "time": "8:00 am - 4:00 pm",
+      "event_location": "Auditorium A Block by Mr. Adnan Shafqat"
+    },
+    {
+      "event_name": "Faculty Interviews FCS",
+      "date": "May 18",
+      "time": "8:00 am - 6:00 pm",
+      "event_location": "C-109 by Mr. Fahad"
+    },
+    {
+      "event_name": "NBEAC Visit",
+      "date": "May 18",
+      "time": "8:00 am - 7:00 pm",
+      "event_location": "C-109 by Ms. Fasiha"
+    },
+    {
       "event_name": "Interviews FSM",
       "date": "May 18",
       "time": "9:00 am - 6:00 pm",
@@ -262,6 +286,24 @@
       "event_location": "Auditorium D Block by Ms. Laraib"
     },
     {
+      "event_name": "Event Assesment",
+      "date": "May 18",
+      "time": "9:00 am - 12:00 pm",
+      "event_location": "CMR by Mr. Junaid"
+    },
+    {
+      "event_name": "Faculty Interviews FCS",
+      "date": "May 19",
+      "time": "8:00 am - 6:00 pm",
+      "event_location": "C-109 by Mr. Fahad"
+    },
+    {
+      "event_name": "Hiring Test",
+      "date": "May 19",
+      "time": "8:00 am - 6:00 pm",
+      "event_location": "Auditorium by Mr. Adnan Shafaqat"
+    },
+    {
       "event_name": "Interviews FSM",
       "date": "May 19",
       "time": "9:00 am - 6:00 pm",
@@ -272,6 +314,18 @@
       "date": "May 19",
       "time": "9:00 am - 6:00 pm",
       "event_location": "Auditorium D Block by Ms. Laraib"
+    },
+    {
+      "event_name": "Event Assesment",
+      "date": "May 19",
+      "time": "9:00 am - 12:00 pm",
+      "event_location": "CMR by Mr. Junaid"
+    },
+    {
+      "event_name": "Faculty Interviews FCS",
+      "date": "May 20",
+      "time": "8:00 am - 6:00 pm",
+      "event_location": "C-109 by Mr. Fahad"
     },
     {
       "event_name": "Interviews FSM",
@@ -280,22 +334,76 @@
       "event_location": "MEDc-117 & 118 by Mr. Afaq"
     },
     {
+      "event_name": "Event Assesment",
+      "date": "May 20",
+      "time": "9:00 am - 12:00 pm",
+      "event_location": "CMR by Mr. Junaid"
+    },
+    {
+      "event_name": "HR Test",
+      "date": "May 20",
+      "time": "9:00 am - 7:00 pm",
+      "event_location": "Auditorium A Block by Mr. Adnan Shafqat"
+    },
+    {
       "event_name": "Interviews FSM",
       "date": "May 21",
       "time": "9:00 am - 6:00 pm",
       "event_location": "MEDc-117 & 118 by Mr. Afaq"
     },
     {
+      "event_name": "Event Assesment",
+      "date": "May 21",
+      "time": "9:00 am - 12:00 pm",
+      "event_location": "CMR by Mr. Junaid"
+    },
+    {
       "event_name": "All Faculty Meeting",
       "date": "May 21",
       "time": "12:00 pm - 2:00 am",
-      "event_location": "Auditorium By Mr. Afaq FSM"
+      "event_location": "Auditorium & C-109 By Mr. Afaq FSM"
     },
     {
       "event_name": "All Faculty Meeting",
       "date": "May 22",
       "time": "12:00 pm - 2:00 am",
-      "event_location": "Auditorium By Mr. Afaq FSM"
+      "event_location": "Auditorium & C-109 By Mr. Afaq FSM"
+    },
+    {
+      "event_name": "Event Assesment",
+      "date": "May 22",
+      "time": "9:00 am - 12:00 pm",
+      "event_location": "CMR by Mr. Junaid"
+    },
+    {
+      "event_name": "Event Assesment",
+      "date": "May 23",
+      "time": "9:00 am - 12:00 pm",
+      "event_location": "CMR by Mr. Junaid"
+    },
+    {
+      "event_name": "PHD Thesis Defense",
+      "date": "June 3",
+      "time": "10:00 am - 2:00 pm",
+      "event_location": "C-109 by Mr. Shakeel Kiyani"
+    },
+    {
+      "event_name": "PHD Thesis Defense",
+      "date": "June 4",
+      "time": "10:00 am - 2:00 pm",
+      "event_location": "C-109 by Mr. Shakeel Kiyani"
+    },
+    {
+      "event_name": "Hackthon",
+      "date": "June 16",
+      "time": "9:00 am - 6:00 pm",
+      "event_location": "Auditorium D Block by Ms. laraib"
+    },
+    {
+      "event_name": "Hackthon",
+      "date": "June 17",
+      "time": "9:00 am - 6:00 pm",
+      "event_location": "Auditorium D Block by Ms. laraib"
     }
   ]
 }
