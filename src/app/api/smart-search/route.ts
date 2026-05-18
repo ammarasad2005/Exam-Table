@@ -1,5 +1,4 @@
 import { NextRequest, NextResponse } from 'next/server'
-import Groq from 'groq-sdk'
 
 export const dynamic = 'force-dynamic'
 
@@ -36,12 +35,6 @@ export async function POST(request: NextRequest) {
           if (locLower.includes(word)) score += 1
         }
 
-        // Partial match bonus
-        if (queryLower.length >= 3) {
-          if (titleLower.includes(queryLower)) score += 5
-          if (descLower.includes(queryLower)) score += 3
-        }
-
         return { ...item, score }
       })
       .filter((item: { score: number }) => item.score > 0)
@@ -57,58 +50,52 @@ export async function POST(request: NextRequest) {
       relevanceScore: item.score,
     }))
 
-    // Generate alternative search terms
     const categories = [...new Set(scored.slice(0, 10).map((i: { category?: string }) => i.category))]
-    const locations = [...new Set(scored.slice(0, 10).map((i: { location?: string }) => i.location))]
+    const alternatives: string[] = categories.slice(0, 4).filter(Boolean) as string[]
 
-    const alternatives: string[] = []
-    if (categories.length > 0) alternatives.push(...(categories.slice(0, 2).filter(Boolean) as string[]))
-    if (locations.length > 0) alternatives.push(...(locations.slice(0, 2).filter(Boolean) as string[]))
-
-    // Try to use Groq for AI fallback
-    const apiKey = process.env.GROQ_API_KEY
-    if (apiKey) {
+    const token = process.env.GITHUB_TOKEN
+    if (token) {
       try {
-        const groq = new Groq({ apiKey })
-        const completion = await groq.chat.completions.create({
-          model: 'llama-3.3-70b-versatile',
-          messages: [
-            {
-              role: 'system',
-              content: `You are a helpful assistant for a university Lost & Found system. 
-              Given a user's search query and some local results, suggest alternative search terms that might help them find their belongings. 
-              Return ONLY a JSON object with:
-              "alternatives": (array of 3-5 short search phrases),
-              "suggestion": (a single brief helpful tip string)`
-            },
-            {
-              role: 'user',
-              content: `User searched for: "${query}"
-              Local results found: ${suggestions.length}
-              Categories present: ${alternatives.join(', ')}`
-            }
-          ],
-          response_format: { type: 'json_object' }
+        const response = await fetch("https://models.github.ai/inference/chat/completions", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "Authorization": `Bearer ${token}`
+          },
+          body: JSON.stringify({
+            model: "gpt-4o-mini",
+            messages: [
+              {
+                role: "system",
+                content: "You are a helpful assistant for a university Lost & Found system. Suggest alternative search terms based on user input. Return ONLY a JSON object with 'alternatives' (array) and 'suggestion' (string)."
+              },
+              {
+                role: "user",
+                content: `Search query: "${query}". Categories found: ${alternatives.join(', ')}`
+              }
+            ],
+            response_format: { type: "json_object" }
+          })
         })
 
-        const content = completion.choices[0]?.message?.content
-        if (content) {
-          const parsed = JSON.parse(content)
+        if (response.ok) {
+          const data = await response.json()
+          const parsed = JSON.parse(data.choices[0]?.message?.content || '{}')
           return NextResponse.json({
             suggestions,
-            alternatives: parsed.alternatives || alternatives.slice(0, 4),
+            alternatives: parsed.alternatives || alternatives,
             aiSuggestion: parsed.suggestion || null,
             source: 'ai',
           })
         }
       } catch (err) {
-        console.error('Groq Smart Search failed:', err)
+        console.error('GitHub Smart Search failed:', err)
       }
     }
 
     return NextResponse.json({
       suggestions,
-      alternatives: alternatives.slice(0, 4),
+      alternatives,
       source: 'local',
     })
   } catch (error) {
