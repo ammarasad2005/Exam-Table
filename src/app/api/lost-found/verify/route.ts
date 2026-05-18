@@ -51,7 +51,7 @@ export async function POST(request: Request) {
         "X-Title": "FAST Schedule Platform"
       },
       body: JSON.stringify({
-        model: "qwen/qwen-3.6-plus:free",
+        model: "qwen/qwen3.6-plus:free",
         messages: [
           {
             role: "user",
