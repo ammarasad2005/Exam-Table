@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { GoogleGenerativeAI } from '@google/generative-ai'
+import Groq from 'groq-sdk'
 
 export const dynamic = 'force-dynamic'
 
@@ -65,31 +65,33 @@ export async function POST(request: NextRequest) {
     if (categories.length > 0) alternatives.push(...(categories.slice(0, 2).filter(Boolean) as string[]))
     if (locations.length > 0) alternatives.push(...(locations.slice(0, 2).filter(Boolean) as string[]))
 
-    // Try to use Gemini for AI fallback
-    const apiKey = process.env.GOOGLE_GENAI_API_KEY
+    // Try to use Groq for AI fallback
+    const apiKey = process.env.GROQ_API_KEY
     if (apiKey) {
       try {
-        const genAI = new GoogleGenerativeAI(apiKey)
-        const model = genAI.getGenerativeModel({ 
-          model: 'gemini-1.5-flash',
-          generationConfig: { responseMimeType: "application/json" }
+        const groq = new Groq({ apiKey })
+        const completion = await groq.chat.completions.create({
+          model: 'llama-3.3-70b-versatile',
+          messages: [
+            {
+              role: 'system',
+              content: `You are a helpful assistant for a university Lost & Found system. 
+              Given a user's search query and some local results, suggest alternative search terms that might help them find their belongings. 
+              Return ONLY a JSON object with:
+              "alternatives": (array of 3-5 short search phrases),
+              "suggestion": (a single brief helpful tip string)`
+            },
+            {
+              role: 'user',
+              content: `User searched for: "${query}"
+              Local results found: ${suggestions.length}
+              Categories present: ${alternatives.join(', ')}`
+            }
+          ],
+          response_format: { type: 'json_object' }
         })
 
-        const prompt = `You are a helpful assistant for a university Lost & Found system. 
-        Given a user's search query and some local results, suggest alternative search terms that might help them find their belongings. 
-        Be concise.
-        
-        User searched for: "${query}"
-        Local results found: ${suggestions.length}
-        Categories present: ${alternatives.join(', ')}
-        
-        Return a JSON object with:
-        "alternatives": (array of 3-5 short search phrases),
-        "suggestion": (a single brief helpful tip string)`
-
-        const result = await model.generateContent(prompt)
-        const content = result.response.text()
-        
+        const content = completion.choices[0]?.message?.content
         if (content) {
           const parsed = JSON.parse(content)
           return NextResponse.json({
@@ -100,7 +102,7 @@ export async function POST(request: NextRequest) {
           })
         }
       } catch (err) {
-        console.error('Gemini Smart Search failed:', err)
+        console.error('Groq Smart Search failed:', err)
       }
     }
 
