@@ -1,6 +1,8 @@
 import { NextResponse } from 'next/server'
 import { GoogleGenerativeAI } from '@google/generative-ai'
 
+export const dynamic = 'force-dynamic'
+
 export async function POST(request: Request) {
   try {
     const { originalImageUrl, resolutionImageBase64 } = await request.json()

@@ -195,11 +195,22 @@ const categoryIcons: Record<string, string> = {
   Electronics: '\uD83D\uDCBB',
   Documents: '\uD83D\uDCC4',
   Accessories: '\u231B',
-  Clothing: '\uD83D\uDC54',
+  Clothing: '\uD83D\uDC55',
   Keys: '\uD83D\uDD11',
   Bags: '\uD83C\uDF92',
-  Books: '\uD83D\uDCDA',
+  Books: '\uD83D\uDCD3',
   Other: '\uD83D\uDCE6',
+}
+
+const categoryExamples: Record<string, string> = {
+  Electronics: 'Phone, AirBuds, Laptop, Charger',
+  Documents: 'ID Card, Wallet, CNIC, File',
+  Accessories: 'Glasses, Watch, Ring, Keychain',
+  Clothing: 'Jacket, Hoodie, Cap, Sweater',
+  Keys: 'Car keys, Room keys',
+  Bags: 'Backpack, Laptop bag, Pouch',
+  Books: 'Textbook, Notebook, Register',
+  Other: 'Water bottle, Lunch box, Umbrella',
 }
 
 const categoryPlaceholders: Record<string, { gradient: string; emoji: string }> = {
@@ -1615,20 +1626,28 @@ function ReportForm({
         <label className="font-mono text-[10px] uppercase tracking-[0.1em] mb-2 block" style={{ color: 'var(--color-text-tertiary)' }}>
           Category
         </label>
-        <div className="flex flex-wrap gap-1.5">
+        <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
           {categories.filter((c) => c !== 'All').map((cat) => (
             <button
               key={cat}
               type="button"
               onClick={() => setCategory(cat)}
-              className={`rounded-md px-2.5 py-1.5 text-[10px] font-semibold uppercase tracking-[0.06em] transition-all duration-150 hover:scale-[1.02] ${category === cat ? 'category-btn-selected' : 'category-btn-unselected'}`}
+              className={`rounded-xl p-3 text-left transition-all duration-150 hover:scale-[1.02] flex flex-col gap-1 ${category === cat ? 'category-btn-selected' : 'category-btn-unselected'}`}
               style={{
                 border: `1.5px solid ${category === cat ? 'var(--accent-lf)' : 'var(--color-border)'}`,
                 backgroundColor: category === cat ? 'var(--accent-lf-bg)' : 'var(--color-bg-subtle)',
-                color: category === cat ? 'var(--accent-lf)' : 'var(--color-text-secondary)',
+                boxShadow: category === cat ? '0 4px 12px -2px var(--accent-lf-bg)' : 'none',
               }}
             >
-              {categoryIcons[cat]} {cat}
+              <div className="flex items-center gap-2">
+                <span className="text-sm">{categoryIcons[cat]}</span>
+                <span className="text-[10px] font-black uppercase tracking-wider" style={{ color: category === cat ? 'var(--accent-lf)' : 'var(--color-text-primary)' }}>
+                  {cat}
+                </span>
+              </div>
+              <p className="text-[8px] leading-tight opacity-60 line-clamp-2" style={{ color: 'var(--color-text-secondary)' }}>
+                {categoryExamples[cat]}
+              </p>
             </button>
           ))}
         </div>
