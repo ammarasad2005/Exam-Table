@@ -99,6 +99,7 @@ interface LostFoundItem {
   }
   date: string
   contactInfo: string
+  reporterName?: string
   isResolved: boolean
   resolvedBy?: string
   imageUrl: string | null
@@ -1107,9 +1108,7 @@ function ItemCard({
   const [descExpanded, setDescExpanded] = useState(false)
   const zone = getZoneForLocation(item.location)
 
-  // Reporter names placeholders (since they aren't in the DB schema yet)
-  const reporters = ['Jane D.', 'Ali R.', 'Sara K.', 'Hamza A.', 'Zoe M.', 'Usman T.']
-  const reporterName = reporters[item.id.charCodeAt(0) % reporters.length]
+  const reporterName = item.reporterName || null
 
   return (
     <motion.div
@@ -1199,12 +1198,14 @@ function ItemCard({
         </p>
 
         <div className="flex items-center justify-between mt-2 pt-2 border-t border-[var(--color-border)]">
-          <div className="flex items-center gap-2">
-            <div className="w-5 h-5 rounded-full bg-[var(--color-bg-subtle)] flex items-center justify-center border border-[var(--color-border)]">
-              <User width={10} height={10} className="text-[var(--color-text-tertiary)]" />
+          {reporterName ? (
+            <div className="flex items-center gap-2">
+              <div className="w-5 h-5 rounded-full bg-[var(--color-bg-subtle)] flex items-center justify-center border border-[var(--color-border)]">
+                <User width={10} height={10} className="text-[var(--color-text-tertiary)]" />
+              </div>
+              <span className="text-[10px] font-bold text-[var(--color-text-primary)]">{reporterName}</span>
             </div>
-            <span className="text-[10px] font-bold text-[var(--color-text-primary)]">{reporterName}</span>
-          </div>
+          ) : <div />}
           
           <div className="flex items-center gap-2">
              {isUrgent && !item.isResolved && (
@@ -1291,6 +1292,7 @@ function ReportForm({
   const [structuredLocation, setStructuredLocation] = useState<LostFoundItem['structuredLocation']>(undefined)
   const [date, setDate] = useState(new Date().toISOString().split('T')[0])
   const [contactInfo, setContactInfo] = useState('')
+  const [reporterName, setReporterName] = useState('')
   const [imageFile, setImageFile] = useState<File | null>(null)
   const [imageUrl, setImageUrl] = useState('')
   const [isUrgent, setUrgent] = useState(false)
@@ -1423,6 +1425,7 @@ function ReportForm({
         structuredLocation: finalStructured,
         date: new Date(date).toISOString(),
         contactInfo: contactInfo.trim() || 'Not provided',
+        reporterName: type === 'lost' ? reporterName.trim() : undefined,
         imageUrl: finalImageUrl,
       })
       
@@ -1441,7 +1444,7 @@ function ReportForm({
   }
 
   const inputCls =
-    'w-full rounded-lg px-3 py-2 text-sm font-body outline-none transition-all duration-150 focus:ring-2 focus:ring-[var(--accent-lf)]/30 focus:border-[var(--accent-lf)]'
+    'w-full rounded-lg px-3 py-2 text-sm font-body outline-none transition-all duration-150 focus:border-[var(--color-text-tertiary)]'
   const inputStyle = {
     backgroundColor: 'var(--color-bg-subtle)',
     border: '1.5px solid var(--color-border)',
@@ -1781,6 +1784,23 @@ function ReportForm({
         {errors.date && <p className="text-xs mt-1" style={{ color: 'var(--accent-ee)' }}>{errors.date}</p>}
       </div>
 
+      {/* Name (Lost only) */}
+      {type === 'lost' && (
+        <div>
+          <label className="font-mono text-[10px] uppercase tracking-[0.1em] mb-2 block" style={{ color: 'var(--color-text-tertiary)' }}>
+            Your Name <span style={{ color: 'var(--color-text-tertiary)' }}>(Optional)</span>
+          </label>
+          <input
+            type="text"
+            value={reporterName}
+            onChange={(e) => setReporterName(e.target.value)}
+            placeholder="e.g., Jane Doe"
+            className={inputCls}
+            style={inputStyle}
+          />
+        </div>
+      )}
+
       {/* Contact Info */}
       <div>
         <label className="font-mono text-[10px] uppercase tracking-[0.1em] mb-2 block" style={{ color: 'var(--color-text-tertiary)' }}>
@@ -2019,7 +2039,9 @@ function ItemDetail({
   const [commentText, setCommentText] = useState('')
   const [showAllComments, setShowAllComments] = useState(false)
   const { toast } = useToast()
-  const itemIdShort = item.id.slice(-8).toUpperCase()
+  const itemIdShort = (item.id && item.id.length >= 8) ? item.id.slice(-8).toUpperCase() : (item.id || 'N/A')
+
+  const reporterName = item.reporterName || null
   
   const myId = typeof window !== 'undefined' ? (localStorage.getItem('lf-user-id') || 'anon-' + Math.random().toString(36).slice(2, 9)) : ''
   const isClaimant = claims.some(c => c.claimer_id === myId)
@@ -2260,11 +2282,21 @@ function ItemDetail({
             {item.title}
           </h2>
           {/* Reported X ago with Clock icon */}
-          <div className="flex items-center gap-1 mt-1">
-            <Clock width={10} height={10} style={{ color: 'var(--color-text-tertiary)' }} />
-            <span className="text-[10px] font-mono" style={{ color: 'var(--color-text-tertiary)' }}>
-              Reported {timeAgo(item.createdAt)}
-            </span>
+          <div className="flex items-center gap-3 mt-1">
+            <div className="flex items-center gap-1">
+              <Clock width={10} height={10} style={{ color: 'var(--color-text-tertiary)' }} />
+              <span className="text-[10px] font-mono" style={{ color: 'var(--color-text-tertiary)' }}>
+                {timeAgo(item.createdAt)}
+              </span>
+            </div>
+            {reporterName && (
+              <div className="flex items-center gap-1">
+                <User width={10} height={10} style={{ color: 'var(--color-text-tertiary)' }} />
+                <span className="text-[10px] font-mono" style={{ color: 'var(--color-text-tertiary)' }}>
+                  By {reporterName}
+                </span>
+              </div>
+            )}
           </div>
         </div>
       </div>
@@ -2394,13 +2426,13 @@ function ItemDetail({
                 </div>
                 <div>
                   <p className="text-sm font-bold" style={{ color: 'var(--color-text-primary)' }}>
-                    {item.structuredLocation?.discoveredAt.building !== 'Unknown' 
-                      ? item.structuredLocation?.discoveredAt.building 
+                    {item.structuredLocation?.discoveredAt?.building && item.structuredLocation.discoveredAt.building !== 'Unknown' 
+                      ? item.structuredLocation.discoveredAt.building 
                       : item.location}
                   </p>
                   <p className="text-[11px]" style={{ color: 'var(--color-text-tertiary)' }}>
-                    {item.structuredLocation?.discoveredAt.area !== 'Unknown' 
-                      ? item.structuredLocation?.discoveredAt.area 
+                    {item.structuredLocation?.discoveredAt?.area && item.structuredLocation.discoveredAt.area !== 'Unknown' 
+                      ? item.structuredLocation.discoveredAt.area 
                       : 'Exact spot not specified'}
                   </p>
                 </div>
@@ -2419,13 +2451,13 @@ function ItemDetail({
                   </div>
                   <div>
                     <p className="text-sm font-bold" style={{ color: '#16a34a' }}>
-                      {item.structuredLocation?.currentlyHeldAt.custodian !== 'None' 
-                        ? item.structuredLocation?.currentlyHeldAt.custodian 
+                      {item.structuredLocation?.currentlyHeldAt?.custodian && item.structuredLocation.currentlyHeldAt.custodian !== 'None' 
+                        ? item.structuredLocation.currentlyHeldAt.custodian 
                         : 'In Safekeeping'}
                     </p>
                     <p className="text-[11px]" style={{ color: 'var(--color-text-tertiary)' }}>
-                      {item.structuredLocation?.currentlyHeldAt.building !== 'Unknown' 
-                        ? `${item.structuredLocation?.currentlyHeldAt.building} (${item.structuredLocation?.currentlyHeldAt.area})`
+                      {item.structuredLocation?.currentlyHeldAt?.building && item.structuredLocation.currentlyHeldAt.building !== 'Unknown' 
+                        ? `${item.structuredLocation.currentlyHeldAt.building} (${item.structuredLocation.currentlyHeldAt.area || 'Unknown Area'})`
                         : 'Handed over to authorities'}
                     </p>
                   </div>
@@ -2823,7 +2855,7 @@ function ItemDetail({
               value={commentText}
               onChange={(e) => setCommentText(e.target.value.slice(0, 200))}
               placeholder="Ask a question about this item..."
-              className="w-full rounded-xl px-4 py-2.5 text-xs outline-none transition-all duration-150 focus:ring-2 focus:ring-[var(--accent-lf)]/30 focus:border-[var(--accent-lf)]"
+              className="w-full rounded-xl px-4 py-2.5 text-xs outline-none transition-all duration-150 focus:border-[var(--color-text-tertiary)]"
               style={{ backgroundColor: 'var(--color-bg-subtle)', border: '1.5px solid var(--color-border)', color: 'var(--color-text-primary)' }}
               onKeyDown={(e) => { if (e.key === 'Enter') handleCommentSubmit() }}
               aria-label="Add a comment"
@@ -2895,7 +2927,7 @@ function ItemDetail({
               value={claimerEmail}
               onChange={(e) => setClaimerEmail(e.target.value)}
               placeholder="e.g., i231234@isb.nu.edu.pk"
-              className="w-full rounded-lg px-3 py-2 text-sm border border-[var(--color-border)] bg-[var(--color-bg-subtle)] outline-none focus:ring-2 focus:ring-[var(--accent-lf)]/30"
+              className="w-full rounded-lg px-3 py-2 text-sm border border-[var(--color-border)] bg-[var(--color-bg-subtle)] outline-none focus:border-[var(--color-text-tertiary)]"
             />
             <p className="text-[10px] mt-2" style={{ color: 'var(--color-text-tertiary)' }}>
               Institutional email is required for automatic resolution of your matching lost reports.
@@ -2985,7 +3017,7 @@ function FilterSidebar({
       {/* Search */}
       <div>
         <div
-          className="flex items-center gap-2 rounded-xl px-3 py-2.5 transition-all duration-200 focus-within:ring-2 focus-within:ring-[var(--accent-lf)]/20"
+          className="flex items-center gap-2 rounded-xl px-3 py-2.5 transition-all duration-200 focus-within:border-[var(--color-text-tertiary)]"
           style={{
             backgroundColor: 'var(--color-bg-subtle)',
             border: '1.5px solid var(--color-border)',
@@ -2997,7 +3029,7 @@ function FilterSidebar({
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             placeholder="Search items..."
-            className="flex-1 bg-transparent text-sm outline-none placeholder:text-[var(--color-text-tertiary)]"
+            className="flex-1 min-w-0 bg-transparent text-sm outline-none placeholder:text-[var(--color-text-tertiary)]"
             style={{ color: 'var(--color-text-primary)' }}
           />
           {searchQuery && (
@@ -3018,7 +3050,7 @@ function FilterSidebar({
           <select
             value={sortBy}
             onChange={(e) => setSortBy(e.target.value as SortOption)}
-            className="w-full rounded-xl px-3 py-2.5 text-[11px] font-bold uppercase tracking-[0.06em] appearance-none cursor-pointer outline-none transition-all duration-200 bg-[var(--color-bg-subtle)] border border-[var(--color-border)] hover:border-[var(--color-text-tertiary)] focus:ring-2 focus:ring-[var(--accent-lf)]/20"
+            className="w-full rounded-xl px-3 py-2.5 text-[11px] font-bold uppercase tracking-[0.06em] appearance-none cursor-pointer outline-none transition-all duration-200 bg-[var(--color-bg-subtle)] border border-[var(--color-border)] hover:border-[var(--color-text-tertiary)] focus:border-[var(--color-text-tertiary)]"
             style={{ color: 'var(--color-text-primary)' }}
           >
             {sortOptions.map((opt) => (
@@ -4245,7 +4277,7 @@ function LostFoundView({
               <select
                 value={sortBy}
                 onChange={(e) => setSortBy(e.target.value as SortOption)}
-                className="w-full rounded-md px-3 py-2 text-[11px] font-bold uppercase tracking-[0.06em] appearance-none cursor-pointer outline-none transition-all duration-150 focus:ring-2 focus:ring-[var(--accent-lf)]/30"
+                className="w-full rounded-md px-3 py-2 text-[11px] font-bold uppercase tracking-[0.06em] appearance-none cursor-pointer outline-none transition-all duration-150 focus:border-[var(--color-text-tertiary)]"
                 style={{
                   backgroundColor: 'var(--color-bg-subtle)',
                   border: '1.5px solid var(--color-border)',
@@ -4871,7 +4903,7 @@ function LostFoundView({
           {/* Search, Sort & Filter Bar */}
           <div className="flex flex-col sm:flex-row gap-3">
             <div
-              className="flex-1 flex items-center gap-2 rounded-xl px-4 py-3 transition-all duration-200 focus-within:ring-2 focus-within:ring-[var(--accent-lf)]/20"
+              className="flex-1 min-w-0 flex items-center gap-2 rounded-xl px-4 py-3 transition-all duration-200 focus-within:border-[var(--color-text-tertiary)]"
               style={{
                 backgroundColor: 'var(--color-bg-raised)',
                 border: '1.5px solid var(--color-border)',
@@ -4883,7 +4915,7 @@ function LostFoundView({
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 placeholder="Search lost or found items..."
-                className="flex-1 bg-transparent text-sm outline-none placeholder:text-[var(--color-text-tertiary)]"
+                className="flex-1 min-w-0 bg-transparent text-sm outline-none placeholder:text-[var(--color-text-tertiary)]"
                 style={{ color: 'var(--color-text-primary)' }}
               />
               {searchQuery && (

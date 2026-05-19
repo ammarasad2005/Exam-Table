@@ -10,6 +10,7 @@ CREATE TABLE lost_found_items (
   structured_location JSONB,
   date TIMESTAMP WITH TIME ZONE NOT NULL,
   contact_info TEXT NOT NULL,
+  reporter_name TEXT,
   is_resolved BOOLEAN DEFAULT false,
   resolved_by TEXT,
   image_url TEXT,

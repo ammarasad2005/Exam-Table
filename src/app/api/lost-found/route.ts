@@ -49,6 +49,7 @@ export async function GET(request: NextRequest) {
       structuredLocation: item.structured_location,
       date: item.date,
       contactInfo: item.contact_info,
+      reporterName: item.reporter_name,
       isResolved: item.is_resolved,
       resolvedBy: item.resolved_by,
       imageUrl: item.image_url,
@@ -81,6 +82,7 @@ export async function POST(request: NextRequest) {
       structuredLocation,
       date,
       contactInfo,
+      reporterName,
       imageUrl,
     } = body;
 
@@ -154,6 +156,7 @@ export async function POST(request: NextRequest) {
         structured_location: structuredLocation,
         date: new Date(date).toISOString(),
         contact_info: contactInfo.trim(),
+        reporter_name: reporterName?.trim() || null,
         image_url: imageUrl?.trim() || null,
       })
       .select()
@@ -172,6 +175,7 @@ export async function POST(request: NextRequest) {
       structuredLocation: item.structured_location,
       date: item.date,
       contactInfo: item.contact_info,
+      reporterName: item.reporter_name,
       isResolved: item.is_resolved,
       imageUrl: item.image_url,
       createdAt: item.created_at,
