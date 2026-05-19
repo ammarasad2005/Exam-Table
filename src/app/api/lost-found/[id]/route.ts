@@ -64,6 +64,75 @@ export async function PATCH(
         .insert({ item_id: id, claimer_id: body.claimerId });
       
       if (claimError) throw claimError;
+
+      // Claim-Sync: Automatically resolve matching lost reports for this user
+      if (body.claimerEmail) {
+        const claimerEmail = body.claimerEmail.toLowerCase().trim();
+        
+        // 1. Fetch current found item details
+        const { data: foundItem } = await supabase
+          .from("lost_found_items")
+          .select("*")
+          .eq("id", id)
+          .single();
+
+        if (foundItem && foundItem.type === 'found') {
+          // 2. Fetch all active lost items by this user's email
+          const { data: lostItems } = await supabase
+            .from("lost_found_items")
+            .select("*")
+            .eq("type", "lost")
+            .eq("is_resolved", false)
+            .eq("contact_info", claimerEmail);
+
+          if (lostItems && lostItems.length > 0) {
+            const token = process.env.GITHUB_TOKEN;
+            if (token) {
+              try {
+                const lostItemsList = lostItems.map(li => `[ID: ${li.id}] Title: ${li.title}, Desc: ${li.description}`).join('\n');
+                
+                const syncResponse = await fetch("https://models.github.ai/inference/chat/completions", {
+                  method: "POST",
+                  headers: {
+                    "Content-Type": "application/json",
+                    "Authorization": `Bearer ${token}`
+                  },
+                  body: JSON.stringify({
+                    model: "gpt-4o-mini",
+                    messages: [
+                      {
+                        role: "system",
+                        content: "You are a Lost & Found synchronization system. Compare a FOUND item with a list of LOST items reported by the same student. Determine if any of the LOST items are the same object as the FOUND item. Note that descriptions might vary slightly. Return ONLY a JSON object with 'matchId' (the ID string) and 'confidence' (0-100). If no match, return null for matchId."
+                      },
+                      {
+                        role: "user",
+                        content: `FOUND ITEM: ${foundItem.title} - ${foundItem.description}\n\nUSER'S LOST ITEMS:\n${lostItemsList}`
+                      }
+                    ],
+                    response_format: { type: "json_object" }
+                  })
+                });
+
+                if (syncResponse.ok) {
+                  const syncData = await syncResponse.json();
+                  const result = JSON.parse(syncData?.choices[0]?.message?.content || '{}');
+
+                  if (result.matchId && result.confidence >= 80) {
+                    console.log(`[Sync] Auto-resolving lost item ${result.matchId} for claimer ${claimerEmail}`);
+                    await supabase
+                      .from("lost_found_items")
+                      .update({ is_resolved: true, resolved_by: body.claimerId })
+                      .eq("id", result.matchId);
+                  }
+                }
+              } catch (err) {
+                console.error("Claim-Sync AI failed:", err);
+              }
+            }
+          }
+        }
+      }
+      
       return NextResponse.json({ success: true });
     }
 

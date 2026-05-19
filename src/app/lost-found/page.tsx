@@ -1304,7 +1304,7 @@ function ReportForm({
     if (!type) return 1
     if (!category) return 2
     if (!title.trim() || !description.trim() || !date) return 3
-    if (type === 'found' && (!location.trim() || !handoffNote.trim())) return 3
+    if (type === 'found' && (!location.trim() || !handoffNote.trim() || !imageFile)) return 3
     return 4
   }
   const currentStep = getStep()
@@ -1322,6 +1322,15 @@ function ReportForm({
     if (type === 'found') {
       if (!location.trim()) e.location = 'Where you found it is required'
       if (!handoffNote.trim()) e.handoffNote = 'Where you submitted it is required'
+      if (!imageFile) e.image = 'Image snapshot is mandatory for found items'
+    }
+    if (type === 'lost') {
+      const emailRegex = /^[a-zA-Z][0-9]{6}@isb\.nu\.edu\.pk$/
+      if (!contactInfo.trim()) {
+        e.contactInfo = 'Institutional email is mandatory for lost items'
+      } else if (!emailRegex.test(contactInfo.trim())) {
+        e.contactInfo = 'Must be a valid institutional email (e.g., i231234@isb.nu.edu.pk)'
+      }
     }
     if (!date) e.date = 'Date is required'
     setErrors(e)
@@ -1775,7 +1784,7 @@ function ReportForm({
       {/* Contact Info */}
       <div>
         <label className="font-mono text-[10px] uppercase tracking-[0.1em] mb-2 block" style={{ color: 'var(--color-text-tertiary)' }}>
-          Contact Info <span style={{ color: 'var(--color-text-tertiary)' }}>(Recommended)</span>
+          Contact Info <span style={{ color: 'var(--color-text-tertiary)' }}>{type === 'lost' ? '(Mandatory: NU Email)' : '(Recommended)'}</span>
         </label>
         <input
           type="text"
@@ -1791,7 +1800,7 @@ function ReportForm({
       {/* Image Upload (with Camera) */}
       <div>
         <label className="font-mono text-[10px] uppercase tracking-[0.1em] mb-2 block" style={{ color: 'var(--color-text-tertiary)' }}>
-          Image / Snapshot <span style={{ color: 'var(--color-text-tertiary)' }}>(optional)</span>
+          Image / Snapshot <span style={{ color: 'var(--color-text-tertiary)' }}>{type === 'found' ? '(Mandatory)' : '(Optional)'}</span>
         </label>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
           <label className="flex items-center justify-center gap-2 rounded-xl py-2.5 px-4 text-[10px] font-bold uppercase tracking-wider cursor-pointer transition-all border border-[var(--color-border)] bg-[var(--color-bg-subtle)] hover:bg-black/5" style={{ color: 'var(--color-text-secondary)' }}>
@@ -1822,6 +1831,7 @@ function ReportForm({
             Selected: {imageFile.name.slice(0, 20)}...
           </p>
         )}
+        {errors.image && <p className="text-xs mt-1" style={{ color: 'var(--accent-ee)' }}>{errors.image}</p>}
       </div>
 
       {/* Urgent toggle */}
@@ -1998,6 +2008,9 @@ function ItemDetail({
   const [feedbackGiven, setFeedbackGiven] = useState<'helpful' | 'not-helpful' | null>(null)
   const [claims, setClaims] = useState<{ id: string; claimer_id: string; created_at: string }[]>([])
   const [claiming, setClaiming] = useState(false)
+  const [claimDialogOpen, setClaimDialogOpen] = useState(false)
+  const [claimerEmail, setClaimerEmail] = useState('')
+  const [matchingLost, setMatchingLost] = useState<LostFoundItem | null>(null)
   const [verifying, setVerifying] = useState(false)
   const [verificationImage, setVerificationImage] = useState<File | null>(null)
   const [verificationResult, setVerificationResult] = useState<{ match: boolean; confidence: number; reasoning?: string } | null>(null)
@@ -2032,17 +2045,25 @@ function ItemDetail({
     }
   }, [item.id, fetchClaims, myId])
 
-  const handleClaim = async () => {
+  const handleClaim = async (email: string) => {
     setClaiming(true)
     try {
       const res = await fetch(`/api/lost-found/${item.id}`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ claimerId: myId, action: 'claim' }),
+        body: JSON.stringify({ 
+          claimerId: myId, 
+          action: 'claim',
+          claimerEmail: email 
+        }),
       })
       if (res.ok) {
-        toast({ title: 'Collection Scheduled!', description: 'You are now marked as a claimant. Please pick up the item and verify possession.' })
+        toast({ 
+          title: 'Collection Scheduled!', 
+          description: 'You are now marked as a claimant. Please pick up the item and verify possession.' 
+        })
         fetchClaims()
+        setClaimDialogOpen(false)
       }
     } catch {
       toast({ title: 'Error', description: 'Failed to register claim.', variant: 'destructive' })
@@ -2441,7 +2462,7 @@ function ItemDetail({
               <>
                 {!isClaimant ? (
                   <button
-                    onClick={handleClaim}
+                    onClick={() => setClaimDialogOpen(true)}
                     disabled={claiming}
                     className="flex-1 rounded-xl py-3.5 text-xs font-black uppercase tracking-[0.12em] transition-all duration-200 flex items-center justify-center gap-2 hover:scale-[1.02] active:scale-[0.98] shadow-md hover:shadow-xl"
                     style={{ backgroundColor: 'var(--accent-lf)', color: 'white' }}
@@ -2858,6 +2879,41 @@ function ItemDetail({
           </div>
         )}
       </div>
+
+      {/* Claim-Sync Dialog */}
+      <AlertDialog open={claimDialogOpen} onOpenChange={setClaimDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Register a Claim</AlertDialogTitle>
+            <AlertDialogDescription>
+              To help us verify and sync your lost reports, please enter your institutional email.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <div className="py-4">
+            <input
+              type="email"
+              value={claimerEmail}
+              onChange={(e) => setClaimerEmail(e.target.value)}
+              placeholder="e.g., i231234@isb.nu.edu.pk"
+              className="w-full rounded-lg px-3 py-2 text-sm border border-[var(--color-border)] bg-[var(--color-bg-subtle)] outline-none focus:ring-2 focus:ring-[var(--accent-lf)]/30"
+            />
+            <p className="text-[10px] mt-2" style={{ color: 'var(--color-text-tertiary)' }}>
+              Institutional email is required for automatic resolution of your matching lost reports.
+            </p>
+          </div>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={() => handleClaim(claimerEmail)}
+              disabled={!claimerEmail.match(/^[a-zA-Z][0-9]{6}@isb\.nu\.edu\.pk$/) || claiming}
+              className="bg-[var(--accent-lf)] text-white hover:opacity-90"
+            >
+              {claiming ? <Loader2 className="animate-spin mr-2" width={14} height={14} /> : <Handshake width={14} height={14} className="mr-2" />}
+              Confirm Claim
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
 
       {/* Print reference */}
       <div className="print-area hidden">
