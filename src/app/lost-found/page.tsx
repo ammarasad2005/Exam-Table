@@ -1108,6 +1108,10 @@ function ItemCard({
   const isReporter = typeof window !== 'undefined' && getMyReportedItems().includes(item.id)
   const canSeeLocation = isReporter || isClaimant || item.isResolved || isLost
 
+  const locationDisplay = isLost 
+    ? (item.location || 'Location not provided') 
+    : (canSeeLocation ? item.location : 'Claim to reveal location')
+
   const reporterName = item.reporterName || null
 
   return (
@@ -1176,7 +1180,9 @@ function ItemCard({
                 <div className="flex flex-wrap gap-x-3 gap-y-1">
                   <span className="flex items-center gap-1.5 text-[11px] font-medium text-[var(--color-text-secondary)]">
                     <MapPin width={12} height={12} className="text-[var(--color-text-tertiary)]" />
-                    {canSeeLocation ? item.location : <span className="text-[10px] opacity-60 italic">Claim to reveal location</span>}
+                    <span className={!canSeeLocation && !isLost ? "text-[10px] opacity-60 italic" : ""}>
+                      {locationDisplay}
+                    </span>
                   </span>
                 </div>
                 
@@ -2045,7 +2051,7 @@ function ItemDetail({
   const myId = typeof window !== 'undefined' ? (localStorage.getItem('lf-user-id') || 'anon-' + Math.random().toString(36).slice(2, 9)) : ''
   const isClaimant = claims.some(c => c.claimer_id === myId)
   const isReporter = typeof window !== 'undefined' && getMyReportedItems().includes(item.id)
-  const canSeeLocation = isReporter || isClaimant || item.isResolved
+  const canSeeLocation = isReporter || isClaimant || item.isResolved || isLost
 
   const fetchClaims = useCallback(async () => {
     try {
