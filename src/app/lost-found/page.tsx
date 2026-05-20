@@ -24,6 +24,8 @@ import {
   Package,
   Sparkles,
   ChevronDown,
+  ChevronUp,
+  ExternalLink,
   HomeIcon,
   Share2,
   ArrowUpDown,
@@ -109,6 +111,7 @@ interface LostFoundItem {
   resolutionImageUrl?: string | null
   createdAt: string
   updatedAt: string
+  claims?: { id: string; claimer_id: string; claimer_email: string; status: string; created_at: string }[]
 }
 
 // ─── Feature Card Data ──────────────────────────────────────────────────────
@@ -837,20 +840,14 @@ function AnimatedCounter({ target, duration = 800 }: { target: number; duration?
 
 function SkeletonCard() {
   return (
-    <div className="rounded-xl p-5 space-y-3" style={{ backgroundColor: 'var(--color-bg-raised)', border: '1px solid var(--color-border)', boxShadow: 'var(--shadow-card)' }}>
-      <div className="flex items-start gap-3 pl-2">
-        <div className="w-10 h-10 rounded-lg shrink-0 skeleton-shimmer" />
-        <div className="flex-1 space-y-2">
-          <div className="flex gap-2">
-            <div className="h-4 w-12 rounded skeleton-shimmer" />
-            <div className="h-4 w-16 rounded skeleton-shimmer" />
-          </div>
-          <div className="h-4 w-3/4 rounded skeleton-shimmer" />
-          <div className="h-3 w-1/2 rounded skeleton-shimmer" />
-          <div className="flex gap-3">
-            <div className="h-3 w-20 rounded skeleton-shimmer" />
-            <div className="h-3 w-14 rounded skeleton-shimmer" />
-          </div>
+    <div className="rounded-2xl p-4 space-y-4 bg-[var(--color-bg-raised)] border border-[var(--color-border)] shadow-sm animate-pulse">
+      <div className="aspect-[4/3] rounded-xl skeleton-shimmer bg-[var(--color-bg-subtle)]" />
+      <div className="space-y-2 px-1">
+        <div className="h-4 w-3/4 rounded skeleton-shimmer" />
+        <div className="h-3 w-1/2 rounded skeleton-shimmer" />
+        <div className="pt-4 border-t border-[var(--color-border)] flex gap-2">
+          <div className="h-8 flex-1 rounded-xl skeleton-shimmer" />
+          <div className="h-8 flex-1 rounded-xl skeleton-shimmer" />
         </div>
       </div>
     </div>
@@ -1087,7 +1084,7 @@ function ItemCard({
   viewCount,
   reward,
   onLocationFilter,
-  viewMode = 'list',
+  viewMode = 'grid',
 }: {
   item: LostFoundItem
   onClick: () => void
@@ -1103,124 +1100,119 @@ function ItemCard({
   viewMode?: 'grid' | 'list'
 }) {
   const isLost = item.type === 'lost'
-  const expired = isExpired(item.createdAt)
-  const archived = isArchived(item.createdAt)
-  const expiringSoon = isExpiringSoon(item.createdAt)
-  const isNew = isNewItem(item.createdAt)
-  const [showQuickMenu, setShowQuickMenu] = useState(false)
   const [descExpanded, setDescExpanded] = useState(false)
-  const zone = getZoneForLocation(item.location)
+  
+  // Authorization check for location masking (found items only)
+  const myId = typeof window !== 'undefined' ? (localStorage.getItem('lf-user-id') || '') : ''
+  const isClaimant = item.claims?.some((c: any) => c.claimer_id === myId)
+  const isReporter = typeof window !== 'undefined' && getMyReportedItems().includes(item.id)
+  const canSeeLocation = isReporter || isClaimant || item.isResolved || isLost
 
   const reporterName = item.reporterName || null
 
   return (
     <motion.div
       layout
-      initial={{ opacity: 0, scale: 0.98 }}
-      animate={{ opacity: item.isResolved ? 0.6 : 1, scale: 1 }}
-      exit={{ opacity: 0, scale: 0.98 }}
-      whileHover={{ y: -2 }}
-      className={`rounded-2xl p-4 cursor-pointer transition-all duration-200 group relative overflow-hidden bg-[var(--color-bg-raised)] border border-[var(--color-border)] hover:border-[var(--color-text-tertiary)] hover:shadow-lg ${viewMode === 'grid' ? 'flex flex-col h-full' : 'flex items-center gap-4'}`}
-      onClick={onClick}
+      initial={{ opacity: 0, y: 10 }}
+      animate={{ opacity: item.isResolved ? 0.7 : 1, y: 0 }}
+      className="group relative flex flex-col bg-[var(--color-bg-raised)] border border-[var(--color-border)] rounded-2xl overflow-hidden transition-all duration-300 hover:shadow-xl hover:border-[var(--color-text-tertiary)]"
     >
-      {/* Type indicator vertical bar */}
-      <div
-        className="absolute left-0 top-0 bottom-0 w-1.5"
-        style={{ backgroundColor: isLost ? 'var(--accent-ee)' : 'var(--accent-af)' }}
-      />
-
-      {/* Thumbnail */}
-      <div
-        className={`shrink-0 rounded-xl overflow-hidden shadow-sm relative ${viewMode === 'grid' ? 'w-full aspect-[4/3] mb-3' : 'w-24 h-24 md:w-32 md:h-32'}`}
-        style={{ backgroundColor: 'var(--color-bg-subtle)' }}
-      >
+      {/* Top Image Section */}
+      <div className="relative aspect-[4/3] overflow-hidden bg-[var(--color-bg-subtle)]">
         {item.imageUrl ? (
-          <img src={item.imageUrl} alt={item.title} className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110" />
+          <img src={item.imageUrl} alt={item.title} className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" />
         ) : (
           <div
-            className="w-full h-full flex items-center justify-center text-3xl"
-            style={{
-              background: categoryPlaceholders[item.category]?.gradient || categoryPlaceholders.Other.gradient,
-            }}
+            className="w-full h-full flex items-center justify-center text-4xl"
+            style={{ background: categoryPlaceholders[item.category]?.gradient || categoryPlaceholders.Other.gradient }}
           >
             {categoryPlaceholders[item.category]?.emoji || categoryPlaceholders.Other.emoji}
           </div>
         )}
-        
-        {/* Mobile quick badges over image */}
-        <div className="absolute top-2 left-2 flex gap-1">
-           <span className={`px-2 py-0.5 rounded-md text-[8px] font-bold uppercase tracking-wider text-white shadow-sm ${isLost ? 'bg-[var(--accent-ee)]' : 'bg-[var(--accent-af)]'}`}>
+
+        {/* Overlay Badges */}
+        <div className="absolute top-3 left-3 flex flex-col gap-2">
+          <span className={`px-2 py-1 rounded-lg text-[9px] font-black uppercase tracking-widest text-white shadow-lg ${isLost ? 'bg-[var(--accent-ee)]' : 'bg-[var(--accent-af)]'}`}>
             {item.type}
           </span>
+          {isUrgent && !item.isResolved && (
+            <span className="bg-red-500 text-white px-2 py-1 rounded-lg text-[9px] font-black uppercase tracking-widest animate-pulse shadow-lg">
+              Urgent
+            </span>
+          )}
         </div>
 
-        {/* Bookmark button */}
+        {/* Bookmark Action */}
         {onToggleBookmark && (
           <button
-            onMouseDown={(e) => { e.stopPropagation(); onToggleBookmark(e, item.id) }}
-            className="absolute top-2 right-2 p-1.5 rounded-lg bg-white/80 dark:bg-black/40 backdrop-blur-sm opacity-0 group-hover:opacity-100 transition-opacity"
+            onClick={(e) => { e.stopPropagation(); onToggleBookmark(e, item.id) }}
+            className="absolute top-3 right-3 p-2 rounded-xl bg-white/10 backdrop-blur-md border border-white/20 text-white opacity-0 group-hover:opacity-100 transition-all hover:bg-white/20"
           >
-            {isBookmarked ? (
-              <BookmarkCheck width={14} height={14} className="text-[var(--accent-lf)]" />
-            ) : (
-              <Bookmark width={14} height={14} className="text-[var(--color-text-tertiary)]" />
-            )}
+            {isBookmarked ? <BookmarkCheck width={16} height={16} /> : <Bookmark width={16} height={16} />}
           </button>
         )}
       </div>
 
-      {/* Content */}
-      <div className="flex-1 min-w-0 flex flex-col justify-center gap-1">
-        <div className="flex items-center justify-between gap-2">
-          <div className="flex items-center gap-2">
-            <h3 className="font-body text-[16px] md:text-lg font-bold truncate tracking-tight text-[var(--color-text-primary)]">
+      {/* Content Section */}
+      <div className="p-4 flex-1 flex flex-col gap-3">
+        <div>
+          <div className="flex items-start justify-between gap-2 mb-1">
+            <h3 className="font-body text-lg font-bold text-[var(--color-text-primary)] truncate leading-tight">
               {item.title}
             </h3>
-            <span className={`px-2 py-0.5 rounded-md text-[9px] font-bold uppercase tracking-wider hidden md:inline-block ${isLost ? 'bg-[var(--accent-ee)]/10 text-[var(--accent-ee)]' : 'bg-[var(--accent-af)]/10 text-[var(--accent-af)]'}`}>
-              {item.type}
+            <span className="font-mono text-[9px] text-[var(--color-text-tertiary)] shrink-0 mt-1">
+              {timeAgo(item.createdAt)}
             </span>
           </div>
-          <span className="font-mono text-[10px] text-[var(--color-text-tertiary)] shrink-0">
-            {timeAgo(item.createdAt)}
-          </span>
-        </div>
-
-        <div className="flex items-center gap-3 text-[var(--color-text-secondary)] text-[11px] font-medium">
-          <span className="flex items-center gap-1">
-            <MapPin width={12} height={12} className="text-[var(--color-text-tertiary)]" />
-            {item.location}
-          </span>
-          <span className="flex items-center gap-1">
-            <Package width={12} height={12} className="text-[var(--color-text-tertiary)]" />
-            {item.category}
-          </span>
-        </div>
-
-        <p className={`text-xs text-[var(--color-text-secondary)] mt-1 ${descExpanded ? '' : 'line-clamp-1'}`}>
-          {item.description}
-        </p>
-
-        <div className="flex items-center justify-between mt-2 pt-2 border-t border-[var(--color-border)]">
-          {reporterName ? (
-            <div className="flex items-center gap-2">
-              <div className="w-5 h-5 rounded-full bg-[var(--color-bg-subtle)] flex items-center justify-center border border-[var(--color-border)]">
-                <User width={10} height={10} className="text-[var(--color-text-tertiary)]" />
-              </div>
-              <span className="text-[10px] font-bold text-[var(--color-text-primary)]">{reporterName}</span>
-            </div>
-          ) : <div />}
           
-          <div className="flex items-center gap-2">
-             {isUrgent && !item.isResolved && (
-                <span className="flex items-center gap-0.5 text-[8px] font-black uppercase text-[var(--accent-ee)] bg-[var(--accent-ee)]/10 px-1.5 py-0.5 rounded-md animate-pulse">
-                  Urgent
-                </span>
-              )}
-              {reward && (
-                <span className="text-[10px] font-bold text-[var(--accent-lf)]">💰 {reward}</span>
-              )}
-              <ChevronRight width={14} height={14} className="text-[var(--color-text-tertiary)] opacity-0 group-hover:opacity-100 transition-opacity" />
+          <div className="flex flex-wrap gap-x-3 gap-y-1 mt-1">
+            <span className="flex items-center gap-1.5 text-[11px] font-medium text-[var(--color-text-secondary)]">
+              <MapPin width={12} height={12} className="text-[var(--color-text-tertiary)]" />
+              {canSeeLocation ? item.location : <span className="text-[10px] opacity-60 italic">Claim to reveal location</span>}
+            </span>
+            <span className="flex items-center gap-1.5 text-[11px] font-medium text-[var(--color-text-secondary)]">
+              <Package width={12} height={12} className="text-[var(--color-text-tertiary)]" />
+              {item.category}
+            </span>
           </div>
+        </div>
+
+        {/* Description / Popover expansion area */}
+        <div className="relative">
+          <p className={`text-xs leading-relaxed text-[var(--color-text-secondary)] ${descExpanded ? '' : 'line-clamp-2'}`}>
+            {item.description}
+          </p>
+          {descExpanded && (
+             <div className="mt-2 pt-2 border-t border-[var(--color-border)] animate-in fade-in slide-in-from-top-1">
+                <div className="flex items-center gap-2 mb-2">
+                   <div className="w-5 h-5 rounded-full bg-[var(--color-bg-subtle)] flex items-center justify-center border border-[var(--color-border)]">
+                      <User width={10} height={10} className="text-[var(--color-text-tertiary)]" />
+                   </div>
+                   <span className="text-[10px] font-bold text-[var(--color-text-primary)]">
+                      {reporterName || 'Anonymous Reporter'}
+                   </span>
+                </div>
+                {reward && <p className="text-[10px] font-bold text-[var(--accent-lf)]">💰 Reward: {reward}</p>}
+             </div>
+          )}
+        </div>
+
+        {/* Footer Actions */}
+        <div className="mt-auto pt-4 flex items-center gap-2 border-t border-[var(--color-border)]">
+          <button
+            onClick={(e) => { e.stopPropagation(); setDescExpanded(!descExpanded) }}
+            className={`flex-1 flex items-center justify-center gap-1.5 py-2 rounded-xl text-[10px] font-bold uppercase tracking-wider transition-all ${descExpanded ? 'bg-[var(--color-text-primary)] text-[var(--color-bg-raised)]' : 'bg-[var(--color-bg-subtle)] text-[var(--color-text-secondary)] hover:bg-[var(--color-border)]'}`}
+          >
+            {descExpanded ? <ChevronUp width={12} height={12} /> : <Zap width={12} height={12} />}
+            {descExpanded ? 'Collapse' : 'Expand'}
+          </button>
+          <button
+            onClick={(e) => { e.stopPropagation(); onClick() }}
+            className="flex-1 flex items-center justify-center gap-1.5 py-2 rounded-xl bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 text-[10px] font-bold uppercase tracking-wider border border-emerald-500/20 hover:bg-emerald-500/20 transition-all"
+          >
+            <ExternalLink width={12} height={12} />
+            Visit
+          </button>
         </div>
       </div>
     </motion.div>
@@ -3671,7 +3663,7 @@ function StatsDashboard({
 
   const stats = [
     {
-      label: 'ACTIVE',
+      label: 'Active Items',
       mobileLabel: 'Active',
       value: totalActive,
       accent: 'var(--accent-lf)',
@@ -3679,7 +3671,7 @@ function StatsDashboard({
       filter: { type: 'all' as const, range: 'all' as const }
     },
     {
-      label: 'LOST WEEK',
+      label: 'Lost This Week',
       mobileLabel: 'Lost',
       value: lostThisWeek,
       accent: 'var(--accent-ee)',
@@ -3687,7 +3679,7 @@ function StatsDashboard({
       filter: { type: 'lost' as const, range: 'week' as const }
     },
     {
-      label: 'FOUND WEEK',
+      label: 'Found This Week',
       mobileLabel: 'Found',
       value: foundThisWeek,
       accent: 'var(--accent-af)',
@@ -3698,52 +3690,74 @@ function StatsDashboard({
 
   return (
     <div className="space-y-4">
-      <div className="grid grid-cols-3 gap-2 md:gap-4">
+      {/* Desktop: Larger Cards */}
+      <div className="hidden md:grid grid-cols-3 gap-4">
         {stats.map((stat) => {
           return (
             <button
               key={stat.label}
               onClick={() => onFilterChange(stat.filter.type, stat.filter.range)}
-              className="rounded-xl md:rounded-2xl p-3 md:p-6 flex flex-col items-center justify-center gap-1 relative transition-all duration-300 hover:shadow-lg hover:scale-[1.02] active:scale-95 group overflow-hidden"
+              className="rounded-2xl p-6 flex flex-col items-center justify-center gap-1 relative transition-all duration-300 hover:shadow-lg hover:scale-[1.02] active:scale-95 group overflow-hidden"
               style={{ 
                 backgroundColor: `color-mix(in srgb, ${stat.accent}, transparent 92%)`, 
                 border: `1px solid color-mix(in srgb, ${stat.accent}, transparent 75%)`,
-                boxShadow: `0 4px 12px -2px color-mix(in srgb, ${stat.accent}, transparent 94%)`,
-                aspectRatio: '1/1'
+                boxShadow: `0 4px 12px -2px color-mix(in srgb, ${stat.accent}, transparent 94%), 0 2px 4px -1px color-mix(in srgb, ${stat.accent}, transparent 96%)`
               }}
             >
               <div className="flex flex-col items-center">
-                <span className="text-xl md:text-4xl font-black tracking-tighter" style={{ color: stat.accent }}>
+                <span className="text-4xl font-black tracking-tighter" style={{ color: stat.accent }}>
                   <AnimatedCounter target={stat.value} />
                 </span>
-                <span className="text-[7px] md:text-[10px] font-black text-[var(--color-text-secondary)] uppercase tracking-[0.1em] md:tracking-[0.15em] mt-0.5 md:mt-1 text-center">
-                  <span className="hidden md:inline">{stat.label}</span>
-                  <span className="md:hidden">{stat.mobileLabel}</span>
+                <span className="text-[10px] font-black text-[var(--color-text-secondary)] uppercase tracking-[0.15em] mt-1 text-center">
+                  {stat.label}
                 </span>
               </div>
               
-              {stat.trend !== 0 && (
-                <div className="mt-1 hidden md:block">
-                  <div className="flex items-center gap-1 px-2 py-0.5 rounded-full bg-white/50 dark:bg-black/20 border border-[var(--color-border)]">
+              <div className="mt-2 min-h-[24px]">
+                {stat.trend !== 0 && (
+                  <div 
+                    className="flex items-center gap-1 px-2 py-0.5 rounded-full bg-white/50 dark:bg-black/20 border border-[var(--color-border)]"
+                  >
                     <span 
                       className="text-[10px] font-bold flex items-center gap-0.5"
-                      style={{ color: stat.trend > 0 && stat.label.includes('LOST') ? 'var(--accent-ee)' : 'var(--accent-af)' }}
+                      style={{ color: stat.trend > 0 && stat.label.includes('Lost') ? 'var(--accent-ee)' : 'var(--accent-af)' }}
                     >
                       {stat.trend > 0 ? <ArrowUp width={10} height={10} /> : <ArrowDown width={10} height={10} />}
                       {Math.abs(stat.trend)}
                     </span>
                     <span className="text-[9px] font-bold text-[var(--color-text-tertiary)] uppercase tracking-wider">Change</span>
                   </div>
-                </div>
-              )}
-
-              {/* Click indicator for mobile */}
-              <div className="md:hidden absolute bottom-1.5 opacity-40">
-                 <div className="w-4 h-0.5 rounded-full" style={{ backgroundColor: stat.accent }} />
+                )}
               </div>
             </button>
           )
         })}
+      </div>
+
+      {/* Mobile: Compact Square Row */}
+      <div className="grid md:hidden grid-cols-3 gap-2">
+        {stats.map((stat) => (
+          <button
+            key={stat.label}
+            onClick={() => onFilterChange(stat.filter.type, stat.filter.range)}
+            className="rounded-xl p-3 flex flex-col items-center justify-center gap-1 relative transition-all duration-300 active:scale-95 group overflow-hidden"
+            style={{ 
+              backgroundColor: `color-mix(in srgb, ${stat.accent}, transparent 92%)`, 
+              border: `1px solid color-mix(in srgb, ${stat.accent}, transparent 75%)`,
+              aspectRatio: '1/1'
+            }}
+          >
+            <span className="text-xl font-black tracking-tighter" style={{ color: stat.accent }}>
+              <AnimatedCounter target={stat.value} />
+            </span>
+            <span className="text-[7px] font-black text-[var(--color-text-secondary)] uppercase tracking-[0.1em] mt-0.5 text-center">
+              {stat.mobileLabel}
+            </span>
+            <div className="absolute bottom-1.5 opacity-40">
+               <div className="w-4 h-0.5 rounded-full" style={{ backgroundColor: stat.accent }} />
+            </div>
+          </button>
+        ))}
       </div>
     </div>
   )
@@ -4789,7 +4803,7 @@ function LostFoundView({
           <AnimatePresence>
             <motion.div 
               layout
-              className={viewMode === 'grid' ? 'grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4' : 'space-y-4'}
+              className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6"
             >
               {activeItems.map((item, idx) => (
                 <div
@@ -4845,7 +4859,7 @@ function LostFoundView({
                   initial={{ height: 0, opacity: 0 }}
                   animate={{ height: 'auto', opacity: 1 }}
                   exit={{ height: 0, opacity: 0 }}
-                  className="overflow-hidden space-y-4"
+                  className="overflow-hidden grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6"
                 >
                   {archivedItems.map((item) => (
                     <ItemCard
@@ -4893,7 +4907,7 @@ function LostFoundView({
                   initial={{ height: 0, opacity: 0 }}
                   animate={{ height: 'auto', opacity: 1 }}
                   exit={{ height: 0, opacity: 0 }}
-                  className="overflow-hidden space-y-4"
+                  className="overflow-hidden grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6"
                 >
                   {resolvedItems.map((item) => (
                     <ItemCard
@@ -4948,8 +4962,8 @@ function LostFoundView({
             <div className="flex items-center gap-2">
               <button
                 onClick={() => onSubViewChange('history')}
-                className="shrink-0 rounded-xl py-3 px-4 text-[10px] font-bold uppercase tracking-[0.1em] transition-all duration-150 flex items-center justify-center gap-2 hover:bg-[var(--color-bg-subtle)] border border-[var(--color-border)]"
-                style={{ color: 'var(--color-text-secondary)' }}
+                className="shrink-0 rounded-xl py-3 px-4 text-[10px] font-bold uppercase tracking-[0.1em] transition-all duration-150 flex items-center justify-center gap-2 bg-emerald-50/50 dark:bg-emerald-950/20 border border-emerald-200/50 dark:border-emerald-800/30 hover:bg-emerald-100/50 dark:hover:bg-emerald-900/30 shadow-sm"
+                style={{ color: '#10b981' }}
               >
                 <History width={14} height={14} />
                 History
@@ -5103,29 +5117,13 @@ function LostFoundView({
             </div>
 
             {/* Desktop Main Content */}
-            <div className="flex-1 min-w-0 space-y-4">
+            <div className="flex-1 min-w-0 space-y-6">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
                   <span className="text-sm font-bold text-[var(--color-text-primary)]">
                     {activeItems.length} Active Items
                   </span>
-                  <span className="text-[10px] text-[var(--color-text-tertiary)] uppercase font-medium">Browsing all items</span>
-                </div>
-                <div className="flex items-center gap-1 bg-[var(--color-bg-subtle)] p-1 rounded-lg border border-[var(--color-border)]">
-                  <button
-                    onClick={() => setViewMode('grid')}
-                    className={`p-1.5 rounded-md transition-all ${viewMode === 'grid' ? 'bg-[var(--color-bg-raised)] text-[var(--accent-lf)] shadow-sm' : 'text-[var(--color-text-tertiary)] hover:text-[var(--color-text-primary)]'}`}
-                    title="Grid View"
-                  >
-                    <LayoutGrid width={14} height={14} />
-                  </button>
-                  <button
-                    onClick={() => setViewMode('list')}
-                    className={`p-1.5 rounded-md transition-all ${viewMode === 'list' ? 'bg-[var(--color-bg-raised)] text-[var(--accent-lf)] shadow-sm' : 'text-[var(--color-text-tertiary)] hover:text-[var(--color-text-primary)]'}`}
-                    title="List View"
-                  >
-                    <List width={14} height={14} />
-                  </button>
+                  <span className="text-[10px] text-[var(--color-text-tertiary)] uppercase font-black tracking-widest opacity-60">Verified Records</span>
                 </div>
               </div>
               {renderItemsList(false)}
@@ -5133,10 +5131,10 @@ function LostFoundView({
           </div>
 
           {/* Mobile: Items list */}
-          <div id="items-list-anchor" className="space-y-4 pt-2 pb-20 md:hidden md:pb-0">
+          <div id="items-list-anchor" className="pt-2 pb-20 md:hidden md:pb-0">
             {/* Recently Viewed (mobile) */}
             {recentlyViewedItems.length > 0 && !showMyReports && !showBookmarked && !loading && (
-              <div className="mb-6">
+              <div className="mb-8">
                 <p
                   className="font-mono text-[9px] uppercase tracking-[0.2em] mb-3 flex items-center gap-1.5 font-bold"
                   style={{ color: 'var(--color-text-tertiary)' }}
@@ -5154,7 +5152,7 @@ function LostFoundView({
                         className="flex-none w-[140px] rounded-xl p-3 text-left transition-all duration-150 bg-[var(--color-bg-subtle)] border border-[var(--color-border)] shadow-sm"
                       >
                         <div className="flex items-center gap-2 mb-2">
-                          <span className="text-xs">{categoryIcons[item.category] || '\uD83D\uDCE6'}</span>
+                          <span className="text-xs">{categoryIcons[item.category] || '📦'}</span>
                           <span className={`px-1.5 py-0.5 rounded text-[7px] font-black uppercase ${isLost ? 'bg-[var(--accent-ee)]/10 text-[var(--accent-ee)]' : 'bg-[var(--accent-af)]/10 text-[var(--accent-af)]'}`}>
                             {item.type}
                           </span>
@@ -5175,7 +5173,7 @@ function LostFoundView({
               </div>
             )}
             {loading && items.length === 0 ? (
-              <div className="space-y-4">
+              <div className="grid grid-cols-1 gap-6">
                 <SkeletonCard />
                 <SkeletonCard />
                 <SkeletonCard />
@@ -5186,27 +5184,30 @@ function LostFoundView({
               <EmptyState hasFilters={hasFilters} onReport={() => onSubViewChange('report')} />
             ) : (
               <AnimatePresence>
-                {activeItems.map((item, idx) => (
-                  <div
-                    key={item.id}
-                    className={`relative ${focusedItemIndex === idx ? 'kb-focused-item rounded-xl' : ''}`}
-                  >
-                    <ItemCard
-                      item={item}
-                      onClick={() => openDetail(item)}
-                      onShare={handleShareItem}
-                      isMyItem={myReportedIds.includes(item.id)}
-                      isBookmarked={bookmarkedIds.includes(item.id)}
-                      onToggleBookmark={handleToggleBookmark}
-                      onQuickAction={handleQuickAction}
-                      isUrgent={urgentIds.includes(item.id)}
-                      viewCount={viewCounts[item.id] || 0}
-                    />
-                    {focusedItemIndex === idx && (
-                      <div className="kb-focused-tooltip">Press Enter to view</div>
-                    )}
-                  </div>
-                ))}
+                <div className="grid grid-cols-1 gap-6">
+                  {activeItems.map((item, idx) => (
+                    <div
+                      key={item.id}
+                      className={`relative ${focusedItemIndex === idx ? 'kb-focused-item rounded-2xl' : ''}`}
+                    >
+                      <ItemCard
+                        item={item}
+                        onClick={() => openDetail(item)}
+                        onShare={handleShareItem}
+                        isMyItem={myReportedIds.includes(item.id)}
+                        isBookmarked={bookmarkedIds.includes(item.id)}
+                        onToggleBookmark={handleToggleBookmark}
+                        onQuickAction={handleQuickAction}
+                        isUrgent={urgentIds.includes(item.id)}
+                        viewCount={viewCounts[item.id] || 0}
+                        onLocationFilter={handleLocationFilter}
+                      />
+                      {focusedItemIndex === idx && (
+                        <div className="kb-focused-tooltip">Press Enter to view</div>
+                      )}
+                    </div>
+                  ))}
+                </div>
               </AnimatePresence>
             )}
           </div>
