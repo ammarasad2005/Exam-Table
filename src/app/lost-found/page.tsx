@@ -1131,9 +1131,12 @@ function ItemCard({
         )}
 
         {/* Overlay Badges */}
-        <div className="absolute top-3 left-3 flex flex-col gap-2">
+        <div className="absolute top-3 left-3 flex flex-wrap gap-2 pr-10">
           <span className={`px-2 py-1 rounded-lg text-[9px] font-black uppercase tracking-widest text-white shadow-lg ${isLost ? 'bg-[var(--accent-ee)]' : 'bg-[var(--accent-af)]'}`}>
             {item.type}
+          </span>
+          <span className="bg-black/40 backdrop-blur-md text-white px-2 py-1 rounded-lg text-[9px] font-black uppercase tracking-widest border border-white/10 shadow-lg">
+            {item.category}
           </span>
           {isUrgent && !item.isResolved && (
             <span className="bg-red-500 text-white px-2 py-1 rounded-lg text-[9px] font-black uppercase tracking-widest animate-pulse shadow-lg">
@@ -1164,35 +1167,34 @@ function ItemCard({
               {timeAgo(item.createdAt)}
             </span>
           </div>
-          
-          <div className="flex flex-wrap gap-x-3 gap-y-1 mt-1">
-            <span className="flex items-center gap-1.5 text-[11px] font-medium text-[var(--color-text-secondary)]">
-              <MapPin width={12} height={12} className="text-[var(--color-text-tertiary)]" />
-              {canSeeLocation ? item.location : <span className="text-[10px] opacity-60 italic">Claim to reveal location</span>}
-            </span>
-            <span className="flex items-center gap-1.5 text-[11px] font-medium text-[var(--color-text-secondary)]">
-              <Package width={12} height={12} className="text-[var(--color-text-tertiary)]" />
-              {item.category}
-            </span>
-          </div>
         </div>
 
         {/* Description / Popover expansion area */}
         <div className="relative">
-          <p className={`text-xs leading-relaxed text-[var(--color-text-secondary)] ${descExpanded ? '' : 'line-clamp-2'}`}>
-            {item.description}
-          </p>
           {descExpanded && (
-             <div className="mt-2 pt-2 border-t border-[var(--color-border)] animate-in fade-in slide-in-from-top-1">
-                <div className="flex items-center gap-2 mb-2">
-                   <div className="w-5 h-5 rounded-full bg-[var(--color-bg-subtle)] flex items-center justify-center border border-[var(--color-border)]">
-                      <User width={10} height={10} className="text-[var(--color-text-tertiary)]" />
-                   </div>
-                   <span className="text-[10px] font-bold text-[var(--color-text-primary)]">
-                      {reporterName || 'Anonymous Reporter'}
-                   </span>
+             <div className="space-y-3 animate-in fade-in slide-in-from-top-1">
+                <div className="flex flex-wrap gap-x-3 gap-y-1">
+                  <span className="flex items-center gap-1.5 text-[11px] font-medium text-[var(--color-text-secondary)]">
+                    <MapPin width={12} height={12} className="text-[var(--color-text-tertiary)]" />
+                    {canSeeLocation ? item.location : <span className="text-[10px] opacity-60 italic">Claim to reveal location</span>}
+                  </span>
                 </div>
-                {reward && <p className="text-[10px] font-bold text-[var(--accent-lf)]">💰 Reward: {reward}</p>}
+                
+                <p className="text-xs leading-relaxed text-[var(--color-text-secondary)]">
+                  {item.description}
+                </p>
+
+                <div className="pt-2 border-t border-[var(--color-border)]">
+                  <div className="flex items-center gap-2 mb-1">
+                     <div className="w-5 h-5 rounded-full bg-[var(--color-bg-subtle)] flex items-center justify-center border border-[var(--color-border)]">
+                        <User width={10} height={10} className="text-[var(--color-text-tertiary)]" />
+                     </div>
+                     <span className="text-[10px] font-bold text-[var(--color-text-primary)]">
+                        {reporterName || 'Anonymous Reporter'}
+                     </span>
+                  </div>
+                  {reward && <p className="text-[10px] font-bold text-[var(--accent-lf)]">💰 Reward: {reward}</p>}
+                </div>
              </div>
           )}
         </div>
