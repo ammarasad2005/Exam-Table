@@ -3602,7 +3602,7 @@ function ResolvedHistory({ items, onSelect }: { items: LostFoundItem[], onSelect
   }
 
   return (
-    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+    <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 gap-3 md:gap-4">
       {resolvedItems.map((item) => (
         <motion.div
           key={item.id}
@@ -4503,7 +4503,10 @@ function LostFoundView({
   const renderItemsList = (isMobile: boolean) => {
     if (loading) {
       return (
-        <div className="space-y-4">
+        <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 gap-3 md:gap-6">
+          <SkeletonCard />
+          <SkeletonCard />
+          <SkeletonCard />
           <SkeletonCard />
           <SkeletonCard />
           <SkeletonCard />
@@ -4803,11 +4806,10 @@ function LostFoundView({
           <EmptyState hasFilters={hasFilters} onReport={() => onSubViewChange('report')} />
         ) : (
           <AnimatePresence>
-            <motion.div 
+            <motion.div
               layout
-              className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6"
-            >
-              {activeItems.map((item, idx) => (
+              className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 gap-3 md:gap-6"
+            >              {activeItems.map((item, idx) => (
                 <div
                   key={item.id}
                   className={`relative ${focusedItemIndex === idx ? 'kb-focused-item rounded-xl' : ''}`}
@@ -4861,7 +4863,7 @@ function LostFoundView({
                   initial={{ height: 0, opacity: 0 }}
                   animate={{ height: 'auto', opacity: 1 }}
                   exit={{ height: 0, opacity: 0 }}
-                  className="overflow-hidden grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6"
+                  className="overflow-hidden grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 gap-3 md:gap-6"
                 >
                   {archivedItems.map((item) => (
                     <ItemCard
@@ -4909,7 +4911,7 @@ function LostFoundView({
                   initial={{ height: 0, opacity: 0 }}
                   animate={{ height: 'auto', opacity: 1 }}
                   exit={{ height: 0, opacity: 0 }}
-                  className="overflow-hidden grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6"
+                  className="overflow-hidden grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 gap-3 md:gap-6"
                 >
                   {resolvedItems.map((item) => (
                     <ItemCard
@@ -5175,7 +5177,7 @@ function LostFoundView({
               </div>
             )}
             {loading && items.length === 0 ? (
-              <div className="grid grid-cols-1 gap-6">
+              <div className="grid grid-cols-2 gap-3 md:gap-6">
                 <SkeletonCard />
                 <SkeletonCard />
                 <SkeletonCard />
@@ -5186,7 +5188,7 @@ function LostFoundView({
               <EmptyState hasFilters={hasFilters} onReport={() => onSubViewChange('report')} />
             ) : (
               <AnimatePresence>
-                <div className="grid grid-cols-1 gap-6">
+                <div className="grid grid-cols-2 gap-3 md:gap-6">
                   {activeItems.map((item, idx) => (
                     <div
                       key={item.id}
