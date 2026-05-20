@@ -301,6 +301,16 @@ const dateRangeOptions: { value: DateRange; label: string }[] = [
 
 // ─── localStorage helpers ───────────────────────────────────────────────────
 
+function getPersistentUserId(): string {
+  if (typeof window === 'undefined') return ''
+  let id = localStorage.getItem('lf-user-id')
+  if (!id) {
+    id = 'user-' + Math.random().toString(36).slice(2, 11)
+    localStorage.setItem('lf-user-id', id)
+  }
+  return id
+}
+
 function getMyReportedItems(): string[] {
   if (typeof window === 'undefined') return []
   try {
@@ -1103,7 +1113,7 @@ function ItemCard({
   const [descExpanded, setDescExpanded] = useState(false)
   
   // Authorization check for location masking (found items only)
-  const myId = typeof window !== 'undefined' ? (localStorage.getItem('lf-user-id') || '') : ''
+  const myId = getPersistentUserId()
   const isClaimant = item.claims?.some((c: any) => c.claimer_id === myId)
   const isReporter = typeof window !== 'undefined' && getMyReportedItems().includes(item.id)
   const canSeeLocation = isReporter || isClaimant || item.isResolved || isLost
@@ -2036,6 +2046,7 @@ function ItemDetail({
   const [matchingLost, setMatchingLost] = useState<LostFoundItem | null>(null)
   const [checkingSync, setCheckingSync] = useState(false)
   const [humbleMessageVisible, setHumbleMessageVisible] = useState(false)
+  const [sessionClaimVerified, setSessionClaimVerified] = useState(false)
   const [verifying, setVerifying] = useState(false)
   const [verificationImage, setVerificationImage] = useState<File | null>(null)
   const [verificationResult, setVerificationResult] = useState<{ match: boolean; confidence: number; reasoning?: string } | null>(null)
@@ -2048,10 +2059,10 @@ function ItemDetail({
 
   const reporterName = item.reporterName || null
   
-  const myId = typeof window !== 'undefined' ? (localStorage.getItem('lf-user-id') || 'anon-' + Math.random().toString(36).slice(2, 9)) : ''
+  const myId = getPersistentUserId()
   const isClaimant = claims.some(c => c.claimer_id === myId)
   const isReporter = typeof window !== 'undefined' && getMyReportedItems().includes(item.id)
-  const canSeeLocation = isReporter || isClaimant || item.isResolved || isLost
+  const canSeeLocation = isReporter || isClaimant || item.isResolved || isLost || sessionClaimVerified
 
   const fetchClaims = useCallback(async () => {
     try {
@@ -2109,6 +2120,7 @@ function ItemDetail({
 
       if (res.ok) {
         setHumbleMessageVisible(true)
+        setSessionClaimVerified(true)
         toast({ 
           title: 'Claim Linked!', 
           description: 'Your lost report has been semantically matched. Location details revealed.' 
@@ -3984,8 +3996,10 @@ function LostFoundView({
   }, [typeFilter, categoryFilter, debouncedSearchQuery, toast])
 
   useEffect(() => {
-    fetchItems()
-  }, [fetchItems])
+    if (subView === 'list') {
+      fetchItems()
+    }
+  }, [fetchItems, subView])
 
   // Smart search: when search query changes and no results, call AI endpoint
   useEffect(() => {
