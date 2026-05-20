@@ -64,6 +64,7 @@ import {
 } from 'lucide-react'
 import { Header } from '@/components/Header'
 import { useToast } from '@/hooks/use-toast'
+import { useIsMobile } from '@/hooks/use-mobile'
 
 export const dynamic = 'force-dynamic'
 
@@ -3614,28 +3615,32 @@ function ResolvedHistory({ items, onSelect }: { items: LostFoundItem[], onSelect
           layout
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
-          className="group relative rounded-2xl p-4 transition-all duration-200 bg-[var(--color-bg-raised)] border border-[var(--color-border)] hover:shadow-lg cursor-pointer"
+          className="group relative rounded-2xl p-4 transition-all duration-200 bg-emerald-50/30 dark:bg-emerald-950/10 border border-emerald-200 dark:border-emerald-800/30 hover:shadow-lg cursor-pointer shadow-sm"
           onClick={() => onSelect(item.id)}
         >
           <div className="flex items-start justify-between mb-3">
             <div className="w-8 h-8 rounded-lg bg-emerald-500/10 flex items-center justify-center border border-emerald-500/20">
               <CheckCircle width={16} height={16} className="text-emerald-500" />
             </div>
-            <span className="text-[10px] font-mono text-[var(--color-text-tertiary)] uppercase tracking-wider">
+            <span className="text-[10px] font-mono text-emerald-600 dark:text-emerald-400 uppercase tracking-wider font-bold">
               {formatDate(item.updatedAt)}
             </span>
           </div>
           <h3 className="text-sm font-bold truncate mb-1" style={{ color: 'var(--color-text-primary)' }}>{item.title}</h3>
-          <p className="text-[10px] font-mono uppercase tracking-widest mb-3" style={{ color: 'var(--color-text-tertiary)' }}>
+          <p className="text-[10px] font-mono uppercase tracking-widest mb-3 opacity-70" style={{ color: 'var(--color-text-tertiary)' }}>
             {item.category} &bull; {item.type}
           </p>
-          <div className="flex items-center gap-2 mt-4 pt-4 border-t border-[var(--color-border)]">
+          <div className="flex items-center gap-2 mt-4 pt-4 border-t border-emerald-100 dark:border-emerald-900/40">
             <div className="flex-1">
-              <p className="text-[9px] font-bold uppercase tracking-tighter" style={{ color: 'var(--color-text-tertiary)' }}>Resolution</p>
+              <p className="text-[9px] font-bold uppercase tracking-tighter text-emerald-600 dark:text-emerald-400">Success Story</p>
               <p className="text-[10px] font-medium" style={{ color: 'var(--color-text-primary)' }}>Successfully Recovered</p>
             </div>
-            <ChevronRight width={14} height={14} className="text-[var(--color-text-tertiary)] opacity-0 group-hover:opacity-100 transition-opacity" />
+            <div className="w-6 h-6 rounded-full bg-white dark:bg-black/20 flex items-center justify-center border border-emerald-100 dark:border-emerald-800/30 shadow-sm transition-transform group-hover:scale-110">
+              <ChevronRight width={12} height={12} className="text-emerald-500" />
+            </div>
           </div>
+          {/* Subtle glow effect */}
+          <div className="absolute inset-0 rounded-2xl bg-gradient-to-br from-emerald-500/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none" />
         </motion.div>
       ))}
     </div>
@@ -3644,7 +3649,13 @@ function ResolvedHistory({ items, onSelect }: { items: LostFoundItem[], onSelect
 
 // ─── Component: StatsDashboard ──────────────────────────────────────────────
 
-function StatsDashboard({ items }: { items: LostFoundItem[] }) {
+function StatsDashboard({ 
+  items, 
+  onFilterChange 
+}: { 
+  items: LostFoundItem[], 
+  onFilterChange: (type: 'all' | 'lost' | 'found', range: DateRange) => void 
+}) {
   const activeItems = items.filter((i) => !i.isResolved)
   const now = new Date()
   const weekAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000)
@@ -3658,107 +3669,62 @@ function StatsDashboard({ items }: { items: LostFoundItem[] }) {
   const lostTrend = lostLastWeek > 0 ? lostThisWeek - lostLastWeek : 0
   const foundTrend = foundLastWeek > 0 ? foundThisWeek - foundLastWeek : 0
 
-  // Percentage breakdown
-  const lostCount = activeItems.filter((i) => i.type === 'lost').length
-  const foundCount = activeItems.filter((i) => i.type === 'found').length
-  const lostPct = totalActive > 0 ? Math.round((lostCount / totalActive) * 100) : 0
-  const foundPct = totalActive > 0 ? Math.round((foundCount / totalActive) * 100) : 0
-
-  // Sparkline data: daily counts for last 7 days
-  const getSparklineData = (type: 'all' | 'lost' | 'found'): number[] => {
-    const data: number[] = []
-    for (let i = 6; i >= 0; i--) {
-      const dayStart = new Date(now.getTime() - i * 24 * 60 * 60 * 1000)
-      dayStart.setHours(0, 0, 0, 0)
-      const dayEnd = new Date(dayStart.getTime() + 24 * 60 * 60 * 1000)
-      const count = activeItems.filter((item) => {
-        if (type !== 'all' && item.type !== type) return false
-        const created = new Date(item.createdAt)
-        return created >= dayStart && created < dayEnd
-      }).length
-      data.push(count)
-    }
-    return data
-  }
-
-  const SparklineChart = ({ data, color }: { data: number[]; color: string }) => {
-    const max = Math.max(...data, 1)
-    const w = 80
-    const h = 24
-    const points = data.map((v, i) => {
-      const x = (i / (data.length - 1)) * w
-      const y = h - (v / max) * (h - 4) - 2
-      return `${x},${y}`
-    }).join(' ')
-    return (
-      <svg width={w} height={h} className="shrink-0" aria-hidden="true">
-        <polyline
-          points={points}
-          fill="none"
-          stroke={color}
-          strokeWidth="1.5"
-          strokeLinecap="round"
-          strokeLinejoin="round"
-          opacity="0.7"
-        />
-        {data.map((v, i) => {
-          const x = (i / (data.length - 1)) * w
-          const y = h - (v / max) * (h - 4) - 2
-          return v > 0 ? <circle key={i} cx={x} cy={y} r="1.5" fill={color} opacity="0.5" /> : null
-        })}
-      </svg>
-    )
-  }
-
   const stats = [
     {
-      label: 'ACTIVE ITEMS',
+      label: 'ACTIVE',
+      mobileLabel: 'Active',
       value: totalActive,
       accent: 'var(--accent-lf)',
       trend: 0,
+      filter: { type: 'all' as const, range: 'all' as const }
     },
     {
-      label: 'LOST THIS WEEK',
+      label: 'LOST WEEK',
+      mobileLabel: 'Lost',
       value: lostThisWeek,
       accent: 'var(--accent-ee)',
       trend: lostTrend,
+      filter: { type: 'lost' as const, range: 'week' as const }
     },
     {
-      label: 'FOUND THIS WEEK',
+      label: 'FOUND WEEK',
+      mobileLabel: 'Found',
       value: foundThisWeek,
       accent: 'var(--accent-af)',
       trend: foundTrend,
+      filter: { type: 'found' as const, range: 'week' as const }
     },
   ]
 
   return (
     <div className="space-y-4">
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+      <div className="grid grid-cols-3 gap-2 md:gap-4">
         {stats.map((stat) => {
           return (
-            <div
+            <button
               key={stat.label}
-              className="rounded-2xl p-6 flex flex-col items-center justify-center gap-1 relative transition-all duration-300 hover:shadow-lg hover:scale-[1.02] group"
+              onClick={() => onFilterChange(stat.filter.type, stat.filter.range)}
+              className="rounded-xl md:rounded-2xl p-3 md:p-6 flex flex-col items-center justify-center gap-1 relative transition-all duration-300 hover:shadow-lg hover:scale-[1.02] active:scale-95 group overflow-hidden"
               style={{ 
                 backgroundColor: `color-mix(in srgb, ${stat.accent}, transparent 92%)`, 
                 border: `1px solid color-mix(in srgb, ${stat.accent}, transparent 75%)`,
-                boxShadow: `0 4px 12px -2px color-mix(in srgb, ${stat.accent}, transparent 94%), 0 2px 4px -1px color-mix(in srgb, ${stat.accent}, transparent 96%)`
+                boxShadow: `0 4px 12px -2px color-mix(in srgb, ${stat.accent}, transparent 94%)`,
+                aspectRatio: '1/1'
               }}
             >
               <div className="flex flex-col items-center">
-                <span className="text-4xl font-black tracking-tighter" style={{ color: stat.accent }}>
+                <span className="text-xl md:text-4xl font-black tracking-tighter" style={{ color: stat.accent }}>
                   <AnimatedCounter target={stat.value} />
                 </span>
-                <span className="text-[10px] font-black text-[var(--color-text-secondary)] uppercase tracking-[0.15em] mt-1 text-center">
-                  {stat.label}
+                <span className="text-[7px] md:text-[10px] font-black text-[var(--color-text-secondary)] uppercase tracking-[0.1em] md:tracking-[0.15em] mt-0.5 md:mt-1 text-center">
+                  <span className="hidden md:inline">{stat.label}</span>
+                  <span className="md:hidden">{stat.mobileLabel}</span>
                 </span>
               </div>
               
-              <div className="mt-2">
-                {stat.trend !== 0 ? (
-                  <div 
-                    className="flex items-center gap-1 px-2 py-0.5 rounded-full bg-white/50 dark:bg-black/20 border border-[var(--color-border)]"
-                  >
+              {stat.trend !== 0 && (
+                <div className="mt-1 hidden md:block">
+                  <div className="flex items-center gap-1 px-2 py-0.5 rounded-full bg-white/50 dark:bg-black/20 border border-[var(--color-border)]">
                     <span 
                       className="text-[10px] font-bold flex items-center gap-0.5"
                       style={{ color: stat.trend > 0 && stat.label.includes('LOST') ? 'var(--accent-ee)' : 'var(--accent-af)' }}
@@ -3768,41 +3734,17 @@ function StatsDashboard({ items }: { items: LostFoundItem[] }) {
                     </span>
                     <span className="text-[9px] font-bold text-[var(--color-text-tertiary)] uppercase tracking-wider">Change</span>
                   </div>
-                ) : (
-                  <span className="text-[9px] font-bold text-[var(--color-text-tertiary)] uppercase tracking-widest opacity-60">No change</span>
-                )}
+                </div>
+              )}
+
+              {/* Click indicator for mobile */}
+              <div className="md:hidden absolute bottom-1.5 opacity-40">
+                 <div className="w-4 h-0.5 rounded-full" style={{ backgroundColor: stat.accent }} />
               </div>
-            </div>
+            </button>
           )
         })}
       </div>
-
-      {/* Activity Breakdown Split Bar */}
-      {totalActive > 0 && (
-        <div
-          className="rounded-2xl p-4 border border-[var(--color-border)] bg-[var(--color-bg-raised)]/50"
-        >
-          <div className="flex items-center justify-between mb-2.5">
-            <span className="font-mono text-[10px] uppercase tracking-[0.12em] font-bold text-[var(--color-text-tertiary)]">
-              Live Activity Breakdown
-            </span>
-            <div className="flex items-center gap-3 text-[10px] font-bold">
-              <div className="flex items-center gap-1.5">
-                <div className="w-2 h-2 rounded-full" style={{ backgroundColor: 'var(--accent-ee)' }} />
-                <span style={{ color: 'var(--color-text-primary)' }}>{lostPct}% Lost</span>
-              </div>
-              <div className="flex items-center gap-1.5">
-                <div className="w-2 h-2 rounded-full" style={{ backgroundColor: 'var(--accent-af)' }} />
-                <span style={{ color: 'var(--color-text-primary)' }}>{foundPct}% Found</span>
-              </div>
-            </div>
-          </div>
-          <div className="h-2 w-full rounded-full overflow-hidden flex bg-[var(--color-bg-subtle)] border border-[var(--color-border)]">
-            <div className="h-full transition-all duration-1000" style={{ width: `${lostPct}%`, backgroundColor: 'var(--accent-ee)' }} />
-            <div className="h-full transition-all duration-1000" style={{ width: `${foundPct}%`, backgroundColor: 'var(--accent-af)' }} />
-          </div>
-        </div>
-      )}
     </div>
   )
 }
@@ -4610,7 +4552,7 @@ function LostFoundView({
         {/* New items since last visit banner */}
         {newSinceVisit > 0 && (
           <div
-            className="rounded-xl p-3 flex items-center gap-3"
+            className="hidden md:flex rounded-xl p-3 items-center gap-3"
             style={{
               backgroundColor: 'var(--accent-cy-bg)',
               border: '1.5px solid var(--accent-cy)33',
@@ -4628,7 +4570,7 @@ function LostFoundView({
         {/* Success Stories Banner - Enhanced dark mode */}
         {resolvedCount > 0 && (
           <div
-            className="rounded-xl p-3 flex items-center gap-3 success-banner-glow"
+            className="hidden md:flex rounded-xl p-3 items-center gap-3 success-banner-glow"
             style={{
               backgroundColor: 'var(--accent-af-bg)',
               border: '1.5px solid var(--accent-af)33',
@@ -4649,7 +4591,7 @@ function LostFoundView({
 
         {/* Recently Added Carousel */}
         {!loading && recentlyAddedItems.length > 0 && !showMyReports && !showBookmarked && (
-          <div>
+          <div className="hidden md:block">
             <p
               className="font-mono text-[9px] uppercase tracking-[0.1em] mb-2 flex items-center gap-1.5"
               style={{ color: 'var(--color-text-tertiary)' }}
@@ -5027,7 +4969,23 @@ function LostFoundView({
           </div>
 
           {/* Quick Stats Dashboard */}
-          {!loading && <StatsDashboard items={items} />}
+          {!loading && (
+            <StatsDashboard 
+              items={items} 
+              onFilterChange={(type, range) => {
+                setTypeFilter(type)
+                setDateRange(range)
+                setShowFilters(true)
+                // Scroll to list on mobile to show results
+                if (typeof window !== 'undefined' && window.innerWidth < 768) {
+                  const listEl = document.getElementById('items-list-anchor')
+                  if (listEl) {
+                    listEl.scrollIntoView({ behavior: 'smooth', block: 'start' })
+                  }
+                }
+              }}
+            />
+          )}
 
           <SectionDivider />
 
@@ -5175,47 +5133,45 @@ function LostFoundView({
           </div>
 
           {/* Mobile: Items list */}
-          <div className="space-y-4 max-h-[calc(100vh-600px)] overflow-y-auto custom-scrollbar pr-1 pb-20 md:hidden md:pb-0">
+          <div id="items-list-anchor" className="space-y-4 pt-2 pb-20 md:hidden md:pb-0">
             {/* Recently Viewed (mobile) */}
             {recentlyViewedItems.length > 0 && !showMyReports && !showBookmarked && !loading && (
-              <div>
+              <div className="mb-6">
                 <p
-                  className="font-mono text-[9px] uppercase tracking-[0.1em] mb-2 flex items-center gap-1.5"
+                  className="font-mono text-[9px] uppercase tracking-[0.2em] mb-3 flex items-center gap-1.5 font-bold"
                   style={{ color: 'var(--color-text-tertiary)' }}
                 >
                   <Clock width={10} height={10} />
                   Recently Viewed
                 </p>
-                <div className="flex gap-2">
+                <div className="flex gap-2 overflow-x-auto pb-2 custom-scrollbar no-scrollbar-mobile">
                   {recentlyViewedItems.map((item) => {
                     const isLost = item.type === 'lost'
                     return (
                       <button
                         key={item.id}
                         onClick={() => openDetail(item)}
-                        className="flex-1 rounded-lg p-2.5 text-left transition-all duration-150 hover:shadow-md"
-                        style={{
-                          backgroundColor: 'var(--color-bg-subtle)',
-                          border: '1px solid var(--color-border)',
-                        }}
+                        className="flex-none w-[140px] rounded-xl p-3 text-left transition-all duration-150 bg-[var(--color-bg-subtle)] border border-[var(--color-border)] shadow-sm"
                       >
-                        <div className="flex items-center gap-2 mb-1">
-                          <span className="text-sm">{categoryIcons[item.category] || '\uD83D\uDCE6'}</span>
-                          <span className={`category-badge ${isLost ? 'type-badge-lost' : 'type-badge-found'}`} style={{ fontSize: '8px', padding: '1px 4px' }}>
+                        <div className="flex items-center gap-2 mb-2">
+                          <span className="text-xs">{categoryIcons[item.category] || '\uD83D\uDCE6'}</span>
+                          <span className={`px-1.5 py-0.5 rounded text-[7px] font-black uppercase ${isLost ? 'bg-[var(--accent-ee)]/10 text-[var(--accent-ee)]' : 'bg-[var(--accent-af)]/10 text-[var(--accent-af)]'}`}>
                             {item.type}
                           </span>
                         </div>
-                        <p className="text-[11px] font-semibold truncate" style={{ color: 'var(--color-text-primary)' }}>
+                        <p className="text-[10px] font-bold truncate leading-tight" style={{ color: 'var(--color-text-primary)' }}>
                           {item.title}
                         </p>
-                        <p className="text-[9px] truncate" style={{ color: 'var(--color-text-tertiary)' }}>
+                        <p className="text-[8px] truncate mt-0.5" style={{ color: 'var(--color-text-tertiary)' }}>
                           {item.location}
                         </p>
                       </button>
                     )
                   })}
                 </div>
-                <SectionDivider />
+                <div className="mt-4">
+                  <SectionDivider color="var(--color-border)" />
+                </div>
               </div>
             )}
             {loading && items.length === 0 ? (
@@ -5412,6 +5368,7 @@ function LostFoundView({
 // ─── Component: NotificationBell ─────────────────────────────────────────────
 
 function NotificationBell() {
+  const isMobile = useIsMobile()
   const [showNotifications, setShowNotifications] = useState(false)
   const [notifications, setNotifications] = useState<NotificationItem[]>([])
   const [unreadCount, setUnreadCount] = useState(0)
@@ -5424,7 +5381,7 @@ function NotificationBell() {
 
   useEffect(() => {
     const handleClick = (e: MouseEvent) => {
-      if (notifRef.current && !notifRef.current.contains(e.target as Node)) {
+      if (!isMobile && notifRef.current && !notifRef.current.contains(e.target as Node)) {
         setShowNotifications(false)
       }
     }
@@ -5432,7 +5389,7 @@ function NotificationBell() {
       document.addEventListener('mousedown', handleClick)
       return () => document.removeEventListener('mousedown', handleClick)
     }
-  }, [showNotifications])
+  }, [showNotifications, isMobile])
 
   return (
     <div className="relative" ref={notifRef}>
@@ -5464,74 +5421,114 @@ function NotificationBell() {
           </span>
         )}
       </button>
+
       <AnimatePresence>
         {showNotifications && (
-          <motion.div
-            initial={{ opacity: 0, y: -8, scale: 0.95 }}
-            animate={{ opacity: 1, y: 0, scale: 1 }}
-            exit={{ opacity: 0, y: -8, scale: 0.95 }}
-            transition={{ duration: 0.15 }}
-            className="absolute right-0 top-10 w-72 rounded-xl overflow-hidden z-50 notification-dropdown shadow-lg"
-            style={{
-              backgroundColor: 'var(--color-bg-raised)',
-              border: '1.5px solid var(--color-border)',
-            }}
-            role="region"
-            aria-label="Notifications"
-          >
-            <div className="px-3 py-2 flex items-center justify-between" style={{ borderBottom: '1px solid var(--color-border)' }}>
-              <span className="font-mono text-[10px] uppercase tracking-[0.1em]" style={{ color: 'var(--color-text-tertiary)' }}>
-                Recent Updates
-              </span>
-              {notifications.length > 0 && (
-                <button
-                  onClick={() => {
-                    try { localStorage.removeItem('lf-notifications') } catch { /* ignore */ }
-                    setNotifications([])
-                    setUnreadCount(0)
-                  }}
-                  className="text-[9px] font-semibold hover:underline"
-                  style={{ color: 'var(--accent-lf)' }}
-                >
-                  Clear all
-                </button>
-              )}
-            </div>
-            <div className="max-h-64 overflow-y-auto custom-scrollbar">
-              {notifications.length === 0 ? (
-                <div className="py-6 text-center">
-                  <Bell width={20} height={20} className="mx-auto mb-2" style={{ color: 'var(--color-text-tertiary)', opacity: 0.4 }} />
-                  <p className="text-[10px]" style={{ color: 'var(--color-text-tertiary)' }}>No notifications yet</p>
+          <>
+            {/* Backdrop for mobile */}
+            {isMobile && (
+              <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                onClick={() => setShowNotifications(false)}
+                className="fixed inset-0 bg-black/40 backdrop-blur-[2px] z-[100]"
+              />
+            )}
+            
+            <motion.div
+              initial={isMobile ? { x: '100%' } : { opacity: 0, y: -8, scale: 0.95 }}
+              animate={isMobile ? { x: 0 } : { opacity: 1, y: 0, scale: 1 }}
+              exit={isMobile ? { x: '100%' } : { opacity: 0, y: -8, scale: 0.95 }}
+              transition={{ type: 'spring', damping: 25, stiffness: 200 }}
+              className={`${isMobile ? 'fixed right-0 top-0 bottom-0 w-[85%] max-w-sm h-screen' : 'absolute right-0 top-10 w-72'} overflow-hidden z-[101] notification-dropdown shadow-2xl flex flex-col`}
+              style={{
+                backgroundColor: 'var(--color-bg-raised)',
+                borderLeft: isMobile ? '1px solid var(--color-border)' : 'none',
+                border: !isMobile ? '1.5px solid var(--color-border)' : undefined,
+                borderRadius: !isMobile ? '12px' : undefined
+              }}
+              role="region"
+              aria-label="Notifications"
+            >
+              <div className="px-4 py-4 flex items-center justify-between border-b border-[var(--color-border)]">
+                <div className="flex items-center gap-2">
+                  <Bell width={14} height={14} style={{ color: 'var(--accent-lf)' }} />
+                  <span className="font-mono text-[11px] uppercase tracking-[0.1em] font-bold" style={{ color: 'var(--color-text-primary)' }}>
+                    Campus Updates
+                  </span>
                 </div>
-              ) : (
-                notifications.slice(0, 8).map((notif) => (
-                  <div
-                    key={notif.id}
-                    className="px-3 py-2.5 flex items-start gap-2 transition-colors"
-                    style={{
-                      backgroundColor: notif.read ? 'transparent' : 'var(--accent-lf-bg)',
-                      borderBottom: '1px solid var(--color-border)',
-                    }}
-                  >
-                    <span className="text-xs shrink-0 mt-0.5">
-                      {notif.type === 'new_item' ? '📱' : notif.type === 'resolved' ? '✅' : notif.type === 'urgent' ? '⚡' : '🙋'}
-                    </span>
-                    <div className="flex-1 min-w-0">
-                      <p className="text-[11px] leading-snug" style={{ color: notif.read ? 'var(--color-text-tertiary)' : 'var(--color-text-primary)' }}>
-                        {notif.text}
-                      </p>
-                      <span className="text-[9px]" style={{ color: 'var(--color-text-tertiary)' }}>
-                        {timeAgo(new Date(notif.timestamp).toISOString())}
-                      </span>
+                <div className="flex items-center gap-3">
+                  {notifications.length > 0 && (
+                    <button
+                      onClick={() => {
+                        try { localStorage.removeItem('lf-notifications') } catch { /* ignore */ }
+                        setNotifications([])
+                        setUnreadCount(0)
+                      }}
+                      className="text-[10px] font-bold hover:underline uppercase tracking-tighter"
+                      style={{ color: 'var(--accent-lf)' }}
+                    >
+                      Clear
+                    </button>
+                  )}
+                  {isMobile && (
+                    <button 
+                      onClick={() => setShowNotifications(false)}
+                      className="p-1 rounded-full hover:bg-[var(--color-bg-subtle)]"
+                    >
+                      <X width={18} height={18} style={{ color: 'var(--color-text-tertiary)' }} />
+                    </button>
+                  )}
+                </div>
+              </div>
+              <div className="flex-1 overflow-y-auto custom-scrollbar">
+                {notifications.length === 0 ? (
+                  <div className="py-20 text-center flex flex-col items-center gap-3">
+                    <div className="w-12 h-12 rounded-full bg-[var(--color-bg-subtle)] flex items-center justify-center opacity-40">
+                       <Bell width={24} height={24} style={{ color: 'var(--color-text-tertiary)' }} />
                     </div>
-                    {!notif.read && (
-                      <div className="w-1.5 h-1.5 rounded-full shrink-0 mt-1.5" style={{ backgroundColor: 'var(--accent-lf)' }} />
-                    )}
+                    <p className="text-xs font-medium" style={{ color: 'var(--color-text-tertiary)' }}>No notifications yet</p>
                   </div>
-                ))
+                ) : (
+                  notifications.map((notif) => (
+                    <div
+                      key={notif.id}
+                      className="px-4 py-4 flex items-start gap-3 transition-colors hover:bg-[var(--color-bg-subtle)]/50"
+                      style={{
+                        backgroundColor: notif.read ? 'transparent' : 'var(--accent-lf-bg)',
+                        borderBottom: '1px solid var(--color-border)',
+                      }}
+                    >
+                      <div className="w-8 h-8 rounded-full bg-[var(--color-bg-subtle)] flex items-center justify-center shrink-0 border border-[var(--color-border)] shadow-sm">
+                        <span className="text-xs">
+                          {notif.type === 'new_item' ? '📱' : notif.type === 'resolved' ? '✅' : notif.type === 'urgent' ? '⚡' : '🙋'}
+                        </span>
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-[12px] font-medium leading-normal mb-1" style={{ color: notif.read ? 'var(--color-text-tertiary)' : 'var(--color-text-primary)' }}>
+                          {notif.text}
+                        </p>
+                        <span className="text-[9px] font-mono opacity-60" style={{ color: 'var(--color-text-tertiary)' }}>
+                          {timeAgo(new Date(notif.timestamp).toISOString())}
+                        </span>
+                      </div>
+                      {!notif.read && (
+                        <div className="w-2 h-2 rounded-full shrink-0 mt-1.5 shadow-sm" style={{ backgroundColor: 'var(--accent-lf)' }} />
+                      )}
+                    </div>
+                  ))
+                )}
+              </div>
+              {isMobile && (
+                <div className="p-4 bg-[var(--color-bg-subtle)]/30 border-t border-[var(--color-border)]">
+                  <p className="text-[9px] text-center uppercase tracking-widest font-bold opacity-30" style={{ color: 'var(--color-text-tertiary)' }}>
+                    End of updates
+                  </p>
+                </div>
               )}
-            </div>
-          </motion.div>
+            </motion.div>
+          </>
         )}
       </AnimatePresence>
     </div>
