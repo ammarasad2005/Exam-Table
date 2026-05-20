@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { supabase } from "@/lib/supabase";
+import { sendVerificationRequestEmail } from "@/lib/email";
 
 export const dynamic = 'force-dynamic';
 
@@ -32,13 +33,14 @@ export async function GET(
       structuredLocation: item.structured_location,
       date: item.date,
       contactInfo: item.contact_info,
+      reporterName: item.reporter_name,
       isResolved: item.is_resolved,
       resolvedBy: item.resolved_by,
       imageUrl: item.image_url,
       resolutionImageUrl: item.resolution_image_url,
       createdAt: item.created_at,
       updatedAt: item.updated_at,
-      claims: item.lost_found_claims || [],
+      claims: (item.lost_found_claims || []).filter((c: any) => c.status !== 'unclaimed'),
     };
 
     return NextResponse.json({ item: mappedItem });
@@ -59,81 +61,29 @@ export async function PATCH(
 
     // Handle "claim" action
     if (body.action === 'claim' && body.claimerId) {
-      const { error: claimError } = await supabase
+      const { data: newClaim, error: claimError } = await supabase
         .from('lost_found_claims')
-        .insert({ item_id: id, claimer_id: body.claimerId });
+        .insert({ 
+          item_id: id, 
+          claimer_id: body.claimerId,
+          claimer_email: body.claimerEmail?.toLowerCase().trim(),
+          lost_item_id: body.lostItemId,
+          status: 'pending'
+        })
+        .select()
+        .single();
       
       if (claimError) throw claimError;
 
-      // Claim-Sync: Automatically resolve matching lost reports for this user
+      // Send initial verification request email
       if (body.claimerEmail) {
-        const claimerEmail = body.claimerEmail.toLowerCase().trim();
-        
-        // 1. Fetch current found item details
-        const { data: foundItem } = await supabase
-          .from("lost_found_items")
-          .select("*")
-          .eq("id", id)
-          .single();
-
-        if (foundItem && foundItem.type === 'found') {
-          // 2. Fetch all active lost items by this user's email
-          const { data: lostItems } = await supabase
-            .from("lost_found_items")
-            .select("*")
-            .eq("type", "lost")
-            .eq("is_resolved", false)
-            .eq("contact_info", claimerEmail);
-
-          if (lostItems && lostItems.length > 0) {
-            const token = process.env.GITHUB_TOKEN;
-            if (token) {
-              try {
-                const lostItemsList = lostItems.map(li => `[ID: ${li.id}] Title: ${li.title}, Desc: ${li.description}`).join('\n');
-                
-                const syncResponse = await fetch("https://models.github.ai/inference/chat/completions", {
-                  method: "POST",
-                  headers: {
-                    "Content-Type": "application/json",
-                    "Authorization": `Bearer ${token}`
-                  },
-                  body: JSON.stringify({
-                    model: "gpt-4o-mini",
-                    messages: [
-                      {
-                        role: "system",
-                        content: "You are a Lost & Found synchronization system. Compare a FOUND item with a list of LOST items reported by the same student. Determine if any of the LOST items are the same object as the FOUND item. Note that descriptions might vary slightly. Return ONLY a JSON object with 'matchId' (the ID string) and 'confidence' (0-100). If no match, return null for matchId."
-                      },
-                      {
-                        role: "user",
-                        content: `FOUND ITEM: ${foundItem.title} - ${foundItem.description}\n\nUSER'S LOST ITEMS:\n${lostItemsList}`
-                      }
-                    ],
-                    response_format: { type: "json_object" }
-                  })
-                });
-
-                if (syncResponse.ok) {
-                  const syncData = await syncResponse.json();
-                  const result = JSON.parse(syncData?.choices[0]?.message?.content || '{}');
-
-                  if (result.matchId && result.confidence >= 80) {
-                    console.log(`[Sync] Auto-resolving lost item ${result.matchId} for claimer ${claimerEmail}`);
-                    await supabase
-                      .from("lost_found_items")
-                      .update({ is_resolved: true, resolved_by: body.claimerId })
-                      .eq("id", result.matchId);
-                  }
-                }
-              } catch (err) {
-                console.error("Claim-Sync AI failed:", err);
-              }
-            }
-          }
+        const { data: item } = await supabase.from('lost_found_items').select('title').eq('id', id).single();
+        if (item) {
+          await sendVerificationRequestEmail(body.claimerEmail, item.title, newClaim.id);
         }
       }
       
-      return NextResponse.json({ success: true });
+      return NextResponse.json({ success: true, claimId: newClaim.id });
     }
 
     const { data: existingItem, error: fetchError } = await supabase
@@ -168,9 +118,19 @@ export async function PATCH(
 
     if (updateError) throw updateError;
 
-    // If resolved, cleanup all claims for this item
+    // If resolved, send reminders to all pending claimers
     if (body.isResolved) {
-      await supabase.from('lost_found_claims').delete().eq('item_id', id);
+      const { data: pendingClaims } = await supabase
+        .from('lost_found_claims')
+        .select('*')
+        .eq('item_id', id)
+        .eq('status', 'pending');
+
+      if (pendingClaims && pendingClaims.length > 0) {
+        for (const claim of pendingClaims) {
+          await sendVerificationRequestEmail(claim.claimer_email, item.title, claim.id);
+        }
+      }
     }
 
     const mappedItem = {

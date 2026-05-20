@@ -19,11 +19,17 @@ CREATE TABLE lost_found_items (
   updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
+-- Index for resolved items to speed up history section
+CREATE INDEX idx_lost_found_items_is_resolved ON lost_found_items(is_resolved);
+
 -- Table for tracking item claims
 CREATE TABLE lost_found_claims (
   id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
   item_id UUID REFERENCES lost_found_items(id) ON DELETE CASCADE,
   claimer_id TEXT NOT NULL,
+  claimer_email TEXT NOT NULL,
+  lost_item_id UUID REFERENCES lost_found_items(id) ON DELETE SET NULL,
+  status TEXT DEFAULT 'pending' CHECK (status IN ('pending', 'verified', 'unclaimed')),
   created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 

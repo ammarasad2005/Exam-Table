@@ -59,6 +59,8 @@ import {
   Building2,
   LayoutGrid,
   List,
+  History,
+  CheckCircle,
 } from 'lucide-react'
 import { Header } from '@/components/Header'
 import { useToast } from '@/hooks/use-toast'
@@ -81,7 +83,7 @@ import {
 // ─── Types ──────────────────────────────────────────────────────────────────
 
 type View = 'home' | 'lost-found'
-type SubView = 'list' | 'detail' | 'report'
+type SubView = 'list' | 'detail' | 'report' | 'history'
 type DateRange = 'all' | 'today' | 'week' | 'month'
 type ViewMode = 'grid' | 'list'
 
@@ -2031,6 +2033,8 @@ function ItemDetail({
   const [claimDialogOpen, setClaimDialogOpen] = useState(false)
   const [claimerEmail, setClaimerEmail] = useState('')
   const [matchingLost, setMatchingLost] = useState<LostFoundItem | null>(null)
+  const [checkingSync, setCheckingSync] = useState(false)
+  const [humbleMessageVisible, setHumbleMessageVisible] = useState(false)
   const [verifying, setVerifying] = useState(false)
   const [verificationImage, setVerificationImage] = useState<File | null>(null)
   const [verificationResult, setVerificationResult] = useState<{ match: boolean; confidence: number; reasoning?: string } | null>(null)
@@ -2046,6 +2050,7 @@ function ItemDetail({
   const myId = typeof window !== 'undefined' ? (localStorage.getItem('lf-user-id') || 'anon-' + Math.random().toString(36).slice(2, 9)) : ''
   const isClaimant = claims.some(c => c.claimer_id === myId)
   const isReporter = typeof window !== 'undefined' && getMyReportedItems().includes(item.id)
+  const canSeeLocation = isReporter || isClaimant || item.isResolved
 
   const fetchClaims = useCallback(async () => {
     try {
@@ -2070,30 +2075,68 @@ function ItemDetail({
   const handleClaim = async (email: string) => {
     setClaiming(true)
     try {
+      // Step 1: Semantic Sync Check
+      setCheckingSync(true)
+      const syncRes = await fetch('/api/lost-found/claim/sync', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ foundItemId: item.id, claimerEmail: email })
+      })
+      const syncData = await syncRes.json()
+      setCheckingSync(false)
+
+      if (!syncData.match) {
+        toast({ 
+          title: 'Report Required', 
+          description: syncData.message || 'Please report your item as lost first for a transparent record.',
+          variant: 'destructive'
+        })
+        return
+      }
+
+      // Step 2: Register Claim
       const res = await fetch(`/api/lost-found/${item.id}`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ 
           claimerId: myId, 
           action: 'claim',
-          claimerEmail: email 
+          claimerEmail: email,
+          lostItemId: syncData.matchId
         }),
       })
+
       if (res.ok) {
+        setHumbleMessageVisible(true)
         toast({ 
-          title: 'Collection Scheduled!', 
-          description: 'You are now marked as a claimant. Please pick up the item and verify possession.' 
+          title: 'Claim Linked!', 
+          description: 'Your lost report has been semantically matched. Location details revealed.' 
         })
         fetchClaims()
         setClaimDialogOpen(false)
       }
-    } catch {
-      toast({ title: 'Error', description: 'Failed to register claim.', variant: 'destructive' })
+    } catch (err) {
+      toast({ title: 'Error', description: 'Failed to process claim.', variant: 'destructive' })
     } finally {
       setClaiming(false)
     }
   }
 
+  const handleUnclaim = async (claimId: string) => {
+    try {
+      const res = await fetch('/api/lost-found/claim/unclaim', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ claimId })
+      })
+      if (res.ok) {
+        toast({ title: 'Claim Removed', description: 'You have unclaimed this item.' })
+        fetchClaims()
+      }
+    } catch (err) {
+      toast({ title: 'Error', description: 'Failed to unclaim.', variant: 'destructive' })
+    }
+  }
   const handleVerifyAndResolve = async () => {
     if (!verificationImage) return
     setVerifying(true)
@@ -2426,14 +2469,14 @@ function ItemDetail({
                 </div>
                 <div>
                   <p className="text-sm font-bold" style={{ color: 'var(--color-text-primary)' }}>
-                    {item.structuredLocation?.discoveredAt?.building && item.structuredLocation.discoveredAt.building !== 'Unknown' 
+                    {canSeeLocation ? (item.structuredLocation?.discoveredAt?.building && item.structuredLocation.discoveredAt.building !== 'Unknown' 
                       ? item.structuredLocation.discoveredAt.building 
-                      : item.location}
+                      : item.location) : (<span className="blur-[4px] select-none opacity-50">Location hidden to public</span>)}
                   </p>
                   <p className="text-[11px]" style={{ color: 'var(--color-text-tertiary)' }}>
-                    {item.structuredLocation?.discoveredAt?.area && item.structuredLocation.discoveredAt.area !== 'Unknown' 
+                    {canSeeLocation ? (item.structuredLocation?.discoveredAt?.area && item.structuredLocation.discoveredAt.area !== 'Unknown' 
                       ? item.structuredLocation.discoveredAt.area 
-                      : 'Exact spot not specified'}
+                      : 'Exact spot not specified') : (<span className="text-[9px] opacity-40">Claim to reveal details</span>)}
                   </p>
                 </div>
               </div>
@@ -2451,14 +2494,22 @@ function ItemDetail({
                   </div>
                   <div>
                     <p className="text-sm font-bold" style={{ color: '#16a34a' }}>
-                      {item.structuredLocation?.currentlyHeldAt?.custodian && item.structuredLocation.currentlyHeldAt.custodian !== 'None' 
-                        ? item.structuredLocation.currentlyHeldAt.custodian 
-                        : 'In Safekeeping'}
+                      {canSeeLocation ? (
+                        item.structuredLocation?.currentlyHeldAt?.custodian && item.structuredLocation.currentlyHeldAt.custodian !== 'None' 
+                          ? item.structuredLocation.currentlyHeldAt.custodian 
+                          : 'In Safekeeping'
+                      ) : (
+                        <span className="blur-[4px] select-none opacity-50">Custodian hidden</span>
+                      )}
                     </p>
                     <p className="text-[11px]" style={{ color: 'var(--color-text-tertiary)' }}>
-                      {item.structuredLocation?.currentlyHeldAt?.building && item.structuredLocation.currentlyHeldAt.building !== 'Unknown' 
-                        ? `${item.structuredLocation.currentlyHeldAt.building} (${item.structuredLocation.currentlyHeldAt.area || 'Unknown Area'})`
-                        : 'Handed over to authorities'}
+                      {canSeeLocation ? (
+                        item.structuredLocation?.currentlyHeldAt?.building && item.structuredLocation.currentlyHeldAt.building !== 'Unknown' 
+                          ? `${item.structuredLocation.currentlyHeldAt.building} (${item.structuredLocation.currentlyHeldAt.area || 'Unknown Area'})`
+                          : 'Handed over to authorities'
+                      ) : (
+                        <span className="text-[9px] opacity-40">Verification required for access</span>
+                      )}
                     </p>
                   </div>
                 </div>
@@ -2508,14 +2559,27 @@ function ItemDetail({
                     )}
                   </button>
                 ) : (
-                  <button
-                    onClick={() => setShowVerifyFlow(true)}
-                    className="flex-1 rounded-xl py-3.5 text-xs font-black uppercase tracking-[0.12em] transition-all duration-200 flex items-center justify-center gap-2 hover:scale-[1.02] active:scale-[0.98] shadow-md hover:shadow-xl btn-shimmer"
-                    style={{ backgroundColor: '#16a34a', color: 'white' }}
-                  >
-                    <CheckCircle2 width={14} height={14} />
-                    Verify & Mark as Resolved
-                  </button>
+                  <div className="flex flex-col sm:flex-row gap-2 w-full">
+                    <button
+                      onClick={() => setShowVerifyFlow(true)}
+                      className="flex-1 rounded-xl py-3.5 text-xs font-black uppercase tracking-[0.12em] transition-all duration-200 flex items-center justify-center gap-2 hover:scale-[1.02] active:scale-[0.98] shadow-md hover:shadow-xl btn-shimmer"
+                      style={{ backgroundColor: '#16a34a', color: 'white' }}
+                    >
+                      <CheckCircle2 width={14} height={14} />
+                      Verify & Mark as Resolved
+                    </button>
+                    <button
+                      onClick={() => {
+                        const myClaim = claims.find(c => c.claimer_id === myId)
+                        if (myClaim) handleUnclaim(myClaim.id)
+                      }}
+                      className="flex-1 rounded-xl py-3.5 text-xs font-black uppercase tracking-[0.12em] transition-all duration-200 flex items-center justify-center gap-2 hover:scale-[1.02] active:scale-[0.98] border border-red-500/20 hover:bg-red-500/10"
+                      style={{ color: '#ef4444' }}
+                    >
+                      <X width={14} height={14} />
+                      Unclaim
+                    </button>
+                  </div>
                 )}
               </>
             )}
@@ -2918,7 +2982,7 @@ function ItemDetail({
           <AlertDialogHeader>
             <AlertDialogTitle>Register a Claim</AlertDialogTitle>
             <AlertDialogDescription>
-              To help us verify and sync your lost reports, please enter your institutional email.
+              To help us verify and sync your lost reports, please enter your institutional email. Our AI will automatically check if you have reported a matching lost item.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <div className="py-4">
@@ -2929,19 +2993,26 @@ function ItemDetail({
               placeholder="e.g., i231234@isb.nu.edu.pk"
               className="w-full rounded-lg px-3 py-2 text-sm border border-[var(--color-border)] bg-[var(--color-bg-subtle)] outline-none focus:border-[var(--color-text-tertiary)]"
             />
-            <p className="text-[10px] mt-2" style={{ color: 'var(--color-text-tertiary)' }}>
-              Institutional email is required for automatic resolution of your matching lost reports.
-            </p>
+            {checkingSync ? (
+              <p className="text-xs text-[var(--accent-lf)] mt-3 flex items-center gap-2 font-medium">
+                <Loader2 className="animate-spin" width={12} height={12} />
+                AI is semantically matching your lost reports...
+              </p>
+            ) : (
+              <p className="text-[10px] mt-2" style={{ color: 'var(--color-text-tertiary)' }}>
+                Institutional email is required. You must have reported this item as lost first.
+              </p>
+            )}
           </div>
           <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogCancel disabled={claiming || checkingSync}>Cancel</AlertDialogCancel>
             <AlertDialogAction
-              onClick={() => handleClaim(claimerEmail)}
-              disabled={!claimerEmail.match(/^[a-zA-Z][0-9]{6}@isb\.nu\.edu\.pk$/) || claiming}
+              onClick={(e) => { e.preventDefault(); handleClaim(claimerEmail) }}
+              disabled={!claimerEmail.match(/^[a-zA-Z][0-9]{6}@isb\.nu\.edu\.pk$/) || claiming || checkingSync}
               className="bg-[var(--accent-lf)] text-white hover:opacity-90"
             >
-              {claiming ? <Loader2 className="animate-spin mr-2" width={14} height={14} /> : <Handshake width={14} height={14} className="mr-2" />}
-              Confirm Claim
+              {(claiming || checkingSync) ? <Loader2 className="animate-spin mr-2" width={14} height={14} /> : <Handshake width={14} height={14} className="mr-2" />}
+              Check & Claim
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
@@ -3518,6 +3589,56 @@ function QuickSearchModal({
         </div>
       </motion.div>
     </motion.div>
+  )
+}
+
+function ResolvedHistory({ items, onSelect }: { items: LostFoundItem[], onSelect: (id: string) => void }) {
+  const resolvedItems = items.filter(i => i.isResolved).sort((a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime())
+
+  if (resolvedItems.length === 0) {
+    return (
+      <div className="py-20 text-center space-y-4">
+        <div className="w-16 h-16 rounded-full bg-[var(--color-bg-subtle)] flex items-center justify-center mx-auto border border-[var(--color-border)]">
+          <History width={32} height={32} className="text-[var(--color-text-tertiary)] opacity-20" />
+        </div>
+        <p className="text-sm font-medium" style={{ color: 'var(--color-text-tertiary)' }}>No resolved items yet. Success stories are coming soon!</p>
+      </div>
+    )
+  }
+
+  return (
+    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+      {resolvedItems.map((item) => (
+        <motion.div
+          key={item.id}
+          layout
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          className="group relative rounded-2xl p-4 transition-all duration-200 bg-[var(--color-bg-raised)] border border-[var(--color-border)] hover:shadow-lg cursor-pointer"
+          onClick={() => onSelect(item.id)}
+        >
+          <div className="flex items-start justify-between mb-3">
+            <div className="w-8 h-8 rounded-lg bg-emerald-500/10 flex items-center justify-center border border-emerald-500/20">
+              <CheckCircle width={16} height={16} className="text-emerald-500" />
+            </div>
+            <span className="text-[10px] font-mono text-[var(--color-text-tertiary)] uppercase tracking-wider">
+              {formatDate(item.updatedAt)}
+            </span>
+          </div>
+          <h3 className="text-sm font-bold truncate mb-1" style={{ color: 'var(--color-text-primary)' }}>{item.title}</h3>
+          <p className="text-[10px] font-mono uppercase tracking-widest mb-3" style={{ color: 'var(--color-text-tertiary)' }}>
+            {item.category} &bull; {item.type}
+          </p>
+          <div className="flex items-center gap-2 mt-4 pt-4 border-t border-[var(--color-border)]">
+            <div className="flex-1">
+              <p className="text-[9px] font-bold uppercase tracking-tighter" style={{ color: 'var(--color-text-tertiary)' }}>Resolution</p>
+              <p className="text-[10px] font-medium" style={{ color: 'var(--color-text-primary)' }}>Successfully Recovered</p>
+            </div>
+            <ChevronRight width={14} height={14} className="text-[var(--color-text-tertiary)] opacity-0 group-hover:opacity-100 transition-opacity" />
+          </div>
+        </motion.div>
+      ))}
+    </div>
   )
 }
 
@@ -4881,18 +5002,28 @@ function LostFoundView({
                 Report items you&apos;ve lost or found on campus. Help fellow students recover their belongings quickly.
               </p>
             </div>
-            {/* Top Right Primary CTA */}
-            <button
-              onClick={() => { onSubViewChange('report'); window.scrollTo({ top: 0, behavior: 'smooth' }) }}
-              className="shrink-0 rounded-xl py-3 px-6 text-xs font-bold uppercase tracking-[0.1em] transition-all duration-150 flex items-center justify-center gap-2 hover:scale-[1.05] active:scale-[0.98] cta-pulse-btn shadow-md hover:shadow-lg"
-              style={{
-                backgroundColor: 'var(--accent-lf)',
-                color: 'white',
-              }}
-            >
-              <Plus width={16} height={16} strokeWidth={3} />
-              Report an Item
-            </button>
+            {/* Top Right Primary CTA Group */}
+            <div className="flex items-center gap-2">
+              <button
+                onClick={() => onSubViewChange('history')}
+                className="shrink-0 rounded-xl py-3 px-4 text-[10px] font-bold uppercase tracking-[0.1em] transition-all duration-150 flex items-center justify-center gap-2 hover:bg-[var(--color-bg-subtle)] border border-[var(--color-border)]"
+                style={{ color: 'var(--color-text-secondary)' }}
+              >
+                <History width={14} height={14} />
+                History
+              </button>
+              <button
+                onClick={() => { onSubViewChange('report'); window.scrollTo({ top: 0, behavior: 'smooth' }) }}
+                className="shrink-0 rounded-xl py-3 px-6 text-xs font-bold uppercase tracking-[0.1em] transition-all duration-150 flex items-center justify-center gap-2 hover:scale-[1.05] active:scale-[0.98] cta-pulse-btn shadow-md hover:shadow-lg"
+                style={{
+                  backgroundColor: 'var(--accent-lf)',
+                  color: 'white',
+                }}
+              >
+                <Plus width={16} height={16} strokeWidth={3} />
+                Report an Item
+              </button>
+            </div>
           </div>
 
           {/* Quick Stats Dashboard */}
@@ -5127,6 +5258,27 @@ function LostFoundView({
       )}
 
       {/* Detail View */}
+      {/* History View */}
+      {subView === 'history' && (
+        <motion.div
+          initial={{ opacity: 0, x: 20 }}
+          animate={{ opacity: 1, x: 0 }}
+          className="space-y-6"
+        >
+          <div className="flex flex-col gap-2">
+            <h2 className="font-body text-2xl font-bold" style={{ color: 'var(--color-text-primary)' }}>Resolved History</h2>
+            <p className="text-sm" style={{ color: 'var(--color-text-secondary)' }}>Success stories of recovered items on campus.</p>
+          </div>
+          <ResolvedHistory items={items} onSelect={(id) => { 
+            const item = items.find(i => i.id === id);
+            if (item) {
+              setSelectedItem(item);
+              onSubViewChange('detail');
+            }
+          }} />
+        </motion.div>
+      )}
+
       {subView === 'detail' && selectedItem && (
         <ItemDetail
           item={selectedItem}
@@ -5442,6 +5594,7 @@ export default function LostFoundPage() {
   const handleBack = useCallback(() => {
     if (subView !== 'list') {
       setSubView('list')
+      setSearchSelectedItemId(null)
       window.scrollTo({ top: 0, behavior: 'smooth' })
     } else {
       router.push('/')
@@ -5495,7 +5648,7 @@ export default function LostFoundPage() {
           <div className="flex-1 flex items-center gap-2 min-w-0">
             <Search width={18} height={18} className="hidden sm:block text-[var(--color-text-tertiary)] shrink-0" />
             <span className="font-mono text-sm font-medium text-[var(--color-text-primary)] truncate">
-              {subView === 'detail' ? 'Item Details' : subView === 'report' ? 'Report Item' : 'Lost & Found'}
+              {subView === 'detail' ? 'Item Details' : subView === 'report' ? 'Report Item' : subView === 'history' ? 'Resolved History' : 'Lost & Found'}
             </span>
             {newItemCount > 0 && subView === 'list' && (
               <span
