@@ -27,6 +27,7 @@ import {
   ChevronUp,
   ExternalLink,
   HomeIcon,
+  Info,
   Share2,
   ArrowUpDown,
   Heart,
@@ -1147,6 +1148,7 @@ function ItemCard({
 }) {
   const isLost = item.type === 'lost'
   const [descExpanded, setDescExpanded] = useState(false)
+  const [showOriginalLocPopup, setShowOriginalLocPopup] = useState(false)
   
   const canSeeLocation = canClientSeeLocation(item)
 
@@ -1155,6 +1157,9 @@ function ItemCard({
     : (canSeeLocation ? item.location : 'Claim to reveal location')
 
   const reporterName = item.reporterName || null
+
+  const rawLoc = item.structuredLocation?.rawLocation || (isLost ? item.location : '')
+  const rawHand = item.structuredLocation?.rawHandoff || item.handoffNote || ''
 
   return (
     <motion.div
@@ -1225,6 +1230,18 @@ function ItemCard({
                     <span className={!canSeeLocation && !isLost ? "text-[10px] opacity-60 italic" : ""}>
                       {locationDisplay}
                     </span>
+                    {canSeeLocation && (rawLoc || rawHand) && (
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation()
+                          setShowOriginalLocPopup(true)
+                        }}
+                        className="ml-1.5 p-0.5 rounded-full hover:bg-[var(--color-border)] text-[var(--color-text-tertiary)] hover:text-[var(--color-text-primary)] transition-all transform active:scale-95"
+                        title="View reporter's original location description"
+                      >
+                        <Info width={11} height={11} />
+                      </button>
+                    )}
                   </span>
                 </div>
                 
@@ -1265,6 +1282,76 @@ function ItemCard({
           </button>
         </div>
       </div>
+
+      {/* Reporter's Original Location Message Popup */}
+      <AnimatePresence>
+        {showOriginalLocPopup && (
+          <div 
+            className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm"
+            onClick={(e) => {
+              e.stopPropagation()
+              setShowOriginalLocPopup(false)
+            }}
+          >
+            <motion.div
+              initial={{ scale: 0.95, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.95, opacity: 0 }}
+              className="w-full max-w-sm rounded-2xl p-5 shadow-2xl border border-[var(--color-border)] space-y-4 text-left"
+              style={{
+                backgroundColor: 'var(--color-bg-raised)',
+              }}
+              onClick={(e) => e.stopPropagation()}
+            >
+              <div className="flex items-center justify-between border-b border-[var(--color-border)] pb-2.5">
+                <h4 className="font-body text-sm font-bold text-[var(--color-text-primary)] flex items-center gap-2">
+                  <Info width={16} height={16} style={{ color: 'var(--accent-lf)' }} />
+                  Original Reporter Message
+                </h4>
+                <button
+                  onClick={() => setShowOriginalLocPopup(false)}
+                  className="p-1 rounded-lg hover:bg-[var(--color-border)] text-[var(--color-text-tertiary)] hover:text-[var(--color-text-primary)] transition-colors"
+                >
+                  <X width={14} height={14} />
+                </button>
+              </div>
+
+              <div className="space-y-3">
+                {rawLoc && (
+                  <div>
+                    <span className="font-mono text-[9px] uppercase tracking-wider block opacity-60 mb-1">
+                      {isLost ? 'Reported Lost Location:' : 'Reported Found Location:'}
+                    </span>
+                    <blockquote className="pl-3 border-l-2 border-[var(--accent-lf)] text-xs italic leading-relaxed text-[var(--color-text-secondary)]">
+                      "{rawLoc}"
+                    </blockquote>
+                  </div>
+                )}
+
+                {rawHand && !isLost && (
+                  <div>
+                    <span className="font-mono text-[9px] uppercase tracking-wider block opacity-60 mb-1">
+                      Reported Handoff / Custody Note:
+                    </span>
+                    <blockquote className="pl-3 border-l-2 border-emerald-500 text-xs italic leading-relaxed text-[var(--color-text-secondary)]">
+                      "{rawHand}"
+                    </blockquote>
+                  </div>
+                )}
+              </div>
+
+              <div className="pt-2 flex justify-end">
+                <button
+                  onClick={() => setShowOriginalLocPopup(false)}
+                  className="px-4 py-1.5 rounded-xl text-xs font-bold bg-[var(--color-bg-subtle)] text-[var(--color-text-secondary)] hover:bg-[var(--color-border)] transition-all uppercase tracking-wider"
+                >
+                  Close
+                </button>
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
     </motion.div>
   )
 }
@@ -1390,7 +1477,14 @@ function ReportForm({
     setSubmitting(true)
 
     let finalLocation = location.trim() || 'Unknown'
-    let finalStructured = structuredLocation
+    let finalStructured = structuredLocation ? {
+      ...structuredLocation,
+      rawLocation: location.trim(),
+      rawHandoff: handoffNote.trim(),
+    } : {
+      rawLocation: location.trim(),
+      rawHandoff: handoffNote.trim(),
+    }
 
     const noteToProcess = type === 'found' 
       ? `Found at: ${location.trim()}. Submitted to: ${handoffNote.trim()}`
@@ -1406,31 +1500,37 @@ function ReportForm({
         })
         const data = await res.json()
         if (data.structured) {
-          finalStructured = data.structured
+          finalStructured = {
+            ...data.structured,
+            rawLocation: location.trim(),
+            rawHandoff: handoffNote.trim(),
+          }
           const s = data.structured
           const held = s.currentlyHeldAt
           const disc = s.discoveredAt
           let locString = ''
           if (type === 'found') {
-            const custodianPart = (held?.custodian && held.custodian !== 'None') ? held.custodian : ''
+            const custodianPart = (held?.custodian && held.custodian !== 'None' && held.custodian !== 'Unknown') ? held.custodian : ''
             const buildingPart = (held?.building && held.building !== 'Unknown' && held.building !== 'None') ? `at ${held.building}` : ''
             const areaPart = (held?.area && held.area !== 'Unknown' && held.area !== 'None') ? `(${held.area})` : ''
             locString = `${custodianPart} ${buildingPart} ${areaPart}`.trim()
             if (!locString) {
               locString = (disc?.building && disc.building !== 'Unknown') 
                 ? `Found at ${disc.building} (${disc.area || 'Unknown Area'})`
-                : 'Campus'
+                : `Found: ${location.trim()} (Handoff: ${handoffNote.trim()})`
             }
           } else {
             locString = (disc?.building && disc.building !== 'Unknown')
               ? `${disc.building} (${disc.area || 'Unknown Spot'})`
               : location.trim()
           }
-          finalLocation = locString.trim() || 'Campus'
+          finalLocation = locString.trim() || location.trim()
         }
       } catch (err) {
         console.error('AI processing failed:', err)
-        finalLocation = type === 'found' ? 'Campus (Handed over)' : 'Campus'
+        finalLocation = type === 'found' 
+          ? `Found: ${location.trim()} (Handoff: ${handoffNote.trim()})`
+          : location.trim()
       } finally {
         setProcessingLocation(false)
       }
@@ -2103,10 +2203,14 @@ function ItemDetail({
   const [comments, setComments] = useState(getComments(item.id))
   const [commentText, setCommentText] = useState('')
   const [showAllComments, setShowAllComments] = useState(false)
+  const [showOriginalLocPopup, setShowOriginalLocPopup] = useState(false)
   const { toast } = useToast()
   const itemIdShort = (item.id && item.id.length >= 8) ? item.id.slice(-8).toUpperCase() : (item.id || 'N/A')
 
   const reporterName = item.reporterName || null
+
+  const rawLoc = item.structuredLocation?.rawLocation || (isLost ? item.location : '')
+  const rawHand = item.structuredLocation?.rawHandoff || item.handoffNote || ''
   
   const myId = getPersistentUserId()
   const isClaimant = claims.some(c => c.claimer_id === myId)
@@ -2530,11 +2634,22 @@ function ItemDetail({
                   <MapPin width={14} height={14} style={{ color: 'var(--accent-lf)' }} />
                 </div>
                 <div>
-                  <p className="text-sm font-bold" style={{ color: 'var(--color-text-primary)' }}>
-                    {canSeeLocation ? (item.structuredLocation?.discoveredAt?.building && item.structuredLocation.discoveredAt.building !== 'Unknown' 
-                      ? item.structuredLocation.discoveredAt.building 
-                      : item.location) : (<span className="blur-[4px] select-none opacity-50">Location hidden to public</span>)}
-                  </p>
+                  <div className="flex items-center gap-1.5 flex-wrap">
+                    <p className="text-sm font-bold" style={{ color: 'var(--color-text-primary)' }}>
+                      {canSeeLocation ? (item.structuredLocation?.discoveredAt?.building && item.structuredLocation.discoveredAt.building !== 'Unknown' 
+                        ? item.structuredLocation.discoveredAt.building 
+                        : item.location) : (<span className="blur-[4px] select-none opacity-50">Location hidden to public</span>)}
+                    </p>
+                    {canSeeLocation && (rawLoc || rawHand) && (
+                      <button
+                        onClick={() => setShowOriginalLocPopup(true)}
+                        className="p-0.5 rounded-full hover:bg-[var(--color-border)] text-[var(--color-text-tertiary)] hover:text-[var(--color-text-primary)] transition-all transform active:scale-95"
+                        title="View reporter's original location message"
+                      >
+                        <Info width={12} height={12} />
+                      </button>
+                    )}
+                  </div>
                   <p className="text-[11px]" style={{ color: 'var(--color-text-tertiary)' }}>
                     {canSeeLocation ? (item.structuredLocation?.discoveredAt?.area && item.structuredLocation.discoveredAt.area !== 'Unknown' 
                       ? item.structuredLocation.discoveredAt.area 
@@ -3084,6 +3199,73 @@ function ItemDetail({
       <div className="print-area hidden">
         <div className="print-ref">REF: #{itemIdShort}</div>
       </div>
+
+      {/* Reporter's Original Location Message Popup */}
+      <AnimatePresence>
+        {showOriginalLocPopup && (
+          <div 
+            className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm no-print"
+            onClick={() => setShowOriginalLocPopup(false)}
+          >
+            <motion.div
+              initial={{ scale: 0.95, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.95, opacity: 0 }}
+              className="w-full max-w-sm rounded-2xl p-5 shadow-2xl border border-[var(--color-border)] space-y-4 text-left"
+              style={{
+                backgroundColor: 'var(--color-bg-raised)',
+              }}
+              onClick={(e) => e.stopPropagation()}
+            >
+              <div className="flex items-center justify-between border-b border-[var(--color-border)] pb-2.5">
+                <h4 className="font-body text-sm font-bold text-[var(--color-text-primary)] flex items-center gap-2">
+                  <Info width={16} height={16} style={{ color: 'var(--accent-lf)' }} />
+                  Original Reporter Message
+                </h4>
+                <button
+                  onClick={() => setShowOriginalLocPopup(false)}
+                  className="p-1 rounded-lg hover:bg-[var(--color-border)] text-[var(--color-text-tertiary)] hover:text-[var(--color-text-primary)] transition-colors"
+                >
+                  <X width={14} height={14} />
+                </button>
+              </div>
+
+              <div className="space-y-3">
+                {rawLoc && (
+                  <div>
+                    <span className="font-mono text-[9px] uppercase tracking-wider block opacity-60 mb-1">
+                      {isLost ? 'Reported Lost Location:' : 'Reported Found Location:'}
+                    </span>
+                    <blockquote className="pl-3 border-l-2 border-[var(--accent-lf)] text-xs italic leading-relaxed text-[var(--color-text-secondary)]">
+                      "{rawLoc}"
+                    </blockquote>
+                  </div>
+                )}
+
+                {rawHand && !isLost && (
+                  <div>
+                    <span className="font-mono text-[9px] uppercase tracking-wider block opacity-60 mb-1">
+                      Reported Handoff / Custody Note:
+                    </span>
+                    <blockquote className="pl-3 border-l-2 border-emerald-500 text-xs italic leading-relaxed text-[var(--color-text-secondary)]">
+                      "{rawHand}"
+                    </blockquote>
+                  </div>
+                )}
+              </div>
+
+              <div className="pt-2 flex justify-end">
+                <button
+                  onClick={() => setShowOriginalLocPopup(false)}
+                  className="px-4 py-1.5 rounded-xl text-xs font-bold bg-[var(--color-bg-subtle)] text-[var(--color-text-secondary)] hover:bg-[var(--color-border)] transition-all uppercase tracking-wider"
+                >
+                  Close
+                </button>
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
     </motion.div>
   )
 }

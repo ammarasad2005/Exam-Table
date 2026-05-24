@@ -1,77 +1,61 @@
 # FAST-NUCES Islamabad Campus Location & Parsing Rules
 
-This document outlines the strict guidelines, abbreviations, and layout of the FAST-NUCES Islamabad campus to be used by the Lost & Found location extraction engine.
+This document outlines the strict guidelines and extraction parameters to be used by the Lost & Found location extraction engine.
 
 ---
 
-## 1. Campus Geography & Blocks
+## 1. High-Fidelity Data Extraction Policy (Zero Assumption)
 
-The Islamabad campus consists of several prominent academic and administrative blocks. When analyzing raw location notes, always normalize references to these specific blocks:
+To preserve the absolute integrity of student and campus records, the location parser must follow a strict **zero-assumption policy**:
 
-### 1.1 Academic & Departmental Blocks
-* **Block A (EE Block):** 
-  * Electrical Engineering department, labs, and office.
-  * Keywords: "A Block", "EE Block", "A-Block", "EE department", "EE labs".
-* **Block B (CS Block):**
-  * Computer Science department, labs, and CS department office.
-  * Keywords: "B Block", "CS Block", "B-Block", "CS department", "CS labs".
-* **Block C:**
-  * Academic Block C containing classrooms (C-101 to C-310).
-  * Keywords: "C Block", "C-Block", "C block", "Classroom C".
-* **Block D:**
-  * Academic Block D containing classrooms (D-101 to D-310) and CS labs.
-  * Keywords: "D Block", "D-Block", "D block", "Classroom D".
-* **Admin Block:**
-  * Administrative offices, Director's office, and Main Lobby.
-  * Keywords: "Admin Block", "Admin", "Lobby", "Reception".
+* **Block A is NOT EE and Block B is NOT CS:** Under no circumstances should you assume or map "Block A" to "EE" (Electrical Engineering) or "Block B" to "CS" (Computer Science), or vice-versa. They are separate, distinct identifiers in the campus map and student records.
+  * If the input text says `"Block A"`, the extracted building MUST be exactly `"Block A"` (do NOT extract it as `"EE"`, `"EE Block"`, or associate it with Electrical Engineering).
+  * If the input text says `"EE"` or `"EE Block"`, the extracted building MUST be `"EE Block"` or `"EE"` (do NOT extract it as `"Block A"` or assume it refers to Block A).
+  * If the input text says `"Block B"`, the extracted building MUST be exactly `"Block B"` (do NOT extract it as `"CS"`, `"CS Block"`, or associate it with Computer Science).
+  * If the input text says `"CS"` or `"CS Block"`, the extracted building MUST be `"CS Block"` or `"CS"` (do NOT extract it as `"Block B"` or assume it refers to Block B).
+* **No External Mapping or Assumptions:** Do NOT attribute any assumptions, external campus layout knowledge, or guesses to the user's message. Extract building names, custodians, and areas entirely and literally from the given note content.
+* **Preserve Textual Context:** If the text says "on bridge between C Block and D Block", the building is strictly `"C Block / D Block"` (or `"C Block & D Block"`) and the area is `"On the bridge"`. Do not guess or truncate.
 
-### 1.2 Shared Facilities
-* **Library:**
-  * Keywords: "Library", "Library 1st floor", "Library 2nd floor", "Reading hall".
-* **Cafeteria:**
-  * Keywords: "Cafeteria", "Cafe", "Dhaba", "Canteen", "Outdoor cafe".
-* **Sports Area:**
-  * Keywords: "Ground", "Playground", "Futsal", "Gym", "Sports complex".
-* **Parking Lots:**
-  * Keywords: "Parking", "Parking Lot A", "Parking Lot B", "Car parking", "Bike parking".
+## 2. Dynamic Location Extraction & Open-Ended Parsing
 
-### 1.3 Transition Zones & Bridges
-* **Bridges:**
-  * There are bridges connecting the 4th floors of C Block and D Block (or other levels).
-  * Keywords: "bridge", "nridge", "connector", "walkway between C and D".
-  * *Rule:* If an item is on the bridge between C and D, map the building to **"C/D Block"** and the area to **"On the bridge"** (along with the specified floor).
+Instead of trying to fit the user's input into a hardcoded list of campus buildings, map coordinates, or pre-defined locations:
+* **Use Intuitive Reasoning:** Rely on standard linguistic analysis and contextual clues to extract the name of the building and the specific area where the item was found.
+* **No Predefined Layout Mapping:** The extracted `"building"` or `"area"` fields can be any string whatsoever that accurately represents the structure or location described by the user. Do not force-map their input to "Block A", "Block B", "Block C", "Block D", "Library", etc., if they wrote something else.
+* **Open-Ended Examples:**
+  * If the note is: `"found on ridge between c block and d block at 4th floor"`, the extracted building is `"C Block / D Block"` (or `"C Block & D Block"`) and the area is `"On the bridge walkway, 4th floor"`.
+  * If the note is: `"in the lawn in front of EE building"`, the extracted building is `"EE Block"` or `"EE Building"` (NOT `"Block A"`, NOT `"Academic Block"`).
+  * If the note is: `"at the CS department lobby"`, the extracted building is `"CS Department"` or `"CS Block"` (NOT `"Block B"`, NOT `"Academic Block"`).
+  * If the note is: `"in the newly built block F"`, the extracted building is `"Block F"` (even if Block F doesn't exist in any pre-defined campus list!).
 
 ---
 
-## 2. Custodian & Submission Status
+## 3. Custodian & Submission Mapping
 
-Differentiate carefully between where an item was found and where it is currently held:
+Analyze the handoff details carefully:
 
-### 2.1 "Left as is" (No Handoff)
-* If the note indicates that the finder left the item at its original spot (e.g., "left it as it is there", "left it on the bench", "didn't pick up", "is still there"):
+### 3.1 "Left as is" (Static Status)
+* If the finder explicitly states that the item was left where it was (e.g., "left it as it is there", "left it on the bench", "didn't pick up", "left it there"):
   * `currently_held_at.custodian` **MUST** be `"None"`.
-  * `currently_held_at.building` **MUST** match the `discovered_at.building`.
-  * `currently_held_at.area` **MUST** be mapped to `"Left at discovery spot"`.
+  * `currently_held_at.building` **MUST** match the `discovered_at.building` exactly.
+  * `currently_held_at.area` **MUST** be set to `"Left at discovery spot"` (or match the discovered area exactly).
 
-### 2.2 Handed Over (Active Custodian)
+### 3.2 Handed Over (Active Custodian)
 * **Guard / Security:**
   * If handed to a guard or security desk (e.g., "handed to guard", "with guard in C Block", "left at security"):
     * `currently_held_at.custodian` = `"Guard"`.
-    * Identify the building of the guard if mentioned, otherwise map to the discovery building.
 * **Department Office:**
-  * If handed to academic or department offices (e.g., "left at CS office", "submitted to EE department office"):
+  * If handed to an academic or department office:
     * `currently_held_at.custodian` = `"Academic Office"`.
-* **Library / Cafeteria Desk:**
-  * If left at the library counter or cafeteria counter:
-    * `currently_held_at.custodian` = `"Library Desk"` or `"Cafeteria Counter"`.
+* **None:**
+  * If the finder is keeping the item personally:
+    * `currently_held_at.custodian` = `"None"`.
 
 ---
 
-## 3. Typo Correction & Robustness
+## 4. Typo Correction & Normalization
 
-Students typing quickly on mobile devices often introduce typos. Correct them on the fly:
+Correct typos on the fly to keep coordinates readable:
 * **"nridge" / "bridge"** -> "bridge"
 * **"c bolck" / "c block"** -> "C Block"
 * **"d bolck" / "d block"** -> "D Block"
-* **"EE dept" / "ee block"** -> "EE"
-* **"CS dept" / "cs block"** -> "CS"
+* **"admin bolck" / "admin block"** -> "Admin Block"
