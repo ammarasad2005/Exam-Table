@@ -5594,12 +5594,16 @@ export default function LostFoundPage() {
     return () => clearInterval(interval)
   }, [])
 
-  // Keyboard shortcut: Cmd/Ctrl+K
+  // Keyboard shortcut: Cmd/Ctrl+K and Ctrl+Shift+A
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
         e.preventDefault()
         setSearchModalOpen((prev) => !prev)
+      }
+      if (e.ctrlKey && e.shiftKey && e.key.toLowerCase() === 'a') {
+        e.preventDefault()
+        router.push('/lost-found/admin')
       }
       if (e.key === 'Escape' && searchModalOpen) {
         setSearchModalOpen(false)
@@ -5611,7 +5615,7 @@ export default function LostFoundPage() {
     }
     window.addEventListener('keydown', handleKeyDown)
     return () => window.removeEventListener('keydown', handleKeyDown)
-  }, [searchModalOpen, subView])
+  }, [searchModalOpen, subView, router])
 
   const handleBack = useCallback(() => {
     if (subView !== 'list') {

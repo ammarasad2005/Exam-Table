@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { supabase } from "@/lib/supabase";
 import { sendVerificationRequestEmail } from "@/lib/email";
+import { isAdminAuthenticated } from "@/lib/admin";
 
 export const dynamic = 'force-dynamic';
 
@@ -58,6 +59,56 @@ export async function PATCH(
   try {
     const { id } = params;
     const body = await request.json();
+
+    // Handle Admin toggle resolution action
+    if (body.action === 'admin-toggle-resolved') {
+      if (!isAdminAuthenticated(request)) {
+        return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+      }
+      
+      const { data: item, error: updateError } = await supabase
+        .from("lost_found_items")
+        .update({ 
+          is_resolved: body.isResolved,
+          resolved_by: body.resolvedBy || 'admin'
+        })
+        .eq("id", id)
+        .select()
+        .single();
+
+      if (updateError) throw updateError;
+
+      if (body.isResolved) {
+        const { data: pendingClaims } = await supabase
+          .from('lost_found_claims')
+          .select('*')
+          .eq('item_id', id)
+          .eq('status', 'pending');
+
+        if (pendingClaims && pendingClaims.length > 0) {
+          for (const claim of pendingClaims) {
+            await sendVerificationRequestEmail(claim.claimer_email, item.title, claim.id);
+          }
+        }
+      }
+
+      const mappedItem = {
+        id: item.id,
+        type: item.type,
+        category: item.category,
+        title: item.title,
+        description: item.description,
+        location: item.location,
+        date: item.date,
+        contactInfo: item.contact_info,
+        isResolved: item.is_resolved,
+        imageUrl: item.image_url,
+        createdAt: item.created_at,
+        updatedAt: item.updated_at,
+      };
+
+      return NextResponse.json({ item: mappedItem });
+    }
 
     // Handle "claim" action
     if (body.action === 'claim' && body.claimerId) {
@@ -160,10 +211,14 @@ export async function PATCH(
 
 // DELETE /api/lost-found/[id] - Delete a lost/found item
 export async function DELETE(
-  _request: NextRequest,
+  request: NextRequest,
   { params }: { params: { id: string } }
 ) {
   try {
+    if (!isAdminAuthenticated(request)) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+    
     const { id } = params;
 
     const { data: existingItem, error: fetchError } = await supabase

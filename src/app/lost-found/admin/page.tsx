@@ -1,0 +1,737 @@
+'use client'
+
+import { useState, useEffect, useCallback } from 'react'
+import { useRouter } from 'next/navigation'
+import { motion, AnimatePresence } from 'framer-motion'
+import {
+  ShieldAlert,
+  Lock,
+  User,
+  LogOut,
+  RefreshCw,
+  Search,
+  Trash2,
+  CheckCircle,
+  AlertTriangle,
+  ArrowLeft,
+  PieChart,
+  Tag,
+  MapPin,
+  Calendar,
+  AlertCircle,
+  X,
+  FileText
+} from 'lucide-react'
+import { Header } from '@/components/Header'
+import { useToast } from '@/hooks/use-toast'
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog'
+
+interface LostFoundItem {
+  id: string
+  type: 'lost' | 'found'
+  category: string
+  title: string
+  description: string
+  location: string
+  handoffNote?: string
+  date: string
+  contactInfo: string
+  reporterName?: string
+  isResolved: boolean
+  resolvedBy?: string
+  imageUrl: string | null
+  createdAt: string
+  updatedAt: string
+}
+
+export default function AdminPage() {
+  const router = useRouter()
+  const { toast } = useToast()
+
+  // State Management
+  const [checkingAuth, setCheckingAuth] = useState(true)
+  const [authenticated, setAuthenticated] = useState(false)
+  
+  // Login Form State
+  const [usernameInput, setUsernameInput] = useState('')
+  const [passwordInput, setPasswordInput] = useState('')
+  const [loginLoading, setLoginLoading] = useState(false)
+  const [loginError, setLoginError] = useState('')
+
+  // Dashboard Data State
+  const [items, setItems] = useState<LostFoundItem[]>([])
+  const [loadingItems, setLoadingItems] = useState(false)
+  
+  // Search & Filter State
+  const [searchQuery, setSearchQuery] = useState('')
+  const [categoryFilter, setCategoryFilter] = useState('All')
+  const [typeFilter, setTypeFilter] = useState('all') // 'all' | 'lost' | 'found'
+  const [statusFilter, setStatusFilter] = useState('all') // 'all' | 'resolved' | 'active'
+
+  // Action States
+  const [itemToDelete, setItemToDelete] = useState<LostFoundItem | null>(null)
+  const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false)
+  const [actionLoading, setActionLoading] = useState<string | null>(null) // id of item being updated
+
+  const categories = [
+    'All',
+    'Electronics',
+    'Documents',
+    'Accessories',
+    'Clothing',
+    'Keys',
+    'Bags',
+    'Books',
+    'Other'
+  ]
+
+  // Check Authentication Status
+  const checkAuth = useCallback(async () => {
+    try {
+      const res = await fetch('/api/lost-found/admin/check')
+      const data = await res.json()
+      setAuthenticated(data.authenticated)
+      if (data.authenticated) {
+        fetchItems()
+      }
+    } catch (err) {
+      console.error('Auth check failed:', err)
+    } finally {
+      setCheckingAuth(false)
+    }
+  }, [])
+
+  useEffect(() => {
+    checkAuth()
+  }, [checkAuth])
+
+  // Fetch all items from the database
+  const fetchItems = async () => {
+    setLoadingItems(true)
+    try {
+      const res = await fetch('/api/lost-found')
+      const data = await res.json()
+      setItems(data.items || [])
+    } catch (err) {
+      console.error('Failed to fetch items:', err)
+      toast({
+        title: 'Error',
+        description: 'Failed to load database items.',
+        variant: 'destructive'
+      })
+    } finally {
+      setLoadingItems(false)
+    }
+  }
+
+  // Handle Login Submission
+  const handleLogin = async (e: React.FormEvent) => {
+    e.preventDefault()
+    setLoginError('')
+    
+    if (!usernameInput.trim() || !passwordInput) {
+      setLoginError('Both username and password are required.')
+      return
+    }
+
+    setLoginLoading(true)
+    try {
+      const res = await fetch('/api/lost-found/admin/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ username: usernameInput.trim(), password: passwordInput })
+      })
+
+      if (res.ok) {
+        setAuthenticated(true)
+        toast({
+          title: 'Welcome back!',
+          description: 'Logged in successfully as Administrator.'
+        })
+        fetchItems()
+      } else {
+        const data = await res.json()
+        setLoginError(data.error || 'Invalid credentials.')
+      }
+    } catch (err) {
+      setLoginError('Server error. Please try again.')
+    } finally {
+      setLoginLoading(false)
+    }
+  }
+
+  // Handle Logout
+  const handleLogout = async () => {
+    try {
+      const res = await fetch('/api/lost-found/admin/logout', { method: 'POST' })
+      if (res.ok) {
+        setAuthenticated(false)
+        setUsernameInput('')
+        setPasswordInput('')
+        setItems([])
+        toast({
+          title: 'Logged Out',
+          description: 'You have logged out of the admin panel.'
+        })
+      }
+    } catch (err) {
+      console.error('Logout error:', err)
+    }
+  }
+
+  // Handle status toggle (Manual resolve / unresolve)
+  const handleToggleResolve = async (item: LostFoundItem) => {
+    setActionLoading(item.id)
+    try {
+      const targetIsResolved = !item.isResolved
+      const res = await fetch(`/api/lost-found/${item.id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          action: 'admin-toggle-resolved',
+          isResolved: targetIsResolved,
+          resolvedBy: 'ammarasad321993'
+        })
+      })
+
+      if (res.ok) {
+        toast({
+          title: targetIsResolved ? 'Marked Resolved' : 'Marked Active',
+          description: `"${item.title}" status successfully modified.`
+        })
+        
+        // Update local item list
+        setItems(prev =>
+          prev.map(i => (i.id === item.id ? { ...i, isResolved: targetIsResolved } : i))
+        )
+      } else {
+        toast({
+          title: 'Action Failed',
+          description: 'Failed to update status. Check session.',
+          variant: 'destructive'
+        })
+      }
+    } catch (err) {
+      console.error('Failed to toggle status:', err)
+    } finally {
+      setActionLoading(null)
+    }
+  }
+
+  // Handle Deletion Confirmation
+  const handleDeleteTrigger = (item: LostFoundItem) => {
+    setItemToDelete(item)
+    setDeleteConfirmOpen(true)
+  }
+
+  // Direct Deletion from Database
+  const handleDeleteConfirm = async () => {
+    if (!itemToDelete) return
+    
+    setActionLoading(itemToDelete.id)
+    setDeleteConfirmOpen(false)
+    try {
+      const res = await fetch(`/api/lost-found/${itemToDelete.id}`, {
+        method: 'DELETE'
+      })
+
+      if (res.ok) {
+        toast({
+          title: 'Item Deleted',
+          description: `"${itemToDelete.title}" permanently deleted from database.`,
+        })
+        // Remove locally
+        setItems(prev => prev.filter(i => i.id !== itemToDelete.id))
+      } else {
+        toast({
+          title: 'Delete Failed',
+          description: 'Failed to delete item from database.',
+          variant: 'destructive'
+        })
+      }
+    } catch (err) {
+      console.error('Deletion error:', err)
+    } finally {
+      setActionLoading(null)
+      setItemToDelete(null)
+    }
+  }
+
+  // Filtering Logic
+  const filteredItems = items.filter(item => {
+    const matchesSearch =
+      item.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      item.description.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      item.location.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      item.contactInfo.toLowerCase().includes(searchQuery.toLowerCase())
+
+    const matchesCategory = categoryFilter === 'All' || item.category === categoryFilter
+    
+    const matchesType =
+      typeFilter === 'all' ||
+      (typeFilter === 'lost' && item.type === 'lost') ||
+      (typeFilter === 'found' && item.type === 'found')
+
+    const matchesStatus =
+      statusFilter === 'all' ||
+      (statusFilter === 'resolved' && item.isResolved) ||
+      (statusFilter === 'active' && !item.isResolved)
+
+    return matchesSearch && matchesCategory && matchesType && matchesStatus
+  })
+
+  // Statistics Computations
+  const totalCount = items.length
+  const lostCount = items.filter(i => i.type === 'lost').length
+  const foundCount = items.filter(i => i.type === 'found').length
+  const resolvedCount = items.filter(i => i.isResolved).length
+  const activeCount = items.filter(i => !i.isResolved).length
+
+  // Render Loader during auth check
+  if (checkingAuth) {
+    return (
+      <div className="min-h-screen flex flex-col items-center justify-center bg-[var(--color-bg)] text-[var(--color-text-primary)]">
+        <RefreshCw className="animate-spin text-orange-500 mb-4" size={40} />
+        <p className="text-sm font-semibold tracking-wider uppercase text-[var(--color-text-secondary)]">
+          Verifying Admin Credentials...
+        </p>
+      </div>
+    )
+  }
+
+  return (
+    <div className="min-h-screen bg-[var(--color-bg)] text-[var(--color-text-primary)] flex flex-col font-sans transition-colors duration-300">
+      <Header />
+
+      <main className="flex-1 max-w-7xl w-full mx-auto px-4 py-8 md:px-8">
+        <AnimatePresence mode="wait">
+          {!authenticated ? (
+            /* ==========================================
+               1. LOGIN FORM SCREEN
+               ========================================== */
+            <motion.div
+              key="login"
+              initial={{ opacity: 0, y: 30 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -30 }}
+              className="flex justify-center items-center py-12"
+            >
+              <div 
+                className="w-full max-w-md rounded-2xl p-8 border backdrop-blur-md relative overflow-hidden shadow-2xl"
+                style={{
+                  backgroundColor: 'rgba(255, 255, 255, 0.03)',
+                  borderColor: 'var(--color-border)',
+                  boxShadow: 'var(--shadow-card)'
+                }}
+              >
+                {/* Glowing subtle gradient circle */}
+                <div 
+                  className="absolute -top-20 -right-20 w-44 h-44 rounded-full filter blur-[60px]"
+                  style={{ backgroundColor: 'rgba(234, 88, 12, 0.15)' }}
+                />
+
+                <div className="text-center mb-8 relative">
+                  <div className="inline-block p-4 rounded-full bg-orange-500/10 text-orange-500 mb-3 border border-orange-500/20">
+                    <ShieldAlert size={36} />
+                  </div>
+                  <h1 className="text-2xl font-black tracking-tight uppercase">Admin Login</h1>
+                  <p className="text-xs text-[var(--color-text-secondary)] mt-1.5 uppercase tracking-wider">
+                    FAST ISB Lost & Found Control Portal
+                  </p>
+                </div>
+
+                <form onSubmit={handleLogin} className="space-y-5 relative">
+                  <div className="space-y-1.5">
+                    <label className="text-[10px] font-black uppercase tracking-[0.1em] text-[var(--color-text-secondary)] flex items-center gap-1.5">
+                      <User size={12} />
+                      Login ID
+                    </label>
+                    <input
+                      type="text"
+                      value={usernameInput}
+                      onChange={(e) => setUsernameInput(e.target.value)}
+                      placeholder="Enter administrative ID"
+                      className="w-full rounded-xl px-4 py-3 text-sm outline-none transition-all border bg-[var(--color-bg-subtle)] focus:border-orange-500/50"
+                      style={{
+                        borderColor: 'var(--color-border)',
+                        color: 'var(--color-text-primary)'
+                      }}
+                    />
+                  </div>
+
+                  <div className="space-y-1.5">
+                    <label className="text-[10px] font-black uppercase tracking-[0.1em] text-[var(--color-text-secondary)] flex items-center gap-1.5">
+                      <Lock size={12} />
+                      Secret Password
+                    </label>
+                    <input
+                      type="password"
+                      value={passwordInput}
+                      onChange={(e) => setPasswordInput(e.target.value)}
+                      placeholder="••••••••••••••"
+                      className="w-full rounded-xl px-4 py-3 text-sm outline-none transition-all border bg-[var(--color-bg-subtle)] focus:border-orange-500/50"
+                      style={{
+                        borderColor: 'var(--color-border)',
+                        color: 'var(--color-text-primary)'
+                      }}
+                    />
+                  </div>
+
+                  {loginError && (
+                    <motion.div
+                      initial={{ opacity: 0, height: 0 }}
+                      animate={{ opacity: 1, height: 'auto' }}
+                      className="flex items-center gap-2 p-3.5 rounded-lg border border-red-500/20 bg-red-500/5 text-red-500 text-xs font-semibold"
+                    >
+                      <AlertCircle size={16} className="shrink-0" />
+                      <span>{loginError}</span>
+                    </motion.div>
+                  )}
+
+                  <button
+                    type="submit"
+                    disabled={loginLoading}
+                    className="w-full rounded-xl py-3.5 bg-orange-600 hover:bg-orange-500 text-white font-black text-xs uppercase tracking-[0.12em] transition-all flex items-center justify-center gap-2 shadow-lg shadow-orange-600/25 active:scale-[0.98]"
+                  >
+                    {loginLoading ? (
+                      <RefreshCw size={14} className="animate-spin" />
+                    ) : (
+                      <>
+                        <Lock size={14} />
+                        Authenticate Portal
+                      </>
+                    )}
+                  </button>
+                </form>
+
+                <div className="mt-8 text-center border-t border-[var(--color-border)] pt-4">
+                  <button
+                    onClick={() => router.push('/lost-found')}
+                    className="text-[10px] font-black uppercase tracking-[0.1em] text-[var(--color-text-secondary)] hover:text-orange-500 transition-colors flex items-center justify-center gap-1.5 mx-auto"
+                  >
+                    <ArrowLeft size={12} />
+                    Back to Public Hub
+                  </button>
+                </div>
+              </div>
+            </motion.div>
+          ) : (
+            /* ==========================================
+               2. ADMIN DASHBOARD SCREEN
+               ========================================== */
+            <motion.div
+              key="dashboard"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="space-y-8"
+            >
+              {/* Dashboard Sub-Header / Controls */}
+              <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+                <div>
+                  <div className="flex items-center gap-2.5">
+                    <span className="h-2.5 w-2.5 rounded-full bg-green-500 animate-pulse" />
+                    <h1 className="text-3xl font-black uppercase tracking-tight">Admin Console</h1>
+                  </div>
+                  <p className="text-xs text-[var(--color-text-secondary)] uppercase mt-1 tracking-wider font-bold">
+                    Logged in securely as <span className="text-orange-500">ammarasad321993</span>
+                  </p>
+                </div>
+
+                <div className="flex items-center gap-3 w-full md:w-auto">
+                  <button
+                    onClick={fetchItems}
+                    className="px-4 py-2.5 rounded-xl border font-bold text-xs uppercase tracking-[0.08em] hover:bg-[var(--color-bg-subtle)] transition-all flex items-center gap-1.5"
+                    style={{ borderColor: 'var(--color-border)' }}
+                  >
+                    <RefreshCw size={12} className={loadingItems ? 'animate-spin' : ''} />
+                    Refresh
+                  </button>
+                  <button
+                    onClick={handleLogout}
+                    className="px-4 py-2.5 rounded-xl border border-red-500/20 bg-red-500/5 hover:bg-red-500/10 text-red-500 font-bold text-xs uppercase tracking-[0.08em] transition-all flex items-center gap-1.5"
+                  >
+                    <LogOut size={12} />
+                    Exit Portal
+                  </button>
+                </div>
+              </div>
+
+              {/* Statistics Grid Cards */}
+              <div className="grid grid-cols-2 lg:grid-cols-5 gap-4">
+                {[
+                  { label: 'Total Records', val: totalCount, icon: FileText, color: 'text-orange-500', bg: 'bg-orange-500/10', border: 'border-orange-500/20' },
+                  { label: 'Lost Reports', val: lostCount, icon: AlertCircle, color: 'text-red-400', bg: 'bg-red-500/10', border: 'border-red-500/20' },
+                  { label: 'Found Belongings', val: foundCount, icon: Search, color: 'text-blue-400', bg: 'bg-blue-500/10', border: 'border-blue-500/20' },
+                  { label: 'Resolved Success', val: resolvedCount, icon: CheckCircle, color: 'text-green-400', bg: 'bg-green-500/10', border: 'border-green-500/20' },
+                  { label: 'Active Reminders', val: activeCount, icon: AlertTriangle, color: 'text-yellow-400', bg: 'bg-yellow-500/10', border: 'border-yellow-500/20' },
+                ].map((stat, idx) => (
+                  <div
+                    key={idx}
+                    className={`rounded-2xl p-5 border flex flex-col relative overflow-hidden ${stat.bg} ${stat.border}`}
+                  >
+                    <div className="flex justify-between items-start mb-4">
+                      <p className="text-[10px] font-black uppercase tracking-wider text-[var(--color-text-secondary)]">
+                        {stat.label}
+                      </p>
+                      <stat.icon size={16} className={stat.color} />
+                    </div>
+                    <p className="text-3xl font-black tracking-tight">{stat.val}</p>
+                  </div>
+                ))}
+              </div>
+
+              {/* Controls bar (Search & Filtering) */}
+              <div 
+                className="rounded-2xl p-5 border flex flex-col md:flex-row gap-4 items-center justify-between shadow-sm"
+                style={{
+                  backgroundColor: 'rgba(255, 255, 255, 0.01)',
+                  borderColor: 'var(--color-border)'
+                }}
+              >
+                {/* Search query input */}
+                <div className="relative w-full md:max-w-md">
+                  <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 text-[var(--color-text-secondary)]" size={16} />
+                  <input
+                    type="text"
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    placeholder="Search database by title, description, location..."
+                    className="w-full rounded-xl pl-10 pr-4 py-2.5 text-xs font-semibold outline-none transition-all border bg-[var(--color-bg-subtle)] focus:border-orange-500/30"
+                    style={{ borderColor: 'var(--color-border)', color: 'var(--color-text-primary)' }}
+                  />
+                  {searchQuery && (
+                    <button
+                      onClick={() => setSearchQuery('')}
+                      className="absolute right-3 top-1/2 -translate-y-1/2 text-[var(--color-text-secondary)] hover:text-orange-500"
+                    >
+                      <X size={14} />
+                    </button>
+                  )}
+                </div>
+
+                {/* Filters selection */}
+                <div className="flex flex-wrap items-center gap-3 w-full md:w-auto">
+                  {/* Category Selector */}
+                  <select
+                    value={categoryFilter}
+                    onChange={(e) => setCategoryFilter(e.target.value)}
+                    className="rounded-xl px-3 py-2.5 text-xs font-bold uppercase tracking-wider border bg-[var(--color-bg-subtle)] outline-none"
+                    style={{ borderColor: 'var(--color-border)', color: 'var(--color-text-primary)' }}
+                  >
+                    {categories.map((cat, idx) => (
+                      <option key={idx} value={cat}>{cat}</option>
+                    ))}
+                  </select>
+
+                  {/* Type Selector */}
+                  <select
+                    value={typeFilter}
+                    onChange={(e) => setTypeFilter(e.target.value)}
+                    className="rounded-xl px-3 py-2.5 text-xs font-bold uppercase tracking-wider border bg-[var(--color-bg-subtle)] outline-none"
+                    style={{ borderColor: 'var(--color-border)', color: 'var(--color-text-primary)' }}
+                  >
+                    <option value="all">All Types</option>
+                    <option value="lost">Lost</option>
+                    <option value="found">Found</option>
+                  </select>
+
+                  {/* Status Selector */}
+                  <select
+                    value={statusFilter}
+                    onChange={(e) => setStatusFilter(e.target.value)}
+                    className="rounded-xl px-3 py-2.5 text-xs font-bold uppercase tracking-wider border bg-[var(--color-bg-subtle)] outline-none"
+                    style={{ borderColor: 'var(--color-border)', color: 'var(--color-text-primary)' }}
+                  >
+                    <option value="all">All Statuses</option>
+                    <option value="active">Active Only</option>
+                    <option value="resolved">Resolved Only</option>
+                  </select>
+                </div>
+              </div>
+
+              {/* Items List Section */}
+              <div 
+                className="rounded-2xl border overflow-hidden shadow-sm"
+                style={{
+                  backgroundColor: 'rgba(255, 255, 255, 0.01)',
+                  borderColor: 'var(--color-border)'
+                }}
+              >
+                <div className="px-6 py-4 border-b border-[var(--color-border)] bg-[var(--color-bg-subtle)] flex items-center justify-between">
+                  <h3 className="text-xs font-black uppercase tracking-wider text-[var(--color-text-secondary)]">
+                    Items Records Database ({filteredItems.length} listed)
+                  </h3>
+                </div>
+
+                {filteredItems.length === 0 ? (
+                  <div className="flex flex-col items-center justify-center py-16 text-[var(--color-text-secondary)]">
+                    <Search size={32} className="text-orange-500 mb-3 opacity-60 animate-bounce" />
+                    <p className="text-sm font-bold uppercase tracking-wide">No database entries found</p>
+                    <p className="text-[10px] uppercase mt-1 font-semibold opacity-70">
+                      Try widening your query filter conditions
+                    </p>
+                  </div>
+                ) : (
+                  <div className="divide-y divide-[var(--color-border)]">
+                    {filteredItems.map((item) => (
+                      <div
+                        key={item.id}
+                        className="p-6 hover:bg-[var(--color-bg-subtle)]/40 transition-colors flex flex-col lg:flex-row lg:items-center justify-between gap-6"
+                      >
+                        {/* Left Side: Thumbnail & Text Metadata */}
+                        <div className="flex items-start gap-4">
+                          {/* Image Thumbnail placeholder or loaded */}
+                          <div className="relative shrink-0 w-16 h-16 rounded-lg overflow-hidden border border-[var(--color-border)] flex items-center justify-center bg-[var(--color-bg-subtle)]">
+                            {item.imageUrl ? (
+                              <img
+                                src={item.imageUrl}
+                                alt={item.title}
+                                className="w-full h-full object-cover"
+                              />
+                            ) : (
+                              <span className="text-xl">📦</span>
+                            )}
+                          </div>
+
+                          <div className="space-y-1">
+                            <div className="flex items-center flex-wrap gap-2">
+                              {/* Type badge */}
+                              <span className={`px-2 py-0.5 rounded-full text-[9px] font-black uppercase tracking-wider ${
+                                item.type === 'lost' 
+                                  ? 'bg-red-500/10 text-red-500 border border-red-500/20' 
+                                  : 'bg-blue-500/10 text-blue-500 border border-blue-500/20'
+                              }`}>
+                                {item.type}
+                              </span>
+
+                              {/* Category badge */}
+                              <span className="px-2 py-0.5 rounded-full text-[9px] font-black uppercase tracking-wider bg-[var(--color-bg-subtle)] text-[var(--color-text-secondary)] border border-[var(--color-border)]">
+                                {item.category}
+                              </span>
+
+                              {/* Status badge */}
+                              <span className={`px-2 py-0.5 rounded-full text-[9px] font-black uppercase tracking-wider ${
+                                item.isResolved
+                                  ? 'bg-green-500/10 text-green-500 border border-green-500/20'
+                                  : 'bg-yellow-500/10 text-yellow-500 border border-yellow-500/20'
+                              }`}>
+                                {item.isResolved ? 'Resolved' : 'Active'}
+                              </span>
+                            </div>
+
+                            <h4 className="font-extrabold text-sm text-[var(--color-text-primary)]">
+                              {item.title}
+                            </h4>
+                            <p className="text-xs text-[var(--color-text-secondary)] line-clamp-1 max-w-2xl">
+                              {item.description}
+                            </p>
+
+                            {/* Details flex list */}
+                            <div className="flex flex-wrap items-center gap-x-4 gap-y-1.5 pt-1.5 text-[10px] text-[var(--color-text-secondary)] font-bold">
+                              <span className="flex items-center gap-1">
+                                <MapPin size={10} />
+                                {item.location}
+                              </span>
+                              <span className="flex items-center gap-1">
+                                <Calendar size={10} />
+                                {new Date(item.date).toLocaleDateString('en-PK', { day: 'numeric', month: 'short' })}
+                              </span>
+                              <span className="flex items-center gap-1">
+                                <User size={10} />
+                                {item.contactInfo}
+                              </span>
+                            </div>
+                          </div>
+                        </div>
+
+                        {/* Right Side: Administrative Actions */}
+                        <div className="flex items-center gap-3 border-t lg:border-t-0 pt-4 lg:pt-0 shrink-0">
+                          {/* Toggle Resolve state switch button */}
+                          <button
+                            onClick={() => handleToggleResolve(item)}
+                            disabled={actionLoading === item.id}
+                            className={`px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-[0.06em] border transition-all flex items-center gap-1.5 ${
+                              item.isResolved
+                                ? 'border-yellow-500/30 hover:bg-yellow-500/5 text-yellow-500'
+                                : 'border-green-500/30 hover:bg-green-500/5 text-green-500'
+                            }`}
+                          >
+                            {actionLoading === item.id ? (
+                              <RefreshCw size={11} className="animate-spin" />
+                            ) : item.isResolved ? (
+                              <>
+                                <AlertTriangle size={11} />
+                                Re-activate Item
+                              </>
+                            ) : (
+                              <>
+                                <CheckCircle size={11} />
+                                Mark Resolved
+                              </>
+                            )}
+                          </button>
+
+                          {/* Delete permanently button */}
+                          <button
+                            onClick={() => handleDeleteTrigger(item)}
+                            disabled={actionLoading === item.id}
+                            className="px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-[0.06em] border border-red-500/20 bg-red-500/5 hover:bg-red-500/10 text-red-500 transition-all flex items-center gap-1.5"
+                          >
+                            <Trash2 size={11} />
+                            Delete Permanent
+                          </button>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+      </main>
+
+      {/* Database Deletion Alert Dialog */}
+      <AlertDialog open={deleteConfirmOpen} onOpenChange={setDeleteConfirmOpen}>
+        <AlertDialogContent className="rounded-2xl border border-red-500/20 bg-[var(--color-bg)] text-[var(--color-text-primary)] max-w-md">
+          <AlertDialogHeader>
+            <AlertDialogTitle className="text-sm font-black uppercase tracking-wider text-red-500 flex items-center gap-2">
+              <AlertTriangle size={18} />
+              Confirm Database Deletion
+            </AlertDialogTitle>
+            <AlertDialogDescription className="text-xs text-[var(--color-text-secondary)] font-medium leading-relaxed mt-2">
+              Are you sure you want to permanently delete <strong className="text-[var(--color-text-primary)]">"{itemToDelete?.title}"</strong> from the database? This action is irreversible and will remove all associated item records, image links, and claims metadata from Supabase.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter className="mt-4 gap-2">
+            <AlertDialogCancel className="rounded-xl border font-bold text-xs uppercase tracking-wide px-4 py-2">
+              Cancel
+            </AlertDialogCancel>
+            <AlertDialogAction 
+              onClick={handleDeleteConfirm}
+              className="rounded-xl bg-red-600 hover:bg-red-500 text-white font-bold text-xs uppercase tracking-wide px-4 py-2"
+            >
+              Permanently Delete
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      <footer className="mt-auto py-6 border-t border-[var(--color-border)] text-center no-print">
+        <p className="text-[9px] font-black tracking-widest text-[var(--color-text-secondary)] uppercase">
+          FAST ISB Schedule Platform &middot; Administrative Engine
+        </p>
+      </footer>
+    </div>
+  )
+}
