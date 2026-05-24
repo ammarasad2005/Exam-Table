@@ -118,24 +118,53 @@ export async function POST(request: Request) {
         }
 
         if (claim) {
+          let resolvedLostItemId = claim.lost_item_id;
+
           // Resolve linked lost item
-          if (claim.lost_item_id) {
+          if (resolvedLostItemId) {
             const { error: lostItemError } = await supabase
               .from('lost_found_items')
               .update({ is_resolved: true })
-              .eq('id', claim.lost_item_id);
+              .eq('id', resolvedLostItemId);
             if (lostItemError) {
               console.error('Error resolving linked lost item:', lostItemError);
             }
+          } else if (claim.claimer_email) {
+            // Fallback: search for active lost report under claimer_email
+            const { data: lostItems, error: findError } = await supabase
+              .from('lost_found_items')
+              .select('id')
+              .eq('type', 'lost')
+              .eq('is_resolved', false)
+              .eq('contact_info', claim.claimer_email.toLowerCase().trim());
+
+            if (findError) {
+              console.error('Error searching for claimer active lost item:', findError);
+            } else if (lostItems && lostItems.length > 0) {
+              // Resolve the first active lost report we find
+              resolvedLostItemId = lostItems[0].id;
+              const { error: lostItemError } = await supabase
+                .from('lost_found_items')
+                .update({ is_resolved: true })
+                .eq('id', resolvedLostItemId);
+              if (lostItemError) {
+                console.error('Error resolving fallback lost item:', lostItemError);
+              }
+            }
           }
 
-          // Mark claim as verified
+          // Mark claim as verified and link the resolved lost item if we found one
+          const updateClaimData: Record<string, any> = { status: 'verified' };
+          if (resolvedLostItemId && !claim.lost_item_id) {
+            updateClaimData.lost_item_id = resolvedLostItemId;
+          }
+
           const { error: claimStatusError } = await supabase
             .from('lost_found_claims')
-            .update({ status: 'verified' })
+            .update(updateClaimData)
             .eq('id', claimId);
           if (claimStatusError) {
-            console.error('Error updating claim status to verified:', claimStatusError);
+            console.error('Error updating claim status:', claimStatusError);
           }
         }
       }

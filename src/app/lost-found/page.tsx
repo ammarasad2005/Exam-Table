@@ -68,6 +68,7 @@ import {
 import { Header } from '@/components/Header'
 import { useToast } from '@/hooks/use-toast'
 import { useIsMobile } from '@/hooks/use-mobile'
+import { ResolutionDetail } from '@/components/ResolutionDetail'
 
 export const dynamic = 'force-dynamic'
 
@@ -87,11 +88,11 @@ import {
 // ─── Types ──────────────────────────────────────────────────────────────────
 
 type View = 'home' | 'lost-found'
-type SubView = 'list' | 'detail' | 'report' | 'history'
+type SubView = 'list' | 'detail' | 'report' | 'history' | 'resolution'
 type DateRange = 'all' | 'today' | 'week' | 'month'
 type ViewMode = 'grid' | 'list'
 
-interface LostFoundItem {
+export interface LostFoundItem {
   id: string
   type: 'lost' | 'found'
   category: string
@@ -4422,6 +4423,41 @@ function LostFoundView({
   const [tempClaimerEmail, setTempClaimerEmail] = useState('')
   const [loadingClaims, setLoadingClaims] = useState(false)
   const [storedClaimerEmail, setStoredClaimerEmail] = useState<string | null>(null)
+  
+  // Resolution pair state for history view
+  const [resolutionPair, setResolutionPair] = useState<{
+    foundItem: LostFoundItem | null;
+    lostItem: LostFoundItem | null;
+    claim: { id: string; claimerId: string; claimerEmail: string; status: string; createdAt: string } | null;
+  } | null>(null)
+  const [loadingResolution, setLoadingResolution] = useState(false)
+
+  const handleViewResolution = async (itemId: string) => {
+    try {
+      setLoadingResolution(true)
+      const res = await fetch(`/api/lost-found/${itemId}/resolution`, { cache: 'no-store' })
+      if (res.ok) {
+        const data = await res.json()
+        setResolutionPair(data)
+        onSubViewChange('resolution')
+      } else {
+        toast({
+          title: 'Error',
+          description: 'Failed to fetch resolution details.',
+          variant: 'destructive',
+        })
+      }
+    } catch (err) {
+      console.error("Error fetching resolution pair:", err)
+      toast({
+        title: 'Error',
+        description: 'An unexpected error occurred.',
+        variant: 'destructive',
+      })
+    } finally {
+      setLoadingResolution(false)
+    }
+  }
 
   const fetchUserClaims = useCallback(async (email: string) => {
     setLoadingClaims(true)
@@ -5881,13 +5917,7 @@ function LostFoundView({
             <h2 className="font-body text-2xl font-bold" style={{ color: 'var(--color-text-primary)' }}>Resolved History</h2>
             <p className="text-sm" style={{ color: 'var(--color-text-secondary)' }}>Success stories of recovered items on campus.</p>
           </div>
-          <ResolvedHistory items={items} onSelect={(id) => { 
-            const item = items.find(i => i.id === id);
-            if (item) {
-              setSelectedItem(item);
-              onSubViewChange('detail');
-            }
-          }} />
+          <ResolvedHistory items={items} onSelect={handleViewResolution} />
         </motion.div>
       )}
 
@@ -5909,6 +5939,33 @@ function LostFoundView({
           }}
           myClaimedItemIds={myClaimedItemIds}
         />
+      )}
+
+      {/* Resolution View */}
+      {subView === 'resolution' && (
+        loadingResolution ? (
+          <div className="py-20 text-center space-y-4 animate-pulse">
+            <Loader2 className="w-8 h-8 animate-spin mx-auto text-emerald-500" />
+            <p className="text-sm font-medium text-[var(--color-text-secondary)]">Retrieving reunion success story...</p>
+          </div>
+        ) : resolutionPair ? (
+          <ResolutionDetail
+            foundItem={resolutionPair.foundItem}
+            lostItem={resolutionPair.lostItem}
+            claim={resolutionPair.claim}
+            onBack={() => { onSubViewChange('history'); window.scrollTo({ top: 0, behavior: 'smooth' }) }}
+          />
+        ) : (
+          <div className="py-20 text-center space-y-4">
+            <p className="text-sm font-medium text-[var(--color-text-secondary)]">Resolution pair details not found.</p>
+            <button 
+              onClick={() => onSubViewChange('history')} 
+              className="px-4 py-2 bg-[var(--color-bg-subtle)] border border-[var(--color-border)] rounded-xl text-sm font-medium text-[var(--color-text-primary)]"
+            >
+              Back to History
+            </button>
+          </div>
+        )
       )}
 
       {/* Report Form */}
