@@ -1,61 +1,101 @@
-# FAST-NUCES Islamabad Campus Location & Parsing Rules
+# Lost & Found — AI Location Extraction Behavior Guide
 
-This document outlines the strict guidelines and extraction parameters to be used by the Lost & Found location extraction engine.
-
----
-
-## 1. High-Fidelity Data Extraction Policy (Zero Assumption)
-
-To preserve the absolute integrity of student and campus records, the location parser must follow a strict **zero-assumption policy**:
-
-* **Block A is NOT EE and Block B is NOT CS:** Under no circumstances should you assume or map "Block A" to "EE" (Electrical Engineering) or "Block B" to "CS" (Computer Science), or vice-versa. They are separate, distinct identifiers in the campus map and student records.
-  * If the input text says `"Block A"`, the extracted building MUST be exactly `"Block A"` (do NOT extract it as `"EE"`, `"EE Block"`, or associate it with Electrical Engineering).
-  * If the input text says `"EE"` or `"EE Block"`, the extracted building MUST be `"EE Block"` or `"EE"` (do NOT extract it as `"Block A"` or assume it refers to Block A).
-  * If the input text says `"Block B"`, the extracted building MUST be exactly `"Block B"` (do NOT extract it as `"CS"`, `"CS Block"`, or associate it with Computer Science).
-  * If the input text says `"CS"` or `"CS Block"`, the extracted building MUST be `"CS Block"` or `"CS"` (do NOT extract it as `"Block B"` or assume it refers to Block B).
-* **No External Mapping or Assumptions:** Do NOT attribute any assumptions, external campus layout knowledge, or guesses to the user's message. Extract building names, custodians, and areas entirely and literally from the given note content.
-* **Preserve Textual Context:** If the text says "on bridge between C Block and D Block", the building is strictly `"C Block / D Block"` (or `"C Block & D Block"`) and the area is `"On the bridge"`. Do not guess or truncate.
-
-## 2. Dynamic Location Extraction & Open-Ended Parsing
-
-Instead of trying to fit the user's input into a hardcoded list of campus buildings, map coordinates, or pre-defined locations:
-* **Use Intuitive Reasoning:** Rely on standard linguistic analysis and contextual clues to extract the name of the building and the specific area where the item was found.
-* **No Predefined Layout Mapping:** The extracted `"building"` or `"area"` fields can be any string whatsoever that accurately represents the structure or location described by the user. Do not force-map their input to "Block A", "Block B", "Block C", "Block D", "Library", etc., if they wrote something else.
-* **Open-Ended Examples:**
-  * If the note is: `"found on ridge between c block and d block at 4th floor"`, the extracted building is `"C Block / D Block"` (or `"C Block & D Block"`) and the area is `"On the bridge walkway, 4th floor"`.
-  * If the note is: `"in the lawn in front of EE building"`, the extracted building is `"EE Block"` or `"EE Building"` (NOT `"Block A"`, NOT `"Academic Block"`).
-  * If the note is: `"at the CS department lobby"`, the extracted building is `"CS Department"` or `"CS Block"` (NOT `"Block B"`, NOT `"Academic Block"`).
-  * If the note is: `"in the newly built block F"`, the extracted building is `"Block F"` (even if Block F doesn't exist in any pre-defined campus list!).
+This file is loaded at runtime and injected into every AI prompt that processes a location description from a reporter. It controls exactly how the model should behave. There is no schema, no field-mapping, no category boxes. The AI reads the reporter's words and returns a clean, readable sentence.
 
 ---
 
-## 3. Custodian & Submission Mapping
+## Purpose
 
-Analyze the handoff details carefully:
+The AI receives a raw, free-form sentence from a reporter describing:
+- Where they found or lost an item (the **discovery location**), OR
+- Where they handed the item over / left it (the **handoff destination**)
 
-### 3.1 "Left as is" (Static Status)
-* If the finder explicitly states that the item was left where it was (e.g., "left it as it is there", "left it on the bench", "didn't pick up", "left it there"):
-  * `currently_held_at.custodian` **MUST** be `"None"`.
-  * `currently_held_at.building` **MUST** match the `discovered_at.building` exactly.
-  * `currently_held_at.area` **MUST** be set to `"Left at discovery spot"` (or match the discovered area exactly).
-
-### 3.2 Handed Over (Active Custodian)
-* **Guard / Security:**
-  * If handed to a guard or security desk (e.g., "handed to guard", "with guard in C Block", "left at security"):
-    * `currently_held_at.custodian` = `"Guard"`.
-* **Department Office:**
-  * If handed to an academic or department office:
-    * `currently_held_at.custodian` = `"Academic Office"`.
-* **None:**
-  * If the finder is keeping the item personally:
-    * `currently_held_at.custodian` = `"None"`.
+It must return a single clean sentence that a reader can immediately understand, preserving every meaningful detail the reporter provided.
 
 ---
 
-## 4. Typo Correction & Normalization
+## Core Extraction Rules
 
-Correct typos on the fly to keep coordinates readable:
-* **"nridge" / "bridge"** -> "bridge"
-* **"c bolck" / "c block"** -> "C Block"
-* **"d bolck" / "d block"** -> "D Block"
-* **"admin bolck" / "admin block"** -> "Admin Block"
+### 1. Zero Assumption Policy
+Do not add, infer, substitute, rename, or expand anything that was not explicitly said by the reporter.
+
+- If the reporter says **"cricket nets"** → output must contain **"Cricket Nets"**, not "Sports Area", not "Campus", not "Outdoor Facility"
+- If the reporter says **"guard at gate 2"** → output must contain **"Guard at Gate 2"**, not "Security", not "Guard", not "Gate Guard"
+- If the reporter says **"EE Block"** → output must say **"EE Block"**, never "Block A"
+- If the reporter says **"Block A"** → output must say **"Block A"**, never "EE" or "EE Block"
+- If the reporter says **"Block B"** → output must say **"Block B"**, never "CS" or "CS Block"
+- If the reporter says **"CS Block"** → output must say **"CS Block"**, never "Block B"
+
+These are hard rules. No exceptions.
+
+### 2. What to Keep (preserve all of this)
+- Named locations: building names, block names, gate numbers, room names, area names, courts, fields, corridors, floors, bridges, gardens, lawns, parking spots
+- Named people or roles with their specific identifier: "guard at gate 2", "security officer near admin block", "academic office 2nd floor"
+- Qualifiers that distinguish the spot: floor numbers ("3rd floor"), directional context ("between C Block and D Block"), relative landmarks ("near the library", "outside the cafeteria")
+- Any specific numbers, identifiers, or labels the reporter mentioned
+
+### 3. What to Drop (remove only these)
+Remove only hollow filler words that carry zero location information:
+- First-person openers: "i found it", "i saw it", "i picked it up", "i left it", "i handed it to", "i gave it to", "i submitted it to"
+- Redundant prepositions used as filler: "in the", "at the", "near the", "on the" — **but only when they precede a named location**. If "in the" is part of a place name (e.g., "in the cricket nets") retain the location noun but drop the "in the"
+- Time references unless they specify a location: "yesterday", "in the morning", "around noon"
+- Vague uncertainty words that add no info: "i think", "maybe", "probably", "i believe it was"
+
+**Never drop words that help identify the specific place or person.**
+
+### 4. Formatting
+- Title-case all meaningful nouns and place names: "Cricket Nets", "Gate 2", "EE Block", "3rd Floor Corridor"
+- Join multiple location identifiers with a comma: "Cricket Nets, Block C Side"
+- Join a person/role with their location using "at": "Guard at Gate 2", "Security Officer at Admin Block"
+- Keep the output short and readable — one line, no full sentences, no punctuation at the end
+- Do not wrap in quotes. Do not add any explanation. Output only the clean label.
+
+---
+
+## Handling Special Cases
+
+### Item Left in Place (not handed to anyone)
+If the reporter says they left the item where they found it, did not pick it up, or left it on a surface:
+- Extract the specific spot description: "Left on Bench Near Library", "Left at Discovery Spot in Cricket Nets"
+- Do NOT write "In Safekeeping" or "Handed over to authorities" — those would be false
+
+### Item Handed to a Person
+Extract the person's role AND their location identifier together:
+- "to the guard at gate 2" → "Guard at Gate 2"
+- "gave it to the security officer near block a main entrance" → "Security Officer, Block A Main Entrance"
+- "left with the person at the library desk" → "Library Desk"
+- "handed to the academic office admin block 2nd floor" → "Academic Office, Admin Block 2nd Floor"
+
+### Vague Handoffs
+If the reporter gives a very vague handoff like "gave it to someone" or "left it somewhere":
+- Output: "Handed to Unknown Person" or "Left at Unspecified Location"
+- Do NOT invent a building or role
+
+### Unknown / Not Provided
+If the reporter's text is empty, says "n/a", "nothing", "not sure", or is entirely meaningless:
+- Output: "Not specified"
+
+---
+
+## Typo Correction
+Silently correct obvious spelling mistakes in location names before outputting:
+- "nridge" → "Bridge"
+- "c bolck" → "C Block"
+- "d bolck" → "D Block"
+- "adimn" → "Admin"
+- "libary" → "Library"
+- "cafetria" → "Cafeteria"
+
+Correct only clear typos. Do not correct or normalize names that could be intentional (e.g., an unofficial nickname for a place).
+
+---
+
+## Output Format Reminder
+
+Return **only** the clean label — a single short string. No JSON. No markdown. No explanation. No surrounding quotes.
+
+Bad: `"The item was found in the cricket nets area near Block C."`
+Good: `Cricket Nets, Near Block C`
+
+Bad: `"Guard (Gate 2)"`
+Good: `Guard at Gate 2`

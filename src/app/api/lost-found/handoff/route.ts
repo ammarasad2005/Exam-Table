@@ -1,148 +1,104 @@
 import { NextResponse } from 'next/server'
+import fs from 'fs'
+import path from 'path'
 
 export const dynamic = 'force-dynamic'
 
+// Load the AI behavior guide from the markdown file
+function loadBehaviorGuide(): string {
+  try {
+    const filePath = path.join(process.cwd(), 'docs/campus_map_rules.md')
+    return fs.readFileSync(filePath, 'utf8')
+  } catch {
+    return ''
+  }
+}
+
+async function callLLM(systemPrompt: string, userText: string, token: string): Promise<string> {
+  const response = await fetch('https://models.github.ai/inference/chat/completions', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${token}`,
+    },
+    body: JSON.stringify({
+      model: 'gpt-4o-mini',
+      messages: [
+        { role: 'system', content: systemPrompt },
+        { role: 'user', content: userText },
+      ],
+      temperature: 0,
+      max_tokens: 80,
+    }),
+  })
+
+  if (!response.ok) {
+    const err = await response.text()
+    throw new Error(`LLM API error: ${err}`)
+  }
+
+  const data = await response.json()
+  const result = data.choices?.[0]?.message?.content?.trim()
+  if (!result) throw new Error('Empty LLM response')
+  return result
+}
+
 export async function POST(request: Request) {
   try {
-    // Accept either the old `note` field (legacy) or the new separate fields
     const body = await request.json()
-    const foundAtNote: string = body.foundAt || ''
-    const handedOffNote: string = body.handedOffTo || ''
-    const legacyNote: string = body.note || ''
+
+    // Accept both field names for backward compatibility during the transition
+    const foundAtInput: string = (body.foundAt || body.note || '').trim()
+    const handedOffInput: string = (body.handedOffTo || '').trim()
 
     const token = process.env.GITHUB_TOKEN
 
+    // Fallback: if no token, return raw inputs as-is
     if (!token) {
       console.error('GITHUB_TOKEN is not set')
       return NextResponse.json({
-        structured: {
-          discoveredAt: {
-            label: foundAtNote || legacyNote || 'Unknown',
-            raw: foundAtNote || legacyNote || '',
-          },
-          currentlyHeldAt: {
-            label: handedOffNote || 'Unknown',
-            raw: handedOffNote || '',
-          },
-        },
+        foundAt: foundAtInput || 'Not specified',
+        submittedAt: handedOffInput || 'Not specified',
       })
     }
 
-    // ── Parse "Found At" ─────────────────────────────────────────────────────
-    const foundAtInput = foundAtNote || legacyNote
-    let discoveredAt = { label: foundAtInput || 'Unknown', raw: foundAtInput }
+    const guide = loadBehaviorGuide()
 
-    if (foundAtInput) {
-      try {
-        const res = await fetch('https://models.github.ai/inference/chat/completions', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            Authorization: `Bearer ${token}`,
-          },
-          body: JSON.stringify({
-            model: 'gpt-4o-mini',
-            messages: [
-              {
-                role: 'system',
-                content: `You extract a clean, concise location label from a free-text description of where someone found a lost item.
+    const foundAtSystemPrompt = `You are a location label extractor for a university Lost & Found platform.
 
-RULES:
-1. Keep ALL meaningful, specific location information that helps identify the spot (building names, area names, floor numbers, landmarks, specific spots).
-2. Drop ONLY filler words: "i found it", "it was", "in the", "at the", "near the", "there was a", "i saw it", "it's in", "found at", etc. Prepositions like "at", "in", "near" are dropped ONLY when they are pure filler and not part of a named place.
-3. ZERO assumptions – do not rename, expand, translate, or substitute the words the reporter used. If they said "cricket nets", output "Cricket Nets" — not "Sports Area" or "Campus".
-4. Capitalise each meaningful word (title case).
-5. Output only the clean label string – no JSON, no quotes, no explanation.
+Your job: read the reporter's free-text description of WHERE they found or lost the item and return a clean, readable location label.
 
-Examples:
-  Input:  "i found it in the cricket nets near block c"
-  Output: Cricket Nets, Near Block C
+${guide}
 
-  Input:  "on the 3rd floor corridor of the EE building"
-  Output: EE Building, 3rd Floor Corridor
+Return ONLY the clean label — one short line. No JSON. No quotes. No explanation.`
 
-  Input:  "left it on the bench outside the library"
-  Output: Bench Outside Library`,
-              },
-              {
-                role: 'user',
-                content: foundAtInput,
-              },
-            ],
-          }),
-        })
-        const data = await res.json()
-        const label = data.choices?.[0]?.message?.content?.trim()
-        if (label) discoveredAt = { label, raw: foundAtInput }
-      } catch (err) {
-        console.error('foundAt parse failed:', err)
-      }
-    }
+    const submittedAtSystemPrompt = `You are a handoff label extractor for a university Lost & Found platform.
 
-    // ── Parse "Handed Off To / Submitted At" ────────────────────────────────
-    let currentlyHeldAt = { label: handedOffNote || 'Not specified', raw: handedOffNote }
+Your job: read the reporter's free-text description of WHERE they handed the item over, who they gave it to, or where they left it — and return a clean, readable label.
 
-    if (handedOffNote) {
-      try {
-        const res = await fetch('https://models.github.ai/inference/chat/completions', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            Authorization: `Bearer ${token}`,
-          },
-          body: JSON.stringify({
-            model: 'gpt-4o-mini',
-            messages: [
-              {
-                role: 'system',
-                content: `You extract a clean, concise label describing who or where an item was handed over to after being found.
+${guide}
 
-RULES:
-1. Keep ALL meaningful identifying information: the person/role type (guard, officer, admin, etc.), the specific location or identifier (gate number, room number, counter, desk, etc.), and any named place.
-2. Drop ONLY filler words: "i handed it to", "i gave it to", "i submitted it to", "i left it with", "to the", "handed it over to", "gave to", etc.
-3. ZERO assumptions – never invent, expand, or substitute the words the reporter used. If they said "guard at gate 2", output "Guard at Gate 2".
-4. Capitalise each meaningful word (title case).
-5. Output only the clean label string – no JSON, no quotes, no explanation.
+Return ONLY the clean label — one short line. No JSON. No quotes. No explanation.`
 
-Examples:
-  Input:  "to the guard at gate 2"
-  Output: Guard at Gate 2
+    // Run both extractions in parallel for speed
+    const [foundAtResult, submittedAtResult] = await Promise.allSettled([
+      foundAtInput ? callLLM(foundAtSystemPrompt, foundAtInput, token) : Promise.resolve(''),
+      handedOffInput ? callLLM(submittedAtSystemPrompt, handedOffInput, token) : Promise.resolve(''),
+    ])
 
-  Input:  "gave it to the security officer near block a main entrance"
-  Output: Security Officer, Block A Main Entrance
+    const foundAt =
+      foundAtResult.status === 'fulfilled' && foundAtResult.value
+        ? foundAtResult.value
+        : foundAtInput || 'Not specified'
 
-  Input:  "handed it to the academic office at admin block 2nd floor"
-  Output: Academic Office, Admin Block 2nd Floor
+    const submittedAt =
+      submittedAtResult.status === 'fulfilled' && submittedAtResult.value
+        ? submittedAtResult.value
+        : handedOffInput || 'Not specified'
 
-  Input:  "left it as it is there"
-  Output: Left in Place
-
-  Input:  "left it on the table in the library"
-  Output: Left on Table in Library`,
-              },
-              {
-                role: 'user',
-                content: handedOffNote,
-              },
-            ],
-          }),
-        })
-        const data = await res.json()
-        const label = data.choices?.[0]?.message?.content?.trim()
-        if (label) currentlyHeldAt = { label, raw: handedOffNote }
-      } catch (err) {
-        console.error('handedOff parse failed:', err)
-      }
-    }
-
-    return NextResponse.json({
-      structured: {
-        discoveredAt,
-        currentlyHeldAt,
-      },
-    })
+    return NextResponse.json({ foundAt, submittedAt })
   } catch (error: unknown) {
     console.error('Handoff API error:', error)
-    return NextResponse.json({ error: 'Failed to process handoff note' }, { status: 500 })
+    return NextResponse.json({ error: 'Failed to process location' }, { status: 500 })
   }
 }

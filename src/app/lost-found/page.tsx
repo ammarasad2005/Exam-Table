@@ -99,12 +99,8 @@ interface LostFoundItem {
   description: string
   location: string
   handoffNote?: string
-  structuredLocation?: {
-    discoveredAt?: { label: string; raw: string }
-    currentlyHeldAt?: { label: string; raw: string }
-    rawLocation?: string
-    rawHandoff?: string
-  }
+  parsedFoundAt?: string
+  parsedSubmittedAt?: string
   date: string
   contactInfo: string
   reporterName?: string
@@ -1160,8 +1156,8 @@ function ItemCard({
 
   const reporterName = item.reporterName || null
 
-  const rawLoc = item.structuredLocation?.rawLocation || item.structuredLocation?.discoveredAt?.raw || (isLost ? item.location : '')
-  const rawHand = item.structuredLocation?.rawHandoff || item.structuredLocation?.currentlyHeldAt?.raw || item.handoffNote || ''
+  const rawLoc = item.parsedFoundAt || (isLost ? item.location : item.location)
+  const rawHand = item.parsedSubmittedAt || item.handoffNote || ''
 
   return (
     <motion.div
@@ -1423,7 +1419,6 @@ function ReportForm({
   const [location, setLocation] = useState('')
   const [handoffNote, setHandoffNote] = useState('')
   const [processingLocation, setProcessingLocation] = useState(false)
-  const [structuredLocation, setStructuredLocation] = useState<LostFoundItem['structuredLocation']>(undefined)
   const [date, setDate] = useState(new Date().toISOString().split('T')[0])
   const [contactInfo, setContactInfo] = useState('')
   const [reporterName, setReporterName] = useState('')
@@ -1478,15 +1473,9 @@ function ReportForm({
     if (!validate()) return
     setSubmitting(true)
 
+    let finalParsedFoundAt: string | undefined
+    let finalParsedSubmittedAt: string | undefined
     let finalLocation = location.trim() || 'Unknown'
-    let finalStructured = structuredLocation ? {
-      ...structuredLocation,
-      rawLocation: location.trim(),
-      rawHandoff: handoffNote.trim(),
-    } : {
-      rawLocation: location.trim(),
-      rawHandoff: handoffNote.trim(),
-    }
 
     if (type === 'found' && (location.trim() || handoffNote.trim())) {
       setProcessingLocation(true)
@@ -1500,22 +1489,14 @@ function ReportForm({
           }),
         })
         const data = await res.json()
-        if (data.structured) {
-          finalStructured = {
-            ...data.structured,
-            rawLocation: location.trim(),
-            rawHandoff: handoffNote.trim(),
-          }
-          // Build the summary location string from the parsed labels
-          const disc = data.structured.discoveredAt
-          const held = data.structured.currentlyHeldAt
-          const discLabel = disc?.label && disc.label !== 'Unknown' ? disc.label : location.trim()
-          const heldLabel = held?.label && held.label !== 'Not specified' ? held.label : handoffNote.trim()
-          finalLocation = heldLabel ? `${discLabel} → ${heldLabel}` : discLabel
-        }
+        if (data.foundAt) finalParsedFoundAt = data.foundAt
+        if (data.submittedAt) finalParsedSubmittedAt = data.submittedAt
+        const discLabel = finalParsedFoundAt || location.trim()
+        const heldLabel = finalParsedSubmittedAt || handoffNote.trim()
+        finalLocation = heldLabel ? `${discLabel} → ${heldLabel}` : discLabel
       } catch (err) {
         console.error('AI processing failed:', err)
-        finalLocation = `${location.trim()} → ${handoffNote.trim()}`
+        finalLocation = handoffNote.trim() ? `${location.trim()} → ${handoffNote.trim()}` : location.trim()
       } finally {
         setProcessingLocation(false)
       }
@@ -1528,12 +1509,9 @@ function ReportForm({
           body: JSON.stringify({ foundAt: location.trim() }),
         })
         const data = await res.json()
-        if (data.structured?.discoveredAt?.label) {
-          finalStructured = {
-            ...data.structured,
-            rawLocation: location.trim(),
-          }
-          finalLocation = data.structured.discoveredAt.label
+        if (data.foundAt) {
+          finalParsedFoundAt = data.foundAt
+          finalLocation = data.foundAt
         }
       } catch (err) {
         console.error('AI processing failed:', err)
@@ -1590,7 +1568,8 @@ function ReportForm({
         description: description.trim(),
         location: finalLocation,
         handoffNote: handoffNote.trim() || undefined,
-        structuredLocation: finalStructured,
+        parsedFoundAt: finalParsedFoundAt,
+        parsedSubmittedAt: finalParsedSubmittedAt,
         date: new Date(date).toISOString(),
         contactInfo: contactInfo.trim() || 'Not provided',
         reporterName: type === 'lost' ? reporterName.trim() : undefined,
@@ -2215,8 +2194,8 @@ function ItemDetail({
 
   const reporterName = item.reporterName || null
 
-  const rawLoc = item.structuredLocation?.rawLocation || item.structuredLocation?.discoveredAt?.raw || (isLost ? item.location : '')
-  const rawHand = item.structuredLocation?.rawHandoff || item.structuredLocation?.currentlyHeldAt?.raw || item.handoffNote || ''
+  const rawLoc = item.parsedFoundAt || (isLost ? item.location : item.location)
+  const rawHand = item.parsedSubmittedAt || item.handoffNote || ''
   
   const myId = getPersistentUserId()
   const isClaimant = claims.some(c => c.claimer_id === myId)
@@ -2643,7 +2622,7 @@ function ItemDetail({
                   <div className="flex items-center gap-1.5 flex-wrap">
                     <p className="text-sm font-bold" style={{ color: 'var(--color-text-primary)' }}>
                       {canSeeLocation
-                        ? (item.structuredLocation?.discoveredAt?.label || item.location || 'Unknown')
+                        ? (item.parsedFoundAt || item.location || 'Not specified')
                         : (<span className="blur-[4px] select-none opacity-50">Location hidden to public</span>)}
                     </p>
                     {canSeeLocation && (rawLoc || rawHand) && (
@@ -2673,7 +2652,7 @@ function ItemDetail({
                   <div>
                     <p className="text-sm font-bold" style={{ color: '#16a34a' }}>
                       {canSeeLocation
-                        ? (item.structuredLocation?.currentlyHeldAt?.label || rawHand || 'Not specified')
+                        ? (item.parsedSubmittedAt || rawHand || 'Not specified')
                         : (<span className="blur-[4px] select-none opacity-50">Custodian hidden</span>)}
                     </p>
                   </div>
