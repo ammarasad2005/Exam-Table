@@ -90,8 +90,15 @@ export async function POST(request: Request) {
     
     const parsed = JSON.parse(content);
 
+    // Normalize keys defensively in case AI outputs different casing
+    const normalized = {
+      match: typeof parsed.match === 'boolean' ? parsed.match : (parsed.Match ?? parsed.MATCH ?? false),
+      confidence: typeof parsed.confidence === 'number' ? parsed.confidence : Number(parsed.Confidence ?? parsed.CONFIDENCE ?? parsed.score ?? parsed.Score ?? 0),
+      reasoning: parsed.reasoning ?? parsed.Reasoning ?? parsed.REASONING ?? parsed.explanation ?? parsed.Explanation ?? 'No reasoning provided.'
+    };
+
     // 4. If match is successful and we have context, update database
-    if (parsed.match && parsed.confidence >= 80) {
+    if (normalized.match && normalized.confidence >= 80) {
       // a. Mark found item as resolved
       await supabase
         .from('lost_found_items')
@@ -124,7 +131,7 @@ export async function POST(request: Request) {
       }
     }
 
-    return NextResponse.json(parsed);
+    return NextResponse.json(normalized);
 
   } catch (error: any) {
     console.error('GitHub Verify API error:', error);

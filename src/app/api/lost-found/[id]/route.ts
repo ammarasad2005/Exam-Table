@@ -115,12 +115,30 @@ export async function PATCH(
 
     // Handle "claim" action
     if (body.action === 'claim' && body.claimerId) {
+      const email = body.claimerEmail?.toLowerCase().trim()
+
+      if (email) {
+        // Check if there is already an active pending claim for this item and email
+        const { data: existingClaims } = await supabase
+          .from('lost_found_claims')
+          .select('id')
+          .eq('item_id', id)
+          .eq('claimer_email', email)
+          .eq('status', 'pending')
+
+        if (existingClaims && existingClaims.length > 0) {
+          return NextResponse.json({ 
+            error: 'You have already registered a pending claim for this item under this email address. Please resolve or unclaim your existing match first.' 
+          }, { status: 400 })
+        }
+      }
+
       const { data: newClaim, error: claimError } = await supabase
         .from('lost_found_claims')
         .insert({ 
           item_id: id, 
           claimer_id: body.claimerId,
-          claimer_email: body.claimerEmail?.toLowerCase().trim(),
+          claimer_email: email,
           lost_item_id: body.lostItemId,
           status: 'pending'
         })
@@ -130,10 +148,10 @@ export async function PATCH(
       if (claimError) throw claimError;
 
       // Send initial verification request email
-      if (body.claimerEmail) {
+      if (email) {
         const { data: item } = await supabase.from('lost_found_items').select('title').eq('id', id).single();
         if (item) {
-          await sendVerificationRequestEmail(body.claimerEmail, item.title, newClaim.id);
+          await sendVerificationRequestEmail(email, item.title, newClaim.id);
         }
       }
       

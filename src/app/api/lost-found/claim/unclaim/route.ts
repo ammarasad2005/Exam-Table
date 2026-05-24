@@ -6,10 +6,10 @@ export const dynamic = 'force-dynamic'
 
 export async function POST(request: NextRequest) {
   try {
-    const { claimId } = await request.json()
+    const { claimId, email } = await request.json()
 
-    if (!claimId) {
-      return NextResponse.json({ error: 'Claim ID is required' }, { status: 400 })
+    if (!claimId || !email) {
+      return NextResponse.json({ error: 'Claim ID and email are required' }, { status: 400 })
     }
 
     // 1. Fetch claim and item details
@@ -23,7 +23,17 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Claim not found' }, { status: 404 })
     }
 
-    // 2. Update claim status to 'unclaimed'
+    // 2. Verify claimant email matches (case insensitive, trimmed)
+    const dbEmail = (claim.claimer_email || '').toLowerCase().trim()
+    const inputEmail = email.toLowerCase().trim()
+
+    if (dbEmail !== inputEmail) {
+      return NextResponse.json({ 
+        error: 'Email address does not match the email associated with this claim. Claim cannot be undone.' 
+      }, { status: 400 })
+    }
+
+    // 3. Update claim status to 'unclaimed'
     const { error: updateError } = await supabase
       .from('lost_found_claims')
       .update({ status: 'unclaimed' })
@@ -31,7 +41,7 @@ export async function POST(request: NextRequest) {
 
     if (updateError) throw updateError
 
-    // 3. Send notification
+    // 4. Send notification
     await sendUnclaimNotification(claim.claimer_email, (claim.lost_found_items as any).title)
 
     return NextResponse.json({ success: true })

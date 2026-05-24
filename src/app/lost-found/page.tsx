@@ -2569,13 +2569,17 @@ function ItemDetail({
       const compressed = await imageCompression(verificationImage, compressionOptions)
       const base64 = await fileToBase64(compressed)
 
+      const myClaim = claims.find(c => c.claimer_id === myId || (storedClaimerEmail && c.claimer_email?.toLowerCase().trim() === storedClaimerEmail.toLowerCase().trim()))
+
       // 2. Call AI Verify API
       const verifyRes = await fetch('/api/lost-found/verify', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ 
           originalImageUrl: item.imageUrl, 
-          resolutionImageBase64: base64 
+          resolutionImageBase64: base64,
+          itemId: item.id,
+          claimId: myClaim?.id
         }),
       })
       
