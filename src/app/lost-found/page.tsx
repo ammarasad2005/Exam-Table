@@ -2190,6 +2190,7 @@ function ItemDetail({
   onNavigateItem?: (item: LostFoundItem) => void
 }) {
   const isLost = item.type === 'lost'
+  const isMobile = useIsMobile()
   const [resolveDialogOpen, setResolveDialogOpen] = useState(false)
   const [lightboxOpen, setLightboxOpen] = useState(false)
   const [viewCount, setViewCount] = useState(0)
@@ -2730,7 +2731,7 @@ function ItemDetail({
                     style={{ backgroundColor: 'var(--accent-lf)', color: 'white' }}
                   >
                     {claiming ? <Loader2 className="animate-spin" width={14} height={14} /> : <Handshake width={14} height={14} />}
-                    Schedule Collection (Claim)
+                    Claim This Item
                     {claims.length > 0 && (
                       <span className="ml-1 bg-white/20 px-1.5 py-0.5 rounded-md text-[9px]">
                         {claims.length}
@@ -2764,7 +2765,7 @@ function ItemDetail({
             )}
 
             {/* Reporter's resolve button */}
-            {isReporter && (
+            {isReporter && !isMobile && (
               <button
                 onClick={() => setResolveDialogOpen(true)}
                 className="flex-1 rounded-xl py-3.5 text-xs font-black uppercase tracking-[0.12em] transition-all duration-200 flex items-center justify-center gap-2 hover:scale-[1.02] active:scale-[0.98] border-2"
