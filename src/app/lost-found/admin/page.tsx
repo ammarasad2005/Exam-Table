@@ -94,28 +94,8 @@ export default function AdminPage() {
     'Other'
   ]
 
-  // Check Authentication Status
-  const checkAuth = useCallback(async () => {
-    try {
-      const res = await fetch('/api/lost-found/admin/check')
-      const data = await res.json()
-      setAuthenticated(data.authenticated)
-      if (data.authenticated) {
-        fetchItems()
-      }
-    } catch (err) {
-      console.error('Auth check failed:', err)
-    } finally {
-      setCheckingAuth(false)
-    }
-  }, [])
-
-  useEffect(() => {
-    checkAuth()
-  }, [checkAuth])
-
   // Fetch all items from the database
-  const fetchItems = async () => {
+  const fetchItems = useCallback(async () => {
     setLoadingItems(true)
     try {
       const res = await fetch('/api/lost-found')
@@ -131,7 +111,27 @@ export default function AdminPage() {
     } finally {
       setLoadingItems(false)
     }
-  }
+  }, [toast])
+
+  // Check Authentication Status
+  const checkAuth = useCallback(async () => {
+    try {
+      const res = await fetch('/api/lost-found/admin/check')
+      const data = await res.json()
+      setAuthenticated(data.authenticated)
+      if (data.authenticated) {
+        fetchItems()
+      }
+    } catch (err) {
+      console.error('Auth check failed:', err)
+    } finally {
+      setCheckingAuth(false)
+    }
+  }, [fetchItems])
+
+  useEffect(() => {
+    checkAuth()
+  }, [checkAuth])
 
   // Handle Login Submission
   const handleLogin = async (e: React.FormEvent) => {
@@ -710,7 +710,7 @@ export default function AdminPage() {
               Confirm Database Deletion
             </AlertDialogTitle>
             <AlertDialogDescription className="text-xs text-[var(--color-text-secondary)] font-medium leading-relaxed mt-2">
-              Are you sure you want to permanently delete <strong className="text-[var(--color-text-primary)]">"{itemToDelete?.title}"</strong> from the database? This action is irreversible and will remove all associated item records, image links, and claims metadata from Supabase.
+              Are you sure you want to permanently delete <strong className="text-[var(--color-text-primary)]">&quot;{itemToDelete?.title}&quot;</strong> from the database? This action is irreversible and will remove all associated item records, image links, and claims metadata from Supabase.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter className="mt-4 gap-2">
