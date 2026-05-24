@@ -100,8 +100,8 @@ interface LostFoundItem {
   location: string
   handoffNote?: string
   structuredLocation?: {
-    discoveredAt?: { building: string; area: string }
-    currentlyHeldAt?: { custodian: string; building: string; area: string }
+    discoveredAt?: { label: string; raw: string }
+    currentlyHeldAt?: { label: string; raw: string }
     rawLocation?: string
     rawHandoff?: string
   }
@@ -1160,8 +1160,8 @@ function ItemCard({
 
   const reporterName = item.reporterName || null
 
-  const rawLoc = item.structuredLocation?.rawLocation || (isLost ? item.location : '')
-  const rawHand = item.structuredLocation?.rawHandoff || item.handoffNote || ''
+  const rawLoc = item.structuredLocation?.rawLocation || item.structuredLocation?.discoveredAt?.raw || (isLost ? item.location : '')
+  const rawHand = item.structuredLocation?.rawHandoff || item.structuredLocation?.currentlyHeldAt?.raw || item.handoffNote || ''
 
   return (
     <motion.div
@@ -1488,17 +1488,16 @@ function ReportForm({
       rawHandoff: handoffNote.trim(),
     }
 
-    const noteToProcess = type === 'found' 
-      ? `Found at: ${location.trim()}. Submitted to: ${handoffNote.trim()}`
-      : location.trim()
-
-    if (noteToProcess) {
+    if (type === 'found' && (location.trim() || handoffNote.trim())) {
       setProcessingLocation(true)
       try {
         const res = await fetch('/api/lost-found/handoff', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ note: noteToProcess }),
+          body: JSON.stringify({
+            foundAt: location.trim(),
+            handedOffTo: handoffNote.trim(),
+          }),
         })
         const data = await res.json()
         if (data.structured) {
@@ -1507,32 +1506,37 @@ function ReportForm({
             rawLocation: location.trim(),
             rawHandoff: handoffNote.trim(),
           }
-          const s = data.structured
-          const held = s.currentlyHeldAt
-          const disc = s.discoveredAt
-          let locString = ''
-          if (type === 'found') {
-            const custodianPart = (held?.custodian && held.custodian !== 'None' && held.custodian !== 'Unknown') ? held.custodian : ''
-            const buildingPart = (held?.building && held.building !== 'Unknown' && held.building !== 'None') ? `at ${held.building}` : ''
-            const areaPart = (held?.area && held.area !== 'Unknown' && held.area !== 'None') ? `(${held.area})` : ''
-            locString = `${custodianPart} ${buildingPart} ${areaPart}`.trim()
-            if (!locString) {
-              locString = (disc?.building && disc.building !== 'Unknown') 
-                ? `Found at ${disc.building} (${disc.area || 'Unknown Area'})`
-                : `Found: ${location.trim()} (Handoff: ${handoffNote.trim()})`
-            }
-          } else {
-            locString = (disc?.building && disc.building !== 'Unknown')
-              ? `${disc.building} (${disc.area || 'Unknown Spot'})`
-              : location.trim()
-          }
-          finalLocation = locString.trim() || location.trim()
+          // Build the summary location string from the parsed labels
+          const disc = data.structured.discoveredAt
+          const held = data.structured.currentlyHeldAt
+          const discLabel = disc?.label && disc.label !== 'Unknown' ? disc.label : location.trim()
+          const heldLabel = held?.label && held.label !== 'Not specified' ? held.label : handoffNote.trim()
+          finalLocation = heldLabel ? `${discLabel} → ${heldLabel}` : discLabel
         }
       } catch (err) {
         console.error('AI processing failed:', err)
-        finalLocation = type === 'found' 
-          ? `Found: ${location.trim()} (Handoff: ${handoffNote.trim()})`
-          : location.trim()
+        finalLocation = `${location.trim()} → ${handoffNote.trim()}`
+      } finally {
+        setProcessingLocation(false)
+      }
+    } else if (type === 'lost' && location.trim()) {
+      setProcessingLocation(true)
+      try {
+        const res = await fetch('/api/lost-found/handoff', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ foundAt: location.trim() }),
+        })
+        const data = await res.json()
+        if (data.structured?.discoveredAt?.label) {
+          finalStructured = {
+            ...data.structured,
+            rawLocation: location.trim(),
+          }
+          finalLocation = data.structured.discoveredAt.label
+        }
+      } catch (err) {
+        console.error('AI processing failed:', err)
       } finally {
         setProcessingLocation(false)
       }
@@ -2211,8 +2215,8 @@ function ItemDetail({
 
   const reporterName = item.reporterName || null
 
-  const rawLoc = item.structuredLocation?.rawLocation || (isLost ? item.location : '')
-  const rawHand = item.structuredLocation?.rawHandoff || item.handoffNote || ''
+  const rawLoc = item.structuredLocation?.rawLocation || item.structuredLocation?.discoveredAt?.raw || (isLost ? item.location : '')
+  const rawHand = item.structuredLocation?.rawHandoff || item.structuredLocation?.currentlyHeldAt?.raw || item.handoffNote || ''
   
   const myId = getPersistentUserId()
   const isClaimant = claims.some(c => c.claimer_id === myId)
@@ -2638,9 +2642,9 @@ function ItemDetail({
                 <div>
                   <div className="flex items-center gap-1.5 flex-wrap">
                     <p className="text-sm font-bold" style={{ color: 'var(--color-text-primary)' }}>
-                      {canSeeLocation ? (item.structuredLocation?.discoveredAt?.building && item.structuredLocation.discoveredAt.building !== 'Unknown' 
-                        ? item.structuredLocation.discoveredAt.building 
-                        : (isLost ? item.location : 'Campus')) : (<span className="blur-[4px] select-none opacity-50">Location hidden to public</span>)}
+                      {canSeeLocation
+                        ? (item.structuredLocation?.discoveredAt?.label || item.location || 'Unknown')
+                        : (<span className="blur-[4px] select-none opacity-50">Location hidden to public</span>)}
                     </p>
                     {canSeeLocation && (rawLoc || rawHand) && (
                       <button
@@ -2652,11 +2656,6 @@ function ItemDetail({
                       </button>
                     )}
                   </div>
-                  <p className="text-[11px]" style={{ color: 'var(--color-text-tertiary)' }}>
-                    {canSeeLocation ? (item.structuredLocation?.discoveredAt?.area && item.structuredLocation.discoveredAt.area !== 'Unknown' 
-                      ? item.structuredLocation.discoveredAt.area 
-                      : 'Exact spot not specified') : (<span className="text-[9px] opacity-40">Claim to reveal details</span>)}
-                  </p>
                 </div>
               </div>
             </div>
@@ -2673,22 +2672,9 @@ function ItemDetail({
                   </div>
                   <div>
                     <p className="text-sm font-bold" style={{ color: '#16a34a' }}>
-                      {canSeeLocation ? (
-                        item.structuredLocation?.currentlyHeldAt?.custodian && item.structuredLocation.currentlyHeldAt.custodian !== 'None' 
-                          ? item.structuredLocation.currentlyHeldAt.custodian 
-                          : 'In Safekeeping'
-                      ) : (
-                        <span className="blur-[4px] select-none opacity-50">Custodian hidden</span>
-                      )}
-                    </p>
-                    <p className="text-[11px]" style={{ color: 'var(--color-text-tertiary)' }}>
-                      {canSeeLocation ? (
-                        (item.structuredLocation?.currentlyHeldAt?.building && item.structuredLocation.currentlyHeldAt.building !== 'Unknown') || (item.structuredLocation?.currentlyHeldAt?.area && item.structuredLocation.currentlyHeldAt.area !== 'Unknown' && item.structuredLocation.currentlyHeldAt.area !== 'None')
-                          ? `${item.structuredLocation.currentlyHeldAt.building && item.structuredLocation.currentlyHeldAt.building !== 'Unknown' ? item.structuredLocation.currentlyHeldAt.building : ''} ${item.structuredLocation?.currentlyHeldAt?.area && item.structuredLocation.currentlyHeldAt.area !== 'Unknown' && item.structuredLocation.currentlyHeldAt.area !== 'None' ? '(' + item.structuredLocation.currentlyHeldAt.area + ')' : ''}`.trim()
-                          : (item.structuredLocation?.rawHandoff ? 'See info icon for exact wording' : 'Handed over to authorities')
-                      ) : (
-                        <span className="text-[9px] opacity-40">Verification required for access</span>
-                      )}
+                      {canSeeLocation
+                        ? (item.structuredLocation?.currentlyHeldAt?.label || rawHand || 'Not specified')
+                        : (<span className="blur-[4px] select-none opacity-50">Custodian hidden</span>)}
                     </p>
                   </div>
                 </div>
