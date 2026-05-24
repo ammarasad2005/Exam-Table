@@ -107,26 +107,36 @@ export async function POST(request: Request) {
 
       // b. If a claim is provided, resolve the linked lost item
       if (claimId) {
-        const { data: claim } = await supabase
+        const { data: claim, error: claimError } = await supabase
           .from('lost_found_claims')
-          .select('*, lost_found_items(title)')
+          .select('*')
           .eq('id', claimId)
           .single();
+
+        if (claimError) {
+          console.error('Error fetching claim details for sync:', claimError);
+        }
 
         if (claim) {
           // Resolve linked lost item
           if (claim.lost_item_id) {
-            await supabase
+            const { error: lostItemError } = await supabase
               .from('lost_found_items')
               .update({ is_resolved: true })
               .eq('id', claim.lost_item_id);
+            if (lostItemError) {
+              console.error('Error resolving linked lost item:', lostItemError);
+            }
           }
 
           // Mark claim as verified
-          await supabase
+          const { error: claimStatusError } = await supabase
             .from('lost_found_claims')
             .update({ status: 'verified' })
             .eq('id', claimId);
+          if (claimStatusError) {
+            console.error('Error updating claim status to verified:', claimStatusError);
+          }
         }
       }
     }
