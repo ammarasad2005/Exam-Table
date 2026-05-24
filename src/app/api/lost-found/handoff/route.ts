@@ -15,11 +15,15 @@ export async function POST(request: Request) {
       console.error('GITHUB_TOKEN is not set')
       return NextResponse.json({ 
         structured: { 
-          custodian: 'None', 
-          building: 'Campus', 
-          floor: 'None', 
-          specific_area: 'None', 
-          status: 'static' 
+          discoveredAt: {
+            building: 'Campus',
+            area: 'Unknown Spot'
+          },
+          currentlyHeldAt: {
+            custodian: 'None',
+            building: 'Campus',
+            area: 'Unknown Spot'
+          }
         } 
       })
     }
@@ -35,19 +39,27 @@ export async function POST(request: Request) {
         messages: [
           {
             role: "system",
-            content: `You are a campus information assistant. Analyze a "location note" for a lost & found item and extract structured data.
-            Differentiate between WHERE the item was originally discovered (Found At) and WHERE it is currently held (Submitted At).
+            content: `You are a high-precision campus location parser for a university Lost & Found platform. 
+            Your goal is to parse a text note describing an item's location and segment it into structured details.
             
-            Return ONLY a JSON object with this exact schema:
+            Strictly differentiate between:
+            1. WHERE the item was originally found/lost (discovered_at)
+            2. WHERE the item is currently kept for collection (currently_held_at)
+            
+            Normalization Rules:
+            - Normalize building names: "Computer Science" or "CS Block" -> "CS", "Electrical Engineering" or "EE Block" -> "EE", "Business Administration" or "BBA Block" -> "BBA".
+            - Normalize custodians: "security", "guard", "security guard" -> "Guard"; "office", "dept office", "academic office" -> "Academic Office"; "me" or "myself" or empty -> "None".
+            
+            Return ONLY a valid JSON object matching this schema:
             {
               "discovered_at": {
-                "building": string (e.g., "EE", "CS", "Cafeteria", "Main Gate", "Unknown"),
-                "area": string (e.g., "Near the stairs", "In Lab 4", "Bench outside")
+                "building": "CS" | "EE" | "BBA" | "Library" | "Cafeteria" | "Main Gate" | "Sports Ground" | "Admin Block" | "Unknown",
+                "area": string (e.g., "In Lab 4", "Near stairs", "1st Floor lobby", "Unknown")
               },
               "currently_held_at": {
-                "custodian": string (e.g., "Academic Office", "Guard", "None"),
-                "building": string (e.g., "EE", "CS", "Main Gate", "Unknown"),
-                "area": string (e.g., "On the desk", "In drawer")
+                "custodian": "Academic Office" | "Guard" | "Library Desk" | "Cafeteria Counter" | "None",
+                "building": "CS" | "EE" | "BBA" | "Library" | "Cafeteria" | "Main Gate" | "Admin Block" | "Unknown",
+                "area": string (e.g., "In drawer", "On table", "Security room", "None")
               }
             }`
           },

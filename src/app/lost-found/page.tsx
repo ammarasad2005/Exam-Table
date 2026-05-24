@@ -808,13 +808,49 @@ function Footer({ onQuickLink }: { onQuickLink?: (action: string) => void }) {
         </div>
       )}
       <p
-        className="font-mono text-[11px] uppercase tracking-[0.1em] text-center mb-1"
+        className="font-mono text-[11px] uppercase tracking-[0.1em] text-center mb-1 flex items-center justify-center gap-1"
         style={{ color: 'var(--color-text-tertiary)' }}
       >
         FAST NUCES &middot; Islamabad Campus &middot; Spring 2026
+        <a 
+          href="/lost-found/admin" 
+          className="hover:text-orange-500 transition-colors duration-150 p-1 ml-0.5 opacity-40 hover:opacity-100"
+          title="Admin Portal"
+        >
+          🔑
+        </a>
       </p>
     </footer>
   )
+}
+
+// Helper to check if a client is authorized to see location details of found items
+function canClientSeeLocation(item: LostFoundItem): boolean {
+  if (item.type === 'lost') return true
+  if (item.isResolved) return true
+  
+  if (typeof window === 'undefined') return false
+  
+  // 1. Check if they are the reporter
+  const myReports = getMyReportedItems()
+  if (myReports.includes(item.id)) return true
+  
+  // 2. Check if they have a locally registered claim
+  const localClaims = localStorage.getItem(`lf-item-claims-${item.id}`)
+  if (localClaims) {
+    try {
+      const parsed = JSON.parse(localClaims)
+      if (parsed && parsed.length > 0) return true
+    } catch {}
+  }
+  
+  // 3. Check if their ID is in item's claims
+  const myId = getPersistentUserId()
+  if (item.claims && item.claims.some((c: any) => c.claimer_id === myId)) {
+    return true
+  }
+
+  return false
 }
 
 // ─── Component: AnimatedCounter ──────────────────────────────────────────────
@@ -1112,11 +1148,7 @@ function ItemCard({
   const isLost = item.type === 'lost'
   const [descExpanded, setDescExpanded] = useState(false)
   
-  // Authorization check for location masking (found items only)
-  const myId = getPersistentUserId()
-  const isClaimant = item.claims?.some((c: any) => c.claimer_id === myId)
-  const isReporter = typeof window !== 'undefined' && getMyReportedItems().includes(item.id)
-  const canSeeLocation = isReporter || isClaimant || item.isResolved || isLost
+  const canSeeLocation = canClientSeeLocation(item)
 
   const locationDisplay = isLost 
     ? (item.location || 'Location not provided') 
@@ -1375,9 +1407,26 @@ function ReportForm({
         const data = await res.json()
         if (data.structured) {
           finalStructured = data.structured
-          // Construct a human-readable location string from AI results
           const s = data.structured
-          finalLocation = `${s.custodian !== 'None' ? s.custodian : ''} ${s.building !== 'None' ? `at ${s.building}` : ''} ${s.specific_area !== 'None' ? `(${s.specific_area})` : ''}`.trim() || 'Campus'
+          const held = s.currentlyHeldAt
+          const disc = s.discoveredAt
+          let locString = ''
+          if (type === 'found') {
+            const custodianPart = (held?.custodian && held.custodian !== 'None') ? held.custodian : ''
+            const buildingPart = (held?.building && held.building !== 'Unknown' && held.building !== 'None') ? `at ${held.building}` : ''
+            const areaPart = (held?.area && held.area !== 'Unknown' && held.area !== 'None') ? `(${held.area})` : ''
+            locString = `${custodianPart} ${buildingPart} ${areaPart}`.trim()
+            if (!locString) {
+              locString = (disc?.building && disc.building !== 'Unknown') 
+                ? `Found at ${disc.building} (${disc.area || 'Unknown Area'})`
+                : 'Campus'
+            }
+          } else {
+            locString = (disc?.building && disc.building !== 'Unknown')
+              ? `${disc.building} (${disc.area || 'Unknown Spot'})`
+              : location.trim()
+          }
+          finalLocation = locString.trim() || 'Campus'
         }
       } catch (err) {
         console.error('AI processing failed:', err)
@@ -2848,7 +2897,7 @@ function ItemDetail({
                     <div className="flex items-center gap-1 mt-1">
                       <MapPin width={8} height={8} style={{ color: 'var(--color-text-tertiary)' }} />
                       <span className="text-[9px] truncate" style={{ color: 'var(--color-text-tertiary)' }}>
-                        {sItem.location}
+                        {canClientSeeLocation(sItem) ? sItem.location : 'Location hidden'}
                       </span>
                     </div>
                     <span className="text-[9px] mt-1 block" style={{ color: 'var(--color-text-tertiary)' }}>
@@ -3572,7 +3621,7 @@ function QuickSearchModal({
                       <span className={`category-badge ${isLost ? 'type-badge-lost' : 'type-badge-found'}`} style={{ fontSize: '8px', padding: '1px 4px' }}>
                         {item.type}
                       </span>
-                      {item.location}
+                      {canClientSeeLocation(item) ? item.location : 'Location hidden'}
                     </p>
                   </div>
                   <span className="text-[10px] shrink-0" style={{ color: 'var(--color-text-tertiary)' }}>
@@ -4673,7 +4722,7 @@ function LostFoundView({
                       <div className="flex items-center gap-1 mt-1">
                         <MapPin width={8} height={8} style={{ color: 'var(--color-text-tertiary)' }} />
                         <span className="text-[9px] truncate" style={{ color: 'var(--color-text-tertiary)' }}>
-                          {item.location}
+                          {canClientSeeLocation(item) ? item.location : 'Location hidden'}
                         </span>
                       </div>
                     </button>
@@ -4812,7 +4861,7 @@ function LostFoundView({
                       {item.title}
                     </p>
                     <p className="text-[9px] truncate" style={{ color: 'var(--color-text-tertiary)' }}>
-                      {item.location}
+                      {canClientSeeLocation(item) ? item.location : 'Location hidden'}
                     </p>
                   </button>
                 )
@@ -5185,7 +5234,7 @@ function LostFoundView({
                           {item.title}
                         </p>
                         <p className="text-[8px] truncate mt-0.5" style={{ color: 'var(--color-text-tertiary)' }}>
-                          {item.location}
+                          {canClientSeeLocation(item) ? item.location : 'Location hidden'}
                         </p>
                       </button>
                     )
