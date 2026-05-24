@@ -4561,8 +4561,9 @@ function LostFoundView({
       if (typeFilter !== 'all') params.set('type', typeFilter)
       if (categoryFilter !== 'All') params.set('category', categoryFilter)
       if (debouncedSearchQuery) params.set('search', debouncedSearchQuery)
+      params.set('t', Date.now().toString())
 
-      const res = await fetch(`/api/lost-found?${params.toString()}`)
+      const res = await fetch(`/api/lost-found?${params.toString()}`, { cache: 'no-store' })
       const data = await res.json()
       const fetchedItems = data.items || []
       setItems(fetchedItems)

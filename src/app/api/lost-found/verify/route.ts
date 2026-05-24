@@ -98,7 +98,7 @@ export async function POST(request: Request) {
     };
 
     // 4. If match is successful and we have context, update database
-    if (normalized.match && normalized.confidence >= 80) {
+    if (normalized.match && normalized.confidence >= 75) {
       // a. Mark found item as resolved
       await supabase
         .from('lost_found_items')
