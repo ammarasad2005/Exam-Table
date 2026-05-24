@@ -1,4 +1,6 @@
 import { NextResponse } from 'next/server'
+import fs from 'fs'
+import path from 'path'
 
 export const dynamic = 'force-dynamic'
 
@@ -11,6 +13,16 @@ export async function POST(request: Request) {
     }
 
     const token = process.env.GITHUB_TOKEN
+    
+    // Dynamically load the campus map rules file
+    let rulesContent = ''
+    try {
+      const filePath = path.join(process.cwd(), 'docs/campus_map_rules.md')
+      rulesContent = fs.readFileSync(filePath, 'utf8')
+    } catch (err) {
+      console.warn("Could not read docs/campus_map_rules.md, using defaults.", err)
+    }
+
     if (!token) {
       console.error('GITHUB_TOKEN is not set')
       return NextResponse.json({ 
@@ -42,24 +54,19 @@ export async function POST(request: Request) {
             content: `You are a high-precision campus location parser for a university Lost & Found platform. 
             Your goal is to parse a text note describing an item's location and segment it into structured details.
             
-            Strictly differentiate between:
-            1. WHERE the item was originally found/lost (discovered_at)
-            2. WHERE the item is currently kept for collection (currently_held_at)
+            Strictly follow these campus map layout blocks, abbreviation rules, and custodian guidelines:
+            ${rulesContent || 'Parse building names and custodians.'}
             
-            Normalization Rules:
-            - Normalize building names: "Computer Science" or "CS Block" -> "CS", "Electrical Engineering" or "EE Block" -> "EE", "Business Administration" or "BBA Block" -> "BBA".
-            - Normalize custodians: "security", "guard", "security guard" -> "Guard"; "office", "dept office", "academic office" -> "Academic Office"; "me" or "myself" or empty -> "None".
-            
-            Return ONLY a valid JSON object matching this schema:
+            Return ONLY a valid JSON object matching this exact schema:
             {
               "discovered_at": {
-                "building": "CS" | "EE" | "BBA" | "Library" | "Cafeteria" | "Main Gate" | "Sports Ground" | "Admin Block" | "Unknown",
-                "area": string (e.g., "In Lab 4", "Near stairs", "1st Floor lobby", "Unknown")
+                "building": "CS" | "EE" | "BBA" | "C Block" | "D Block" | "C/D Block" | "Library" | "Cafeteria" | "Main Gate" | "Sports Ground" | "Admin Block" | "Unknown",
+                "area": string (e.g., "On the 4th floor bridge", "In Lab 4", "Near stairs", "1st Floor lobby", "Unknown")
               },
               "currently_held_at": {
                 "custodian": "Academic Office" | "Guard" | "Library Desk" | "Cafeteria Counter" | "None",
-                "building": "CS" | "EE" | "BBA" | "Library" | "Cafeteria" | "Main Gate" | "Admin Block" | "Unknown",
-                "area": string (e.g., "In drawer", "On table", "Security room", "None")
+                "building": "CS" | "EE" | "BBA" | "C Block" | "D Block" | "C/D Block" | "Library" | "Cafeteria" | "Main Gate" | "Admin Block" | "Unknown",
+                "area": string (e.g., "Left at discovery spot", "In drawer", "On table", "Security room", "None")
               }
             }`
           },
