@@ -1,7 +1,7 @@
 'use client'
 
-import { useState, useEffect, useCallback, useRef } from 'react'
-import { useRouter } from 'next/navigation'
+import { useState, useEffect, useCallback, useRef, Suspense } from 'react'
+import { useRouter, useSearchParams } from 'next/navigation'
 import { motion, AnimatePresence } from 'framer-motion'
 import {
   CalendarDays,
@@ -1373,40 +1373,255 @@ function ItemCard({
   )
 }
 
-// ─── Component: ResolveDialog ───────────────────────────────────────────────
 
-function ResolveDialog({
-  open,
-  onOpenChange,
-  onConfirm,
-  itemName,
-}: {
+// ─── Component: UnclaimConfirmDialog ─────────────────────────────────────────
+
+interface UnclaimConfirmDialogProps {
   open: boolean
   onOpenChange: (open: boolean) => void
-  onConfirm: () => void
+  claimId: string
   itemName: string
-}) {
+  onSuccess: () => void
+}
+
+function UnclaimConfirmDialog({ open, onOpenChange, claimId, itemName, onSuccess }: UnclaimConfirmDialogProps) {
+  const [email, setEmail] = useState('')
+  const [submitting, setSubmitting] = useState(false)
+  const [errorMsg, setErrorMsg] = useState('')
+  const { toast } = useToast()
+
+  const handleConfirm = async (e: React.MouseEvent) => {
+    e.preventDefault()
+    if (!email) return
+    setSubmitting(true)
+    setErrorMsg('')
+    try {
+      const res = await fetch('/api/lost-found/claim/unclaim', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ claimId, email }),
+      })
+      const data = await res.json()
+      if (res.ok) {
+        toast({ title: 'Claim Removed', description: 'You have unclaimed this item.' })
+        onSuccess()
+        onOpenChange(false)
+      } else {
+        setErrorMsg(data.error || 'Failed to unclaim.')
+      }
+    } catch (err) {
+      setErrorMsg('Failed to connect to verification server.')
+    } finally {
+      setSubmitting(false)
+    }
+  }
+
   return (
-    <AlertDialog open={open} onOpenChange={onOpenChange}>
+    <AlertDialog open={open} onOpenChange={(val) => { if (!submitting) { onOpenChange(val); setEmail(''); setErrorMsg(''); } }}>
       <AlertDialogContent>
         <AlertDialogHeader>
-          <AlertDialogTitle>Mark as Resolved?</AlertDialogTitle>
+          <AlertDialogTitle className="text-red-500 flex items-center gap-2">
+            <AlertTriangle width={18} height={18} />
+            Unclaim Item
+          </AlertDialogTitle>
           <AlertDialogDescription>
-            Are you sure you want to mark &ldquo;{itemName}&rdquo; as resolved? This action cannot be undone and the item will be moved to the resolved section.
+            Are you sure you want to cancel your claim for &ldquo;{itemName}&rdquo;? To verify your identity, please enter your registered institutional email.
           </AlertDialogDescription>
         </AlertDialogHeader>
+        <div className="py-4 space-y-3">
+          <input
+            type="email"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            placeholder="e.g., i231234@isb.nu.edu.pk"
+            className="w-full rounded-lg px-3 py-2 text-sm border border-[var(--color-border)] bg-[var(--color-bg-subtle)] outline-none focus:border-red-500"
+          />
+          {errorMsg && (
+            <p className="text-xs text-red-500 flex items-center gap-1 font-medium bg-red-500/10 p-2 rounded-lg border border-red-500/20">
+              <AlertCircle width={14} height={14} className="shrink-0" />
+              {errorMsg}
+            </p>
+          )}
+        </div>
         <AlertDialogFooter>
-          <AlertDialogCancel>Cancel</AlertDialogCancel>
+          <AlertDialogCancel disabled={submitting}>Cancel</AlertDialogCancel>
           <AlertDialogAction
-            onClick={onConfirm}
-            className="bg-[var(--accent-af)] text-white hover:opacity-90"
+            onClick={handleConfirm}
+            disabled={!email.match(/^[a-zA-Z][0-9]{6}@isb\.nu\.edu\.pk$/) || submitting}
+            className="bg-red-500 text-white hover:bg-red-600 hover:opacity-90"
           >
-            <CheckCircle2 width={14} height={14} className="inline mr-1 -mt-0.5" />
-            Mark Resolved
+            {submitting ? <Loader2 className="animate-spin mr-2" width={14} height={14} /> : <X width={14} height={14} className="mr-2" />}
+            Confirm Unclaim
           </AlertDialogAction>
         </AlertDialogFooter>
       </AlertDialogContent>
     </AlertDialog>
+  )
+}
+
+// ─── Component: VerifyHoldDialog ─────────────────────────────────────────────
+
+interface VerifyHoldDialogProps {
+  open: boolean
+  onOpenChange: (open: boolean) => void
+  claimId: string
+  onClaimerEmailEstablished?: (email: string) => void
+  onResolutionCompleted: () => void
+}
+
+function VerifyHoldDialog({ open, onOpenChange, claimId, onClaimerEmailEstablished, onResolutionCompleted }: VerifyHoldDialogProps) {
+  const [claim, setClaim] = useState<any>(null)
+  const [loading, setLoading] = useState(true)
+  const [verifying, setVerifying] = useState(false)
+  const [unclaimOpen, setUnclaimOpen] = useState(false)
+  const { toast } = useToast()
+
+  useEffect(() => {
+    if (!open) return
+    const fetchDetails = async () => {
+      setLoading(true)
+      try {
+        const res = await fetch(`/api/lost-found/claim/details?claimId=${claimId}`)
+        const data = await res.json()
+        if (res.ok && data.claim) {
+          setClaim(data.claim)
+          if (data.claim.claimerEmail) {
+            localStorage.setItem('lf-claimer-email', data.claim.claimerEmail)
+            if (onClaimerEmailEstablished) {
+              onClaimerEmailEstablished(data.claim.claimerEmail)
+            }
+          }
+        } else {
+          toast({ title: 'Error', description: data.error || 'Failed to fetch claim details.', variant: 'destructive' })
+          onOpenChange(false)
+        }
+      } catch (err) {
+        toast({ title: 'Error', description: 'Failed to load claim verification.', variant: 'destructive' })
+        onOpenChange(false)
+      } finally {
+        setLoading(false)
+      }
+    }
+    fetchDetails()
+  }, [open, claimId, onOpenChange, toast, onClaimerEmailEstablished])
+
+  const handleVerifyCollection = async () => {
+    setVerifying(true)
+    try {
+      const res = await fetch('/api/lost-found/claim/verify-hold', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ claimId })
+      })
+      const data = await res.json()
+      if (res.ok) {
+        toast({ 
+          title: 'Retrieval Verified!', 
+          description: 'Thank you! Both lost and found reports have been successfully marked as resolved.',
+          duration: 6000 
+        })
+        onResolutionCompleted()
+        onOpenChange(false)
+      } else {
+        toast({ title: 'Verification Failed', description: data.error || 'Failed to verify retrieval.', variant: 'destructive' })
+      }
+    } catch (err) {
+      toast({ title: 'Error', description: 'Failed to connect to verification server.', variant: 'destructive' })
+    } finally {
+      setVerifying(false)
+    }
+  }
+
+  if (!open) return null
+
+  return (
+    <>
+      <AlertDialog open={open} onOpenChange={(val) => { if (!verifying && !loading) onOpenChange(val) }}>
+        <AlertDialogContent className="glass-morphism border-[var(--color-border)] max-w-md">
+          {loading ? (
+            <div className="flex flex-col items-center justify-center py-12 space-y-4">
+              <Loader2 className="animate-spin text-[var(--accent-lf)]" width={32} height={32} />
+              <p className="text-sm font-semibold" style={{ color: 'var(--color-text-secondary)' }}>
+                Loading claim verification context...
+              </p>
+            </div>
+          ) : (
+            claim && (
+              <>
+                <AlertDialogHeader className="text-center flex flex-col items-center">
+                  <div className="w-12 h-12 rounded-full bg-[#16a34a]/10 flex items-center justify-center mb-2">
+                    <Handshake width={24} height={24} style={{ color: '#16a34a' }} />
+                  </div>
+                  <AlertDialogTitle className="text-xl font-black tracking-tight" style={{ color: 'var(--color-text-primary)' }}>
+                    Have you obtained your item?
+                  </AlertDialogTitle>
+                  <AlertDialogDescription className="text-sm text-center leading-relaxed" style={{ color: 'var(--color-text-secondary)' }}>
+                    We found a semantic match for your lost report with &ldquo;<span className="font-bold text-[var(--color-text-primary)]">{claim.item?.title}</span>&rdquo;. 
+                    Please help us keep our campus records transparent and clean by verifying if you have successfully received it.
+                  </AlertDialogDescription>
+                </AlertDialogHeader>
+
+                <div className="bg-[var(--color-bg-subtle)] border border-[var(--color-border)] rounded-xl p-4 my-3 text-xs space-y-2">
+                  <div className="flex justify-between">
+                    <span style={{ color: 'var(--color-text-tertiary)' }}>Category:</span>
+                    <span className="font-semibold">{claim.item?.category}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span style={{ color: 'var(--color-text-tertiary)' }}>Matching Status:</span>
+                    <span className="px-2 py-0.5 rounded-full text-[9px] font-bold bg-[#ea580c]/10 text-[#ea580c]">
+                      Claim Pending
+                    </span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span style={{ color: 'var(--color-text-tertiary)' }}>Registered Email:</span>
+                    <span className="font-mono text-[#16a34a]">{claim.claimerEmail}</span>
+                  </div>
+                </div>
+
+                <div className="p-3 bg-[#16a34a]/5 rounded-lg border border-[#16a34a]/20 text-[10px] text-[#16a34a] text-center leading-relaxed">
+                  💡 By confirming, you verify that you have successfully retrieved this item. This will resolve the report for you and the finder, closing all matching queues.
+                </div>
+
+                <AlertDialogFooter className="flex flex-col sm:flex-row gap-2 mt-4">
+                  <button
+                    onClick={() => setUnclaimOpen(true)}
+                    disabled={verifying}
+                    className="flex-1 rounded-xl py-3 text-xs font-bold transition-all border border-red-500/20 hover:bg-red-500/10 text-red-500 disabled:opacity-50"
+                  >
+                    No, Unclaim Item
+                  </button>
+                  <button
+                    onClick={handleVerifyCollection}
+                    disabled={verifying}
+                    className="flex-1 rounded-xl py-3 text-xs font-black uppercase tracking-wider transition-all text-white bg-[#16a34a] hover:opacity-90 disabled:opacity-50 flex items-center justify-center gap-1.5"
+                  >
+                    {verifying ? (
+                      <Loader2 className="animate-spin" width={14} height={14} />
+                    ) : (
+                      <CheckCircle2 width={14} height={14} />
+                    )}
+                    Yes, I Got It
+                  </button>
+                </AlertDialogFooter>
+              </>
+            )
+          )}
+        </AlertDialogContent>
+      </AlertDialog>
+
+      {claim && (
+        <UnclaimConfirmDialog
+          open={unclaimOpen}
+          onOpenChange={setUnclaimOpen}
+          claimId={claimId}
+          itemName={claim.item?.title || ''}
+          onSuccess={() => {
+            onOpenChange(false)
+            onResolutionCompleted()
+          }}
+        />
+      )}
+    </>
   )
 }
 
@@ -2181,6 +2396,10 @@ function ItemDetail({
   onToggleBookmark,
   similarItems,
   onNavigateItem,
+  storedClaimerEmail,
+  onClaimerEmailChange,
+  onClaimUpdated,
+  myClaimedItemIds,
 }: {
   item: LostFoundItem
   onBack: () => void
@@ -2189,14 +2408,19 @@ function ItemDetail({
   onToggleBookmark?: (id: string) => void
   similarItems?: LostFoundItem[]
   onNavigateItem?: (item: LostFoundItem) => void
+  storedClaimerEmail: string | null
+  onClaimerEmailChange: (email: string | null) => void
+  onClaimUpdated?: () => void
+  myClaimedItemIds?: string[]
 }) {
   const isLost = item.type === 'lost'
   const isMobile = useIsMobile()
-  const [resolveDialogOpen, setResolveDialogOpen] = useState(false)
   const [lightboxOpen, setLightboxOpen] = useState(false)
+  const [unclaimConfirmOpen, setUnclaimConfirmOpen] = useState(false)
+  const [selectedUnclaimId, setSelectedUnclaimId] = useState<string | null>(null)
   const [viewCount, setViewCount] = useState(0)
   const [feedbackGiven, setFeedbackGiven] = useState<'helpful' | 'not-helpful' | null>(null)
-  const [claims, setClaims] = useState<{ id: string; claimer_id: string; created_at: string }[]>([])
+  const [claims, setClaims] = useState<{ id: string; claimer_id: string; claimer_email?: string; created_at: string }[]>([])
   const [claiming, setClaiming] = useState(false)
   const [claimDialogOpen, setClaimDialogOpen] = useState(false)
   const [claimerEmail, setClaimerEmail] = useState('')
@@ -2222,13 +2446,13 @@ function ItemDetail({
   const rawHand = item.rawSubmittedAt || item.handoffNote || ''
   
   const myId = getPersistentUserId()
-  const isClaimant = claims.some(c => c.claimer_id === myId)
+  const isClaimant = sessionClaimVerified || (myClaimedItemIds && myClaimedItemIds.includes(item.id)) || claims.some(c => c.claimer_id === myId || (storedClaimerEmail && c.claimer_email?.toLowerCase().trim() === storedClaimerEmail.toLowerCase().trim()))
   const isReporter = typeof window !== 'undefined' && getMyReportedItems().includes(item.id)
   const canSeeLocation = isReporter || isClaimant || item.isResolved || isLost || sessionClaimVerified
 
   const fetchClaims = useCallback(async () => {
     try {
-      const res = await fetch(`/api/lost-found/${item.id}`)
+      const res = await fetch(`/api/lost-found/${item.id}?t=${Date.now()}`, { cache: 'no-store' })
       const data = await res.json()
       // In the real app, data.item.claims would be populated via Supabase join
       if (data.item?.claims) setClaims(data.item.claims)
@@ -2281,6 +2505,8 @@ function ItemDetail({
       })
 
       if (res.ok) {
+        localStorage.setItem('lf-claimer-email', email)
+        onClaimerEmailChange(email)
         setHumbleMessageVisible(true)
         setSessionClaimVerified(true)
         toast({ 
@@ -2288,7 +2514,29 @@ function ItemDetail({
           description: 'Your lost report has been semantically matched. Location details revealed.' 
         })
         fetchClaims()
+        if (onClaimUpdated) onClaimUpdated()
         setClaimDialogOpen(false)
+      } else {
+        const errorData = await res.json()
+        if (res.status === 400 && errorData.error?.includes('already registered a pending claim')) {
+          localStorage.setItem('lf-claimer-email', email)
+          onClaimerEmailChange(email)
+          setHumbleMessageVisible(true)
+          setSessionClaimVerified(true)
+          toast({
+            title: 'Claim Connected!',
+            description: 'You already have an active claim under this email. Showing claim details.'
+          })
+          fetchClaims()
+          if (onClaimUpdated) onClaimUpdated()
+          setClaimDialogOpen(false)
+        } else {
+          toast({ 
+            title: 'Claim Failed', 
+            description: errorData.error || 'Failed to process claim.', 
+            variant: 'destructive' 
+          })
+        }
       }
     } catch (err) {
       toast({ title: 'Error', description: 'Failed to process claim.', variant: 'destructive' })
@@ -2751,8 +2999,11 @@ function ItemDetail({
                     </button>
                     <button
                       onClick={() => {
-                        const myClaim = claims.find(c => c.claimer_id === myId)
-                        if (myClaim) handleUnclaim(myClaim.id)
+                        const myClaim = claims.find(c => c.claimer_id === myId || (storedClaimerEmail && c.claimer_email?.toLowerCase().trim() === storedClaimerEmail.toLowerCase().trim()))
+                        if (myClaim) {
+                          setSelectedUnclaimId(myClaim.id)
+                          setUnclaimConfirmOpen(true)
+                        }
                       }}
                       className="flex-1 rounded-xl py-3.5 text-xs font-black uppercase tracking-[0.12em] transition-all duration-200 flex items-center justify-center gap-2 hover:scale-[1.02] active:scale-[0.98] border border-red-500/20 hover:bg-red-500/10"
                       style={{ color: '#ef4444' }}
@@ -2765,17 +3016,6 @@ function ItemDetail({
               </>
             )}
 
-            {/* Reporter's resolve button */}
-            {isReporter && !isMobile && (
-              <button
-                onClick={() => setResolveDialogOpen(true)}
-                className="flex-1 rounded-xl py-3.5 text-xs font-black uppercase tracking-[0.12em] transition-all duration-200 flex items-center justify-center gap-2 hover:scale-[1.02] active:scale-[0.98] border-2"
-                style={{ borderColor: '#16a34a', color: '#16a34a', backgroundColor: 'rgba(22,163,74,0.05)' }}
-              >
-                <ShieldCheck width={14} height={14} />
-                Admin Resolve
-              </button>
-            )}
           </div>
 
           <div className="flex gap-2">
@@ -3157,6 +3397,20 @@ function ItemDetail({
         )}
       </div>
 
+      {selectedUnclaimId && (
+        <UnclaimConfirmDialog
+          open={unclaimConfirmOpen}
+          onOpenChange={setUnclaimConfirmOpen}
+          claimId={selectedUnclaimId}
+          itemName={item.title}
+          onSuccess={() => {
+            fetchClaims()
+            if (onClaimUpdated) onClaimUpdated()
+            if (onBack) onBack()
+          }}
+        />
+      )}
+
       {/* Claim-Sync Dialog */}
       <AlertDialog open={claimDialogOpen} onOpenChange={setClaimDialogOpen}>
         <AlertDialogContent>
@@ -3292,6 +3546,9 @@ function FilterSidebar({
   setShowMyReports,
   showBookmarked,
   setShowBookmarked,
+  showMyClaims,
+  setShowMyClaims,
+  setClaimerEmailPromptOpen,
   dateRange,
   setDateRange,
   hasFilters,
@@ -3310,6 +3567,9 @@ function FilterSidebar({
   setShowMyReports: (v: boolean) => void
   showBookmarked: boolean
   setShowBookmarked: (v: boolean) => void
+  showMyClaims: boolean
+  setShowMyClaims: (v: boolean) => void
+  setClaimerEmailPromptOpen: (v: boolean) => void
   dateRange: DateRange
   setDateRange: (d: DateRange) => void
   hasFilters: boolean
@@ -3469,6 +3729,72 @@ function FilterSidebar({
                     </button>
                   )
                 })}
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+      </div>
+
+      {/* My Items & Claims */}
+      <div className="space-y-2">
+        <button
+          onClick={() => toggleSection('myItems')}
+          className="flex items-center justify-between w-full group"
+        >
+          <label className="font-mono text-[9px] uppercase tracking-[0.12em] flex items-center gap-2 text-[var(--color-text-tertiary)] cursor-pointer group-hover:text-[var(--color-text-primary)] transition-colors">
+            <User width={10} height={10} />
+            Personal
+          </label>
+          <ChevronDown
+            width={12}
+            height={12}
+            className={`transition-transform duration-300 text-[var(--color-text-tertiary)] ${collapsedSections.myItems ? '' : 'rotate-180'}`}
+          />
+        </button>
+        <AnimatePresence initial={false}>
+          {!collapsedSections.myItems && (
+            <motion.div
+              initial={{ height: 0, opacity: 0 }}
+              animate={{ height: 'auto', opacity: 1 }}
+              exit={{ height: 0, opacity: 0 }}
+              transition={{ duration: 0.25, ease: 'easeInOut' }}
+              className="overflow-hidden"
+            >
+              <div className="flex flex-col gap-1 py-1">
+                <button
+                  key="my-reports"
+                  onClick={() => setShowMyReports(!showMyReports)}
+                  className="rounded-lg px-3 py-2 text-[10px] uppercase tracking-[0.06em] transition-all duration-150 text-left hover:translate-x-1 flex items-center gap-1.5"
+                  style={btnStyle(showMyReports)}
+                >
+                  <BookmarkCheck width={12} height={12} />
+                  My Reports
+                </button>
+                <button
+                  key="my-claims"
+                  onClick={() => {
+                    const email = localStorage.getItem('lf-claimer-email')
+                    if (!email) {
+                      setClaimerEmailPromptOpen(true)
+                    } else {
+                      setShowMyClaims(!showMyClaims)
+                    }
+                  }}
+                  className="rounded-lg px-3 py-2 text-[10px] uppercase tracking-[0.06em] transition-all duration-150 text-left hover:translate-x-1 flex items-center gap-1.5"
+                  style={btnStyle(showMyClaims)}
+                >
+                  <Handshake width={12} height={12} />
+                  My Claims
+                </button>
+                <button
+                  key="my-bookmarks"
+                  onClick={() => setShowBookmarked(!showBookmarked)}
+                  className="rounded-lg px-3 py-2 text-[10px] uppercase tracking-[0.06em] transition-all duration-150 text-left hover:translate-x-1 flex items-center gap-1.5"
+                  style={btnStyle(showBookmarked)}
+                >
+                  <Bookmark width={12} height={12} />
+                  Saved Items
+                </button>
               </div>
             </motion.div>
           )}
@@ -4034,6 +4360,23 @@ function LostFoundView({
   onSubViewChange: (sv: SubView) => void
   autoSelectItemId?: string | null
 }) {
+  const searchParams = useSearchParams()
+  const [showVerifyHoldDialog, setShowVerifyHoldDialog] = useState(false)
+  const [verifyClaimId, setVerifyClaimId] = useState<string | null>(null)
+
+  // Listen to verifyClaimId query param
+  useEffect(() => {
+    const claimIdParam = searchParams?.get('verifyClaimId')
+    if (claimIdParam) {
+      setVerifyClaimId(claimIdParam)
+      setShowVerifyHoldDialog(true)
+      
+      // Clean url parameter silently without reloading
+      const newUrl = window.location.pathname
+      window.history.replaceState({ ...window.history.state, as: newUrl, url: newUrl }, '', newUrl)
+    }
+  }, [searchParams])
+
   const [items, setItems] = useState<LostFoundItem[]>([])
   const [loading, setLoading] = useState(true)
   const [selectedItem, setSelectedItem] = useState<LostFoundItem | null>(null)
@@ -4068,8 +4411,36 @@ function LostFoundView({
   const [smartSearchResults, setSmartSearchResults] = useState<{ suggestions: { id: string; title: string; type: string; category: string; location: string; createdAt: string }[]; alternatives: string[]; aiSuggestion?: string | null; source?: string } | null>(null)
   const [smartSearchLoading, setSmartSearchLoading] = useState(false)
   const [duplicateWarning, setDuplicateWarning] = useState<{ title: string; timeAgo: string } | null>(null)
-  const [resolveDialogOpen, setResolveDialogOpen] = useState(false)
   const [locationZoneFilter, setLocationZoneFilter] = useState<string | null>(null)
+  const [showMyClaims, setShowMyClaims] = useState(false)
+  const [myClaimedItemIds, setMyClaimedItemIds] = useState<string[]>([])
+  const [claimerEmailPromptOpen, setClaimerEmailPromptOpen] = useState(false)
+  const [tempClaimerEmail, setTempClaimerEmail] = useState('')
+  const [loadingClaims, setLoadingClaims] = useState(false)
+  const [storedClaimerEmail, setStoredClaimerEmail] = useState<string | null>(null)
+
+  const fetchUserClaims = useCallback(async (email: string) => {
+    setLoadingClaims(true)
+    try {
+      const res = await fetch(`/api/lost-found/claim/user-claims?email=${encodeURIComponent(email)}`)
+      const data = await res.json()
+      if (res.ok && data.itemIds) {
+        setMyClaimedItemIds(data.itemIds)
+      }
+    } catch (err) {
+      console.error('Failed to fetch user claims:', err)
+    } finally {
+      setLoadingClaims(false)
+    }
+  }, [])
+
+  useEffect(() => {
+    if (storedClaimerEmail) {
+      fetchUserClaims(storedClaimerEmail)
+    } else {
+      setMyClaimedItemIds([])
+    }
+  }, [storedClaimerEmail, fetchUserClaims])
   const [showArchived, setShowArchived] = useState(false)
   const [activityFeed, setActivityFeed] = useState<ActivityItem[]>([])
   const activeItemsRef = useRef<LostFoundItem[]>([])
@@ -4082,6 +4453,7 @@ function LostFoundView({
       if (isArchived(i.createdAt)) return false // Archived items go to separate section
       if (showMyReports && !myReportedIds.includes(i.id)) return false
       if (showBookmarked && !bookmarkedIds.includes(i.id)) return false
+      if (showMyClaims && !myClaimedItemIds.includes(i.id)) return false
       if (!isInRange(i.createdAt, dateRange)) return false
       if (locationZoneFilter) {
         const itemZone = getZoneForLocation(i.location)
@@ -4139,6 +4511,14 @@ function LostFoundView({
     setRecentlyViewedIds(getRecentlyViewed())
     setBookmarkedIds(getBookmarkedItems())
     setUrgentIds(getUrgentItems())
+    
+    if (typeof window !== 'undefined') {
+      const email = localStorage.getItem('lf-claimer-email')
+      if (email) {
+        setStoredClaimerEmail(email)
+      }
+    }
+
     // Load view counts
     try {
       const counts = JSON.parse(localStorage.getItem('lf-view-counts') || '{}')
@@ -4531,6 +4911,7 @@ function LostFoundView({
     if (!i.isResolved) return false
     if (showMyReports && !myReportedIds.includes(i.id)) return false
     if (showBookmarked && !bookmarkedIds.includes(i.id)) return false
+    if (showMyClaims && !myClaimedItemIds.includes(i.id)) return false
     if (locationZoneFilter) {
       const itemZone = getZoneForLocation(i.location)
       if (itemZone !== locationZoneFilter) return false
@@ -4539,13 +4920,14 @@ function LostFoundView({
   })
   const resolvedCount = items.filter((i) => i.isResolved).length
 
-  const hasFilters = searchQuery !== '' || typeFilter !== 'all' || categoryFilter !== 'All' || showMyReports || showBookmarked || dateRange !== 'all' || locationZoneFilter !== null
+  const hasFilters = searchQuery !== '' || typeFilter !== 'all' || categoryFilter !== 'All' || showMyReports || showBookmarked || showMyClaims || dateRange !== 'all' || locationZoneFilter !== null
   const filterCount = [
     searchQuery !== '',
     typeFilter !== 'all',
     categoryFilter !== 'All',
     showMyReports,
     showBookmarked,
+    showMyClaims,
     dateRange !== 'all',
     locationZoneFilter !== null,
   ].filter(Boolean).length
@@ -5372,6 +5754,9 @@ function LostFoundView({
                   setShowMyReports={setShowMyReports}
                   showBookmarked={showBookmarked}
                   setShowBookmarked={setShowBookmarked}
+                  showMyClaims={showMyClaims}
+                  setShowMyClaims={setShowMyClaims}
+                  setClaimerEmailPromptOpen={setClaimerEmailPromptOpen}
                   dateRange={dateRange}
                   setDateRange={setDateRange}
                   hasFilters={hasFilters}
@@ -5510,6 +5895,14 @@ function LostFoundView({
           onToggleBookmark={handleToggleBookmarkDetail}
           similarItems={getSimilarItems(selectedItem)}
           onNavigateItem={handleNavigateSimilarItem}
+          storedClaimerEmail={storedClaimerEmail}
+          onClaimerEmailChange={setStoredClaimerEmail}
+          onClaimUpdated={() => {
+            if (storedClaimerEmail) {
+              fetchUserClaims(storedClaimerEmail)
+            }
+          }}
+          myClaimedItemIds={myClaimedItemIds}
         />
       )}
 
@@ -5592,18 +5985,6 @@ function LostFoundView({
                 <span className="text-[9px] font-semibold uppercase">WhatsApp</span>
               </button>
               <button
-                onClick={() => {
-                  if (!selectedQuickActionItem.isResolved) {
-                    setResolveDialogOpen(true)
-                  }
-                }}
-                className="flex flex-col items-center gap-1 p-2 rounded-lg transition-all active:scale-[0.95]"
-                style={{ color: 'var(--accent-af)' }}
-              >
-                <CheckCircle2 width={18} height={18} />
-                <span className="text-[9px] font-semibold uppercase">Resolve</span>
-              </button>
-              <button
                 onClick={() => setSelectedQuickActionItem(null)}
                 className="flex flex-col items-center gap-1 p-2 rounded-lg transition-all active:scale-[0.95]"
                 style={{ color: 'var(--color-text-tertiary)' }}
@@ -5616,19 +5997,61 @@ function LostFoundView({
         )}
       </AnimatePresence>
 
-      {/* Resolve Dialog for Quick Action Bar */}
-      <ResolveDialog
-        open={resolveDialogOpen}
-        onOpenChange={setResolveDialogOpen}
-        onConfirm={() => {
-          if (selectedQuickActionItem) {
-            handleResolve(selectedQuickActionItem.id)
-            setSelectedQuickActionItem(null)
-          }
-          setResolveDialogOpen(false)
-        }}
-        itemName={selectedQuickActionItem?.title || ''}
-      />
+      {verifyClaimId && (
+        <VerifyHoldDialog
+          open={showVerifyHoldDialog}
+          onOpenChange={setShowVerifyHoldDialog}
+          claimId={verifyClaimId}
+          onClaimerEmailEstablished={setStoredClaimerEmail}
+          onResolutionCompleted={() => {
+            fetchItems()
+            if (selectedItem) {
+              setSelectedItem(null)
+            }
+          }}
+        />
+      )}
+
+      {/* Claimant Email Prompt Dialog */}
+      <AlertDialog open={claimerEmailPromptOpen} onOpenChange={setClaimerEmailPromptOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Load My Claims</AlertDialogTitle>
+            <AlertDialogDescription>
+              To view all the active claims you have registered, please enter your institutional email address.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <div className="py-4">
+            <input
+              type="email"
+              value={tempClaimerEmail}
+              onChange={(e) => setTempClaimerEmail(e.target.value)}
+              placeholder="e.g., i231234@isb.nu.edu.pk"
+              className="w-full rounded-lg px-3 py-2 text-sm border border-[var(--color-border)] bg-[var(--color-bg-subtle)] outline-none focus:border-[var(--color-text-tertiary)]"
+            />
+          </div>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={(e) => {
+                e.preventDefault()
+                if (tempClaimerEmail.match(/^[a-zA-Z][0-9]{6}@isb\.nu\.edu\.pk$/)) {
+                  localStorage.setItem('lf-claimer-email', tempClaimerEmail)
+                  setStoredClaimerEmail(tempClaimerEmail)
+                  fetchUserClaims(tempClaimerEmail)
+                  setShowMyClaims(true)
+                  setClaimerEmailPromptOpen(false)
+                } else {
+                  toast({ title: 'Invalid Email', description: 'Please enter a valid institutional email (e.g., i231234@isb.nu.edu.pk).', variant: 'destructive' })
+                }
+              }}
+              className="bg-[var(--accent-lf)] text-white hover:opacity-90"
+            >
+              Load Claims
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   )
 }
@@ -5936,12 +6359,19 @@ export default function LostFoundPage() {
         className="flex flex-col flex-1 px-5 pt-4 pb-4 max-w-5xl mx-auto w-full"
         style={{ color: 'var(--color-text-primary)' }}
       >
-        <LostFoundView
-          onBack={handleBack}
-          subView={subView}
-          onSubViewChange={setSubView}
-          autoSelectItemId={searchSelectedItemId}
-        />
+        <Suspense fallback={
+          <div className="flex flex-col items-center justify-center py-24 space-y-4">
+            <Loader2 className="animate-spin text-[var(--accent-lf)]" width={32} height={32} />
+            <p className="text-sm font-semibold text-[var(--color-text-secondary)]">Loading Lost & Found...</p>
+          </div>
+        }>
+          <LostFoundView
+            onBack={handleBack}
+            subView={subView}
+            onSubViewChange={setSubView}
+            autoSelectItemId={searchSelectedItemId}
+          />
+        </Suspense>
         <div className="mt-12">
           <Footer onQuickLink={(action) => {
             if (action === 'report') {
