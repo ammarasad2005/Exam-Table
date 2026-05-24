@@ -2078,9 +2078,10 @@ function ReportForm({
                 type="button"
                 onClick={() => {
                   // This won't navigate during form, but shows the match info
+                  const canSee = canClientSeeLocation(mItem as any)
                   toast({
                     title: mItem.title,
-                    description: `${mItem.type.toUpperCase()} at ${mItem.location} — Contact: ${mItem.contactInfo}`,
+                    description: `${mItem.type.toUpperCase()} at ${canSee ? mItem.location : 'Location hidden'} — Contact: ${mItem.contactInfo}`,
                   })
                 }}
                 className="w-full rounded-lg p-3 text-left transition-all duration-150 hover:shadow-md"
@@ -2096,7 +2097,7 @@ function ReportForm({
                       {mItem.title}
                     </p>
                     <p className="text-[10px]" style={{ color: 'var(--color-text-tertiary)' }}>
-                      {mItem.location} &middot; {timeAgo(mItem.createdAt)}
+                      {canClientSeeLocation(mItem as any) ? mItem.location : 'Location hidden'} &middot; {timeAgo(mItem.createdAt)}
                     </p>
                   </div>
                   <span className={`category-badge ${mItem.type === 'lost' ? 'type-badge-lost' : 'type-badge-found'}`} style={{ fontSize: '8px', padding: '1px 4px' }}>
@@ -5579,7 +5580,9 @@ function LostFoundView({
               </button>
               <button
                 onClick={() => {
-                  const text = encodeURIComponent(`🔍 [${selectedQuickActionItem.type.toUpperCase()}] ${selectedQuickActionItem.title}\n📍 ${selectedQuickActionItem.location}\n📞 Contact: ${selectedQuickActionItem.contactInfo}\n\nFAST Isb Lost & Found`)
+                  const canSee = canClientSeeLocation(selectedQuickActionItem)
+                  const displayLoc = canSee ? selectedQuickActionItem.location : 'Location hidden'
+                  const text = encodeURIComponent(`🔍 [${selectedQuickActionItem.type.toUpperCase()}] ${selectedQuickActionItem.title}\n📍 ${displayLoc}\n📞 Contact: ${selectedQuickActionItem.contactInfo}\n\nFAST Isb Lost & Found`)
                   window.open(`https://wa.me/?text=${text}`, '_blank')
                 }}
                 className="flex flex-col items-center gap-1 p-2 rounded-lg transition-all active:scale-[0.95]"
