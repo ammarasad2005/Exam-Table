@@ -155,7 +155,7 @@ export async function POST(request: NextRequest) {
         handoff_note: handoffNote,
         structured_location: structuredLocation,
         date: new Date(date).toISOString(),
-        contact_info: contactInfo.trim(),
+        contact_info: contactInfo.toLowerCase().trim(),
         reporter_name: reporterName?.trim() || null,
         image_url: imageUrl?.trim() || null,
       })

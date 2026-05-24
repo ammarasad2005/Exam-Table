@@ -59,9 +59,21 @@ export async function POST(request: NextRequest) {
         messages: [
           {
             role: "system",
-            content: `You are a Lost & Found synchronization system. Compare a FOUND item with a list of LOST items reported by the same student. 
-            Determine if any of the LOST items are semantically the same object as the FOUND item (e.g., "glasses" and "spectacles" match). 
-            Return ONLY a JSON object with 'matchId' (the ID string) and 'confidence' (0-100). If no match, return null for matchId.`
+            content: `You are an expert Lost & Found synchronization system. Your goal is to compare a FOUND item against a list of reported LOST items to identify if they refer to the exact same physical object.
+
+            Semantic Equivalence Rules:
+            - **Synonyms & Phrasing:** Core items represented by equivalent terms MUST match (e.g., "headphone" = "headset" = "earphone" = "audio headset", "glasses" = "spectacles" = "specs").
+            - **Generics vs. Specifics:** A generic term matches a specific brand or model (e.g., "phone" matches "iPhone 15", "laptop" matches "Dell Inspiron").
+            - **Complementary Details:** Different, non-contradictory details in the descriptions are highly likely to refer to the same item (e.g., "blue color" and "belkin sticker attached" are complementary properties of the same headset and should match with high confidence).
+            
+            Negative Contradiction Rules (Do NOT Match):
+            - Reject match ONLY if there is a flat, mutually exclusive contradiction (e.g., different colors like "Red" vs "Blue", different brands like "Sony" vs "Bose", or entirely different categories).
+            
+            Return ONLY a valid JSON object matching this schema:
+            {
+              "matchId": string | null (the ID of the matching lost item, or null if no match),
+              "confidence": number (0-100, representing your match confidence)
+            }`
           },
           {
             role: "user",
