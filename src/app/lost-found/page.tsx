@@ -1148,13 +1148,14 @@ function ItemCard({
 }) {
   const isLost = item.type === 'lost'
   const [descExpanded, setDescExpanded] = useState(false)
-  const [showOriginalLocPopup, setShowOriginalLocPopup] = useState(false)
+  const [showFoundLocPopup, setShowFoundLocPopup] = useState(false)
+  const [showSubmittedLocPopup, setShowSubmittedLocPopup] = useState(false)
   
   const canSeeLocation = canClientSeeLocation(item)
 
-  const locationDisplay = isLost 
-    ? (item.location || 'Location not provided') 
-    : (canSeeLocation ? item.location : 'Claim to reveal location')
+  const locationDisplay = isLost
+    ? (item.parsedFoundAt || item.location || 'Location not provided')
+    : (canSeeLocation ? (item.parsedFoundAt || item.location) : 'Claim to reveal location')
 
   const reporterName = item.reporterName || null
 
@@ -1224,25 +1225,41 @@ function ItemCard({
         <div className="relative">
           {descExpanded && (
              <div className="space-y-3 animate-in fade-in slide-in-from-top-1">
-                <div className="flex flex-wrap gap-x-3 gap-y-1">
+                <div className="space-y-2">
+                  {/* Found At row */}
                   <span className="flex items-center gap-1.5 text-[11px] font-medium text-[var(--color-text-secondary)]">
-                    <MapPin width={12} height={12} className="text-[var(--color-text-tertiary)]" />
-                    <span className={!canSeeLocation && !isLost ? "text-[10px] opacity-60 italic" : ""}>
+                    <MapPin width={12} height={12} className="text-[var(--color-text-tertiary)] shrink-0" />
+                    <span className={!canSeeLocation && !isLost ? 'text-[10px] opacity-60 italic' : ''}>
                       {locationDisplay}
                     </span>
-                    {canSeeLocation && (rawLoc || rawHand) && (
+                    {canSeeLocation && rawLoc && (
                       <button
-                        onClick={(e) => {
-                          e.stopPropagation()
-                          setShowOriginalLocPopup(true)
-                        }}
-                        className="ml-1.5 p-0.5 rounded-full hover:bg-[var(--color-border)] text-[var(--color-text-tertiary)] hover:text-[var(--color-text-primary)] transition-all transform active:scale-95"
-                        title="View reporter's original location description"
+                        onClick={(e) => { e.stopPropagation(); setShowFoundLocPopup(true) }}
+                        className="ml-0.5 p-0.5 rounded-full hover:bg-[var(--color-border)] text-[var(--color-text-tertiary)] hover:text-[var(--color-text-primary)] transition-all active:scale-95"
+                        title="View reporter's original found location"
                       >
                         <Info width={11} height={11} />
                       </button>
                     )}
                   </span>
+
+                  {/* Submitted At row — found items only */}
+                  {!isLost && canSeeLocation && (item.parsedSubmittedAt || rawHand) && (
+                    <span className="flex items-center gap-1.5 text-[11px] font-medium" style={{ color: '#16a34a' }}>
+                      <ShieldCheck width={12} height={12} className="shrink-0" style={{ color: '#16a34a' }} />
+                      <span>{item.parsedSubmittedAt || rawHand}</span>
+                      {rawHand && (
+                        <button
+                          onClick={(e) => { e.stopPropagation(); setShowSubmittedLocPopup(true) }}
+                          className="ml-0.5 p-0.5 rounded-full hover:bg-[#16a34a]/20 transition-all active:scale-95"
+                          style={{ color: '#16a34a' }}
+                          title="View reporter's original handoff message"
+                        >
+                          <Info width={11} height={11} />
+                        </button>
+                      )}
+                    </span>
+                  )}
                 </div>
                 
                 <p className="text-xs leading-relaxed text-[var(--color-text-secondary)]">
@@ -1283,71 +1300,71 @@ function ItemCard({
         </div>
       </div>
 
-      {/* Reporter's Original Location Message Popup */}
+      {/* Found At — Reporter Original Message Popup */}
       <AnimatePresence>
-        {showOriginalLocPopup && (
-          <div 
+        {showFoundLocPopup && (
+          <div
             className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm"
-            onClick={(e) => {
-              e.stopPropagation()
-              setShowOriginalLocPopup(false)
-            }}
+            onClick={(e) => { e.stopPropagation(); setShowFoundLocPopup(false) }}
           >
             <motion.div
               initial={{ scale: 0.95, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
               exit={{ scale: 0.95, opacity: 0 }}
-              className="w-full max-w-sm rounded-2xl p-5 shadow-2xl border border-[var(--color-border)] space-y-4 text-left"
-              style={{
-                backgroundColor: 'var(--color-bg-raised)',
-              }}
+              className="w-full max-w-sm rounded-2xl p-5 shadow-2xl border border-[var(--color-border)] space-y-3 text-left"
+              style={{ backgroundColor: 'var(--color-bg-raised)' }}
               onClick={(e) => e.stopPropagation()}
             >
               <div className="flex items-center justify-between border-b border-[var(--color-border)] pb-2.5">
                 <h4 className="font-body text-sm font-bold text-[var(--color-text-primary)] flex items-center gap-2">
-                  <Info width={16} height={16} style={{ color: 'var(--accent-lf)' }} />
-                  Original Reporter Message
+                  <MapPin width={15} height={15} style={{ color: 'var(--accent-lf)' }} />
+                  {isLost ? 'Where Reporter Said They Lost It' : 'Where Reporter Said They Found It'}
                 </h4>
                 <button
-                  onClick={() => setShowOriginalLocPopup(false)}
+                  onClick={() => setShowFoundLocPopup(false)}
                   className="p-1 rounded-lg hover:bg-[var(--color-border)] text-[var(--color-text-tertiary)] hover:text-[var(--color-text-primary)] transition-colors"
                 >
                   <X width={14} height={14} />
                 </button>
               </div>
+              <blockquote className="pl-3 border-l-2 border-[var(--accent-lf)] text-sm italic leading-relaxed text-[var(--color-text-secondary)]">
+                &ldquo;{rawLoc}&rdquo;
+              </blockquote>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
 
-              <div className="space-y-3">
-                {rawLoc && (
-                  <div>
-                    <span className="font-mono text-[9px] uppercase tracking-wider block opacity-60 mb-1">
-                      {isLost ? 'Reported Lost Location:' : 'Reported Found Location:'}
-                    </span>
-                    <blockquote className="pl-3 border-l-2 border-[var(--accent-lf)] text-xs italic leading-relaxed text-[var(--color-text-secondary)]">
-                      &ldquo;{rawLoc}&rdquo;
-                    </blockquote>
-                  </div>
-                )}
-
-                {rawHand && !isLost && (
-                  <div>
-                    <span className="font-mono text-[9px] uppercase tracking-wider block opacity-60 mb-1">
-                      Reported Handoff / Custody Note:
-                    </span>
-                    <blockquote className="pl-3 border-l-2 border-emerald-500 text-xs italic leading-relaxed text-[var(--color-text-secondary)]">
-                      &ldquo;{rawHand}&rdquo;
-                    </blockquote>
-                  </div>
-                )}
-              </div>
-
-              <div className="pt-2 flex justify-end">
+      {/* Submitted At — Reporter Original Message Popup */}
+      <AnimatePresence>
+        {showSubmittedLocPopup && (
+          <div
+            className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm"
+            onClick={(e) => { e.stopPropagation(); setShowSubmittedLocPopup(false) }}
+          >
+            <motion.div
+              initial={{ scale: 0.95, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.95, opacity: 0 }}
+              className="w-full max-w-sm rounded-2xl p-5 shadow-2xl border border-[#16a34a]/30 space-y-3 text-left"
+              style={{ backgroundColor: 'var(--color-bg-raised)' }}
+              onClick={(e) => e.stopPropagation()}
+            >
+              <div className="flex items-center justify-between border-b border-[#16a34a]/20 pb-2.5">
+                <h4 className="font-body text-sm font-bold text-[var(--color-text-primary)] flex items-center gap-2">
+                  <ShieldCheck width={15} height={15} style={{ color: '#16a34a' }} />
+                  Where Reporter Handed It Over
+                </h4>
                 <button
-                  onClick={() => setShowOriginalLocPopup(false)}
-                  className="px-4 py-1.5 rounded-xl text-xs font-bold bg-[var(--color-bg-subtle)] text-[var(--color-text-secondary)] hover:bg-[var(--color-border)] transition-all uppercase tracking-wider"
+                  onClick={() => setShowSubmittedLocPopup(false)}
+                  className="p-1 rounded-lg hover:bg-[var(--color-border)] text-[var(--color-text-tertiary)] hover:text-[var(--color-text-primary)] transition-colors"
                 >
-                  Close
+                  <X width={14} height={14} />
                 </button>
               </div>
+              <blockquote className="pl-3 border-l-2 border-emerald-500 text-sm italic leading-relaxed text-[var(--color-text-secondary)]">
+                &ldquo;{rawHand}&rdquo;
+              </blockquote>
             </motion.div>
           </div>
         )}
@@ -2351,7 +2368,8 @@ function ItemDetail({
   }
 
   const handleShare = async () => {
-    const text = `🔍 [${item.type.toUpperCase()}] ${item.title}\n📍 ${item.location}\n📅 ${formatDate(item.date)}\n📝 ${item.description}\n📞 Contact: ${item.contactInfo}\n\nReported on FAST Isb Lost & Found`
+    const displayLoc = canSeeLocation ? item.location : 'Location hidden'
+    const text = `🔍 [${item.type.toUpperCase()}] ${item.title}\n📍 ${displayLoc}\n📅 ${formatDate(item.date)}\n📝 ${item.description}\n📞 Contact: ${item.contactInfo}\n\nReported on FAST Isb Lost & Found`
     try {
       await navigator.clipboard.writeText(text)
       toast({
@@ -2368,7 +2386,8 @@ function ItemDetail({
   }
 
   const handleWhatsAppShare = () => {
-    const text = encodeURIComponent(`🔍 [${item.type.toUpperCase()}] ${item.title}\n📍 ${item.location}\n📅 ${formatDate(item.date)}\n📝 ${item.description}\n📞 Contact: ${item.contactInfo}\n\nReported on FAST Isb Lost & Found`)
+    const displayLoc = canSeeLocation ? item.location : 'Location hidden'
+    const text = encodeURIComponent(`🔍 [${item.type.toUpperCase()}] ${item.title}\n📍 ${displayLoc}\n📅 ${formatDate(item.date)}\n📝 ${item.description}\n📞 Contact: ${item.contactInfo}\n\nReported on FAST Isb Lost & Found`)
     window.open(`https://wa.me/?text=${text}`, '_blank')
   }
 
@@ -4393,7 +4412,9 @@ function LostFoundView({
 
   const handleShareItem = (e: React.MouseEvent, item: LostFoundItem) => {
     e.stopPropagation()
-    const text = `\u{1F50D} [${item.type.toUpperCase()}] ${item.title}\n\u{1F4CD} ${item.location}\n\u{1F4C5} ${formatDate(item.date)}\n\u{1F4DD} ${item.description}\n\u{1F4DE} Contact: ${item.contactInfo}\n\nReported on FAST Isb Lost & Found`
+    const canSee = canClientSeeLocation(item)
+    const displayLoc = canSee ? item.location : 'Location hidden'
+    const text = `\u{1F50D} [${item.type.toUpperCase()}] ${item.title}\n\u{1F4CD} ${displayLoc}\n\u{1F4C5} ${formatDate(item.date)}\n\u{1F4DD} ${item.description}\n\u{1F4DE} Contact: ${item.contactInfo}\n\nReported on FAST Isb Lost & Found`
     navigator.clipboard.writeText(text).then(() => {
       toast({
         title: 'Link copied to clipboard!',
@@ -4452,7 +4473,8 @@ function LostFoundView({
     const found = active.filter((i) => i.type === 'found')
     let text = `FAST Isb Lost & Found Summary\n${active.length} active items (${lost.length} lost, ${found.length} found)\n\n`
     active.forEach((item, idx) => {
-      text += `${idx + 1}. [${item.type.toUpperCase()}] ${item.title}\n   Location: ${item.location} | Date: ${formatDate(item.date)}\n`
+      const displayLoc = canClientSeeLocation(item) ? item.location : 'Location hidden'
+      text += `${idx + 1}. [${item.type.toUpperCase()}] ${item.title}\n   Location: ${displayLoc} | Date: ${formatDate(item.date)}\n`
     })
     text += '\nReported on FAST Isb Lost & Found'
     navigator.clipboard.writeText(text).then(() => {
@@ -4959,7 +4981,7 @@ function LostFoundView({
                         {sug.title}
                       </p>
                       <p className="text-[10px]" style={{ color: 'var(--color-text-tertiary)' }}>
-                        {sug.location} &middot; {timeAgo(sug.createdAt)}
+                        {canClientSeeLocation(sugItem) ? sug.location : 'Location hidden'} &middot; {timeAgo(sug.createdAt)}
                       </p>
                     </div>
                     <span className={`category-badge ${sug.type === 'lost' ? 'type-badge-lost' : 'type-badge-found'}`} style={{ fontSize: '8px', padding: '1px 4px' }}>
