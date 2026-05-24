@@ -2640,7 +2640,7 @@ function ItemDetail({
                     <p className="text-sm font-bold" style={{ color: 'var(--color-text-primary)' }}>
                       {canSeeLocation ? (item.structuredLocation?.discoveredAt?.building && item.structuredLocation.discoveredAt.building !== 'Unknown' 
                         ? item.structuredLocation.discoveredAt.building 
-                        : item.location) : (<span className="blur-[4px] select-none opacity-50">Location hidden to public</span>)}
+                        : (isLost ? item.location : 'Campus')) : (<span className="blur-[4px] select-none opacity-50">Location hidden to public</span>)}
                     </p>
                     {canSeeLocation && (rawLoc || rawHand) && (
                       <button
@@ -2683,9 +2683,9 @@ function ItemDetail({
                     </p>
                     <p className="text-[11px]" style={{ color: 'var(--color-text-tertiary)' }}>
                       {canSeeLocation ? (
-                        item.structuredLocation?.currentlyHeldAt?.building && item.structuredLocation.currentlyHeldAt.building !== 'Unknown' 
-                          ? `${item.structuredLocation.currentlyHeldAt.building} (${item.structuredLocation.currentlyHeldAt.area || 'Unknown Area'})`
-                          : 'Handed over to authorities'
+                        (item.structuredLocation?.currentlyHeldAt?.building && item.structuredLocation.currentlyHeldAt.building !== 'Unknown') || (item.structuredLocation?.currentlyHeldAt?.area && item.structuredLocation.currentlyHeldAt.area !== 'Unknown' && item.structuredLocation.currentlyHeldAt.area !== 'None')
+                          ? `${item.structuredLocation.currentlyHeldAt.building && item.structuredLocation.currentlyHeldAt.building !== 'Unknown' ? item.structuredLocation.currentlyHeldAt.building : ''} ${item.structuredLocation?.currentlyHeldAt?.area && item.structuredLocation.currentlyHeldAt.area !== 'Unknown' && item.structuredLocation.currentlyHeldAt.area !== 'None' ? '(' + item.structuredLocation.currentlyHeldAt.area + ')' : ''}`.trim()
+                          : (item.structuredLocation?.rawHandoff ? 'See info icon for exact wording' : 'Handed over to authorities')
                       ) : (
                         <span className="text-[9px] opacity-40">Verification required for access</span>
                       )}
