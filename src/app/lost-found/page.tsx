@@ -1323,7 +1323,7 @@ function ItemCard({
                       {isLost ? 'Reported Lost Location:' : 'Reported Found Location:'}
                     </span>
                     <blockquote className="pl-3 border-l-2 border-[var(--accent-lf)] text-xs italic leading-relaxed text-[var(--color-text-secondary)]">
-                      "{rawLoc}"
+                      &ldquo;{rawLoc}&rdquo;
                     </blockquote>
                   </div>
                 )}
@@ -1334,7 +1334,7 @@ function ItemCard({
                       Reported Handoff / Custody Note:
                     </span>
                     <blockquote className="pl-3 border-l-2 border-emerald-500 text-xs italic leading-relaxed text-[var(--color-text-secondary)]">
-                      "{rawHand}"
+                      &ldquo;{rawHand}&rdquo;
                     </blockquote>
                   </div>
                 )}
@@ -3237,7 +3237,7 @@ function ItemDetail({
                       {isLost ? 'Reported Lost Location:' : 'Reported Found Location:'}
                     </span>
                     <blockquote className="pl-3 border-l-2 border-[var(--accent-lf)] text-xs italic leading-relaxed text-[var(--color-text-secondary)]">
-                      "{rawLoc}"
+                      &ldquo;{rawLoc}&rdquo;
                     </blockquote>
                   </div>
                 )}
@@ -3248,7 +3248,7 @@ function ItemDetail({
                       Reported Handoff / Custody Note:
                     </span>
                     <blockquote className="pl-3 border-l-2 border-emerald-500 text-xs italic leading-relaxed text-[var(--color-text-secondary)]">
-                      "{rawHand}"
+                      &ldquo;{rawHand}&rdquo;
                     </blockquote>
                   </div>
                 )}
