@@ -101,6 +101,8 @@ interface LostFoundItem {
   handoffNote?: string
   parsedFoundAt?: string
   parsedSubmittedAt?: string
+  rawFoundAt?: string
+  rawSubmittedAt?: string
   date: string
   contactInfo: string
   reporterName?: string
@@ -1156,8 +1158,8 @@ function ItemCard({
 
   const reporterName = item.reporterName || null
 
-  const rawLoc = item.parsedFoundAt || (isLost ? item.location : item.location)
-  const rawHand = item.parsedSubmittedAt || item.handoffNote || ''
+  const rawLoc = item.rawFoundAt || (isLost ? item.location : '')
+  const rawHand = item.rawSubmittedAt || item.handoffNote || ''
 
   return (
     <motion.div
@@ -1493,10 +1495,10 @@ function ReportForm({
         if (data.submittedAt) finalParsedSubmittedAt = data.submittedAt
         const discLabel = finalParsedFoundAt || location.trim()
         const heldLabel = finalParsedSubmittedAt || handoffNote.trim()
-        finalLocation = heldLabel ? `${discLabel} → ${heldLabel}` : discLabel
+        finalLocation = discLabel
       } catch (err) {
         console.error('AI processing failed:', err)
-        finalLocation = handoffNote.trim() ? `${location.trim()} → ${handoffNote.trim()}` : location.trim()
+        finalLocation = location.trim()
       } finally {
         setProcessingLocation(false)
       }
@@ -1570,6 +1572,8 @@ function ReportForm({
         handoffNote: handoffNote.trim() || undefined,
         parsedFoundAt: finalParsedFoundAt,
         parsedSubmittedAt: finalParsedSubmittedAt,
+        rawFoundAt: location.trim() || undefined,
+        rawSubmittedAt: handoffNote.trim() || undefined,
         date: new Date(date).toISOString(),
         contactInfo: contactInfo.trim() || 'Not provided',
         reporterName: type === 'lost' ? reporterName.trim() : undefined,
@@ -2188,14 +2192,15 @@ function ItemDetail({
   const [comments, setComments] = useState(getComments(item.id))
   const [commentText, setCommentText] = useState('')
   const [showAllComments, setShowAllComments] = useState(false)
-  const [showOriginalLocPopup, setShowOriginalLocPopup] = useState(false)
+  const [showFoundLocPopup, setShowFoundLocPopup] = useState(false)
+  const [showSubmittedLocPopup, setShowSubmittedLocPopup] = useState(false)
   const { toast } = useToast()
   const itemIdShort = (item.id && item.id.length >= 8) ? item.id.slice(-8).toUpperCase() : (item.id || 'N/A')
 
   const reporterName = item.reporterName || null
 
-  const rawLoc = item.parsedFoundAt || (isLost ? item.location : item.location)
-  const rawHand = item.parsedSubmittedAt || item.handoffNote || ''
+  const rawLoc = item.rawFoundAt || (isLost ? item.location : '')
+  const rawHand = item.rawSubmittedAt || item.handoffNote || ''
   
   const myId = getPersistentUserId()
   const isClaimant = claims.some(c => c.claimer_id === myId)
@@ -2625,11 +2630,11 @@ function ItemDetail({
                         ? (item.parsedFoundAt || item.location || 'Not specified')
                         : (<span className="blur-[4px] select-none opacity-50">Location hidden to public</span>)}
                     </p>
-                    {canSeeLocation && (rawLoc || rawHand) && (
+                    {canSeeLocation && rawLoc && (
                       <button
-                        onClick={() => setShowOriginalLocPopup(true)}
+                        onClick={() => setShowFoundLocPopup(true)}
                         className="p-0.5 rounded-full hover:bg-[var(--color-border)] text-[var(--color-text-tertiary)] hover:text-[var(--color-text-primary)] transition-all transform active:scale-95"
-                        title="View reporter's original location message"
+                        title="View reporter's original found location message"
                       >
                         <Info width={12} height={12} />
                       </button>
@@ -2650,11 +2655,22 @@ function ItemDetail({
                     <ShieldCheck width={14} height={14} style={{ color: '#16a34a' }} />
                   </div>
                   <div>
-                    <p className="text-sm font-bold" style={{ color: '#16a34a' }}>
-                      {canSeeLocation
-                        ? (item.parsedSubmittedAt || rawHand || 'Not specified')
-                        : (<span className="blur-[4px] select-none opacity-50">Custodian hidden</span>)}
-                    </p>
+                    <div className="flex items-center gap-1.5 flex-wrap">
+                      <p className="text-sm font-bold" style={{ color: '#16a34a' }}>
+                        {canSeeLocation
+                          ? (item.parsedSubmittedAt || rawHand || 'Not specified')
+                          : (<span className="blur-[4px] select-none opacity-50">Custodian hidden</span>)}
+                      </p>
+                      {canSeeLocation && rawHand && (
+                        <button
+                          onClick={() => setShowSubmittedLocPopup(true)}
+                          className="p-0.5 rounded-full hover:bg-[#16a34a]/20 text-[#16a34a]/60 hover:text-[#16a34a] transition-all transform active:scale-95"
+                          title="View reporter's original handoff message"
+                        >
+                          <Info width={12} height={12} />
+                        </button>
+                      )}
+                    </div>
                   </div>
                 </div>
               </div>
@@ -3167,68 +3183,71 @@ function ItemDetail({
         <div className="print-ref">REF: #{itemIdShort}</div>
       </div>
 
-      {/* Reporter's Original Location Message Popup */}
+      {/* Found At — Reporter Original Message Popup */}
       <AnimatePresence>
-        {showOriginalLocPopup && (
-          <div 
+        {showFoundLocPopup && (
+          <div
             className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm no-print"
-            onClick={() => setShowOriginalLocPopup(false)}
+            onClick={() => setShowFoundLocPopup(false)}
           >
             <motion.div
               initial={{ scale: 0.95, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
               exit={{ scale: 0.95, opacity: 0 }}
-              className="w-full max-w-sm rounded-2xl p-5 shadow-2xl border border-[var(--color-border)] space-y-4 text-left"
-              style={{
-                backgroundColor: 'var(--color-bg-raised)',
-              }}
+              className="w-full max-w-sm rounded-2xl p-5 shadow-2xl border border-[var(--color-border)] space-y-3 text-left"
+              style={{ backgroundColor: 'var(--color-bg-raised)' }}
               onClick={(e) => e.stopPropagation()}
             >
               <div className="flex items-center justify-between border-b border-[var(--color-border)] pb-2.5">
                 <h4 className="font-body text-sm font-bold text-[var(--color-text-primary)] flex items-center gap-2">
-                  <Info width={16} height={16} style={{ color: 'var(--accent-lf)' }} />
-                  Original Reporter Message
+                  <MapPin width={15} height={15} style={{ color: 'var(--accent-lf)' }} />
+                  {isLost ? 'Where Reporter Said They Lost It' : 'Where Reporter Said They Found It'}
                 </h4>
                 <button
-                  onClick={() => setShowOriginalLocPopup(false)}
+                  onClick={() => setShowFoundLocPopup(false)}
                   className="p-1 rounded-lg hover:bg-[var(--color-border)] text-[var(--color-text-tertiary)] hover:text-[var(--color-text-primary)] transition-colors"
                 >
                   <X width={14} height={14} />
                 </button>
               </div>
+              <blockquote className="pl-3 border-l-2 border-[var(--accent-lf)] text-sm italic leading-relaxed text-[var(--color-text-secondary)]">
+                &ldquo;{rawLoc}&rdquo;
+              </blockquote>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
 
-              <div className="space-y-3">
-                {rawLoc && (
-                  <div>
-                    <span className="font-mono text-[9px] uppercase tracking-wider block opacity-60 mb-1">
-                      {isLost ? 'Reported Lost Location:' : 'Reported Found Location:'}
-                    </span>
-                    <blockquote className="pl-3 border-l-2 border-[var(--accent-lf)] text-xs italic leading-relaxed text-[var(--color-text-secondary)]">
-                      &ldquo;{rawLoc}&rdquo;
-                    </blockquote>
-                  </div>
-                )}
-
-                {rawHand && !isLost && (
-                  <div>
-                    <span className="font-mono text-[9px] uppercase tracking-wider block opacity-60 mb-1">
-                      Reported Handoff / Custody Note:
-                    </span>
-                    <blockquote className="pl-3 border-l-2 border-emerald-500 text-xs italic leading-relaxed text-[var(--color-text-secondary)]">
-                      &ldquo;{rawHand}&rdquo;
-                    </blockquote>
-                  </div>
-                )}
-              </div>
-
-              <div className="pt-2 flex justify-end">
+      {/* Submitted At — Reporter Original Message Popup */}
+      <AnimatePresence>
+        {showSubmittedLocPopup && (
+          <div
+            className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm no-print"
+            onClick={() => setShowSubmittedLocPopup(false)}
+          >
+            <motion.div
+              initial={{ scale: 0.95, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.95, opacity: 0 }}
+              className="w-full max-w-sm rounded-2xl p-5 shadow-2xl border border-[#16a34a]/30 space-y-3 text-left"
+              style={{ backgroundColor: 'var(--color-bg-raised)' }}
+              onClick={(e) => e.stopPropagation()}
+            >
+              <div className="flex items-center justify-between border-b border-[#16a34a]/20 pb-2.5">
+                <h4 className="font-body text-sm font-bold text-[var(--color-text-primary)] flex items-center gap-2">
+                  <ShieldCheck width={15} height={15} style={{ color: '#16a34a' }} />
+                  Where Reporter Handed It Over
+                </h4>
                 <button
-                  onClick={() => setShowOriginalLocPopup(false)}
-                  className="px-4 py-1.5 rounded-xl text-xs font-bold bg-[var(--color-bg-subtle)] text-[var(--color-text-secondary)] hover:bg-[var(--color-border)] transition-all uppercase tracking-wider"
+                  onClick={() => setShowSubmittedLocPopup(false)}
+                  className="p-1 rounded-lg hover:bg-[var(--color-border)] text-[var(--color-text-tertiary)] hover:text-[var(--color-text-primary)] transition-colors"
                 >
-                  Close
+                  <X width={14} height={14} />
                 </button>
               </div>
+              <blockquote className="pl-3 border-l-2 border-emerald-500 text-sm italic leading-relaxed text-[var(--color-text-secondary)]">
+                &ldquo;{rawHand}&rdquo;
+              </blockquote>
             </motion.div>
           </div>
         )}

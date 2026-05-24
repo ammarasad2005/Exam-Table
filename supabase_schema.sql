@@ -9,6 +9,8 @@ CREATE TABLE lost_found_items (
   handoff_note TEXT,
   parsed_found_at TEXT,
   parsed_submitted_at TEXT,
+  raw_found_at TEXT,
+  raw_submitted_at TEXT,
   date TIMESTAMP WITH TIME ZONE NOT NULL,
   contact_info TEXT NOT NULL,
   reporter_name TEXT,

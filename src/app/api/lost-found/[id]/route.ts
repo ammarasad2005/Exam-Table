@@ -33,6 +33,8 @@ export async function GET(
       handoffNote: item.handoff_note,
       parsedFoundAt: item.parsed_found_at ?? undefined,
       parsedSubmittedAt: item.parsed_submitted_at ?? undefined,
+      rawFoundAt: item.raw_found_at ?? undefined,
+      rawSubmittedAt: item.raw_submitted_at ?? undefined,
       date: item.date,
       contactInfo: item.contact_info,
       reporterName: item.reporter_name,
