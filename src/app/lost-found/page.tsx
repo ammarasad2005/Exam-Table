@@ -100,8 +100,10 @@ interface LostFoundItem {
   location: string
   handoffNote?: string
   structuredLocation?: {
-    discoveredAt: { building: string; area: string }
-    currentlyHeldAt: { custodian: string; building: string; area: string }
+    discoveredAt?: { building: string; area: string }
+    currentlyHeldAt?: { custodian: string; building: string; area: string }
+    rawLocation?: string
+    rawHandoff?: string
   }
   date: string
   contactInfo: string
