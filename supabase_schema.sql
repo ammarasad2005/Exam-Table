@@ -93,3 +93,31 @@ USING ( bucket_id = 'lost_found_images' );
 CREATE POLICY "Public Upload"
 ON storage.objects FOR INSERT
 WITH CHECK ( bucket_id = 'lost_found_images' );
+
+-- Table for campus reviews and suggestions
+CREATE TABLE IF NOT EXISTS campus_feedback (
+  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+  email TEXT,
+  category TEXT NOT NULL CHECK (category IN ('bug_report', 'suggestion', 'review', 'inquiry')),
+  rating INTEGER NOT NULL CHECK (rating >= 1 AND rating <= 5),
+  content TEXT NOT NULL,
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
+-- Enable RLS
+ALTER TABLE campus_feedback ENABLE ROW LEVEL SECURITY;
+
+-- Enable public insertions (so anyone on the campus can submit feedback)
+CREATE POLICY "Allow public insert feedback"
+ON campus_feedback FOR INSERT
+WITH CHECK (true);
+
+-- Enable public selects (we'll fetch safely on the backend)
+CREATE POLICY "Allow public read feedback"
+ON campus_feedback FOR SELECT
+USING (true);
+
+-- Enable public deletes (used by the secure admin dashboard)
+CREATE POLICY "Allow public delete feedback"
+ON campus_feedback FOR DELETE
+USING (true);

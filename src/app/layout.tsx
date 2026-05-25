@@ -7,6 +7,7 @@ import { Navbar } from '@/components/Navbar';
 import { FloatingMenu } from '@/components/FloatingMenu';
 import { Analytics } from '@vercel/analytics/next';
 import { Toaster } from '@/components/ui/toaster';
+import { FeedbackWidget } from '@/components/FeedbackWidget';
 
 const dmSans = DM_Sans({
   subsets: ['latin'],
@@ -74,6 +75,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           {children}
           <Navbar />
           <FloatingMenu />
+          <FeedbackWidget />
           <Toaster />
         </ThemeProvider>
         <Analytics />

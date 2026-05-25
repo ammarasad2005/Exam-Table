@@ -20,7 +20,14 @@ import {
   Calendar,
   AlertCircle,
   X,
-  FileText
+  FileText,
+  MessageSquare,
+  Heart,
+  Smile,
+  Lightbulb,
+  Bug,
+  Star,
+  HelpCircle
 } from 'lucide-react'
 import { Header } from '@/components/Header'
 import { useToast } from '@/hooks/use-toast'
@@ -60,6 +67,7 @@ export default function AdminPage() {
   // State Management
   const [checkingAuth, setCheckingAuth] = useState(true)
   const [authenticated, setAuthenticated] = useState(false)
+  const [adminView, setAdminView] = useState<'items' | 'feedback'>('items')
   
   // Login Form State
   const [usernameInput, setUsernameInput] = useState('')
@@ -70,16 +78,29 @@ export default function AdminPage() {
   // Dashboard Data State
   const [items, setItems] = useState<LostFoundItem[]>([])
   const [loadingItems, setLoadingItems] = useState(false)
+
+  // Feedback Data State
+  const [feedbackList, setFeedbackList] = useState<any[]>([])
+  const [loadingFeedback, setLoadingFeedback] = useState(false)
   
-  // Search & Filter State
+  // Search & Filter State (Items)
   const [searchQuery, setSearchQuery] = useState('')
   const [categoryFilter, setCategoryFilter] = useState('All')
   const [typeFilter, setTypeFilter] = useState('all') // 'all' | 'lost' | 'found'
   const [statusFilter, setStatusFilter] = useState('all') // 'all' | 'resolved' | 'active'
 
+  // Search & Filter State (Feedback)
+  const [feedbackSearchQuery, setFeedbackSearchQuery] = useState('')
+  const [feedbackCategoryFilter, setFeedbackCategoryFilter] = useState('All')
+  const [feedbackRatingFilter, setFeedbackRatingFilter] = useState('All')
+
   // Action States
   const [itemToDelete, setItemToDelete] = useState<LostFoundItem | null>(null)
   const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false)
+
+  const [feedbackToDelete, setFeedbackToDelete] = useState<any | null>(null)
+  const [feedbackDeleteConfirmOpen, setFeedbackDeleteConfirmOpen] = useState(false)
+
   const [actionLoading, setActionLoading] = useState<string | null>(null) // id of item being updated
 
   const categories = [
@@ -113,6 +134,25 @@ export default function AdminPage() {
     }
   }, [toast])
 
+  // Fetch all feedback submissions
+  const fetchFeedback = useCallback(async () => {
+    setLoadingFeedback(true)
+    try {
+      const res = await fetch('/api/feedback')
+      const data = await res.json()
+      setFeedbackList(data.feedback || [])
+    } catch (err) {
+      console.error('Failed to fetch feedback:', err)
+      toast({
+        title: 'Error',
+        description: 'Failed to load database feedback.',
+        variant: 'destructive'
+      })
+    } finally {
+      setLoadingFeedback(false)
+    }
+  }, [toast])
+
   // Check Authentication Status
   const checkAuth = useCallback(async () => {
     try {
@@ -121,13 +161,14 @@ export default function AdminPage() {
       setAuthenticated(data.authenticated)
       if (data.authenticated) {
         fetchItems()
+        fetchFeedback()
       }
     } catch (err) {
       console.error('Auth check failed:', err)
     } finally {
       setCheckingAuth(false)
     }
-  }, [fetchItems])
+  }, [fetchItems, fetchFeedback])
 
   useEffect(() => {
     checkAuth()
@@ -158,6 +199,7 @@ export default function AdminPage() {
           description: 'Logged in successfully as Administrator.'
         })
         fetchItems()
+        fetchFeedback()
       } else {
         const data = await res.json()
         setLoginError(data.error || 'Invalid credentials.')
@@ -178,6 +220,7 @@ export default function AdminPage() {
         setUsernameInput('')
         setPasswordInput('')
         setItems([])
+        setFeedbackList([])
         toast({
           title: 'Logged Out',
           description: 'You have logged out of the admin panel.'
@@ -265,6 +308,69 @@ export default function AdminPage() {
       setItemToDelete(null)
     }
   }
+
+  // Trigger Deletion of Feedback Entry
+  const handleFeedbackDeleteTrigger = (feedbackItem: any) => {
+    setFeedbackToDelete(feedbackItem)
+    setFeedbackDeleteConfirmOpen(true)
+  }
+
+  // Confirm Deletion of Feedback from database
+  const handleFeedbackDeleteConfirm = async () => {
+    if (!feedbackToDelete) return
+    
+    setActionLoading(feedbackToDelete.id)
+    setFeedbackDeleteConfirmOpen(false)
+    try {
+      const res = await fetch(`/api/feedback/${feedbackToDelete.id}`, {
+        method: 'DELETE'
+      })
+
+      if (res.ok) {
+        toast({
+          title: 'Feedback Deleted',
+          description: 'Feedback submission permanently deleted from database.',
+        })
+        // Remove locally
+        setFeedbackList(prev => prev.filter(f => f.id !== feedbackToDelete.id))
+      } else {
+        toast({
+          title: 'Delete Failed',
+          description: 'Failed to delete feedback submission.',
+          variant: 'destructive'
+        })
+      }
+    } catch (err) {
+      console.error('Feedback deletion error:', err)
+    } finally {
+      setActionLoading(null)
+      setFeedbackToDelete(null)
+    }
+  }
+
+  // Filtering Feedback Logic
+  const filteredFeedback = feedbackList.filter(item => {
+    const matchesSearch =
+      (item.email || '').toLowerCase().includes(feedbackSearchQuery.toLowerCase()) ||
+      item.content.toLowerCase().includes(feedbackSearchQuery.toLowerCase())
+
+    const matchesCategory =
+      feedbackCategoryFilter === 'All' || item.category === feedbackCategoryFilter
+
+    const matchesRating =
+      feedbackRatingFilter === 'All' || String(item.rating) === feedbackRatingFilter
+
+    return matchesSearch && matchesCategory && matchesRating
+  })
+
+  // Feedback Statistics
+  const totalFeedbackCount = feedbackList.length
+  const bugReportCount = feedbackList.filter(f => f.category === 'bug_report').length
+  const suggestionCount = feedbackList.filter(f => f.category === 'suggestion').length
+  const positiveCount = feedbackList.filter(f => f.rating >= 4).length
+  const avgSatisfaction = feedbackList.length > 0 
+    ? (feedbackList.reduce((acc, f) => acc + f.rating, 0) / feedbackList.length).toFixed(1) 
+    : 'N/A'
 
   // Filtering Logic
   const filteredItems = items.filter(item => {
@@ -449,11 +555,14 @@ export default function AdminPage() {
 
                 <div className="flex items-center gap-3 w-full md:w-auto">
                   <button
-                    onClick={fetchItems}
+                    onClick={() => {
+                      fetchItems()
+                      fetchFeedback()
+                    }}
                     className="px-4 py-2.5 rounded-xl border font-bold text-xs uppercase tracking-[0.08em] hover:bg-[var(--color-bg-subtle)] transition-all flex items-center gap-1.5"
                     style={{ borderColor: 'var(--color-border)' }}
                   >
-                    <RefreshCw size={12} className={loadingItems ? 'animate-spin' : ''} />
+                    <RefreshCw size={12} className={(loadingItems || loadingFeedback) ? 'animate-spin' : ''} />
                     Refresh
                   </button>
                   <button
@@ -466,242 +575,461 @@ export default function AdminPage() {
                 </div>
               </div>
 
-              {/* Statistics Grid Cards */}
-              <div className="grid grid-cols-2 lg:grid-cols-5 gap-4">
-                {[
-                  { label: 'Total Records', val: totalCount, icon: FileText, color: 'text-orange-500', bg: 'bg-orange-500/10', border: 'border-orange-500/20' },
-                  { label: 'Lost Reports', val: lostCount, icon: AlertCircle, color: 'text-red-400', bg: 'bg-red-500/10', border: 'border-red-500/20' },
-                  { label: 'Found Belongings', val: foundCount, icon: Search, color: 'text-blue-400', bg: 'bg-blue-500/10', border: 'border-blue-500/20' },
-                  { label: 'Resolved Success', val: resolvedCount, icon: CheckCircle, color: 'text-green-400', bg: 'bg-green-500/10', border: 'border-green-500/20' },
-                  { label: 'Active Reminders', val: activeCount, icon: AlertTriangle, color: 'text-yellow-400', bg: 'bg-yellow-500/10', border: 'border-yellow-500/20' },
-                ].map((stat, idx) => (
-                  <div
-                    key={idx}
-                    className={`rounded-2xl p-5 border flex flex-col relative overflow-hidden ${stat.bg} ${stat.border}`}
-                  >
-                    <div className="flex justify-between items-start mb-4">
-                      <p className="text-[10px] font-black uppercase tracking-wider text-[var(--color-text-secondary)]">
-                        {stat.label}
-                      </p>
-                      <stat.icon size={16} className={stat.color} />
-                    </div>
-                    <p className="text-3xl font-black tracking-tight">{stat.val}</p>
-                  </div>
-                ))}
+              {/* Tab Selector Header */}
+              <div className="flex border-b border-[var(--color-border)] gap-2">
+                <button
+                  onClick={() => setAdminView('items')}
+                  className={`px-5 py-3 font-black text-xs uppercase tracking-[0.08em] border-b-2 transition-all flex items-center gap-2 ${
+                    adminView === 'items'
+                      ? 'border-orange-500 text-orange-500 font-black'
+                      : 'border-transparent text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)]'
+                  }`}
+                >
+                  <FileText size={13} />
+                  Belongings Database ({items.length})
+                </button>
+                <button
+                  onClick={() => setAdminView('feedback')}
+                  className={`px-5 py-3 font-black text-xs uppercase tracking-[0.08em] border-b-2 transition-all flex items-center gap-2 ${
+                    adminView === 'feedback'
+                      ? 'border-orange-500 text-orange-500 font-black'
+                      : 'border-transparent text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)]'
+                  }`}
+                >
+                  <MessageSquare size={13} />
+                  Student Suggestions ({feedbackList.length})
+                </button>
               </div>
 
-              {/* Controls bar (Search & Filtering) */}
-              <div 
-                className="rounded-2xl p-5 border flex flex-col md:flex-row gap-4 items-center justify-between shadow-sm"
-                style={{
-                  backgroundColor: 'rgba(255, 255, 255, 0.01)',
-                  borderColor: 'var(--color-border)'
-                }}
-              >
-                {/* Search query input */}
-                <div className="relative w-full md:max-w-md">
-                  <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 text-[var(--color-text-secondary)]" size={16} />
-                  <input
-                    type="text"
-                    value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
-                    placeholder="Search database by title, description, location..."
-                    className="w-full rounded-xl pl-10 pr-4 py-2.5 text-xs font-semibold outline-none transition-all border bg-[var(--color-bg-subtle)] focus:border-orange-500/30"
-                    style={{ borderColor: 'var(--color-border)', color: 'var(--color-text-primary)' }}
-                  />
-                  {searchQuery && (
-                    <button
-                      onClick={() => setSearchQuery('')}
-                      className="absolute right-3 top-1/2 -translate-y-1/2 text-[var(--color-text-secondary)] hover:text-orange-500"
-                    >
-                      <X size={14} />
-                    </button>
-                  )}
-                </div>
-
-                {/* Filters selection */}
-                <div className="flex flex-wrap items-center gap-3 w-full md:w-auto">
-                  {/* Category Selector */}
-                  <select
-                    value={categoryFilter}
-                    onChange={(e) => setCategoryFilter(e.target.value)}
-                    className="rounded-xl px-3 py-2.5 text-xs font-bold uppercase tracking-wider border bg-[var(--color-bg-subtle)] outline-none"
-                    style={{ borderColor: 'var(--color-border)', color: 'var(--color-text-primary)' }}
-                  >
-                    {categories.map((cat, idx) => (
-                      <option key={idx} value={cat}>{cat}</option>
-                    ))}
-                  </select>
-
-                  {/* Type Selector */}
-                  <select
-                    value={typeFilter}
-                    onChange={(e) => setTypeFilter(e.target.value)}
-                    className="rounded-xl px-3 py-2.5 text-xs font-bold uppercase tracking-wider border bg-[var(--color-bg-subtle)] outline-none"
-                    style={{ borderColor: 'var(--color-border)', color: 'var(--color-text-primary)' }}
-                  >
-                    <option value="all">All Types</option>
-                    <option value="lost">Lost</option>
-                    <option value="found">Found</option>
-                  </select>
-
-                  {/* Status Selector */}
-                  <select
-                    value={statusFilter}
-                    onChange={(e) => setStatusFilter(e.target.value)}
-                    className="rounded-xl px-3 py-2.5 text-xs font-bold uppercase tracking-wider border bg-[var(--color-bg-subtle)] outline-none"
-                    style={{ borderColor: 'var(--color-border)', color: 'var(--color-text-primary)' }}
-                  >
-                    <option value="all">All Statuses</option>
-                    <option value="active">Active Only</option>
-                    <option value="resolved">Resolved Only</option>
-                  </select>
-                </div>
-              </div>
-
-              {/* Items List Section */}
-              <div 
-                className="rounded-2xl border overflow-hidden shadow-sm"
-                style={{
-                  backgroundColor: 'rgba(255, 255, 255, 0.01)',
-                  borderColor: 'var(--color-border)'
-                }}
-              >
-                <div className="px-6 py-4 border-b border-[var(--color-border)] bg-[var(--color-bg-subtle)] flex items-center justify-between">
-                  <h3 className="text-xs font-black uppercase tracking-wider text-[var(--color-text-secondary)]">
-                    Items Records Database ({filteredItems.length} listed)
-                  </h3>
-                </div>
-
-                {filteredItems.length === 0 ? (
-                  <div className="flex flex-col items-center justify-center py-16 text-[var(--color-text-secondary)]">
-                    <Search size={32} className="text-orange-500 mb-3 opacity-60 animate-bounce" />
-                    <p className="text-sm font-bold uppercase tracking-wide">No database entries found</p>
-                    <p className="text-[10px] uppercase mt-1 font-semibold opacity-70">
-                      Try widening your query filter conditions
-                    </p>
-                  </div>
-                ) : (
-                  <div className="divide-y divide-[var(--color-border)]">
-                    {filteredItems.map((item) => (
+              {adminView === 'items' ? (
+                <>
+                  {/* Statistics Grid Cards (Items) */}
+                  <div className="grid grid-cols-2 lg:grid-cols-5 gap-4">
+                    {[
+                      { label: 'Total Records', val: totalCount, icon: FileText, color: 'text-orange-500', bg: 'bg-orange-500/10', border: 'border-orange-500/20' },
+                      { label: 'Lost Reports', val: lostCount, icon: AlertCircle, color: 'text-red-400', bg: 'bg-red-500/10', border: 'border-red-500/20' },
+                      { label: 'Found Belongings', val: foundCount, icon: Search, color: 'text-blue-400', bg: 'bg-blue-500/10', border: 'border-blue-500/20' },
+                      { label: 'Resolved Success', val: resolvedCount, icon: CheckCircle, color: 'text-green-400', bg: 'bg-green-500/10', border: 'border-green-500/20' },
+                      { label: 'Active Reminders', val: activeCount, icon: AlertTriangle, color: 'text-yellow-400', bg: 'bg-yellow-500/10', border: 'border-yellow-500/20' },
+                    ].map((stat, idx) => (
                       <div
-                        key={item.id}
-                        className="p-6 hover:bg-[var(--color-bg-subtle)]/40 transition-colors flex flex-col lg:flex-row lg:items-center justify-between gap-6"
+                        key={idx}
+                        className={`rounded-2xl p-5 border flex flex-col relative overflow-hidden ${stat.bg} ${stat.border}`}
                       >
-                        {/* Left Side: Thumbnail & Text Metadata */}
-                        <div className="flex items-start gap-4">
-                          {/* Image Thumbnail placeholder or loaded */}
-                          <div className="relative shrink-0 w-16 h-16 rounded-lg overflow-hidden border border-[var(--color-border)] flex items-center justify-center bg-[var(--color-bg-subtle)]">
-                            {item.imageUrl ? (
-                              <img
-                                src={item.imageUrl}
-                                alt={item.title}
-                                className="w-full h-full object-cover"
-                              />
-                            ) : (
-                              <span className="text-xl">📦</span>
-                            )}
-                          </div>
-
-                          <div className="space-y-1">
-                            <div className="flex items-center flex-wrap gap-2">
-                              {/* Type badge */}
-                              <span className={`px-2 py-0.5 rounded-full text-[9px] font-black uppercase tracking-wider ${
-                                item.type === 'lost' 
-                                  ? 'bg-red-500/10 text-red-500 border border-red-500/20' 
-                                  : 'bg-blue-500/10 text-blue-500 border border-blue-500/20'
-                              }`}>
-                                {item.type}
-                              </span>
-
-                              {/* Category badge */}
-                              <span className="px-2 py-0.5 rounded-full text-[9px] font-black uppercase tracking-wider bg-[var(--color-bg-subtle)] text-[var(--color-text-secondary)] border border-[var(--color-border)]">
-                                {item.category}
-                              </span>
-
-                              {/* Status badge */}
-                              <span className={`px-2 py-0.5 rounded-full text-[9px] font-black uppercase tracking-wider ${
-                                item.isResolved
-                                  ? 'bg-green-500/10 text-green-500 border border-green-500/20'
-                                  : 'bg-yellow-500/10 text-yellow-500 border border-yellow-500/20'
-                              }`}>
-                                {item.isResolved ? 'Resolved' : 'Active'}
-                              </span>
-                            </div>
-
-                            <h4 className="font-extrabold text-sm text-[var(--color-text-primary)]">
-                              {item.title}
-                            </h4>
-                            <p className="text-xs text-[var(--color-text-secondary)] line-clamp-1 max-w-2xl">
-                              {item.description}
-                            </p>
-
-                            {/* Details flex list */}
-                            <div className="flex flex-wrap items-center gap-x-4 gap-y-1.5 pt-1.5 text-[10px] text-[var(--color-text-secondary)] font-bold">
-                              <span className="flex items-center gap-1">
-                                <MapPin size={10} />
-                                {item.location}
-                              </span>
-                              <span className="flex items-center gap-1">
-                                <Calendar size={10} />
-                                {new Date(item.date).toLocaleDateString('en-PK', { day: 'numeric', month: 'short' })}
-                              </span>
-                              <span className="flex items-center gap-1">
-                                <User size={10} />
-                                {item.contactInfo}
-                              </span>
-                            </div>
-                          </div>
+                        <div className="flex justify-between items-start mb-4">
+                          <p className="text-[10px] font-black uppercase tracking-wider text-[var(--color-text-secondary)]">
+                            {stat.label}
+                          </p>
+                          <stat.icon size={16} className={stat.color} />
                         </div>
-
-                        {/* Right Side: Administrative Actions */}
-                        <div className="flex items-center gap-3 border-t lg:border-t-0 pt-4 lg:pt-0 shrink-0">
-                          {/* Toggle Resolve state switch button */}
-                          <button
-                            onClick={() => handleToggleResolve(item)}
-                            disabled={actionLoading === item.id}
-                            className={`px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-[0.06em] border transition-all flex items-center gap-1.5 ${
-                              item.isResolved
-                                ? 'border-yellow-500/30 hover:bg-yellow-500/5 text-yellow-500'
-                                : 'border-green-500/30 hover:bg-green-500/5 text-green-500'
-                            }`}
-                          >
-                            {actionLoading === item.id ? (
-                              <RefreshCw size={11} className="animate-spin" />
-                            ) : item.isResolved ? (
-                              <>
-                                <AlertTriangle size={11} />
-                                Re-activate Item
-                              </>
-                            ) : (
-                              <>
-                                <CheckCircle size={11} />
-                                Mark Resolved
-                              </>
-                            )}
-                          </button>
-
-                          {/* Delete permanently button */}
-                          <button
-                            onClick={() => handleDeleteTrigger(item)}
-                            disabled={actionLoading === item.id}
-                            className="px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-[0.06em] border border-red-500/20 bg-red-500/5 hover:bg-red-500/10 text-red-500 transition-all flex items-center gap-1.5"
-                          >
-                            <Trash2 size={11} />
-                            Delete Permanent
-                          </button>
-                        </div>
+                        <p className="text-3xl font-black tracking-tight">{stat.val}</p>
                       </div>
                     ))}
                   </div>
-                )}
-              </div>
+
+                  {/* Controls bar (Search & Filtering) */}
+                  <div 
+                    className="rounded-2xl p-5 border flex flex-col md:flex-row gap-4 items-center justify-between shadow-sm"
+                    style={{
+                      backgroundColor: 'rgba(255, 255, 255, 0.01)',
+                      borderColor: 'var(--color-border)'
+                    }}
+                  >
+                    {/* Search query input */}
+                    <div className="relative w-full md:max-w-md">
+                      <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 text-[var(--color-text-secondary)]" size={16} />
+                      <input
+                        type="text"
+                        value={searchQuery}
+                        onChange={(e) => setSearchQuery(e.target.value)}
+                        placeholder="Search database by title, description, location..."
+                        className="w-full rounded-xl pl-10 pr-4 py-2.5 text-xs font-semibold outline-none transition-all border bg-[var(--color-bg-subtle)] focus:border-orange-500/30"
+                        style={{ borderColor: 'var(--color-border)', color: 'var(--color-text-primary)' }}
+                      />
+                      {searchQuery && (
+                        <button
+                          onClick={() => setSearchQuery('')}
+                          className="absolute right-3 top-1/2 -translate-y-1/2 text-[var(--color-text-secondary)] hover:text-orange-500"
+                        >
+                          <X size={14} />
+                        </button>
+                      )}
+                    </div>
+
+                    {/* Filters selection */}
+                    <div className="flex flex-wrap items-center gap-3 w-full md:w-auto">
+                      {/* Category Selector */}
+                      <select
+                        value={categoryFilter}
+                        onChange={(e) => setCategoryFilter(e.target.value)}
+                        className="rounded-xl px-3 py-2.5 text-xs font-bold uppercase tracking-wider border bg-[var(--color-bg-subtle)] outline-none"
+                        style={{ borderColor: 'var(--color-border)', color: 'var(--color-text-primary)' }}
+                      >
+                        {categories.map((cat, idx) => (
+                          <option key={idx} value={cat}>{cat}</option>
+                        ))}
+                      </select>
+
+                      {/* Type Selector */}
+                      <select
+                        value={typeFilter}
+                        onChange={(e) => setTypeFilter(e.target.value)}
+                        className="rounded-xl px-3 py-2.5 text-xs font-bold uppercase tracking-wider border bg-[var(--color-bg-subtle)] outline-none"
+                        style={{ borderColor: 'var(--color-border)', color: 'var(--color-text-primary)' }}
+                      >
+                        <option value="all">All Types</option>
+                        <option value="lost">Lost</option>
+                        <option value="found">Found</option>
+                      </select>
+
+                      {/* Status Selector */}
+                      <select
+                        value={statusFilter}
+                        onChange={(e) => setStatusFilter(e.target.value)}
+                        className="rounded-xl px-3 py-2.5 text-xs font-bold uppercase tracking-wider border bg-[var(--color-bg-subtle)] outline-none"
+                        style={{ borderColor: 'var(--color-border)', color: 'var(--color-text-primary)' }}
+                      >
+                        <option value="all">All Statuses</option>
+                        <option value="active">Active Only</option>
+                        <option value="resolved">Resolved Only</option>
+                      </select>
+                    </div>
+                  </div>
+
+                  {/* Items List Section */}
+                  <div 
+                    className="rounded-2xl border overflow-hidden shadow-sm"
+                    style={{
+                      backgroundColor: 'rgba(255, 255, 255, 0.01)',
+                      borderColor: 'var(--color-border)'
+                    }}
+                  >
+                    <div className="px-6 py-4 border-b border-[var(--color-border)] bg-[var(--color-bg-subtle)] flex items-center justify-between">
+                      <h3 className="text-xs font-black uppercase tracking-wider text-[var(--color-text-secondary)]">
+                        Items Records Database ({filteredItems.length} listed)
+                      </h3>
+                    </div>
+
+                    {filteredItems.length === 0 ? (
+                      <div className="flex flex-col items-center justify-center py-16 text-[var(--color-text-secondary)]">
+                        <Search size={32} className="text-orange-500 mb-3 opacity-60 animate-bounce" />
+                        <p className="text-sm font-bold uppercase tracking-wide">No database entries found</p>
+                        <p className="text-[10px] uppercase mt-1 font-semibold opacity-70">
+                          Try widening your query filter conditions
+                        </p>
+                      </div>
+                    ) : (
+                      <div className="divide-y divide-[var(--color-border)]">
+                        {filteredItems.map((item) => (
+                          <div
+                            key={item.id}
+                            className="p-6 hover:bg-[var(--color-bg-subtle)]/40 transition-colors flex flex-col lg:flex-row lg:items-center justify-between gap-6"
+                          >
+                            {/* Left Side: Thumbnail & Text Metadata */}
+                            <div className="flex items-start gap-4">
+                              <div className="relative shrink-0 w-16 h-16 rounded-lg overflow-hidden border border-[var(--color-border)] flex items-center justify-center bg-[var(--color-bg-subtle)]">
+                                {item.imageUrl ? (
+                                  <img
+                                    src={item.imageUrl}
+                                    alt={item.title}
+                                    className="w-full h-full object-cover"
+                                  />
+                                ) : (
+                                  <span className="text-xl">📦</span>
+                                )}
+                              </div>
+
+                              <div className="space-y-1">
+                                <div className="flex items-center flex-wrap gap-2">
+                                  <span className={`px-2 py-0.5 rounded-full text-[9px] font-black uppercase tracking-wider ${
+                                    item.type === 'lost' 
+                                      ? 'bg-red-500/10 text-red-500 border border-red-500/20' 
+                                      : 'bg-blue-500/10 text-blue-500 border border-blue-500/20'
+                                  }`}>
+                                    {item.type}
+                                  </span>
+
+                                  <span className="px-2 py-0.5 rounded-full text-[9px] font-black uppercase tracking-wider bg-[var(--color-bg-subtle)] text-[var(--color-text-secondary)] border border-[var(--color-border)]">
+                                    {item.category}
+                                  </span>
+
+                                  <span className={`px-2 py-0.5 rounded-full text-[9px] font-black uppercase tracking-wider ${
+                                    item.isResolved
+                                      ? 'bg-green-500/10 text-green-500 border border-green-500/20'
+                                      : 'bg-yellow-500/10 text-yellow-500 border border-yellow-500/20'
+                                  }`}>
+                                    {item.isResolved ? 'Resolved' : 'Active'}
+                                  </span>
+                                </div>
+
+                                <h4 className="font-extrabold text-sm text-[var(--color-text-primary)]">
+                                  {item.title}
+                                </h4>
+                                <p className="text-xs text-[var(--color-text-secondary)] line-clamp-1 max-w-2xl">
+                                  {item.description}
+                                </p>
+
+                                {/* Details flex list */}
+                                <div className="flex flex-wrap items-center gap-x-4 gap-y-1.5 pt-1.5 text-[10px] text-[var(--color-text-secondary)] font-bold">
+                                  <span className="flex items-center gap-1">
+                                    <MapPin size={10} />
+                                    {item.location}
+                                  </span>
+                                  <span className="flex items-center gap-1">
+                                    <Calendar size={10} />
+                                    {new Date(item.date).toLocaleDateString('en-PK', { day: 'numeric', month: 'short' })}
+                                  </span>
+                                  <span className="flex items-center gap-1">
+                                    <User size={10} />
+                                    {item.contactInfo}
+                                  </span>
+                                </div>
+                              </div>
+                            </div>
+
+                            {/* Right Side: Administrative Actions */}
+                            <div className="flex items-center gap-3 border-t lg:border-t-0 pt-4 lg:pt-0 shrink-0">
+                              <button
+                                onClick={() => handleToggleResolve(item)}
+                                disabled={actionLoading === item.id}
+                                className={`px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-[0.06em] border transition-all flex items-center gap-1.5 ${
+                                  item.isResolved
+                                    ? 'border-yellow-500/30 hover:bg-yellow-500/5 text-yellow-500'
+                                    : 'border-green-500/30 hover:bg-green-500/5 text-green-500'
+                                }`}
+                              >
+                                {actionLoading === item.id ? (
+                                  <RefreshCw size={11} className="animate-spin" />
+                                ) : item.isResolved ? (
+                                  <>
+                                    <AlertTriangle size={11} />
+                                    Re-activate Item
+                                  </>
+                                ) : (
+                                  <>
+                                    <CheckCircle size={11} />
+                                    Mark Resolved
+                                  </>
+                                )}
+                              </button>
+
+                              <button
+                                onClick={() => handleDeleteTrigger(item)}
+                                disabled={actionLoading === item.id}
+                                className="px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-[0.06em] border border-red-500/20 bg-red-500/5 hover:bg-red-500/10 text-red-500 transition-all flex items-center gap-1.5"
+                              >
+                                <Trash2 size={11} />
+                                Delete Permanent
+                              </button>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                </>
+              ) : (
+                <>
+                  {/* Statistics Grid Cards (Feedback) */}
+                  <div className="grid grid-cols-2 lg:grid-cols-5 gap-4">
+                    {[
+                      { label: 'Total Suggestions', val: totalFeedbackCount, icon: MessageSquare, color: 'text-orange-500', bg: 'bg-orange-500/10', border: 'border-orange-500/20' },
+                      { label: 'Bug Reports', val: bugReportCount, icon: Bug, color: 'text-red-400', bg: 'bg-red-500/10', border: 'border-red-500/20' },
+                      { label: 'Feature Ideas', val: suggestionCount, icon: Lightbulb, color: 'text-green-400', bg: 'bg-green-500/10', border: 'border-green-500/20' },
+                      { label: 'Positive (4-5★)', val: positiveCount, icon: Smile, color: 'text-blue-400', bg: 'bg-blue-500/10', border: 'border-blue-500/20' },
+                      { label: 'Avg Rating', val: avgSatisfaction === 'N/A' ? 'N/A' : `${avgSatisfaction} / 5`, icon: Star, color: 'text-yellow-400', bg: 'bg-yellow-500/10', border: 'border-yellow-500/20' },
+                    ].map((stat, idx) => (
+                      <div
+                        key={idx}
+                        className={`rounded-2xl p-5 border flex flex-col relative overflow-hidden ${stat.bg} ${stat.border}`}
+                      >
+                        <div className="flex justify-between items-start mb-4">
+                          <p className="text-[10px] font-black uppercase tracking-wider text-[var(--color-text-secondary)]">
+                            {stat.label}
+                          </p>
+                          <stat.icon size={16} className={stat.color} />
+                        </div>
+                        <p className="text-3xl font-black tracking-tight">{stat.val}</p>
+                      </div>
+                    ))}
+                  </div>
+
+                  {/* Controls bar (Search & Filtering - Feedback) */}
+                  <div 
+                    className="rounded-2xl p-5 border flex flex-col md:flex-row gap-4 items-center justify-between shadow-sm"
+                    style={{
+                      backgroundColor: 'rgba(255, 255, 255, 0.01)',
+                      borderColor: 'var(--color-border)'
+                    }}
+                  >
+                    {/* Search query input */}
+                    <div className="relative w-full md:max-w-md">
+                      <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 text-[var(--color-text-secondary)]" size={16} />
+                      <input
+                        type="text"
+                        value={feedbackSearchQuery}
+                        onChange={(e) => setFeedbackSearchQuery(e.target.value)}
+                        placeholder="Search feedback by email or text content..."
+                        className="w-full rounded-xl pl-10 pr-4 py-2.5 text-xs font-semibold outline-none transition-all border bg-[var(--color-bg-subtle)] focus:border-orange-500/30"
+                        style={{ borderColor: 'var(--color-border)', color: 'var(--color-text-primary)' }}
+                      />
+                      {feedbackSearchQuery && (
+                        <button
+                          onClick={() => setFeedbackSearchQuery('')}
+                          className="absolute right-3 top-1/2 -translate-y-1/2 text-[var(--color-text-secondary)] hover:text-orange-500"
+                        >
+                          <X size={14} />
+                        </button>
+                      )}
+                    </div>
+
+                    {/* Filters selection */}
+                    <div className="flex flex-wrap items-center gap-3 w-full md:w-auto">
+                      {/* Category Selector */}
+                      <select
+                        value={feedbackCategoryFilter}
+                        onChange={(e) => setFeedbackCategoryFilter(e.target.value)}
+                        className="rounded-xl px-3 py-2.5 text-xs font-bold uppercase tracking-wider border bg-[var(--color-bg-subtle)] outline-none"
+                        style={{ borderColor: 'var(--color-border)', color: 'var(--color-text-primary)' }}
+                      >
+                        <option value="All">All Categories</option>
+                        <option value="suggestion">💡 Suggestion</option>
+                        <option value="bug_report">🐛 Bug Report</option>
+                        <option value="review">⭐ Review</option>
+                        <option value="inquiry">❓ Inquiry</option>
+                      </select>
+
+                      {/* Rating Selector */}
+                      <select
+                        value={feedbackRatingFilter}
+                        onChange={(e) => setFeedbackRatingFilter(e.target.value)}
+                        className="rounded-xl px-3 py-2.5 text-xs font-bold uppercase tracking-wider border bg-[var(--color-bg-subtle)] outline-none"
+                        style={{ borderColor: 'var(--color-border)', color: 'var(--color-text-primary)' }}
+                      >
+                        <option value="All">All Ratings</option>
+                        <option value="5">5 ★ 😄 Excellent</option>
+                        <option value="4">4 ★ 🙂 Happy</option>
+                        <option value="3">3 ★ 😐 Neutral</option>
+                        <option value="2">2 ★ 🙁 Sad</option>
+                        <option value="1">1 ★ 😠 Angry</option>
+                      </select>
+                    </div>
+                  </div>
+
+                  {/* Feedback Log Section */}
+                  <div 
+                    className="rounded-2xl border overflow-hidden shadow-sm"
+                    style={{
+                      backgroundColor: 'rgba(255, 255, 255, 0.01)',
+                      borderColor: 'var(--color-border)'
+                    }}
+                  >
+                    <div className="px-6 py-4 border-b border-[var(--color-border)] bg-[var(--color-bg-subtle)] flex items-center justify-between">
+                      <h3 className="text-xs font-black uppercase tracking-wider text-[var(--color-text-secondary)]">
+                        Student Suggestions Log ({filteredFeedback.length} submissions)
+                      </h3>
+                    </div>
+
+                    {filteredFeedback.length === 0 ? (
+                      <div className="flex flex-col items-center justify-center py-16 text-[var(--color-text-secondary)]">
+                        <MessageSquare size={32} className="text-orange-500 mb-3 opacity-60 animate-bounce" />
+                        <p className="text-sm font-bold uppercase tracking-wide">No feedback entries found</p>
+                        <p className="text-[10px] uppercase mt-1 font-semibold opacity-70">
+                          No suggestions registered under these filters yet
+                        </p>
+                      </div>
+                    ) : (
+                      <div className="divide-y divide-[var(--color-border)]">
+                        {filteredFeedback.map((item) => (
+                          <div
+                            key={item.id}
+                            className="p-6 hover:bg-[var(--color-bg-subtle)]/40 transition-colors flex flex-col lg:flex-row lg:items-start justify-between gap-6"
+                          >
+                            {/* Left Side: Category, rating and textual feedback */}
+                            <div className="space-y-3 flex-1">
+                              <div className="flex flex-wrap items-center gap-2">
+                                {/* Category Badge */}
+                                {item.category === 'bug_report' && (
+                                  <span className="bg-red-500/10 text-red-500 border border-red-500/20 px-2 py-0.5 rounded-full text-[9px] font-black uppercase tracking-wider flex items-center gap-1">
+                                    <Bug size={10} /> Bug Report
+                                  </span>
+                                )}
+                                {item.category === 'suggestion' && (
+                                  <span className="bg-green-500/10 text-green-500 border border-green-500/20 px-2 py-0.5 rounded-full text-[9px] font-black uppercase tracking-wider flex items-center gap-1">
+                                    <Lightbulb size={10} /> Suggestion
+                                  </span>
+                                )}
+                                {item.category === 'review' && (
+                                  <span className="bg-blue-500/10 text-blue-500 border border-blue-500/20 px-2 py-0.5 rounded-full text-[9px] font-black uppercase tracking-wider flex items-center gap-1">
+                                    <Star size={10} /> Review
+                                  </span>
+                                )}
+                                {item.category === 'inquiry' && (
+                                  <span className="bg-yellow-500/10 text-yellow-500 border border-yellow-500/20 px-2 py-0.5 rounded-full text-[9px] font-black uppercase tracking-wider flex items-center gap-1">
+                                    <HelpCircle size={10} /> Inquiry
+                                  </span>
+                                )}
+
+                                {/* Rating Smiley badge */}
+                                <div className="flex items-center gap-1 text-[11px] bg-[var(--color-bg-subtle)] border border-[var(--color-border)] px-2 py-0.5 rounded-full font-bold">
+                                  <span>
+                                    {item.rating === 1 && '😠'}
+                                    {item.rating === 2 && '🙁'}
+                                    {item.rating === 3 && '😐'}
+                                    {item.rating === 4 && '🙂'}
+                                    {item.rating === 5 && '😄'}
+                                  </span>
+                                  <span className="text-[8px] font-mono text-[var(--color-text-secondary)] uppercase tracking-wider">
+                                    Rating: {item.rating}/5
+                                  </span>
+                                </div>
+                              </div>
+
+                              <p className="text-xs font-semibold leading-relaxed text-[var(--color-text-primary)] max-w-4xl whitespace-pre-wrap">
+                                {item.content}
+                              </p>
+
+                              {/* Details metadata */}
+                              <div className="flex flex-wrap items-center gap-x-4 gap-y-1.5 pt-1 text-[10px] text-[var(--color-text-secondary)] font-bold">
+                                <span className="flex items-center gap-1">
+                                  <User size={10} />
+                                  {item.email ? (
+                                    <span className="text-orange-500">{item.email}</span>
+                                  ) : (
+                                    <span className="text-[var(--color-text-tertiary)] italic">Anonymous Student</span>
+                                  )}
+                                </span>
+                                <span className="flex items-center gap-1">
+                                  <Calendar size={10} />
+                                  {new Date(item.created_at).toLocaleDateString('en-PK', { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' })}
+                                </span>
+                              </div>
+                            </div>
+
+                            {/* Right Side: Feedback Delete Action */}
+                            <div className="flex items-center shrink-0 border-t lg:border-t-0 pt-4 lg:pt-0">
+                              <button
+                                onClick={() => handleFeedbackDeleteTrigger(item)}
+                                disabled={actionLoading === item.id}
+                                className="px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-[0.06em] border border-red-500/20 bg-red-500/5 hover:bg-red-500/10 text-red-500 transition-all flex items-center gap-1.5"
+                              >
+                                <Trash2 size={11} />
+                                Delete Submission
+                              </button>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                </>
+              )}
             </motion.div>
           )}
         </AnimatePresence>
       </main>
 
-      {/* Database Deletion Alert Dialog */}
+      {/* 1. Items Database Deletion Confirmation Alert Dialog */}
       <AlertDialog open={deleteConfirmOpen} onOpenChange={setDeleteConfirmOpen}>
         <AlertDialogContent className="rounded-2xl border border-red-500/20 bg-[var(--color-bg)] text-[var(--color-text-primary)] max-w-md">
           <AlertDialogHeader>
@@ -722,6 +1050,32 @@ export default function AdminPage() {
               className="rounded-xl bg-red-600 hover:bg-red-500 text-white font-bold text-xs uppercase tracking-wide px-4 py-2"
             >
               Permanently Delete
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      {/* 2. Feedback Submissions Deletion Confirmation Alert Dialog */}
+      <AlertDialog open={feedbackDeleteConfirmOpen} onOpenChange={setFeedbackDeleteConfirmOpen}>
+        <AlertDialogContent className="rounded-2xl border border-red-500/20 bg-[var(--color-bg)] text-[var(--color-text-primary)] max-w-md">
+          <AlertDialogHeader>
+            <AlertDialogTitle className="text-sm font-black uppercase tracking-wider text-red-500 flex items-center gap-2">
+              <AlertTriangle size={18} />
+              Confirm Submission Deletion
+            </AlertDialogTitle>
+            <AlertDialogDescription className="text-xs text-[var(--color-text-secondary)] font-medium leading-relaxed mt-2">
+              Are you sure you want to permanently delete this student suggestion from the database? This action is irreversible and will remove the log entry permanently from Supabase.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter className="mt-4 gap-2">
+            <AlertDialogCancel className="rounded-xl border font-bold text-xs uppercase tracking-wide px-4 py-2">
+              Cancel
+            </AlertDialogCancel>
+            <AlertDialogAction 
+              onClick={handleFeedbackDeleteConfirm}
+              className="rounded-xl bg-red-600 hover:bg-red-500 text-white font-bold text-xs uppercase tracking-wide px-4 py-2"
+            >
+              Confirm Delete
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
