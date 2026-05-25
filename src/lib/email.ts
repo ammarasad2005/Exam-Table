@@ -10,11 +10,13 @@ const transporter = (process.env.GMAIL_USER && process.env.GMAIL_APP_PASSWORD)
     })
   : null;
 
-export async function sendVerificationRequestEmail(email: string, itemTitle: string, claimId: string) {
+export async function sendVerificationRequestEmail(email: string, itemTitle: string, claimId: string, baseUrl?: string) {
   if (!transporter) {
     console.warn('Gmail SMTP credentials not configured. Skipping email.');
     return;
   }
+
+  const url = `${baseUrl || 'https://fast-isb-exams.vercel.app'}/lost-found?verifyClaimId=${claimId}`;
 
   try {
     await transporter.sendMail({
@@ -42,7 +44,7 @@ export async function sendVerificationRequestEmail(email: string, itemTitle: str
           </div>
 
           <div style="text-align: center; margin: 30px 0;">
-            <a href="https://fast-isb-exams.vercel.app/lost-found" style="background-color: #ea580c; color: #ffffff; padding: 14px 32px; border-radius: 10px; text-decoration: none; font-weight: bold; font-size: 16px; display: inline-block; box-shadow: 0 4px 6px -1px rgba(234, 88, 12, 0.2);">
+            <a href="${url}" style="background-color: #ea580c; color: #ffffff; padding: 14px 32px; border-radius: 10px; text-decoration: none; font-weight: bold; font-size: 16px; display: inline-block; box-shadow: 0 4px 6px -1px rgba(234, 88, 12, 0.2);">
               Verify Collection Now
             </a>
           </div>
@@ -95,9 +97,10 @@ export async function sendUnclaimNotification(email: string, itemTitle: string) 
   }
 }
 
-export async function sendClaimRecordedEmail(email: string, itemTitle: string, claimId: string, totalCount: number, allEmails: string[]) {
+export async function sendClaimRecordedEmail(email: string, itemTitle: string, claimId: string, totalCount: number, allEmails: string[], baseUrl?: string) {
   if (!transporter) return;
 
+  const url = `${baseUrl || 'https://fast-isb-exams.vercel.app'}/lost-found?verifyClaimId=${claimId}`;
   const emailsListHtml = allEmails.map(e => `<li style="margin-bottom: 6px; font-weight: 500; color: #1e293b;">${e}</li>`).join('');
 
   try {
@@ -124,7 +127,7 @@ export async function sendClaimRecordedEmail(email: string, itemTitle: string, c
           </p>
 
           <div style="text-align: center; margin: 30px 0;">
-            <a href="https://fast-isb-exams.vercel.app/lost-found" style="background-color: #ea580c; color: #ffffff; padding: 14px 32px; border-radius: 10px; text-decoration: none; font-weight: bold; font-size: 16px; display: inline-block; box-shadow: 0 4px 6px -1px rgba(234, 88, 12, 0.2);">
+            <a href="${url}" style="background-color: #ea580c; color: #ffffff; padding: 14px 32px; border-radius: 10px; text-decoration: none; font-weight: bold; font-size: 16px; display: inline-block; box-shadow: 0 4px 6px -1px rgba(234, 88, 12, 0.2);">
               Verify & Resolve Status
             </a>
           </div>
@@ -157,9 +160,10 @@ export async function sendClaimRecordedEmail(email: string, itemTitle: string, c
   }
 }
 
-export async function sendNewClaimNotificationToOthers(email: string, itemTitle: string, newClaimerEmail: string, totalCount: number, allEmails: string[]) {
+export async function sendNewClaimNotificationToOthers(email: string, itemTitle: string, newClaimerEmail: string, totalCount: number, allEmails: string[], baseUrl?: string) {
   if (!transporter) return;
 
+  const portalUrl = `${baseUrl || 'https://fast-isb-exams.vercel.app'}/lost-found`;
   const emailsListHtml = allEmails.map(e => `<li style="margin-bottom: 6px; font-weight: 500; color: #1e293b;">${e}</li>`).join('');
 
   try {
@@ -192,6 +196,12 @@ export async function sendNewClaimNotificationToOthers(email: string, itemTitle:
             <ul style="margin: 0; padding-left: 20px; font-size: 13px;">
               ${emailsListHtml}
             </ul>
+          </div>
+
+          <div style="text-align: center; margin: 24px 0;">
+            <a href="${portalUrl}" style="background-color: #f1f5f9; color: #334155; padding: 10px 24px; border-radius: 8px; text-decoration: none; font-weight: 600; font-size: 14px; display: inline-block; border: 1px solid #cbd5e1;">
+              Go to Lost & Found Portal
+            </a>
           </div>
 
           <p style="color: #64748b; font-size: 12px; line-height: 1.5; margin-top: 24px;">

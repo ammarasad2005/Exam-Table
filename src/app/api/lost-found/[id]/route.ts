@@ -93,8 +93,9 @@ export async function PATCH(
           .eq('status', 'pending');
 
         if (pendingClaims && pendingClaims.length > 0) {
+          const origin = request.nextUrl.origin;
           for (const claim of pendingClaims) {
-            await sendVerificationRequestEmail(claim.claimer_email, item.title, claim.id);
+            await sendVerificationRequestEmail(claim.claimer_email, item.title, claim.id, origin);
           }
         }
       }
@@ -165,13 +166,15 @@ export async function PATCH(
           const activeClaimersEmails = allClaims ? allClaims.map(c => c.claimer_email).filter(Boolean) as string[] : [];
           const totalCount = activeClaimersEmails.length;
 
+          const origin = request.nextUrl.origin;
+
           // 1. Send unique Claim Recorded email to the current claimer
-          await sendClaimRecordedEmail(email, item.title, newClaim.id, totalCount, activeClaimersEmails);
+          await sendClaimRecordedEmail(email, item.title, newClaim.id, totalCount, activeClaimersEmails, origin);
 
           // 2. Notify all other active claimers
           const otherClaimers = activeClaimersEmails.filter(e => e.toLowerCase().trim() !== email.toLowerCase().trim());
           for (const otherEmail of otherClaimers) {
-            await sendNewClaimNotificationToOthers(otherEmail, item.title, email, totalCount, activeClaimersEmails);
+            await sendNewClaimNotificationToOthers(otherEmail, item.title, email, totalCount, activeClaimersEmails, origin);
           }
         }
       }
@@ -292,8 +295,9 @@ export async function PATCH(
         .eq('status', 'pending');
 
       if (pendingClaims && pendingClaims.length > 0) {
+        const origin = request.nextUrl.origin;
         for (const claim of pendingClaims) {
-          await sendVerificationRequestEmail(claim.claimer_email, item.title, claim.id);
+          await sendVerificationRequestEmail(claim.claimer_email, item.title, claim.id, origin);
         }
       }
     }

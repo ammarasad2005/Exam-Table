@@ -27,6 +27,7 @@ export async function GET(request: Request) {
       return NextResponse.json({ message: 'No pending claims found.' });
     }
 
+    const { origin } = new URL(request.url);
     let sentCount = 0;
 
     for (const claim of pendingClaims) {
@@ -35,7 +36,7 @@ export async function GET(request: Request) {
 
       // Only send reminders if the found item is still active
       if (associatedItem && !associatedItem.is_resolved) {
-        await sendVerificationRequestEmail(claim.claimer_email, associatedItem.title, claim.id);
+        await sendVerificationRequestEmail(claim.claimer_email, associatedItem.title, claim.id, origin);
         sentCount++;
       }
     }
