@@ -12,10 +12,10 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: 'Claim ID is required' }, { status: 400 })
     }
 
-    // Query claim details and join lost_found_items
+    // Query claim details and join lost_found_items (specifying item_id relationship explicitly)
     const { data: claim, error: claimError } = await supabase
       .from('lost_found_claims')
-      .select('*, lost_found_items(*)')
+      .select('*, lost_found_items!lost_found_claims_item_id_fkey(*)')
       .eq('id', claimId)
       .single()
 

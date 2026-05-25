@@ -12,10 +12,10 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Claim ID and email are required' }, { status: 400 })
     }
 
-    // 1. Fetch claim and item details
+    // 1. Fetch claim and item details (specifying item_id relationship explicitly)
     const { data: claim, error: claimError } = await supabase
       .from('lost_found_claims')
-      .select('*, lost_found_items(title)')
+      .select('*, lost_found_items!lost_found_claims_item_id_fkey(title)')
       .eq('id', claimId)
       .single()
 

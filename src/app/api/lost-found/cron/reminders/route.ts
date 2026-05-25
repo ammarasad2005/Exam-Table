@@ -12,10 +12,10 @@ export async function GET(request: Request) {
   }
 
   try {
-    // 1. Fetch all pending claims with their associated items
+    // 1. Fetch all pending claims with their associated items (specifying item_id relationship explicitly)
     const { data: pendingClaims, error: claimsError } = await supabase
       .from('lost_found_claims')
-      .select('*, lost_found_items(*)')
+      .select('*, lost_found_items!lost_found_claims_item_id_fkey(*)')
       .eq('status', 'pending');
 
     if (claimsError) {
