@@ -103,14 +103,20 @@ export function FeedbackWidget() {
   return (
     <>
       {/* 1. SIDE-PINNED VERTICAL TAB TRIGGER */}
-      <div className="fixed right-0 top-1/2 -translate-y-1/2 z-40 pointer-events-none">
+      <div className="fixed right-0 top-1/2 -translate-y-1/2 z-50 pointer-events-none">
         <button
           onClick={() => setIsOpen(true)}
-          className="pointer-events-auto flex items-center gap-2 bg-gradient-to-r from-orange-600 to-orange-500 text-white font-bold text-[11px] uppercase tracking-wider px-4 py-2.5 rounded-t-xl shadow-lg border border-orange-500/20 origin-bottom-right -rotate-90 translate-x-[calc(100%-35px)] hover:translate-x-[calc(100%-45px)] active:scale-95 transition-all duration-300"
-          style={{ boxShadow: '0 -4px 14px rgba(234, 88, 12, 0.3)' }}
+          className="pointer-events-auto flex items-center gap-2 bg-gradient-to-l from-orange-600 to-orange-500 hover:from-orange-500 hover:to-orange-400 text-white font-extrabold text-[10px] uppercase tracking-widest py-4 px-2.5 rounded-l-2xl shadow-2xl border-l border-y border-orange-500/20 active:scale-95 transition-all duration-200"
+          style={{ 
+            boxShadow: '-4px 0 14px rgba(234, 88, 12, 0.3)',
+            writingMode: 'vertical-rl',
+            textOrientation: 'mixed'
+          }}
         >
-          <MessageSquare width={13} height={13} className="rotate-90 animate-bounce" />
-          Give Feedback
+          <div className="flex items-center gap-1.5" style={{ writingMode: 'vertical-rl' }}>
+            <MessageSquare width={13} height={13} className="mb-2 animate-bounce" style={{ transform: 'rotate(90deg)' }} />
+            <span>Give Feedback</span>
+          </div>
         </button>
       </div>
 
