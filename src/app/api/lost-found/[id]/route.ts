@@ -190,8 +190,51 @@ export async function PATCH(
 
     if (updateError) throw updateError;
 
-    // If resolved, send reminders to all pending claimers
+    // If resolved, sync claimant's lost item resolution and send reminders to other pending claimers
     if (body.isResolved) {
+      if (item && item.type === 'found') {
+        const { data: claims } = await supabase
+          .from('lost_found_claims')
+          .select('*')
+          .eq('item_id', id);
+
+        if (claims && claims.length > 0) {
+          for (const claim of claims) {
+            if (claim.claimer_email) {
+              let lostItemId = claim.lost_item_id;
+
+              if (!lostItemId) {
+                const { data: fallbackLost } = await supabase
+                  .from('lost_found_items')
+                  .select('id')
+                  .eq('type', 'lost')
+                  .eq('is_resolved', false)
+                  .eq('contact_info', claim.claimer_email.toLowerCase().trim());
+
+                if (fallbackLost && fallbackLost.length > 0) {
+                  lostItemId = fallbackLost[0].id;
+                }
+              }
+
+              if (lostItemId) {
+                // Resolve the claimant's lost report
+                await supabase
+                  .from('lost_found_items')
+                  .update({ is_resolved: true })
+                  .eq('id', lostItemId);
+
+                // Update claim to verified and map the lost_item_id
+                await supabase
+                  .from('lost_found_claims')
+                  .update({ status: 'verified', lost_item_id: lostItemId })
+                  .eq('id', claim.id);
+              }
+            }
+          }
+        }
+      }
+
+      // Also send reminders to any remaining pending claimers (if any left after updates)
       const { data: pendingClaims } = await supabase
         .from('lost_found_claims')
         .select('*')
