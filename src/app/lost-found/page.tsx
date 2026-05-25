@@ -4325,7 +4325,7 @@ function StatsDashboard({
   const stats = [
     {
       label: 'Active Items',
-      mobileLabel: 'Active',
+      mobileLabel: 'Active Items',
       value: totalActive,
       accent: 'var(--accent-lf)',
       trend: 0,
@@ -4333,7 +4333,7 @@ function StatsDashboard({
     },
     {
       label: 'Lost This Week',
-      mobileLabel: 'Lost',
+      mobileLabel: 'Lost This Week',
       value: lostThisWeek,
       accent: 'var(--accent-ee)',
       trend: lostTrend,
@@ -4341,7 +4341,7 @@ function StatsDashboard({
     },
     {
       label: 'Found This Week',
-      mobileLabel: 'Found',
+      mobileLabel: 'Found This Week',
       value: foundThisWeek,
       accent: 'var(--accent-af)',
       trend: foundTrend,

@@ -259,7 +259,7 @@ export function ResolutionDetail({
                 VERIFIED BY AI
               </div>
               <p className="text-sm leading-relaxed" style={{ color: 'var(--color-text-secondary)' }}>
-                {"This verification photo was submitted by the claimant to verify their possession of the lost item. Antigravity's vision model matched key features and wear patterns with 100% confidence to guarantee accuracy before resolving the reports."}
+                {"This verification photo was submitted by the claimant to verify their possession of the lost item. The VLM matched key features and wear patterns with 100% confidence to guarantee accuracy before resolving the reports."}
               </p>
             </div>
           </div>
