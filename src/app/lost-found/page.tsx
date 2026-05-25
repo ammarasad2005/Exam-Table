@@ -3585,7 +3585,7 @@ function FilterSidebar({
   const [collapsedSections, setCollapsedSections] = useState<Record<string, boolean>>({
     type: false,       // default open
     dateRange: false,  // default open
-    myItems: true,     // default closed
+    myItems: false,     // default open
     category: false,   // default open
   })
 
