@@ -1467,7 +1467,7 @@ interface VerifyHoldDialogProps {
   onOpenChange: (open: boolean) => void
   claimId: string
   onClaimerEmailEstablished?: (email: string) => void
-  onResolutionCompleted: () => void
+  onResolutionCompleted: (itemId?: string) => void
 }
 
 function VerifyHoldDialog({ open, onOpenChange, claimId, onClaimerEmailEstablished, onResolutionCompleted }: VerifyHoldDialogProps) {
@@ -1564,7 +1564,7 @@ function VerifyHoldDialog({ open, onOpenChange, claimId, onClaimerEmailEstablish
             description: result.reasoning || `AI confirmed possession (${result.confidence}%). Both lost and found reports have been successfully marked as resolved.`,
             duration: 6000 
           })
-          onResolutionCompleted()
+          onResolutionCompleted(claim.item?.id)
           onOpenChange(false)
         } else {
           toast({ title: 'Verification Failed', description: data.error || 'Failed to verify retrieval.', variant: 'destructive' })
@@ -4881,6 +4881,7 @@ function LostFoundView({
           title: 'Item resolved',
           description: 'The item has been marked as resolved.',
         })
+        handleViewResolution(id)
       }
     } catch (err) {
       console.error('Failed to resolve item:', err)
@@ -6137,10 +6138,13 @@ function LostFoundView({
           onOpenChange={setShowVerifyHoldDialog}
           claimId={verifyClaimId}
           onClaimerEmailEstablished={setStoredClaimerEmail}
-          onResolutionCompleted={() => {
+          onResolutionCompleted={(itemId) => {
             fetchItems()
             if (selectedItem) {
               setSelectedItem(null)
+            }
+            if (itemId) {
+              handleViewResolution(itemId)
             }
           }}
         />
