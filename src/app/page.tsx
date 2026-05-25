@@ -272,8 +272,15 @@ export default function RootPage() {
 
           {/* Footer strip */}
           <div className="mt-10 pt-6 border-t border-[var(--color-border)]">
-            <p className="font-mono text-[10px] text-[var(--color-text-tertiary)] uppercase tracking-widest text-center">
+            <p className="font-mono text-[10px] text-[var(--color-text-tertiary)] uppercase tracking-widest text-center flex items-center justify-center gap-1">
               FAST NUCES · Islamabad Campus · Spring 2026
+              <a 
+                href="/admin" 
+                className="hover:text-orange-500 transition-colors duration-150 p-1 ml-0.5 opacity-40 hover:opacity-100"
+                title="Admin Portal"
+              >
+                🔑
+              </a>
             </p>
           </div>
         </div>
@@ -424,8 +431,15 @@ export default function RootPage() {
 
             {/* Footer strip */}
             <div className="mt-10 pt-6 border-t border-[var(--color-border)]">
-              <p className="font-mono text-[10px] text-[var(--color-text-tertiary)] uppercase tracking-widest text-center">
+              <p className="font-mono text-[10px] text-[var(--color-text-tertiary)] uppercase tracking-widest text-center flex items-center justify-center gap-1">
                 FAST NUCES · Islamabad Campus · Spring 2026
+                <a 
+                  href="/admin" 
+                  className="hover:text-orange-500 transition-colors duration-150 p-1 ml-0.5 opacity-40 hover:opacity-100"
+                  title="Admin Portal"
+                >
+                  🔑
+                </a>
               </p>
             </div>
           </div>
