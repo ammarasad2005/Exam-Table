@@ -261,13 +261,13 @@ export function FeedbackWidget() {
                     {/* Optional Email Address */}
                     <div className="space-y-2">
                       <label className="text-[10px] font-extrabold uppercase tracking-wider text-neutral-500 dark:text-neutral-400">
-                        Institutional Email (Optional)
+                        Email Address (Optional)
                       </label>
                       <input
                         type="text"
                         value={email}
                         onChange={(e) => setEmail(e.target.value)}
-                        placeholder="e.g. i210432@isb.nu.edu.pk"
+                        placeholder="e.g. john@gmail.com or i210432@isb.nu.edu.pk"
                         className="w-full px-4 py-3 text-xs rounded-xl bg-white/40 dark:bg-black/10 border border-neutral-200 dark:border-neutral-800 focus:outline-none focus:border-orange-500 focus:ring-1 focus:ring-orange-500 transition-colors"
                       />
                       <p className="text-[8px] text-neutral-400 dark:text-neutral-500 leading-normal font-medium uppercase tracking-wider">

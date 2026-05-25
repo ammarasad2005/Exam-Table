@@ -1434,7 +1434,7 @@ function UnclaimConfirmDialog({ open, onOpenChange, claimId, itemName, onSuccess
             type="email"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
-            placeholder="e.g., i231234@isb.nu.edu.pk"
+            placeholder="e.g., john@gmail.com or i231234@isb.nu.edu.pk"
             className="w-full rounded-lg px-3 py-2 text-sm border border-[var(--color-border)] bg-[var(--color-bg-subtle)] outline-none focus:border-red-500"
           />
           {errorMsg && (
@@ -1763,11 +1763,11 @@ function ReportForm({
       if (!imageFile) e.image = 'Image snapshot is mandatory for found items'
     }
     if (type === 'lost') {
-      const emailRegex = /^[a-zA-Z][0-9]{6}@isb\.nu\.edu\.pk$/
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
       if (!contactInfo.trim()) {
-        e.contactInfo = 'Institutional email is mandatory for lost items'
+        e.contactInfo = 'Email is mandatory for lost items'
       } else if (!emailRegex.test(contactInfo.trim())) {
-        e.contactInfo = 'Must be a valid institutional email (e.g., i231234@isb.nu.edu.pk)'
+        e.contactInfo = 'Must be a valid email (e.g., john@gmail.com or i231234@isb.nu.edu.pk)'
       }
     }
     if (!date) e.date = 'Date is required'
@@ -2260,13 +2260,13 @@ function ReportForm({
       {/* Contact Info */}
       <div>
         <label className="font-mono text-[10px] uppercase tracking-[0.1em] mb-2 block" style={{ color: 'var(--color-text-tertiary)' }}>
-          Contact Info <span style={{ color: 'var(--color-text-tertiary)' }}>{type === 'lost' ? '(Mandatory: NU Email)' : '(Recommended)'}</span>
+          Contact Info <span style={{ color: 'var(--color-text-tertiary)' }}>{type === 'lost' ? '(Mandatory: Email)' : '(Recommended)'}</span>
         </label>
         <input
           type="text"
           value={contactInfo}
           onChange={(e) => setContactInfo(e.target.value)}
-          placeholder="e.g., i23xxxx@isb.nu.edu.pk or +92 xxx-xxxxxxx"
+          placeholder="e.g., john@gmail.com, i23xxxx@isb.nu.edu.pk or +92 xxx-xxxxxxx"
           className={inputCls}
           style={inputStyle}
         />
@@ -3494,7 +3494,7 @@ function ItemDetail({
           <AlertDialogHeader>
             <AlertDialogTitle>Register a Claim</AlertDialogTitle>
             <AlertDialogDescription>
-              To help us verify and sync your lost reports, please enter your institutional email. Our AI will automatically check if you have reported a matching lost item.
+              To help us verify and sync your lost reports, please enter your email. Our AI will automatically check if you have reported a matching lost item.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <div className="py-4">
@@ -3502,7 +3502,7 @@ function ItemDetail({
               type="email"
               value={claimerEmail}
               onChange={(e) => setClaimerEmail(e.target.value)}
-              placeholder="e.g., i231234@isb.nu.edu.pk"
+              placeholder="e.g., john@gmail.com or i231234@isb.nu.edu.pk"
               className="w-full rounded-lg px-3 py-2 text-sm border border-[var(--color-border)] bg-[var(--color-bg-subtle)] outline-none focus:border-[var(--color-text-tertiary)]"
             />
             {checkingSync ? (
@@ -6156,7 +6156,7 @@ function LostFoundView({
           <AlertDialogHeader>
             <AlertDialogTitle>Load My Claims</AlertDialogTitle>
             <AlertDialogDescription>
-              To view all the active claims you have registered, please enter your institutional email address.
+              To view all the active claims you have registered, please enter your email address.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <div className="py-4">
@@ -6164,7 +6164,7 @@ function LostFoundView({
               type="email"
               value={tempClaimerEmail}
               onChange={(e) => setTempClaimerEmail(e.target.value)}
-              placeholder="e.g., i231234@isb.nu.edu.pk"
+              placeholder="e.g., john@gmail.com or i231234@isb.nu.edu.pk"
               className="w-full rounded-lg px-3 py-2 text-sm border border-[var(--color-border)] bg-[var(--color-bg-subtle)] outline-none focus:border-[var(--color-text-tertiary)]"
             />
           </div>
@@ -6173,14 +6173,14 @@ function LostFoundView({
             <AlertDialogAction
               onClick={(e) => {
                 e.preventDefault()
-                if (tempClaimerEmail.match(/^[a-zA-Z][0-9]{6}@isb\.nu\.edu\.pk$/)) {
+                if (tempClaimerEmail.match(/^[^\s@]+@[^\s@]+\.[^\s@]+$/)) {
                   localStorage.setItem('lf-claimer-email', tempClaimerEmail)
                   setStoredClaimerEmail(tempClaimerEmail)
                   fetchUserClaims(tempClaimerEmail)
                   setShowMyClaims(true)
                   setClaimerEmailPromptOpen(false)
                 } else {
-                  toast({ title: 'Invalid Email', description: 'Please enter a valid institutional email (e.g., i231234@isb.nu.edu.pk).', variant: 'destructive' })
+                  toast({ title: 'Invalid Email', description: 'Please enter a valid email (e.g., john@gmail.com or i231234@isb.nu.edu.pk).', variant: 'destructive' })
                 }
               }}
               className="bg-[var(--accent-lf)] text-white hover:opacity-90"
