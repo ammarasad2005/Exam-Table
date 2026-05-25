@@ -815,7 +815,7 @@ function Footer({ onQuickLink }: { onQuickLink?: (action: string) => void }) {
       >
         FAST NUCES &middot; Islamabad Campus &middot; Spring 2026
         <a 
-          href="/lost-found/admin" 
+          href="/admin" 
           className="hover:text-orange-500 transition-colors duration-150 p-1 ml-0.5 opacity-40 hover:opacity-100"
           title="Admin Portal"
         >
@@ -6398,16 +6398,12 @@ export default function LostFoundPage() {
     return () => clearInterval(interval)
   }, [])
 
-  // Keyboard shortcut: Cmd/Ctrl+K and Ctrl+Shift+A
+  // Keyboard shortcut: Cmd/Ctrl+K
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
         e.preventDefault()
         setSearchModalOpen((prev) => !prev)
-      }
-      if (e.ctrlKey && e.shiftKey && e.key.toLowerCase() === 'a') {
-        e.preventDefault()
-        router.push('/lost-found/admin')
       }
       if (e.key === 'Escape' && searchModalOpen) {
         setSearchModalOpen(false)

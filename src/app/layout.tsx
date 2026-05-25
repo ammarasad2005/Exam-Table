@@ -8,7 +8,7 @@ import { FloatingMenu } from '@/components/FloatingMenu';
 import { Analytics } from '@vercel/analytics/next';
 import { Toaster } from '@/components/ui/toaster';
 import { FeedbackWidget } from '@/components/FeedbackWidget';
-
+import { GlobalShortcuts } from '@/components/GlobalShortcuts';
 const dmSans = DM_Sans({
   subsets: ['latin'],
   variable: '--font-body',
@@ -76,6 +76,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           <Navbar />
           <FloatingMenu />
           <FeedbackWidget />
+          <GlobalShortcuts />
           <Toaster />
         </ThemeProvider>
         <Analytics />

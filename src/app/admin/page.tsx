@@ -156,7 +156,7 @@ export default function AdminPage() {
   // Check Authentication Status
   const checkAuth = useCallback(async () => {
     try {
-      const res = await fetch('/api/lost-found/admin/check')
+      const res = await fetch('/api/admin/check')
       const data = await res.json()
       setAuthenticated(data.authenticated)
       if (data.authenticated) {
@@ -186,7 +186,7 @@ export default function AdminPage() {
 
     setLoginLoading(true)
     try {
-      const res = await fetch('/api/lost-found/admin/login', {
+      const res = await fetch('/api/admin/login', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ username: usernameInput.trim(), password: passwordInput })
@@ -214,7 +214,7 @@ export default function AdminPage() {
   // Handle Logout
   const handleLogout = async () => {
     try {
-      const res = await fetch('/api/lost-found/admin/logout', { method: 'POST' })
+      const res = await fetch('/api/admin/logout', { method: 'POST' })
       if (res.ok) {
         setAuthenticated(false)
         setUsernameInput('')
