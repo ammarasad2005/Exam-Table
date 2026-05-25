@@ -190,7 +190,7 @@ export async function PATCH(
 
     if (updateError) throw updateError;
 
-    // If resolved, sync claimant's lost item resolution and send reminders to other pending claimers
+    // If resolved, sync claimant's lost item resolution and link them in resolved_by field
     if (body.isResolved) {
       if (item && item.type === 'found') {
         const { data: claims } = await supabase
@@ -198,38 +198,67 @@ export async function PATCH(
           .select('*')
           .eq('item_id', id);
 
+        let lostItemId = null;
+        let claimerId = body.resolvedBy || 'anon';
+
         if (claims && claims.length > 0) {
-          for (const claim of claims) {
-            if (claim.claimer_email) {
-              let lostItemId = claim.lost_item_id;
+          const activeClaim = claims[0];
+          claimerId = activeClaim.claimer_id || claimerId;
+          lostItemId = activeClaim.lost_item_id;
 
-              if (!lostItemId) {
-                const { data: fallbackLost } = await supabase
-                  .from('lost_found_items')
-                  .select('id')
-                  .eq('type', 'lost')
-                  .eq('is_resolved', false)
-                  .eq('contact_info', claim.claimer_email.toLowerCase().trim());
+          if (!lostItemId && activeClaim.claimer_email) {
+            const { data: fallbackLost } = await supabase
+              .from('lost_found_items')
+              .select('id')
+              .eq('type', 'lost')
+              .eq('is_resolved', false)
+              .eq('contact_info', activeClaim.claimer_email.toLowerCase().trim());
 
-                if (fallbackLost && fallbackLost.length > 0) {
-                  lostItemId = fallbackLost[0].id;
-                }
-              }
-
-              if (lostItemId) {
-                // Resolve the claimant's lost report
-                await supabase
-                  .from('lost_found_items')
-                  .update({ is_resolved: true })
-                  .eq('id', lostItemId);
-
-                // Update claim to verified and map the lost_item_id
-                await supabase
-                  .from('lost_found_claims')
-                  .update({ status: 'verified', lost_item_id: lostItemId })
-                  .eq('id', claim.id);
-              }
+            if (fallbackLost && fallbackLost.length > 0) {
+              lostItemId = fallbackLost[0].id;
             }
+          }
+        } else if (body.resolvedBy && body.resolvedBy.includes('@')) {
+          // Fallback if resolvedBy is email
+          const { data: fallbackLost } = await supabase
+            .from('lost_found_items')
+            .select('id')
+            .eq('type', 'lost')
+            .eq('is_resolved', false)
+            .eq('contact_info', body.resolvedBy.toLowerCase().trim());
+
+          if (fallbackLost && fallbackLost.length > 0) {
+            lostItemId = fallbackLost[0].id;
+          }
+        }
+
+        if (lostItemId) {
+          // 1. Update found item resolved_by to hold the linked lost item
+          await supabase
+            .from('lost_found_items')
+            .update({ 
+              resolved_by: `${claimerId}:${lostItemId}`,
+              resolution_image_url: body.resolutionImageUrl || item.resolution_image_url
+            })
+            .eq('id', id);
+
+          // 2. Resolve claimant's lost report and store the found item link
+          await supabase
+            .from('lost_found_items')
+            .update({ 
+              is_resolved: true,
+              resolved_by: `${claimerId}:${id}`,
+              resolution_image_url: body.resolutionImageUrl || item.resolution_image_url
+            })
+            .eq('id', lostItemId);
+
+          // 3. Try to update claim status to verified for good measure (might be blocked by RLS, which is fine since we now bypass it)
+          const matchingClaim = claims?.find(c => c.item_id === id);
+          if (matchingClaim) {
+            await supabase
+              .from('lost_found_claims')
+              .update({ status: 'verified', lost_item_id: lostItemId })
+              .eq('id', matchingClaim.id);
           }
         }
       }

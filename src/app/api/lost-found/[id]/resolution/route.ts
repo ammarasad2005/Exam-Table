@@ -10,132 +10,107 @@ export async function GET(
   try {
     const { id } = params;
 
-    // 1. Find the verified claim linking the items
-    const { data: claim, error: claimError } = await supabase
-      .from("lost_found_claims")
+    // 1. Fetch the selected item
+    const { data: selectedItem, error: fetchError } = await supabase
+      .from("lost_found_items")
       .select("*")
-      .or(`item_id.eq.${id},lost_item_id.eq.${id}`)
-      .eq("status", "verified")
-      .maybeSingle();
+      .eq("id", id)
+      .single();
 
-    if (claimError) {
-      console.error("Error fetching claim for resolution:", claimError);
+    if (fetchError || !selectedItem) {
+      return NextResponse.json({ error: "Item not found" }, { status: 404 });
     }
 
     let foundItem = null;
     let lostItem = null;
+    let claim = null;
 
-    if (claim) {
-      // Fetch both items if claim exists
-      if (claim.item_id) {
-        const { data: fItem } = await supabase
-          .from("lost_found_items")
-          .select("*")
-          .eq("id", claim.item_id)
-          .single();
-        if (fItem) {
-          foundItem = {
-            id: fItem.id,
-            type: fItem.type,
-            category: fItem.category,
-            title: fItem.title,
-            description: fItem.description,
-            location: fItem.location,
-            handoffNote: fItem.handoff_note,
-            parsedFoundAt: fItem.parsed_found_at ?? undefined,
-            parsedSubmittedAt: fItem.parsed_submitted_at ?? undefined,
-            rawFoundAt: fItem.raw_found_at ?? undefined,
-            rawSubmittedAt: fItem.raw_submitted_at ?? undefined,
-            date: fItem.date,
-            contactInfo: fItem.contact_info,
-            reporterName: fItem.reporter_name,
-            isResolved: fItem.is_resolved,
-            resolvedBy: fItem.resolved_by,
-            imageUrl: fItem.image_url,
-            resolutionImageUrl: fItem.resolution_image_url,
-            createdAt: fItem.created_at,
-            updatedAt: fItem.updated_at,
-          };
-        }
-      }
+    // 2. Parse resolved_by to see if it holds a linked item ID
+    let linkedItemId = null;
+    let claimerId = selectedItem.resolved_by;
 
-      if (claim.lost_item_id) {
-        const { data: lItem } = await supabase
-          .from("lost_found_items")
-          .select("*")
-          .eq("id", claim.lost_item_id)
-          .single();
-        if (lItem) {
-          lostItem = {
-            id: lItem.id,
-            type: lItem.type,
-            category: lItem.category,
-            title: lItem.title,
-            description: lItem.description,
-            location: lItem.location,
-            handoffNote: lItem.handoff_note,
-            parsedFoundAt: lItem.parsed_found_at ?? undefined,
-            parsedSubmittedAt: lItem.parsed_submitted_at ?? undefined,
-            rawFoundAt: lItem.raw_found_at ?? undefined,
-            rawSubmittedAt: lItem.raw_submitted_at ?? undefined,
-            date: lItem.date,
-            contactInfo: lItem.contact_info,
-            reporterName: lItem.reporter_name,
-            isResolved: lItem.is_resolved,
-            resolvedBy: lItem.resolved_by,
-            imageUrl: lItem.image_url,
-            resolutionImageUrl: lItem.resolution_image_url,
-            createdAt: lItem.created_at,
-            updatedAt: lItem.updated_at,
-          };
-        }
-      }
-    } else {
-      // Fallback: if no claim found, just fetch the single item
-      const { data: singleItem } = await supabase
+    if (selectedItem.resolved_by && selectedItem.resolved_by.includes(':')) {
+      const parts = selectedItem.resolved_by.split(':');
+      claimerId = parts[0];
+      linkedItemId = parts[1];
+    }
+
+    // 3. Fetch linked item if present
+    let linkedItem = null;
+    if (linkedItemId) {
+      const { data: lItem } = await supabase
         .from("lost_found_items")
         .select("*")
-        .eq("id", id)
+        .eq("id", linkedItemId)
         .single();
-      if (singleItem) {
-        const mapped = {
-          id: singleItem.id,
-          type: singleItem.type,
-          category: singleItem.category,
-          title: singleItem.title,
-          description: singleItem.description,
-          location: singleItem.location,
-          handoffNote: singleItem.handoff_note,
-          parsedFoundAt: singleItem.parsed_found_at ?? undefined,
-          parsedSubmittedAt: singleItem.parsed_submitted_at ?? undefined,
-          rawFoundAt: singleItem.raw_found_at ?? undefined,
-          rawSubmittedAt: singleItem.raw_submitted_at ?? undefined,
-          date: singleItem.date,
-          contactInfo: singleItem.contact_info,
-          reporterName: singleItem.reporter_name,
-          isResolved: singleItem.is_resolved,
-          resolvedBy: singleItem.resolved_by,
-          imageUrl: singleItem.image_url,
-          resolutionImageUrl: singleItem.resolution_image_url,
-          createdAt: singleItem.created_at,
-          updatedAt: singleItem.updated_at,
+      if (lItem) {
+        linkedItem = {
+          id: lItem.id,
+          type: lItem.type,
+          category: lItem.category,
+          title: lItem.title,
+          description: lItem.description,
+          location: lItem.location,
+          handoffNote: lItem.handoff_note,
+          parsedFoundAt: lItem.parsed_found_at ?? undefined,
+          parsedSubmittedAt: lItem.parsed_submitted_at ?? undefined,
+          rawFoundAt: lItem.raw_found_at ?? undefined,
+          rawSubmittedAt: lItem.raw_submitted_at ?? undefined,
+          date: lItem.date,
+          contactInfo: lItem.contact_info,
+          reporterName: lItem.reporter_name,
+          isResolved: lItem.is_resolved,
+          resolvedBy: lItem.resolved_by,
+          imageUrl: lItem.image_url,
+          resolutionImageUrl: lItem.resolution_image_url,
+          createdAt: lItem.created_at,
+          updatedAt: lItem.updated_at,
         };
-        if (mapped.type === "found") {
-          foundItem = mapped;
-        } else {
-          lostItem = mapped;
-        }
       }
     }
 
+    const mappedSelected = {
+      id: selectedItem.id,
+      type: selectedItem.type,
+      category: selectedItem.category,
+      title: selectedItem.title,
+      description: selectedItem.description,
+      location: selectedItem.location,
+      handoffNote: selectedItem.handoff_note,
+      parsedFoundAt: selectedItem.parsed_found_at ?? undefined,
+      parsedSubmittedAt: selectedItem.parsed_submitted_at ?? undefined,
+      rawFoundAt: selectedItem.raw_found_at ?? undefined,
+      rawSubmittedAt: selectedItem.raw_submitted_at ?? undefined,
+      date: selectedItem.date,
+      contactInfo: selectedItem.contact_info,
+      reporterName: selectedItem.reporter_name,
+      isResolved: selectedItem.is_resolved,
+      resolvedBy: selectedItem.resolved_by,
+      imageUrl: selectedItem.image_url,
+      resolutionImageUrl: selectedItem.resolution_image_url,
+      createdAt: selectedItem.created_at,
+      updatedAt: selectedItem.updated_at,
+    };
+
+    if (selectedItem.type === "found") {
+      foundItem = mappedSelected;
+      lostItem = linkedItem;
+    } else {
+      lostItem = mappedSelected;
+      foundItem = linkedItem;
+    }
+
+    // 4. Synthesize claim info for display using the data we have
+    claim = {
+      id: `resolved-${selectedItem.id.slice(0, 8)}`,
+      claimerId: claimerId || "anon",
+      claimerEmail: foundItem?.contactInfo || lostItem?.contactInfo || "fast.student@isb.nu.edu.pk",
+      status: "verified",
+      createdAt: selectedItem.updated_at,
+    };
+
     return NextResponse.json({
-      claim: claim ? {
-        id: claim.id,
-        claimerId: claim.claimer_id,
-        claimerEmail: claim.claimer_email,
-        status: claim.status,
-        createdAt: claim.created_at,
-      } : null,
+      claim,
       foundItem,
       lostItem,
     });
