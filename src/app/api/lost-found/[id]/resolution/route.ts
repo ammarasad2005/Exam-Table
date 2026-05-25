@@ -101,10 +101,17 @@ export async function GET(
     }
 
     // 4. Synthesize claim info for display using the data we have
+    let claimerEmail = "fast.student@isb.nu.edu.pk";
+    if (lostItem?.contactInfo && lostItem.contactInfo !== "not provided") {
+      claimerEmail = lostItem.contactInfo;
+    } else if (foundItem?.contactInfo && foundItem.contactInfo !== "not provided") {
+      claimerEmail = foundItem.contactInfo;
+    }
+
     claim = {
       id: `resolved-${selectedItem.id.slice(0, 8)}`,
       claimerId: claimerId || "anon",
-      claimerEmail: foundItem?.contactInfo || lostItem?.contactInfo || "fast.student@isb.nu.edu.pk",
+      claimerEmail,
       status: "verified",
       createdAt: selectedItem.updated_at,
     };
