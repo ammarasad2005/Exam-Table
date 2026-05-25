@@ -5,7 +5,7 @@ export const dynamic = 'force-dynamic'
 
 export async function POST(request: NextRequest) {
   try {
-    const { claimId } = await request.json()
+    const { claimId, resolutionImageUrl } = await request.json()
 
     if (!claimId) {
       return NextResponse.json({ error: 'Claim ID is required' }, { status: 400 })
@@ -34,24 +34,26 @@ export async function POST(request: NextRequest) {
 
     if (claimUpdateError) throw claimUpdateError
 
-    // 3. Mark the associated found item as resolved
+    // 3. Mark the associated found item as resolved with the resolution photo
     const { error: foundItemError } = await supabase
       .from('lost_found_items')
       .update({ 
         is_resolved: true,
-        resolved_by: `Claimant verified (${claim.claimer_email})`
+        resolved_by: `Claimant verified (${claim.claimer_email})`,
+        resolution_image_url: resolutionImageUrl || null
       })
       .eq('id', claim.item_id)
 
     if (foundItemError) throw foundItemError
 
-    // 4. If there is a linked lost item report, mark it as resolved simultaneously
+    // 4. If there is a linked lost item report, mark it as resolved simultaneously with the resolution photo
     if (claim.lost_item_id) {
       const { error: lostItemError } = await supabase
         .from('lost_found_items')
         .update({ 
           is_resolved: true,
-          resolved_by: `Claimant verified sync (${claim.claimer_email})`
+          resolved_by: `Claimant verified sync (${claim.claimer_email})`,
+          resolution_image_url: resolutionImageUrl || null
         })
         .eq('id', claim.lost_item_id)
 

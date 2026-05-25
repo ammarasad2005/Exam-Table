@@ -1475,6 +1475,7 @@ function VerifyHoldDialog({ open, onOpenChange, claimId, onClaimerEmailEstablish
   const [loading, setLoading] = useState(true)
   const [verifying, setVerifying] = useState(false)
   const [unclaimOpen, setUnclaimOpen] = useState(false)
+  const [verificationImage, setVerificationImage] = useState<File | null>(null)
   const { toast } = useToast()
 
   useEffect(() => {
@@ -1506,27 +1507,77 @@ function VerifyHoldDialog({ open, onOpenChange, claimId, onClaimerEmailEstablish
     fetchDetails()
   }, [open, claimId, onOpenChange, toast, onClaimerEmailEstablished])
 
+  const fileToBase64 = (file: File): Promise<string> => {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader()
+      reader.readAsDataURL(file)
+      reader.onload = () => resolve((reader.result as string).split(',')[1])
+      reader.onerror = error => reject(error)
+    })
+  }
+
   const handleVerifyCollection = async () => {
+    if (!verificationImage) {
+      toast({ title: 'Photo Required', description: 'Please take/upload a live photo of the item in your possession to verify retrieval.', variant: 'destructive' })
+      return
+    }
+
     setVerifying(true)
     try {
-      const res = await fetch('/api/lost-found/claim/verify-hold', {
+      // 1. Compress and prepare image
+      const compressionOptions = { maxSizeMB: 0.5, maxWidthOrHeight: 800, useWebWorker: true }
+      const compressed = await imageCompression(verificationImage, compressionOptions)
+      const base64 = await fileToBase64(compressed)
+
+      // 2. Call AI Verify API to ensure match
+      const verifyRes = await fetch('/api/lost-found/verify', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ claimId })
+        body: JSON.stringify({ 
+          originalImageUrl: claim.item?.imageUrl, 
+          resolutionImageBase64: base64,
+          itemId: claim.item?.id,
+          claimId: claim.id
+        }),
       })
-      const data = await res.json()
-      if (res.ok) {
-        toast({ 
-          title: 'Retrieval Verified!', 
-          description: 'Thank you! Both lost and found reports have been successfully marked as resolved.',
-          duration: 6000 
+      
+      const result = await verifyRes.json()
+
+      if (result.match && result.confidence >= 75) {
+        // 3. Upload resolution image to storage
+        const fileExt = compressed.name.split('.').pop()
+        const fileName = `resolved-${claim.item.id}-${Date.now()}.${fileExt}`
+        const { error: uploadError } = await supabase.storage.from('lost_found_images').upload(fileName, compressed)
+        if (uploadError) throw new Error('Upload failed')
+        const { data: { publicUrl } } = supabase.storage.from('lost_found_images').getPublicUrl(fileName)
+
+        // 4. Save verify details in database
+        const res = await fetch('/api/lost-found/claim/verify-hold', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ claimId, resolutionImageUrl: publicUrl })
         })
-        onResolutionCompleted()
-        onOpenChange(false)
+        const data = await res.json()
+        if (res.ok) {
+          toast({ 
+            title: 'Retrieval Verified!', 
+            description: result.reasoning || `AI confirmed possession (${result.confidence}%). Both lost and found reports have been successfully marked as resolved.`,
+            duration: 6000 
+          })
+          onResolutionCompleted()
+          onOpenChange(false)
+        } else {
+          toast({ title: 'Verification Failed', description: data.error || 'Failed to verify retrieval.', variant: 'destructive' })
+        }
       } else {
-        toast({ title: 'Verification Failed', description: data.error || 'Failed to verify retrieval.', variant: 'destructive' })
+        toast({ 
+          title: 'Verification Failed', 
+          description: `${result.reasoning || 'Item does not match original report.'} (Confidence: ${result.confidence}%)`, 
+          variant: 'destructive' 
+        })
       }
     } catch (err) {
+      console.error(err)
       toast({ title: 'Error', description: 'Failed to connect to verification server.', variant: 'destructive' })
     } finally {
       setVerifying(false)
@@ -1579,6 +1630,27 @@ function VerifyHoldDialog({ open, onOpenChange, claimId, onClaimerEmailEstablish
                   </div>
                 </div>
 
+                {/* AI Live Photo Verification UI */}
+                <div className="my-3 space-y-2">
+                  <span className="text-xs font-bold" style={{ color: 'var(--color-text-primary)' }}>
+                    Live Possession Photo Match:
+                  </span>
+                  {!verificationImage ? (
+                    <label className="flex flex-col items-center justify-center h-28 rounded-xl border-2 border-dashed transition-colors cursor-pointer hover:bg-black/5" style={{ borderColor: 'var(--color-border)' }}>
+                      <Camera width={20} height={20} style={{ color: 'var(--color-text-tertiary)' }} />
+                      <span className="text-[10px] font-bold mt-1.5" style={{ color: 'var(--color-text-tertiary)' }}>Take/Upload photo of item in hand</span>
+                      <input type="file" accept="image/*" capture="environment" className="hidden" onChange={(e) => setVerificationImage(e.target.files?.[0] || null)} />
+                    </label>
+                  ) : (
+                    <div className="relative rounded-xl overflow-hidden h-28 border border-[var(--color-border)]">
+                      <img src={URL.createObjectURL(verificationImage)} className="w-full h-full object-cover" alt="Possession Proof" />
+                      <button onClick={() => setVerificationImage(null)} className="absolute top-1.5 right-1.5 w-5 h-5 rounded-full bg-black/50 text-white flex items-center justify-center">
+                        <X width={10} height={10} />
+                      </button>
+                    </div>
+                  )}
+                </div>
+
                 <div className="p-3 bg-[#16a34a]/5 rounded-lg border border-[#16a34a]/20 text-[10px] text-[#16a34a] text-center leading-relaxed">
                   💡 By confirming, you verify that you have successfully retrieved this item. This will resolve the report for you and the finder, closing all matching queues.
                 </div>
@@ -1593,7 +1665,7 @@ function VerifyHoldDialog({ open, onOpenChange, claimId, onClaimerEmailEstablish
                   </button>
                   <button
                     onClick={handleVerifyCollection}
-                    disabled={verifying}
+                    disabled={!verificationImage || verifying}
                     className="flex-1 rounded-xl py-3 text-xs font-black uppercase tracking-wider transition-all text-white bg-[#16a34a] hover:opacity-90 disabled:opacity-50 flex items-center justify-center gap-1.5"
                   >
                     {verifying ? (
