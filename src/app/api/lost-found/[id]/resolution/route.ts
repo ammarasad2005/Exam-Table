@@ -25,16 +25,6 @@ export async function GET(
     let lostItem = null;
     let claim = null;
 
-    // 2. Parse resolved_by to see if it holds a linked item ID
-    let linkedItemId = null;
-    let claimerId = selectedItem.resolved_by;
-
-    if (selectedItem.resolved_by && selectedItem.resolved_by.includes(':')) {
-      const parts = selectedItem.resolved_by.split(':');
-      claimerId = parts[0];
-      linkedItemId = parts[1];
-    }
-
     // Helper to calculate keyword overlap
     const getKeywordOverlapScore = (str1: string, str2: string): number => {
       const words1 = new Set((str1 || '').toLowerCase().split(/\s+/).filter(w => w.length > 2));
@@ -46,14 +36,68 @@ export async function GET(
       return intersection;
     };
 
-    // 3. Fetch linked item if present or execute advanced fallback matcher
     let linkedItem = null;
+    let linkedItemId = null;
+    let claimerId = selectedItem.resolved_by || "anon";
+    let claimerEmail = "fast.student@isb.nu.edu.pk";
+
+    // Tier 1: Query the lost_found_claims table to find any verified claims matching the item
+    const { data: claims } = await supabase
+      .from("lost_found_claims")
+      .select("*")
+      .or(`item_id.eq.${id},lost_item_id.eq.${id}`);
+
+    let activeClaim = claims?.find(c => c.status === 'verified');
+    if (!activeClaim && claims && claims.length > 0) {
+      activeClaim = claims[0];
+    }
+
+    if (activeClaim) {
+      claimerId = activeClaim.claimer_id || claimerId;
+      claimerEmail = activeClaim.claimer_email || claimerEmail;
+      if (selectedItem.type === 'found') {
+        linkedItemId = activeClaim.lost_item_id;
+      } else {
+        linkedItemId = activeClaim.item_id;
+      }
+    }
+
+    // Tier 2: Parse resolved_by column format "claimerId:linkedItemId"
+    if (selectedItem.resolved_by && selectedItem.resolved_by.includes(':')) {
+      const parts = selectedItem.resolved_by.split(':');
+      if (parts[0] && parts[0] !== 'Claimant verified' && parts[0] !== 'Claimant verified sync') {
+        claimerId = parts[0];
+      }
+      const possibleId = parts[1];
+      if (possibleId && possibleId.length === 36) { // Check if UUID
+        linkedItemId = possibleId;
+      }
+    }
+
+    // Tier 3: Parse email out of resolved_by string (e.g. Claimant verified (email))
+    let emailFromResolvedBy = null;
+    if (selectedItem.resolved_by) {
+      if (selectedItem.resolved_by.includes('(') && selectedItem.resolved_by.includes(')')) {
+        const match = selectedItem.resolved_by.match(/\(([^)]+)\)/);
+        if (match) {
+          emailFromResolvedBy = match[1].trim().toLowerCase();
+        }
+      } else if (selectedItem.resolved_by.includes('@') && !selectedItem.resolved_by.includes(':')) {
+        emailFromResolvedBy = selectedItem.resolved_by.trim().toLowerCase();
+      }
+    }
+    if (emailFromResolvedBy) {
+      claimerEmail = emailFromResolvedBy;
+    }
+
+    // Fetch by linkedItemId if we determined it
     if (linkedItemId) {
       const { data: lItem } = await supabase
         .from("lost_found_items")
         .select("*")
         .eq("id", linkedItemId)
         .single();
+      
       if (lItem) {
         linkedItem = {
           id: lItem.id,
@@ -78,25 +122,30 @@ export async function GET(
           updatedAt: lItem.updated_at,
         };
       }
-    } else {
-      // Fallback matching layer
-      if (selectedItem.type === 'lost') {
-        const email = selectedItem.contact_info?.trim().toLowerCase();
-        if (email) {
-          const { data: candidates } = await supabase
-            .from("lost_found_items")
-            .select("*")
-            .eq("type", "found")
-            .eq("is_resolved", true)
-            .ilike("resolved_by", `%${email}%`);
+    }
 
-          if (candidates && candidates.length > 0) {
+    // Tier 4: Case-insensitive email-based matching fallback
+    if (!linkedItem && claimerEmail) {
+      const emailPattern = claimerEmail.trim().toLowerCase();
+      if (selectedItem.type === 'lost') {
+        const { data: candidates } = await supabase
+          .from("lost_found_items")
+          .select("*")
+          .eq("type", "found")
+          .eq("is_resolved", true);
+
+        if (candidates && candidates.length > 0) {
+          const matchedCandidates = candidates.filter(cand => {
+            const resBy = (cand.resolved_by || '').toLowerCase();
+            return resBy.includes(emailPattern);
+          });
+
+          if (matchedCandidates.length > 0) {
             let bestCandidate = null;
             let bestScore = -1;
 
-            for (const cand of candidates) {
+            for (const cand of matchedCandidates) {
               let score = 0;
-              // Time proximity: resolved within 15 minutes (900,000 ms)
               const timeDiff = Math.abs(new Date(selectedItem.updated_at).getTime() - new Date(cand.updated_at).getTime());
               if (timeDiff <= 15 * 60 * 1000) {
                 score += 10;
@@ -137,28 +186,24 @@ export async function GET(
           }
         }
       } else if (selectedItem.type === 'found') {
-        let emailFromResolvedBy = null;
-        if (selectedItem.resolved_by && selectedItem.resolved_by.includes('(') && selectedItem.resolved_by.includes(')')) {
-          const match = selectedItem.resolved_by.match(/\(([^)]+)\)/);
-          if (match) {
-            emailFromResolvedBy = match[1].trim().toLowerCase();
-          }
-        }
-        if (emailFromResolvedBy) {
-          const { data: candidates } = await supabase
-            .from("lost_found_items")
-            .select("*")
-            .eq("type", "lost")
-            .eq("is_resolved", true)
-            .eq("contact_info", emailFromResolvedBy);
+        const { data: candidates } = await supabase
+          .from("lost_found_items")
+          .select("*")
+          .eq("type", "lost")
+          .eq("is_resolved", true);
 
-          if (candidates && candidates.length > 0) {
+        if (candidates && candidates.length > 0) {
+          const matchedCandidates = candidates.filter(cand => {
+            const contact = (cand.contact_info || '').trim().toLowerCase();
+            return contact === emailPattern;
+          });
+
+          if (matchedCandidates.length > 0) {
             let bestCandidate = null;
             let bestScore = -1;
 
-            for (const cand of candidates) {
+            for (const cand of matchedCandidates) {
               let score = 0;
-              // Time proximity: resolved within 15 minutes (900,000 ms)
               const timeDiff = Math.abs(new Date(selectedItem.updated_at).getTime() - new Date(cand.updated_at).getTime());
               if (timeDiff <= 15 * 60 * 1000) {
                 score += 10;
@@ -201,6 +246,113 @@ export async function GET(
       }
     }
 
+    // Tier 5: General Keyword overlap fallback matching (if emails are missing or unlinked)
+    if (!linkedItem) {
+      if (selectedItem.type === 'lost') {
+        const { data: candidates } = await supabase
+          .from("lost_found_items")
+          .select("*")
+          .eq("type", "found")
+          .eq("is_resolved", true);
+
+        if (candidates && candidates.length > 0) {
+          let bestCandidate = null;
+          let bestScore = -1;
+
+          for (const cand of candidates) {
+            let score = 0;
+            const timeDiff = Math.abs(new Date(selectedItem.updated_at).getTime() - new Date(cand.updated_at).getTime());
+            if (timeDiff <= 15 * 60 * 1000) {
+              score += 10;
+            }
+            score += getKeywordOverlapScore(selectedItem.title, cand.title) * 4;
+            score += getKeywordOverlapScore(selectedItem.description, cand.description) * 2;
+
+            if (score > bestScore && score > 2) {
+              bestScore = score;
+              bestCandidate = cand;
+            }
+          }
+
+          if (bestCandidate) {
+            linkedItem = {
+              id: bestCandidate.id,
+              type: bestCandidate.type,
+              category: bestCandidate.category,
+              title: bestCandidate.title,
+              description: bestCandidate.description,
+              location: bestCandidate.location,
+              handoffNote: bestCandidate.handoff_note,
+              parsedFoundAt: bestCandidate.parsed_found_at ?? undefined,
+              parsedSubmittedAt: bestCandidate.parsed_submitted_at ?? undefined,
+              rawFoundAt: bestCandidate.raw_found_at ?? undefined,
+              rawSubmittedAt: bestCandidate.raw_submitted_at ?? undefined,
+              date: bestCandidate.date,
+              contactInfo: bestCandidate.contact_info,
+              reporterName: bestCandidate.reporter_name,
+              isResolved: bestCandidate.is_resolved,
+              resolvedBy: bestCandidate.resolved_by,
+              imageUrl: bestCandidate.image_url,
+              resolutionImageUrl: bestCandidate.resolution_image_url,
+              createdAt: bestCandidate.created_at,
+              updatedAt: bestCandidate.updated_at,
+            };
+          }
+        }
+      } else if (selectedItem.type === 'found') {
+        const { data: candidates } = await supabase
+          .from("lost_found_items")
+          .select("*")
+          .eq("type", "lost")
+          .eq("is_resolved", true);
+
+        if (candidates && candidates.length > 0) {
+          let bestCandidate = null;
+          let bestScore = -1;
+
+          for (const cand of candidates) {
+            let score = 0;
+            const timeDiff = Math.abs(new Date(selectedItem.updated_at).getTime() - new Date(cand.updated_at).getTime());
+            if (timeDiff <= 15 * 60 * 1000) {
+              score += 10;
+            }
+            score += getKeywordOverlapScore(selectedItem.title, cand.title) * 4;
+            score += getKeywordOverlapScore(selectedItem.description, cand.description) * 2;
+
+            if (score > bestScore && score > 2) {
+              bestScore = score;
+              bestCandidate = cand;
+            }
+          }
+
+          if (bestCandidate) {
+            linkedItem = {
+              id: bestCandidate.id,
+              type: bestCandidate.type,
+              category: bestCandidate.category,
+              title: bestCandidate.title,
+              description: bestCandidate.description,
+              location: bestCandidate.location,
+              handoffNote: bestCandidate.handoff_note,
+              parsedFoundAt: bestCandidate.parsed_found_at ?? undefined,
+              parsedSubmittedAt: bestCandidate.parsed_submitted_at ?? undefined,
+              rawFoundAt: bestCandidate.raw_found_at ?? undefined,
+              rawSubmittedAt: bestCandidate.raw_submitted_at ?? undefined,
+              date: bestCandidate.date,
+              contactInfo: bestCandidate.contact_info,
+              reporterName: bestCandidate.reporter_name,
+              isResolved: bestCandidate.is_resolved,
+              resolvedBy: bestCandidate.resolved_by,
+              imageUrl: bestCandidate.image_url,
+              resolutionImageUrl: bestCandidate.resolution_image_url,
+              createdAt: bestCandidate.created_at,
+              updatedAt: bestCandidate.updated_at,
+            };
+          }
+        }
+      }
+    }
+
     const mappedSelected = {
       id: selectedItem.id,
       type: selectedItem.type,
@@ -232,18 +384,17 @@ export async function GET(
       foundItem = linkedItem;
     }
 
-    // 4. Synthesize claim info for display using the data we have
-    let claimerEmail = "fast.student@isb.nu.edu.pk";
-    if (lostItem?.contactInfo && lostItem.contactInfo !== "not provided") {
+    // Try to synthesize clean claimer email
+    if (lostItem?.contactInfo && lostItem.contactInfo !== "not provided" && lostItem.contactInfo.includes('@')) {
       claimerEmail = lostItem.contactInfo;
-    } else if (foundItem?.contactInfo && foundItem.contactInfo !== "not provided") {
+    } else if (foundItem?.contactInfo && foundItem.contactInfo !== "not provided" && foundItem.contactInfo.includes('@')) {
       claimerEmail = foundItem.contactInfo;
     }
 
     claim = {
-      id: `resolved-${selectedItem.id.slice(0, 8)}`,
+      id: activeClaim?.id || `resolved-${selectedItem.id.slice(0, 8)}`,
       claimerId: claimerId || "anon",
-      claimerEmail,
+      claimerEmail: claimerEmail || "fast.student@isb.nu.edu.pk",
       status: "verified",
       createdAt: selectedItem.updated_at,
     };

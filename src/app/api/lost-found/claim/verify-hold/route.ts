@@ -39,7 +39,7 @@ export async function POST(request: NextRequest) {
       .from('lost_found_items')
       .update({ 
         is_resolved: true,
-        resolved_by: `Claimant verified (${claim.claimer_email})`,
+        resolved_by: claim.lost_item_id ? `${claim.claimer_id}:${claim.lost_item_id}` : `Claimant verified (${claim.claimer_email})`,
         resolution_image_url: resolutionImageUrl || null
       })
       .eq('id', claim.item_id)
@@ -52,7 +52,7 @@ export async function POST(request: NextRequest) {
         .from('lost_found_items')
         .update({ 
           is_resolved: true,
-          resolved_by: `Claimant verified sync (${claim.claimer_email})`,
+          resolved_by: `${claim.claimer_id}:${claim.item_id}`,
           resolution_image_url: resolutionImageUrl || null
         })
         .eq('id', claim.lost_item_id)
