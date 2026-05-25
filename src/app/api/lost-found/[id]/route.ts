@@ -3,7 +3,8 @@ import { supabase } from "@/lib/supabase";
 import { 
   sendVerificationRequestEmail, 
   sendClaimRecordedEmail, 
-  sendNewClaimNotificationToOthers 
+  sendNewClaimNotificationToOthers,
+  sendClaimNotificationToReporter
 } from "@/lib/email";
 import { isAdminAuthenticated } from "@/lib/admin";
 
@@ -154,7 +155,7 @@ export async function PATCH(
 
       // Send initial transparency and verification request emails
       if (email) {
-        const { data: item } = await supabase.from('lost_found_items').select('title').eq('id', id).single();
+        const { data: item } = await supabase.from('lost_found_items').select('title, contact_info, type').eq('id', id).single();
         if (item) {
           // Fetch all active pending claims for this item (including the new one)
           const { data: allClaims } = await supabase
@@ -175,6 +176,11 @@ export async function PATCH(
           const otherClaimers = activeClaimersEmails.filter(e => e.toLowerCase().trim() !== email.toLowerCase().trim());
           for (const otherEmail of otherClaimers) {
             await sendNewClaimNotificationToOthers(otherEmail, item.title, email, totalCount, activeClaimersEmails, origin);
+          }
+
+          // 3. Notify the original found reporter if they provided their email
+          if (item.type === 'found' && item.contact_info && item.contact_info.includes('@') && item.contact_info.toLowerCase().trim() !== 'not provided') {
+            await sendClaimNotificationToReporter(item.contact_info, item.title, email, totalCount, activeClaimersEmails, origin);
           }
         }
       }

@@ -220,3 +220,76 @@ export async function sendNewClaimNotificationToOthers(email: string, itemTitle:
     console.error('Failed to send new claim notification:', err);
   }
 }
+
+export async function sendClaimNotificationToReporter(email: string, itemTitle: string, newClaimerEmail: string, totalCount: number, allEmails: string[], baseUrl?: string) {
+  if (!transporter) return;
+
+  const portalUrl = `${baseUrl || 'https://fast-isb-exams.vercel.app'}/lost-found`;
+  const emailsListHtml = allEmails.map(e => `<li style="margin-bottom: 6px; font-weight: 500; color: #1e293b;">${e}</li>`).join('');
+
+  try {
+    await transporter.sendMail({
+      from: `"Lost & Found" <${process.env.GMAIL_USER}>`,
+      to: email,
+      subject: `Claim Registered on Your Reported Item: "${itemTitle}"`,
+      html: `
+        <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #e2e8f0; border-radius: 12px; background-color: #ffffff;">
+          <h2 style="color: #0f172a; margin-top: 0; border-bottom: 2px solid #f1f5f9; padding-bottom: 12px;">
+            Claim Alert: Your Reported Item
+          </h2>
+          <p style="color: #334155; font-size: 14px; line-height: 1.6;">
+            Hello,
+          </p>
+          <p style="color: #334155; font-size: 14px; line-height: 1.6;">
+            A student has successfully registered a claim over the item you reported as found: <strong>"${itemTitle}"</strong>.
+          </p>
+          <p style="color: #334155; font-size: 14px; line-height: 1.6;">
+            Claimant's Email: <strong style="color: #ea580c;">${newClaimerEmail}</strong>
+          </p>
+
+          <div style="background-color: #f8fafc; padding: 20px; border-radius: 10px; border: 1px solid #e2e8f0; margin-top: 24px;">
+            <h3 style="color: #0f172a; margin-top: 0; font-size: 14px; border-bottom: 1px solid #e2e8f0; padding-bottom: 8px;">
+              Active Claims Transparency Panel
+            </h3>
+            <p style="color: #475569; font-size: 13px;">
+              Total active claimers so far: <strong style="color: #ea580c; font-size: 15px;">${totalCount}</strong>
+            </p>
+            <p style="color: #475569; font-size: 13px; margin-bottom: 8px;">
+              Registered claimers' emails:
+            </p>
+            <ul style="margin: 0; padding-left: 20px; font-size: 13px;">
+              ${emailsListHtml}
+            </ul>
+          </div>
+
+          <div style="background-color: #f0fdf4; padding: 16px; border-radius: 10px; border: 1px solid #bbf7d0; margin-top: 20px;">
+            <p style="color: #166534; font-size: 13px; margin: 0; font-weight: 600;">
+              🛡️ No Action Required from Your Side
+            </p>
+            <p style="color: #1e3a1e; font-size: 12px; margin: 6px 0 0 0; line-height: 1.5;">
+              The student who claims this item is responsible for verifying their possession/hold of the item on the platform when they retrieve it. This will automatically close the report and resolve the status. You do not need to perform any manual action.
+            </p>
+          </div>
+
+          <div style="text-align: center; margin: 24px 0;">
+            <a href="${portalUrl}" style="background-color: #f1f5f9; color: #334155; padding: 10px 24px; border-radius: 8px; text-decoration: none; font-weight: 600; font-size: 14px; display: inline-block; border: 1px solid #cbd5e1;">
+              Go to Lost & Found Portal
+            </a>
+          </div>
+
+          <p style="color: #64748b; font-size: 12px; line-height: 1.5; margin-top: 24px;">
+            Thank you for helping keep our campus belongings organized and returned to their owners.
+          </p>
+          
+          <hr style="border: 0; border-top: 1px solid #f1f5f9; margin: 30px 0;" />
+          <p style="color: #94a3b8; font-size: 11px; text-align: center;">
+            FAST ISB Schedule Platform &middot; Lost & Found Service
+          </p>
+        </div>
+      `,
+    });
+    console.log(`Claim alert notification email sent to found reporter ${email}`);
+  } catch (err) {
+    console.error('Failed to send claim notification to reporter:', err);
+  }
+}
