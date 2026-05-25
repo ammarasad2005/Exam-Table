@@ -94,3 +94,119 @@ export async function sendUnclaimNotification(email: string, itemTitle: string) 
     console.error('Failed to send unclaim email:', err);
   }
 }
+
+export async function sendClaimRecordedEmail(email: string, itemTitle: string, claimId: string, totalCount: number, allEmails: string[]) {
+  if (!transporter) return;
+
+  const emailsListHtml = allEmails.map(e => `<li style="margin-bottom: 6px; font-weight: 500; color: #1e293b;">${e}</li>`).join('');
+
+  try {
+    await transporter.sendMail({
+      from: `"Lost & Found" <${process.env.GMAIL_USER}>`,
+      to: email,
+      subject: `Claim Successfully Recorded: "${itemTitle}"`,
+      html: `
+        <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #e2e8f0; border-radius: 12px; background-color: #ffffff;">
+          <div style="text-align: center; margin-bottom: 20px;">
+            <div style="display: inline-block; padding: 12px; background-color: #fff7ed; border-radius: 50%; margin-bottom: 16px;">
+              <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#ea580c" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>
+            </div>
+            <h2 style="color: #1a202c; margin: 0;">Claim Successfully Recorded!</h2>
+            <p style="color: #64748b; font-size: 14px;">"${itemTitle}"</p>
+          </div>
+          
+          <p style="color: #4a5568; line-height: 1.6;">
+            Hello, your claim for <strong>"${itemTitle}"</strong> has been successfully recorded. 
+          </p>
+          
+          <p style="color: #4a5568; line-height: 1.6;">
+            Once you successfully retrieve/collect this item, please verify your hold using the link below so the platform record can be resolved.
+          </p>
+
+          <div style="text-align: center; margin: 30px 0;">
+            <a href="https://fast-isb-exams.vercel.app/lost-found" style="background-color: #ea580c; color: #ffffff; padding: 14px 32px; border-radius: 10px; text-decoration: none; font-weight: bold; font-size: 16px; display: inline-block; box-shadow: 0 4px 6px -1px rgba(234, 88, 12, 0.2);">
+              Verify & Resolve Status
+            </a>
+          </div>
+
+          <div style="background-color: #f8fafc; padding: 20px; border-radius: 10px; border: 1px solid #e2e8f0; margin-top: 30px;">
+            <h3 style="color: #0f172a; margin-top: 0; font-size: 14px; border-bottom: 1px solid #e2e8f0; padding-bottom: 8px;">
+              Active Claims Transparency Panel
+            </h3>
+            <p style="color: #475569; font-size: 13px;">
+              Total active claimers so far: <strong style="color: #ea580c; font-size: 15px;">${totalCount}</strong>
+            </p>
+            <p style="color: #475569; font-size: 13px; margin-bottom: 8px;">
+              Registered Claimant Emails:
+            </p>
+            <ul style="margin: 0; padding-left: 20px; font-size: 13px;">
+              ${emailsListHtml}
+            </ul>
+          </div>
+          
+          <hr style="border: 0; border-top: 1px solid #f1f5f9; margin: 30px 0;" />
+          <p style="color: #94a3b8; font-size: 11px; text-align: center;">
+            FAST ISB Schedule Platform &middot; Lost & Found Service
+          </p>
+        </div>
+      `,
+    });
+    console.log(`Claim recorded email sent to ${email}`);
+  } catch (err) {
+    console.error('Failed to send claim recorded email:', err);
+  }
+}
+
+export async function sendNewClaimNotificationToOthers(email: string, itemTitle: string, newClaimerEmail: string, totalCount: number, allEmails: string[]) {
+  if (!transporter) return;
+
+  const emailsListHtml = allEmails.map(e => `<li style="margin-bottom: 6px; font-weight: 500; color: #1e293b;">${e}</li>`).join('');
+
+  try {
+    await transporter.sendMail({
+      from: `"Lost & Found" <${process.env.GMAIL_USER}>`,
+      to: email,
+      subject: `New Claim Registered: "${itemTitle}"`,
+      html: `
+        <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #e2e8f0; border-radius: 12px; background-color: #ffffff;">
+          <h2 style="color: #0f172a; margin-top: 0; border-bottom: 2px solid #f1f5f9; padding-bottom: 12px;">
+            Notification: New Claim Registered
+          </h2>
+          <p style="color: #334155; font-size: 14px; line-height: 1.6;">
+            A new claim has been registered over the item <strong>"${itemTitle}"</strong>.
+          </p>
+          <p style="color: #334155; font-size: 14px; line-height: 1.6;">
+            A person with the email address <strong style="color: #ea580c;">${newClaimerEmail}</strong> has recorded their claim. 
+          </p>
+
+          <div style="background-color: #f8fafc; padding: 20px; border-radius: 10px; border: 1px solid #e2e8f0; margin-top: 24px;">
+            <h3 style="color: #0f172a; margin-top: 0; font-size: 14px; border-bottom: 1px solid #e2e8f0; padding-bottom: 8px;">
+              Active Claims Transparency Panel
+            </h3>
+            <p style="color: #475569; font-size: 13px;">
+              Total active claimers so far: <strong style="color: #ea580c; font-size: 15px;">${totalCount}</strong>
+            </p>
+            <p style="color: #475569; font-size: 13px; margin-bottom: 8px;">
+              Registered claimers' emails (including yours):
+            </p>
+            <ul style="margin: 0; padding-left: 20px; font-size: 13px;">
+              ${emailsListHtml}
+            </ul>
+          </div>
+
+          <p style="color: #64748b; font-size: 12px; line-height: 1.5; margin-top: 24px;">
+            This system coordinates transparent claiming records. If you have already successfully collected the item, please ensure to resolve its status on the platform.
+          </p>
+          
+          <hr style="border: 0; border-top: 1px solid #f1f5f9; margin: 30px 0;" />
+          <p style="color: #94a3b8; font-size: 11px; text-align: center;">
+            FAST ISB Schedule Platform &middot; Lost & Found Service
+          </p>
+        </div>
+      `,
+    });
+    console.log(`New claim notification email sent to previous claimer ${email}`);
+  } catch (err) {
+    console.error('Failed to send new claim notification:', err);
+  }
+}

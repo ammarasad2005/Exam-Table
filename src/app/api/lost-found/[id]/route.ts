@@ -1,6 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
 import { supabase } from "@/lib/supabase";
-import { sendVerificationRequestEmail } from "@/lib/email";
+import { 
+  sendVerificationRequestEmail, 
+  sendClaimRecordedEmail, 
+  sendNewClaimNotificationToOthers 
+} from "@/lib/email";
 import { isAdminAuthenticated } from "@/lib/admin";
 
 export const dynamic = 'force-dynamic';
@@ -147,11 +151,28 @@ export async function PATCH(
       
       if (claimError) throw claimError;
 
-      // Send initial verification request email
+      // Send initial transparency and verification request emails
       if (email) {
         const { data: item } = await supabase.from('lost_found_items').select('title').eq('id', id).single();
         if (item) {
-          await sendVerificationRequestEmail(email, item.title, newClaim.id);
+          // Fetch all active pending claims for this item (including the new one)
+          const { data: allClaims } = await supabase
+            .from('lost_found_claims')
+            .select('claimer_email')
+            .eq('item_id', id)
+            .eq('status', 'pending');
+
+          const activeClaimersEmails = allClaims ? allClaims.map(c => c.claimer_email).filter(Boolean) as string[] : [];
+          const totalCount = activeClaimersEmails.length;
+
+          // 1. Send unique Claim Recorded email to the current claimer
+          await sendClaimRecordedEmail(email, item.title, newClaim.id, totalCount, activeClaimersEmails);
+
+          // 2. Notify all other active claimers
+          const otherClaimers = activeClaimersEmails.filter(e => e.toLowerCase().trim() !== email.toLowerCase().trim());
+          for (const otherEmail of otherClaimers) {
+            await sendNewClaimNotificationToOthers(otherEmail, item.title, email, totalCount, activeClaimersEmails);
+          }
         }
       }
       
