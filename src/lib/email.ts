@@ -1,17 +1,25 @@
-import { Resend } from 'resend';
+import nodemailer from 'nodemailer';
 
-const resend = process.env.RESEND_API_KEY ? new Resend(process.env.RESEND_API_KEY) : null;
+const transporter = (process.env.GMAIL_USER && process.env.GMAIL_APP_PASSWORD) 
+  ? nodemailer.createTransport({
+      service: 'gmail',
+      auth: {
+        user: process.env.GMAIL_USER,
+        pass: process.env.GMAIL_APP_PASSWORD,
+      },
+    })
+  : null;
 
 export async function sendVerificationRequestEmail(email: string, itemTitle: string, claimId: string) {
-  if (!resend) {
-    console.warn('Resend API key not configured. Skipping email.');
+  if (!transporter) {
+    console.warn('Gmail SMTP credentials not configured. Skipping email.');
     return;
   }
 
   try {
-    const { data, error } = await resend.emails.send({
-      from: 'Lost & Found <notifications@fast-isb-exams.vercel.app>',
-      to: [email],
+    await transporter.sendMail({
+      from: `"Lost & Found" <${process.env.GMAIL_USER}>`,
+      to: email,
       subject: `Action Required: Verify your claim for "${itemTitle}"`,
       html: `
         <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #e2e8f0; border-radius: 12px; background-color: #ffffff;">
@@ -51,23 +59,19 @@ export async function sendVerificationRequestEmail(email: string, itemTitle: str
         </div>
       `,
     });
-
-    if (error) {
-      console.error('Error sending email:', error);
-    }
-    return data;
+    console.log(`Verification email successfully sent to ${email}`);
   } catch (err) {
     console.error('Failed to send verification email:', err);
   }
 }
 
 export async function sendUnclaimNotification(email: string, itemTitle: string) {
-  if (!resend) return;
+  if (!transporter) return;
 
   try {
-    await resend.emails.send({
-      from: 'Lost & Found <notifications@fast-isb-exams.vercel.app>',
-      to: [email],
+    await transporter.sendMail({
+      from: `"Lost & Found" <${process.env.GMAIL_USER}>`,
+      to: email,
       subject: `Claim Removed for "${itemTitle}"`,
       html: `
         <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #f1f5f9; border-radius: 12px;">
@@ -85,6 +89,7 @@ export async function sendUnclaimNotification(email: string, itemTitle: string) 
         </div>
       `,
     });
+    console.log(`Unclaim email successfully sent to ${email}`);
   } catch (err) {
     console.error('Failed to send unclaim email:', err);
   }
