@@ -4,116 +4,125 @@
   "generatedAt": "2026-05-31",
   "keyDates": [
     {
-      "label": "Classes Begin",
-      "date": "2026-02-10",
+      "label": "First day of classes",
+      "date": "Mon, 19 Jan 2026",
       "type": "academic",
       "icon": "school"
     },
     {
-      "label": "Last Date to Add Courses",
-      "date": "2026-02-14",
+      "label": "Add & Drop of courses / labs",
+      "date": "Sat, 31 Jan 2026",
       "type": "deadline",
       "icon": "event_available"
     },
     {
-      "label": "Last Date to Drop Courses",
-      "date": "2026-03-07",
+      "label": "Semester Freeze",
+      "date": "Fri, 6 Feb 2026",
       "type": "deadline",
       "icon": "event_busy"
     },
     {
-      "label": "Mid-Term Exams Begin",
-      "date": "2026-03-17",
+      "label": "First Sessional Examination",
+      "date": "21–25 Feb 2026",
       "type": "exam",
       "icon": "quiz"
     },
     {
-      "label": "Mid-Term Exams End",
-      "date": "2026-03-21",
+      "label": "First Sessional results announced",
+      "date": "Wed, 4 Mar 2026",
+      "type": "academic",
+      "icon": "info"
+    },
+    {
+      "label": "Second Sessional Examination",
+      "date": "9–13 Apr 2026",
       "type": "exam",
       "icon": "quiz"
     },
     {
-      "label": "Classes Resume After Mid-Terms",
-      "date": "2026-03-24",
+      "label": "Second Sessional results announced",
+      "date": "Fri, 17 Apr 2026",
+      "type": "academic",
+      "icon": "info"
+    },
+    {
+      "label": "Last day of classes",
+      "date": "Fri, 8 May 2026",
       "type": "academic",
       "icon": "school"
     },
     {
-      "label": "Last Day of Regular Classes",
-      "date": "2026-04-30",
-      "type": "academic",
-      "icon": "school"
+      "label": "Course withdrawal deadline / Makeup week",
+      "date": "11–15 May 2026",
+      "type": "deadline",
+      "icon": "event_busy"
     },
     {
-      "label": "Final Term Exams Begin",
-      "date": "2026-05-18",
+      "label": "Final Examinations",
+      "date": "18 May – 12 Jun 2026",
       "type": "exam",
       "icon": "quiz"
     },
     {
-      "label": "Final Term Exams End",
-      "date": "2026-06-05",
-      "type": "exam",
-      "icon": "quiz"
-    },
-    {
-      "label": "Semester Ends",
-      "date": "2026-06-05",
+      "label": "Final Examination results announced",
+      "date": "Mon, 15 Jun 2026",
       "type": "academic",
-      "icon": "flag"
+      "icon": "info"
     }
   ],
   "holidays": [
     {
       "label": "Kashmir Day",
-      "date": "2026-02-05",
+      "date": "5 Feb 2026",
       "type": "national"
+    },
+    {
+      "label": "Eid-ul-Fitr",
+      "date": "19–21 Mar 2026",
+      "type": "religious"
     },
     {
       "label": "Pakistan Day",
-      "date": "2026-03-23",
+      "date": "23 Mar 2026",
       "type": "national"
-    },
-    {
-      "label": "Eid ul-Fitr (Estimated)",
-      "date": "2026-03-30",
-      "endDate": "2026-04-01",
-      "type": "religious",
-      "note": "Actual dates subject to moon sighting"
     },
     {
       "label": "Labour Day",
-      "date": "2026-05-01",
+      "date": "1 May 2026",
       "type": "national"
     },
     {
-      "label": "Eid ul-Adha (Estimated)",
-      "date": "2026-06-07",
-      "endDate": "2026-06-09",
-      "type": "religious",
-      "note": "Actual dates subject to moon sighting"
+      "label": "Eid-ul-Azha",
+      "date": "28–30 May 2026",
+      "type": "religious"
     }
   ],
   "academicRanges": [
     {
       "label": "Regular Classes",
-      "startDate": "2026-02-10",
-      "endDate": "2026-04-30",
+      "startDate": "2026-01-19",
+      "endDate": "2026-05-08",
       "color": "blue",
       "type": "classes"
     },
     {
-      "label": "Mid-Term Exam Period",
-      "startDate": "2026-03-17",
-      "endDate": "2026-03-21",
+      "label": "First Sessional Examination",
+      "startDate": "2026-02-21",
+      "endDate": "2026-02-25",
       "color": "orange",
       "type": "exams"
     },
     {
-      "label": "Final Term Exam Period",
+      "label": "Second Sessional Examination",
+      "startDate": "2026-04-09",
+      "endDate": "2026-04-13",
+      "color": "orange",
+      "type": "exams"
+    },
+    {
+      "label": "Final Examinations",
       "startDate": "2026-05-18",
-      "endDate": "2026-06-05",
+      "endDate": "2026-06-12",
       "color": "red",
       "type": "exams"
     }
