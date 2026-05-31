@@ -1,0 +1,123 @@
+{
+  "semester": "Spring 2026",
+  "academicYear": "2025-2026",
+  "generatedAt": "2026-05-31",
+  "keyDates": [
+    {
+      "label": "Classes Begin",
+      "date": "2026-02-10",
+      "type": "academic",
+      "icon": "school"
+    },
+    {
+      "label": "Last Date to Add Courses",
+      "date": "2026-02-14",
+      "type": "deadline",
+      "icon": "event_available"
+    },
+    {
+      "label": "Last Date to Drop Courses",
+      "date": "2026-03-07",
+      "type": "deadline",
+      "icon": "event_busy"
+    },
+    {
+      "label": "Mid-Term Exams Begin",
+      "date": "2026-03-17",
+      "type": "exam",
+      "icon": "quiz"
+    },
+    {
+      "label": "Mid-Term Exams End",
+      "date": "2026-03-21",
+      "type": "exam",
+      "icon": "quiz"
+    },
+    {
+      "label": "Classes Resume After Mid-Terms",
+      "date": "2026-03-24",
+      "type": "academic",
+      "icon": "school"
+    },
+    {
+      "label": "Last Day of Regular Classes",
+      "date": "2026-04-30",
+      "type": "academic",
+      "icon": "school"
+    },
+    {
+      "label": "Final Term Exams Begin",
+      "date": "2026-05-18",
+      "type": "exam",
+      "icon": "quiz"
+    },
+    {
+      "label": "Final Term Exams End",
+      "date": "2026-06-05",
+      "type": "exam",
+      "icon": "quiz"
+    },
+    {
+      "label": "Semester Ends",
+      "date": "2026-06-05",
+      "type": "academic",
+      "icon": "flag"
+    }
+  ],
+  "holidays": [
+    {
+      "label": "Kashmir Day",
+      "date": "2026-02-05",
+      "type": "national"
+    },
+    {
+      "label": "Pakistan Day",
+      "date": "2026-03-23",
+      "type": "national"
+    },
+    {
+      "label": "Eid ul-Fitr (Estimated)",
+      "date": "2026-03-30",
+      "endDate": "2026-04-01",
+      "type": "religious",
+      "note": "Actual dates subject to moon sighting"
+    },
+    {
+      "label": "Labour Day",
+      "date": "2026-05-01",
+      "type": "national"
+    },
+    {
+      "label": "Eid ul-Adha (Estimated)",
+      "date": "2026-06-07",
+      "endDate": "2026-06-09",
+      "type": "religious",
+      "note": "Actual dates subject to moon sighting"
+    }
+  ],
+  "academicRanges": [
+    {
+      "label": "Regular Classes",
+      "startDate": "2026-02-10",
+      "endDate": "2026-04-30",
+      "color": "blue",
+      "type": "classes"
+    },
+    {
+      "label": "Mid-Term Exam Period",
+      "startDate": "2026-03-17",
+      "endDate": "2026-03-21",
+      "color": "orange",
+      "type": "exams"
+    },
+    {
+      "label": "Final Term Exam Period",
+      "startDate": "2026-05-18",
+      "endDate": "2026-06-05",
+      "color": "red",
+      "type": "exams"
+    }
+  ],
+  "weekCount": 16,
+  "totalCreditHoursPerWeek": 18
+}
