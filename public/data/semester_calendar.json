@@ -5,67 +5,71 @@
   "keyDates": [
     {
       "label": "First day of classes",
-      "date": "Mon, 19 Jan 2026",
+      "date": "2026-01-19",
       "type": "academic",
       "icon": "school"
     },
     {
       "label": "Add & Drop of courses / labs",
-      "date": "Sat, 31 Jan 2026",
+      "date": "2026-01-31",
       "type": "deadline",
       "icon": "event_available"
     },
     {
       "label": "Semester Freeze",
-      "date": "Fri, 6 Feb 2026",
+      "date": "2026-02-06",
       "type": "deadline",
       "icon": "event_busy"
     },
     {
       "label": "First Sessional Examination",
-      "date": "21–25 Feb 2026",
+      "date": "2026-02-21",
+      "endDate": "2026-02-25",
       "type": "exam",
       "icon": "quiz"
     },
     {
       "label": "First Sessional results announced",
-      "date": "Wed, 4 Mar 2026",
+      "date": "2026-03-04",
       "type": "academic",
       "icon": "info"
     },
     {
       "label": "Second Sessional Examination",
-      "date": "9–13 Apr 2026",
+      "date": "2026-04-09",
+      "endDate": "2026-04-13",
       "type": "exam",
       "icon": "quiz"
     },
     {
       "label": "Second Sessional results announced",
-      "date": "Fri, 17 Apr 2026",
+      "date": "2026-04-17",
       "type": "academic",
       "icon": "info"
     },
     {
       "label": "Last day of classes",
-      "date": "Fri, 8 May 2026",
+      "date": "2026-05-08",
       "type": "academic",
       "icon": "school"
     },
     {
       "label": "Course withdrawal deadline / Makeup week",
-      "date": "11–15 May 2026",
+      "date": "2026-05-11",
+      "endDate": "2026-05-15",
       "type": "deadline",
       "icon": "event_busy"
     },
     {
       "label": "Final Examinations",
-      "date": "18 May – 12 Jun 2026",
+      "date": "2026-05-18",
+      "endDate": "2026-06-12",
       "type": "exam",
       "icon": "quiz"
     },
     {
       "label": "Final Examination results announced",
-      "date": "Mon, 15 Jun 2026",
+      "date": "2026-06-15",
       "type": "academic",
       "icon": "info"
     }
@@ -73,27 +77,29 @@
   "holidays": [
     {
       "label": "Kashmir Day",
-      "date": "5 Feb 2026",
+      "date": "2026-02-05",
       "type": "national"
     },
     {
       "label": "Eid-ul-Fitr",
-      "date": "19–21 Mar 2026",
+      "date": "2026-03-19",
+      "endDate": "2026-03-21",
       "type": "religious"
     },
     {
       "label": "Pakistan Day",
-      "date": "23 Mar 2026",
+      "date": "2026-03-23",
       "type": "national"
     },
     {
       "label": "Labour Day",
-      "date": "1 May 2026",
+      "date": "2026-05-01",
       "type": "national"
     },
     {
       "label": "Eid-ul-Azha",
-      "date": "28–30 May 2026",
+      "date": "2026-05-28",
+      "endDate": "2026-05-30",
       "type": "religious"
     }
   ],
