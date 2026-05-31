@@ -1,62 +1,138 @@
 'use client';
 import { useState, useEffect } from 'react';
 import { Header } from '@/components/Header';
+import semesterCalendarRaw from '../../../public/data/semester_calendar.json';
 
 // ── Data ─────────────────────────────────────────────────────────────────────
 
-const KEY_DATES = [
-  { badge: 'Start',       type: 'milestone', label: 'First day of classes',                    date: 'Mon, 19 Jan 2026' },
-  { badge: 'Deadline',    type: 'deadline',  label: 'Add & Drop of courses / labs',            date: 'Sat, 31 Jan 2026' },
-  { badge: 'Deadline',    type: 'deadline',  label: 'Semester Freeze',                          date: 'Fri, 6 Feb 2026'  },
-  { badge: 'Sessional 1', type: 'exam',      label: 'First Sessional Examination',             date: '21–25 Feb 2026'   },
-  { badge: 'Results',     type: 'info',      label: 'First Sessional results announced',       date: 'Wed, 4 Mar 2026'  },
-  { badge: 'Sessional 2', type: 'exam',      label: 'Second Sessional Examination',            date: '9–13 Apr 2026'    },
-  { badge: 'Results',     type: 'info',      label: 'Second Sessional results announced',      date: 'Fri, 17 Apr 2026' },
-  { badge: 'End',         type: 'milestone', label: 'Last day of classes',                     date: 'Fri, 8 May 2026'  },
-  { badge: 'Deadline',    type: 'deadline',  label: 'Course withdrawal deadline / Makeup week', date: '11–15 May 2026'  },
-  { badge: 'Finals',      type: 'exam',      label: 'Final Examinations',                      date: '18 May – 12 Jun 2026' },
-  { badge: 'Results',     type: 'info',      label: 'Final Examination results announced',     date: 'Mon, 15 Jun 2026' },
-];
+type SemesterCalendar = {
+  semester: string;
+  academicYear: string;
+  generatedAt: string;
+  keyDates: {
+    label: string;
+    date: string;
+    endDate?: string;
+    type: 'academic' | 'exam' | 'deadline';
+    icon?: string;
+  }[];
+  holidays: {
+    label: string;
+    date: string;
+    endDate?: string;
+    type: 'national' | 'religious';
+    note?: string;
+  }[];
+  academicRanges: {
+    label: string;
+    startDate: string;
+    endDate: string;
+    color: string;
+    type: 'classes' | 'exams';
+  }[];
+  weekCount: number;
+  totalCreditHoursPerWeek: number;
+};
 
-const HOLIDAYS = [
-  { name: 'Kashmir Day',   date: '5 Feb 2026',    lunar: false },
-  { name: 'Eid-ul-Fitr',  date: '19–21 Mar 2026', lunar: true  },
-  { name: 'Pakistan Day',  date: '23 Mar 2026',   lunar: false },
-  { name: 'Labour Day',    date: '1 May 2026',    lunar: false },
-  { name: 'Eid-ul-Azha',  date: '28–30 May 2026', lunar: true  },
-];
+const semesterCalendar = semesterCalendarRaw as SemesterCalendar;
+
+const KEY_DATE_BADGES: Record<string, string> = {
+  'First day of classes': 'Start',
+  'Add & Drop of courses / labs': 'Deadline',
+  'Semester Freeze': 'Deadline',
+  'First Sessional Examination': 'Sessional 1',
+  'First Sessional results announced': 'Results',
+  'Second Sessional Examination': 'Sessional 2',
+  'Second Sessional results announced': 'Results',
+  'Last day of classes': 'End',
+  'Course withdrawal deadline / Makeup week': 'Deadline',
+  'Final Examinations': 'Finals',
+  'Final Examination results announced': 'Results',
+};
 
 // Calendar helpers
 const MONTH_NAMES = ['January', 'February', 'March', 'April', 'May', 'June'];
-const DOW_SHORT   = ['Su', 'Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa'];
+const MONTH_SHORT = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+const DOW_SHORT = ['Su', 'Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa'];
+const WEEKDAY_SHORT = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
 
-function addRange(set: Set<string>, y: number, m: number, d1: number, d2: number) {
-  for (let d = d1; d <= d2; d++) set.add(`${y}-${m}-${d}`);
+function toUtcDate(isoDate: string) {
+  const [year, month, day] = isoDate.split('-').map(Number);
+  return new Date(Date.UTC(year, month - 1, day));
 }
+
+function addRange(set: Set<string>, startDate: string, endDate?: string) {
+  const start = toUtcDate(startDate);
+  const end = toUtcDate(endDate ?? startDate);
+  for (const cursor = new Date(start); cursor <= end; cursor.setUTCDate(cursor.getUTCDate() + 1)) {
+    set.add(`${cursor.getUTCFullYear()}-${cursor.getUTCMonth() + 1}-${cursor.getUTCDate()}`);
+  }
+}
+
+function formatDateRange(startDate: string, endDate?: string, includeWeekday = false) {
+  const start = toUtcDate(startDate);
+  const end = endDate ? toUtcDate(endDate) : null;
+  if (!end || startDate === endDate) {
+    const base = `${start.getUTCDate()} ${MONTH_SHORT[start.getUTCMonth()]} ${start.getUTCFullYear()}`;
+    return includeWeekday ? `${WEEKDAY_SHORT[start.getUTCDay()]}, ${base}` : base;
+  }
+  const sameMonth = start.getUTCMonth() === end.getUTCMonth() && start.getUTCFullYear() === end.getUTCFullYear();
+  if (sameMonth) {
+    return `${start.getUTCDate()}–${end.getUTCDate()} ${MONTH_SHORT[start.getUTCMonth()]} ${start.getUTCFullYear()}`;
+  }
+  const sameYear = start.getUTCFullYear() === end.getUTCFullYear();
+  if (sameYear) {
+    return `${start.getUTCDate()} ${MONTH_SHORT[start.getUTCMonth()]} – ${end.getUTCDate()} ${MONTH_SHORT[end.getUTCMonth()]} ${start.getUTCFullYear()}`;
+  }
+  return `${start.getUTCDate()} ${MONTH_SHORT[start.getUTCMonth()]} ${start.getUTCFullYear()} – ${end.getUTCDate()} ${MONTH_SHORT[end.getUTCMonth()]} ${end.getUTCFullYear()}`;
+}
+
+function mapKeyDateType(event: SemesterCalendar['keyDates'][number]) {
+  if (event.type === 'exam') return 'exam';
+  if (event.type === 'deadline') return 'deadline';
+  if (event.icon === 'info' || event.label.toLowerCase().includes('results')) return 'info';
+  return 'milestone';
+}
+
+const KEY_DATES = semesterCalendar.keyDates.map((event) => ({
+  badge: KEY_DATE_BADGES[event.label] ?? 'Info',
+  type: mapKeyDateType(event),
+  label: event.label,
+  date: formatDateRange(event.date, event.endDate, true),
+}));
+
+const HOLIDAYS = semesterCalendar.holidays.map((holiday) => ({
+  name: holiday.label,
+  date: formatDateRange(holiday.date, holiday.endDate),
+  lunar: holiday.type === 'religious',
+}));
 
 const examDays     = new Set<string>();
 const deadlineDays = new Set<string>();
 const holidayDays  = new Set<string>();
-addRange(examDays,     2026,  2, 21, 25);
-addRange(examDays,     2026,  4,  9, 13);
-addRange(examDays,     2026,  5, 18, 31);
-addRange(examDays,     2026,  6,  1, 12);
-deadlineDays.add('2026-1-31');
-deadlineDays.add('2026-2-6');
-addRange(deadlineDays, 2026,  5, 11, 15);
-holidayDays.add('2026-2-5');
-addRange(holidayDays,  2026,  3, 19, 21);
-holidayDays.add('2026-3-23');
-holidayDays.add('2026-5-1');
-addRange(holidayDays,  2026,  5, 28, 30);
+const classStartDays = new Set<string>();
+
+semesterCalendar.keyDates.forEach((event) => {
+  if (event.type === 'exam') addRange(examDays, event.date, event.endDate);
+  if (event.type === 'deadline') addRange(deadlineDays, event.date, event.endDate);
+  if (event.type === 'academic' && ['First day of classes', 'Last day of classes'].includes(event.label)) {
+    addRange(classStartDays, event.date, event.endDate);
+  }
+});
+
+semesterCalendar.academicRanges.forEach((range) => {
+  if (range.type === 'exams') addRange(examDays, range.startDate, range.endDate);
+});
+
+semesterCalendar.holidays.forEach((holiday) => addRange(holidayDays, holiday.date, holiday.endDate));
 
 type DayKind = 'today' | 'classes-start' | 'exam' | 'deadline' | 'holiday' | 'normal' | 'empty';
 
 function classifyDay(y: number, m1: number, d: number): DayKind {
   const today = new Date();
   if (today.getFullYear() === y && today.getMonth() + 1 === m1 && today.getDate() === d) return 'today';
-  if ((m1 === 1 && d === 19) || (m1 === 5 && d === 8)) return 'classes-start';
   const key = `${y}-${m1}-${d}`;
+  if (classStartDays.has(key)) return 'classes-start';
   if (examDays.has(key))     return 'exam';
   if (deadlineDays.has(key)) return 'deadline';
   if (holidayDays.has(key))  return 'holiday';
@@ -156,7 +232,7 @@ function MobileHero() {
         FAST NUCES · Islamabad
       </p>
       <h1 className="font-display text-3xl leading-tight text-[var(--color-text-primary)]">
-        Semester Schedule<br /><span className="italic">Spring 2026.</span>
+        Semester Schedule<br /><span className="italic">{semesterCalendar.semester}.</span>
       </h1>
       <p className="mt-2 font-mono text-[11px] text-[var(--color-text-tertiary)]">
         Signed Jan 8, 2026
@@ -175,7 +251,7 @@ function DesktopHero() {
         className="font-display leading-[1.1] text-[var(--color-text-primary)]"
         style={{ fontSize: 'clamp(2.2rem, 3.5vw, 3.6rem)' }}
       >
-        Semester Schedule — <span className="italic">Spring 2026.</span>
+        Semester Schedule — <span className="italic">{semesterCalendar.semester}.</span>
       </h1>
     </div>
   );
