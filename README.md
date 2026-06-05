@@ -18,6 +18,60 @@ No more digging through messy Google Sheets. No more searching emails for exam s
 
 ---
 
+## Navigation
+- [The Problem](#the-problem)
+- [What Is FAST Isb Utilities?](#what-is-fast-isb-utilities)
+  - [Who Is It For?](#who-is-it-for)
+- [Screenshots](#screenshots)
+  - [Landing Page](#landing-page)
+- [Features](#features)
+  - [📅 Timetable Viewer](#timetable-viewer)
+  - [📝 Exam Schedule Finder](#exam-schedule-finder)
+  - [🎯 Custom Exams Builder](#custom-exams-builder)
+  - [🗓️ Custom Timetable Builder](#custom-timetable-builder)
+  - [🧠 Timetable Optimizer](#timetable-optimizer)
+  - [🚪 Free Rooms Finder](#free-rooms-finder)
+  - [👨‍🏫 Faculty Directory](#faculty-directory)
+  - [🎪 Campus Events Calendar](#campus-events-calendar)
+  - [📆 Semester Schedule](#semester-schedule)
+  - [📦 Lost & Found](#lost-found)
+  - [🏠 Configuration & Home Page](#configuration-home-page)
+  - [🌗 Dark Mode & Theming](#dark-mode-theming)
+  - [⌨️ Keyboard Shortcuts](#keyboard-shortcuts)
+  - [📤 Export Options](#export-options)
+- [How It Works](#how-it-works)
+  - [User Workflow](#user-workflow)
+  - [Custom Course Workflow](#custom-course-workflow)
+  - [Timetable Optimizer Workflow](#timetable-optimizer-workflow)
+  - [Data Flow](#data-flow)
+- [Tech Stack](#tech-stack)
+- [Project Structure](#project-structure)
+- [Routes](#routes)
+- [Getting Started](#getting-started)
+  - [Prerequisites](#prerequisites)
+  - [Installation](#installation)
+- [Available Scripts](#available-scripts)
+- [Data Pipeline](#data-pipeline)
+  - [Exam Schedule Pipeline](#exam-schedule-pipeline)
+  - [Timetable Pipeline](#timetable-pipeline)
+  - [Campus Events Pipeline](#campus-events-pipeline)
+  - [Faculty & Semester Data](#faculty-semester-data)
+- [Scheduled Automation](#scheduled-automation)
+  - [Vercel Cron Jobs (Production)](#vercel-cron-jobs-production)
+  - [GitHub Actions (Recommended for Data Updates)](#github-actions-data-updates)
+- [Database Schema](#database-schema)
+  - [`lost_found_items`](#lost-found-items)
+  - [`lost_found_claims`](#lost-found-claims)
+  - [`campus_feedback`](#campus-feedback)
+- [Design Highlights](#design-highlights)
+- [License & Usage](#license-usage)
+  - [What You Can Do](#what-you-can-do)
+  - [What You Cannot Do](#what-you-cannot-do)
+- [Contributing](#contributing)
+- [License](#license)
+
+
+<a id="the-problem"></a>
 ## The Problem
 
 Life at FAST NUCES Islamabad comes with a set of avoidable daily frustrations that every student knows too well:
@@ -42,12 +96,14 @@ Life at FAST NUCES Islamabad comes with a set of avoidable daily frustrations th
 
 ---
 
+<a id="what-is-fast-isb-utilities"></a>
 ## What Is FAST Isb Utilities?
 
 FAST Isb Utilities is an all-in-one web platform purpose-built for the students of FAST NUCES Islamabad. It consolidates every essential campus utility — timetables, exam schedules, room availability, faculty directory, campus events, semester calendar, lost & found, and even a timetable optimizer — into a single, beautifully designed, mobile-first web application.
 
 Instead of juggling between Google Sheets, email threads, WhatsApp groups, and physical scavenger hunts, students get everything they need in one place, accessible from any device, at any time.
 
+<a id="who-is-it-for"></a>
 ### Who Is It For?
 
 - **Students** of FAST NUCES Islamabad across all batches (2022–2025), departments (CS, AI, DS, CY, SE, EE, CE, SH, AF, MS), and schools (FSC, FSM, FSE) — whether you're following the standard cohort path or taking custom courses across departments.
@@ -56,8 +112,10 @@ Instead of juggling between Google Sheets, email threads, WhatsApp groups, and p
 
 ---
 
+<a id="screenshots"></a>
 ## Screenshots
 
+<a id="landing-page"></a>
 ### Landing Page
 
 <p align="center">
@@ -68,8 +126,10 @@ Instead of juggling between Google Sheets, email threads, WhatsApp groups, and p
 
 ---
 
+<a id="features"></a>
 ## Features
 
+<a id="timetable-viewer"></a>
 ### 📅 Timetable Viewer
 
 View your weekly class schedule filtered by batch, department, and section. No more scrolling through a monolithic Google Sheet with hundreds of rows.
@@ -90,6 +150,7 @@ View your weekly class schedule filtered by batch, department, and section. No m
 
 ---
 
+<a id="exam-schedule-finder"></a>
 ### 📝 Exam Schedule Finder
 
 Find your exam dates instantly. Filter by batch, school, and department — or search by course code and name.
@@ -107,6 +168,7 @@ Find your exam dates instantly. Filter by batch, school, and department — or s
 
 ---
 
+<a id="custom-exams-builder"></a>
 ### 🎯 Custom Exams Builder
 
 Taking courses across multiple departments or batches? Build your own custom exam schedule by selecting individual courses from any combination of batch, stream, and department.
@@ -124,6 +186,7 @@ Taking courses across multiple departments or batches? Build your own custom exa
 
 ---
 
+<a id="custom-timetable-builder"></a>
 ### 🗓️ Custom Timetable Builder
 
 Same idea as Custom Exams, but for your weekly class schedule. Mix and match courses from any department and section.
@@ -143,6 +206,7 @@ Same idea as Custom Exams, but for your weekly class schedule. Mix and match cou
 
 ---
 
+<a id="timetable-optimizer"></a>
 ### 🧠 Timetable Optimizer
 
 The crown jewel for students who want the perfect schedule. Enter your courses, and the optimizer uses a backtracking algorithm to find all clash-free section combinations — then ranks them by how comfortable your week would be.
@@ -165,6 +229,7 @@ The crown jewel for students who want the perfect schedule. Enter your courses, 
 
 ---
 
+<a id="free-rooms-finder"></a>
 ### 🚪 Free Rooms Finder
 
 Find empty rooms across campus without leaving your seat. The timetable data is inverted to show which rooms are free at any given time.
@@ -185,6 +250,7 @@ Find empty rooms across campus without leaving your seat. The timetable data is 
 
 ---
 
+<a id="faculty-directory"></a>
 ### 👨‍🏫 Faculty Directory
 
 A searchable, filterable directory of all FAST Islamabad faculty members. No more wandering the corridors looking for an office.
@@ -204,6 +270,7 @@ A searchable, filterable directory of all FAST Islamabad faculty members. No mor
 
 ---
 
+<a id="campus-events-calendar"></a>
 ### 🎪 Campus Events Calendar
 
 Never miss a campus event again. Events are scraped from the official SLATE portal and displayed in a beautiful monthly calendar.
@@ -222,6 +289,7 @@ Never miss a campus event again. Events are scraped from the official SLATE port
 
 ---
 
+<a id="semester-schedule"></a>
 ### 📆 Semester Schedule
 
 The full academic calendar with key dates, holidays, and monthly grids — always accessible, never buried in email.
@@ -240,6 +308,7 @@ The full academic calendar with key dates, holidays, and monthly grids — alway
 
 ---
 
+<a id="lost-found"></a>
 ### 📦 Lost & Found
 
 A complete lost-and-found system for campus. Report items, browse listings, submit claims, and resolve returns — all in one place.
@@ -263,6 +332,7 @@ A complete lost-and-found system for campus. Report items, browse listings, subm
 
 ---
 
+<a id="configuration-home-page"></a>
 ### 🏠 Configuration & Home Page
 
 The central hub where you pick your feature, set your filters, and configure your experience. Your preferences are saved locally so you never have to re-enter them.
@@ -281,12 +351,14 @@ The central hub where you pick your feature, set your filters, and configure you
 
 ---
 
+<a id="dark-mode-theming"></a>
 ### 🌗 Dark Mode & Theming
 
 The entire platform supports light and dark themes with a single tap. System preference is detected automatically. Each department has its own accent color throughout the app for instant visual recognition.
 
 ---
 
+<a id="keyboard-shortcuts"></a>
 ### ⌨️ Keyboard Shortcuts
 
 | Shortcut | Action |
@@ -296,6 +368,7 @@ The entire platform supports light and dark themes with a single tap. System pre
 
 ---
 
+<a id="export-options"></a>
 ### 📤 Export Options
 
 Every schedule view supports multiple export formats:
@@ -309,8 +382,10 @@ Every schedule view supports multiple export formats:
 
 ---
 
+<a id="how-it-works"></a>
 ## How It Works
 
+<a id="user-workflow"></a>
 ### User Workflow
 
 ```
@@ -321,6 +396,7 @@ Every schedule view supports multiple export formats:
 5.  Export or share your filtered schedule
 ```
 
+<a id="custom-course-workflow"></a>
 ### Custom Course Workflow
 
 ```
@@ -330,6 +406,7 @@ Every schedule view supports multiple export formats:
 4.  View your personalized schedule → Export
 ```
 
+<a id="timetable-optimizer-workflow"></a>
 ### Timetable Optimizer Workflow
 
 ```
@@ -342,6 +419,7 @@ Every schedule view supports multiple export formats:
 7.  Preview any result → Sends to Custom Timetable Builder for editing and export
 ```
 
+<a id="data-flow"></a>
 ### Data Flow
 
 ```
@@ -397,6 +475,7 @@ Every schedule view supports multiple export formats:
 
 ---
 
+<a id="tech-stack"></a>
 ## Tech Stack
 
 | Layer | Technology |
@@ -419,6 +498,7 @@ Every schedule view supports multiple export formats:
 
 ---
 
+<a id="project-structure"></a>
 ## Project Structure
 
 ```
@@ -503,6 +583,7 @@ Exam-Table/
 
 ---
 
+<a id="routes"></a>
 ## Routes
 
 | Route | Description |
@@ -528,14 +609,17 @@ Exam-Table/
 
 ---
 
+<a id="getting-started"></a>
 ## Getting Started
 
+<a id="prerequisites"></a>
 ### Prerequisites
 
 - Node.js 18+
 - Python 3.8+ (for data pipeline scripts)
 - A Supabase project (for Lost & Found and Feedback features)
 
+<a id="installation"></a>
 ### Installation
 
 1. **Clone the repository:**
@@ -588,6 +672,7 @@ Exam-Table/
 
 ---
 
+<a id="available-scripts"></a>
 ## Available Scripts
 
 | Script | Description |
@@ -604,20 +689,24 @@ Exam-Table/
 
 ---
 
+<a id="data-pipeline"></a>
 ## Data Pipeline
 
+<a id="exam-schedule-pipeline"></a>
 ### Exam Schedule Pipeline
 ```
 exam_schedule.xlsx  →  scripts/parse-excel.ts  →  public/data/schedule.json
 ```
 Runs automatically as a `prebuild` step before every build.
 
+<a id="timetable-pipeline"></a>
 ### Timetable Pipeline
 ```
 Google Sheets (course data)  →  all_courses_schedule.py  →  public/data/timetable.json
 ```
 Run manually via `npm run timetable:update`.
 
+<a id="campus-events-pipeline"></a>
 ### Campus Events Pipeline
 ```
 SLATE Portal  →  scripts/scrape_slate.py  →  slate_calendar_events.json
@@ -625,13 +714,16 @@ SLATE Portal  →  scripts/scrape_slate.py  →  slate_calendar_events.json
 ```
 Run manually via `npm run events:update`. Requires SLATE credentials and Groq API key.
 
+<a id="faculty-semester-data"></a>
 ### Faculty & Semester Data
 Manually curated JSON files in `public/data/`.
 
 ---
 
+<a id="scheduled-automation"></a>
 ## Scheduled Automation
 
+<a id="vercel-cron-jobs-production"></a>
 ### Vercel Cron Jobs (Production)
 
 Configured in `vercel.json`:
@@ -641,6 +733,7 @@ Configured in `vercel.json`:
 | Weekdays 5:00 AM UTC | `/api/lost-found/cron/reminders` | Send Lost & Found claim reminders |
 | Sundays 1:00 PM UTC | `/api/lost-found/cron/reminders` | Weekly Lost & Found digest |
 
+<a id="github-actions-data-updates"></a>
 ### GitHub Actions (Recommended for Data Updates)
 
 - `.github/workflows/update-timetable.yml` — Hourly timetable refresh
@@ -650,14 +743,18 @@ Required repository secrets: `MAIN_PUSH_TOKEN`, `SLATE_USERNAME`, `SLATE_PASSWOR
 
 ---
 
+<a id="database-schema"></a>
 ## Database Schema
 
+<a id="lost-found-items"></a>
 ### `lost_found_items`
 Stores all reported lost and found items with image URLs, campus zone locations, resolution status, and timestamps.
 
+<a id="lost-found-claims"></a>
 ### `lost_found_claims`
 Tracks claims submitted by users on found items, with verification status (pending, verified, unclaimed).
 
+<a id="campus-feedback"></a>
 ### `campus_feedback`
 Stores user feedback submissions with category (bug report, suggestion, review, inquiry) and emoji rating (1–5).
 
@@ -665,6 +762,7 @@ All tables use Supabase Row Level Security with permissive policies for the stud
 
 ---
 
+<a id="design-highlights"></a>
 ## Design Highlights
 
 - **Glass-morphism Header** — Sticky header with backdrop blur and a signature "laser rail" gradient border (purple→orange in light mode, gold→yellow in dark mode).
@@ -676,10 +774,12 @@ All tables use Supabase Row Level Security with permissive policies for the stud
 
 ---
 
+<a id="license-usage"></a>
 ## License & Usage
 
 This project is **source-available** — the codebase is publicly visible for learning, transparency, and community contribution, but it is **not open source** in the traditional sense. I retain full ownership and all rights are reserved.
 
+<a id="what-you-can-do"></a>
 ### What You Can Do
 
 - **Read and explore** the codebase to understand how things work under the hood
@@ -687,6 +787,7 @@ This project is **source-available** — the codebase is publicly visible for le
 - **Fork the repository** to open pull requests — contributions are welcome, I review and merge at my discretion
 - **Report issues and suggest features** through GitHub Issues
 
+<a id="what-you-cannot-do"></a>
 ### What You Cannot Do
 
 - **Copy the codebase** — in whole or in part — into your own project without my explicit permission
@@ -697,6 +798,7 @@ If you'd like to use any part of this project beyond what's permitted above, [re
 
 ---
 
+<a id="contributing"></a>
 ## Contributing
 
 Contributions are welcome — I review and merge at my discretion. If you see something that could be improved or want to add a feature:
@@ -711,6 +813,7 @@ Contributions I merge become part of this project under the same license terms.
 
 ---
 
+<a id="license"></a>
 ## License
 
 © 2026 Ammar Asad. All rights reserved.
