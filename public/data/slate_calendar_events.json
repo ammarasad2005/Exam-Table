@@ -1,7 +1,7 @@
 {
-  "scraped_at": "2026-06-01T11:46:43.544762",
+  "scraped_at": "2026-06-08T11:07:57.679259",
   "date_range": "2026-06-01 to 2026-07-31",
-  "total_events": 9,
+  "total_events": 27,
   "events": [
     {
       "event_name": "Project Presentation",
@@ -22,10 +22,34 @@
       "event_location": "C-109 by Mr. Shakeel Kiyani"
     },
     {
+      "event_name": "Class FSM",
+      "date": "June 3",
+      "time": "1:00 pm - 4:00 pm",
+      "event_location": "MEDC-118 by Dr. Daniyal"
+    },
+    {
       "event_name": "PHD Thesis Defense",
       "date": "June 4",
       "time": "10:00 am - 2:00 pm",
       "event_location": "C-109 by Mr. Shakeel Kiyani"
+    },
+    {
+      "event_name": "Class FSM",
+      "date": "June 4",
+      "time": "1:00 pm - 4:00 pm",
+      "event_location": "MEDC-118 by Dr. Daniyal"
+    },
+    {
+      "event_name": "Application of AI In Engineering",
+      "date": "June 5",
+      "time": "9:00 am - 12:00 pm",
+      "event_location": "MEDC 118 by Dr. Rashif Ramzan (EE)"
+    },
+    {
+      "event_name": "Faculty Interviews FCS",
+      "date": "June 5",
+      "time": "9:00 am - 6:00 pm",
+      "event_location": "C-109 by Dr. Subhanullah"
     },
     {
       "event_name": "Faculty Interviews FSM",
@@ -46,16 +70,100 @@
       "event_location": "MEDC-117 & 118"
     },
     {
+      "event_name": "NRPU Interviews",
+      "date": "June 10",
+      "time": "1:00 pm - 5:00 pm",
+      "event_location": "C Block C-109 By Dr. Riffat Shaheen(FSM)"
+    },
+    {
+      "event_name": "MS BA Orientation",
+      "date": "June 11",
+      "time": "4:00 pm - 7:00 pm",
+      "event_location": "MEDC 118 By Ms Fasiha (FSM)"
+    },
+    {
+      "event_name": "Recruitment Drive",
+      "date": "June 15",
+      "time": "9:00 am - 5:00 am",
+      "event_location": "Auditorium D  &C-109 by Mr. Zeeshan CSO"
+    },
+    {
+      "event_name": "Recruitment Drive",
+      "date": "June 16",
+      "time": "9:00 am - 5:00 am",
+      "event_location": "Auditorium D  &C-109 by Mr. Zeeshan CSO"
+    },
+    {
       "event_name": "Hackthon",
       "date": "June 16",
       "time": "9:00 am - 6:00 pm",
       "event_location": "Auditorium D Block by Ms. laraib"
     },
     {
+      "event_name": "Academic Council Meeting",
+      "date": "June 16",
+      "time": "9:00 am - 4:00 pm",
+      "event_location": "C-109 by Mr. Usman Tariq"
+    },
+    {
+      "event_name": "Recruitment Drive",
+      "date": "June 16",
+      "time": "9:00 am - 5:00 am",
+      "event_location": "Auditorium D  &MEDC 117 by Mr. Zeeshan CSO"
+    },
+    {
+      "event_name": "Recruitment Drive",
+      "date": "June 17",
+      "time": "9:00 am - 5:00 am",
+      "event_location": "Auditorium D  &MEDC 117 by Mr. Zeeshan CSO"
+    },
+    {
       "event_name": "Hackthon",
       "date": "June 17",
       "time": "9:00 am - 6:00 pm",
       "event_location": "Auditorium D Block by Ms. laraib"
+    },
+    {
+      "event_name": "QEC Visit",
+      "date": "June 17",
+      "time": "9:00 am - 7:00 pm",
+      "event_location": "C-109 by Ms. Warda"
+    },
+    {
+      "event_name": "QEC Visit",
+      "date": "June 18",
+      "time": "9:00 am - 7:00 pm",
+      "event_location": "C-109 by Ms. Warda"
+    },
+    {
+      "event_name": "Hackthon Closing Ceremony",
+      "date": "June 18",
+      "time": "9:00 am - 8:00 pm",
+      "event_location": "Auditorium A Block by Mr. Junaid"
+    },
+    {
+      "event_name": "QEC Training",
+      "date": "June 22",
+      "time": "9:00 am - 6:00 pm",
+      "event_location": "C-109 by Ms. Wardah"
+    },
+    {
+      "event_name": "QEC Training",
+      "date": "June 23",
+      "time": "9:00 am - 6:00 pm",
+      "event_location": "C-109 by Ms. Wardah"
+    },
+    {
+      "event_name": "QEC Training",
+      "date": "June 24",
+      "time": "9:00 am - 6:00 pm",
+      "event_location": "C-109 by Ms. Wardah"
+    },
+    {
+      "event_name": "EE Event",
+      "date": "July 2",
+      "time": "7:00 am - 7:00 pm",
+      "event_location": "D Block Audi by Dr. Saeed"
     }
   ]
 }

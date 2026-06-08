@@ -1,8 +1,8 @@
 {
-  "filtered_at": "2026-06-01T11:46:43.544762",
+  "filtered_at": "2026-06-08T11:07:57.679259",
   "date_range": "2026-06-01 to 2026-07-31",
-  "total_original": 9,
-  "total_filtered": 4,
+  "total_original": 27,
+  "total_filtered": 14,
   "events": [
     {
       "event_name": "Project Presentation",
@@ -17,16 +17,76 @@
       "event_location": "Auditorium A & D Block by Mr. Nadeem (CAO) Zaki"
     },
     {
+      "event_name": "Class FSM",
+      "date": "June 3",
+      "time": "1:00 pm - 4:00 pm",
+      "event_location": "MEDC-118 by Dr. Daniyal"
+    },
+    {
+      "event_name": "Class FSM",
+      "date": "June 4",
+      "time": "1:00 pm - 4:00 pm",
+      "event_location": "MEDC-118 by Dr. Daniyal"
+    },
+    {
+      "event_name": "Application of AI In Engineering",
+      "date": "June 5",
+      "time": "9:00 am - 12:00 pm",
+      "event_location": "MEDC 118 by Dr. Rashif Ramzan (EE)"
+    },
+    {
+      "event_name": "MS BA Orientation",
+      "date": "June 11",
+      "time": "4:00 pm - 7:00 pm",
+      "event_location": "MEDC 118 By Ms Fasiha (FSM)"
+    },
+    {
+      "event_name": "Recruitment Drive",
+      "date": "June 15",
+      "time": "9:00 am - 5:00 am",
+      "event_location": "Auditorium D  &C-109 by Mr. Zeeshan CSO"
+    },
+    {
+      "event_name": "Recruitment Drive",
+      "date": "June 16",
+      "time": "9:00 am - 5:00 am",
+      "event_location": "Auditorium D  &C-109 by Mr. Zeeshan CSO"
+    },
+    {
       "event_name": "Hackthon",
       "date": "June 16",
       "time": "9:00 am - 6:00 pm",
       "event_location": "Auditorium D Block by Ms. laraib"
     },
     {
+      "event_name": "Recruitment Drive",
+      "date": "June 16",
+      "time": "9:00 am - 5:00 am",
+      "event_location": "Auditorium D  &MEDC 117 by Mr. Zeeshan CSO"
+    },
+    {
+      "event_name": "Recruitment Drive",
+      "date": "June 17",
+      "time": "9:00 am - 5:00 am",
+      "event_location": "Auditorium D  &MEDC 117 by Mr. Zeeshan CSO"
+    },
+    {
       "event_name": "Hackthon",
       "date": "June 17",
       "time": "9:00 am - 6:00 pm",
       "event_location": "Auditorium D Block by Ms. laraib"
+    },
+    {
+      "event_name": "Hackthon Closing Ceremony",
+      "date": "June 18",
+      "time": "9:00 am - 8:00 pm",
+      "event_location": "Auditorium A Block by Mr. Junaid"
+    },
+    {
+      "event_name": "EE Event",
+      "date": "July 2",
+      "time": "7:00 am - 7:00 pm",
+      "event_location": "D Block Audi by Dr. Saeed"
     }
   ]
 }
