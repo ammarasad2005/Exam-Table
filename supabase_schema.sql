@@ -121,3 +121,31 @@ USING (true);
 CREATE POLICY "Allow public delete feedback"
 ON campus_feedback FOR DELETE
 USING (true);
+
+-- Table for Summer Semester Configuration settings
+CREATE TABLE IF NOT EXISTS semester_settings (
+  id INTEGER PRIMARY KEY CHECK (id = 1) DEFAULT 1,
+  semester_type TEXT NOT NULL DEFAULT 'regular' CHECK (semester_type IN ('regular', 'summer')),
+  bypass_courses_config BOOLEAN NOT NULL DEFAULT false,
+  google_sheets_url TEXT NOT NULL DEFAULT '',
+  course_mappings JSONB NOT NULL DEFAULT '[]'::jsonb,
+  updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
+-- Enable RLS
+ALTER TABLE semester_settings ENABLE ROW LEVEL SECURITY;
+
+-- Policies for semester_settings
+CREATE POLICY "Allow public read settings"
+ON semester_settings FOR SELECT
+USING (true);
+
+CREATE POLICY "Allow public update settings"
+ON semester_settings FOR UPDATE
+USING (true);
+
+-- Seed initial default settings row
+INSERT INTO semester_settings (id, semester_type, bypass_courses_config, google_sheets_url, course_mappings)
+VALUES (1, 'regular', false, '', '[]')
+ON CONFLICT (id) DO NOTHING;
+

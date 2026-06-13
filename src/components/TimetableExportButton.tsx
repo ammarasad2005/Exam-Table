@@ -6,9 +6,10 @@ import type { TimetableEntry } from '@/lib/types';
 interface Props {
   entries: TimetableEntry[];
   variant?: 'header' | 'sidebar';
+  isSummer?: boolean;
 }
 
-export function TimetableExportButton({ entries, variant = 'header' }: Props) {
+export function TimetableExportButton({ entries, variant = 'header', isSummer }: Props) {
   const [open, setOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
 
@@ -52,7 +53,7 @@ export function TimetableExportButton({ entries, variant = 'header' }: Props) {
           }`}
         >
           {[
-            { label: 'as Calendar (.ics)', action: () => { downloadTimetableICS(entries); setOpen(false); } },
+            { label: 'as Calendar (.ics)', action: () => { downloadTimetableICS(entries, isSummer); setOpen(false); } },
             { label: 'as XLSX',            action: () => { downloadTimetableXLSX(entries); setOpen(false); } },
             { label: 'as CSV',             action: () => { downloadTimetableCSV(entries); setOpen(false); } },
           ].map(({ label, action }) => (

@@ -307,9 +307,9 @@ export async function downloadTimetableImage(entries: TimetableEntry[], config?:
 
 /**
  * Generates a recurring weekly .ics for a set of timetable entries.
- * Events repeat RRULE:FREQ=WEEKLY for ~16 weeks from the current date.
+ * Events repeat RRULE:FREQ=WEEKLY for ~16 weeks (or 8 weeks for summer) from the current date.
  */
-export function downloadTimetableICS(entries: TimetableEntry[]): void {
+export function downloadTimetableICS(entries: TimetableEntry[], isSummer?: boolean): void {
   try {
     const DAY_MAP: Record<string, string> = {
       Monday: 'MO', Tuesday: 'TU', Wednesday: 'WE', Thursday: 'TH', Friday: 'FR',
@@ -318,9 +318,10 @@ export function downloadTimetableICS(entries: TimetableEntry[]): void {
       Sunday: 0, Monday: 1, Tuesday: 2, Wednesday: 3, Thursday: 4, Friday: 5, Saturday: 6,
     };
 
+    const weeks = isSummer ? 8 : 16;
     const dtStamp = new Date().toISOString().replace(/[-:]/g, '').split('.')[0] + 'Z';
     const semStart = new Date(); semStart.setHours(0, 0, 0, 0);
-    const semEnd = new Date(semStart); semEnd.setDate(semEnd.getDate() + 16 * 7);
+    const semEnd = new Date(semStart); semEnd.setDate(semEnd.getDate() + weeks * 7);
     const untilDT = semEnd.toISOString().replace(/[-:]/g, '').split('.')[0] + 'Z';
 
     function nextWeekday(targetDay: string): Date {

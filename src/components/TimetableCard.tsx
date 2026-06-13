@@ -12,6 +12,7 @@ interface Props {
   onRemove?: () => void;
   onChangeSection?: (section: string) => void;
   availableSections?: string[];
+  displayName?: string; // alias override for summer mode
 }
 
 export function TimetableCard({
@@ -23,6 +24,7 @@ export function TimetableCard({
   onRemove,
   onChangeSection,
   availableSections = [],
+  displayName,
 }: Props) {
   const accentColor = `var(--accent-${dept.toLowerCase()})`;
   const accentBg    = `var(--accent-${dept.toLowerCase()}-bg)`;
@@ -123,7 +125,7 @@ export function TimetableCard({
 
       {/* Course name */}
       <p className="font-body text-sm font-medium text-[var(--color-text-primary)] leading-snug line-clamp-2">
-        {entry.courseName}
+        {displayName ?? entry.courseName}
       </p>
 
       {/* Time */}

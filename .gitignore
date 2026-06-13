@@ -73,3 +73,24 @@ __pycache__/
 /*.jpeg
 /lint.txt
 
+
+# Agent orchestration metadata
+.agents/
+
+# Scratch/test files
+scratch/
+
+# API response test data
+api_response.json
+api_response_3001.json
+
+# Runtime logs
+server.log
+
+# Development utilities
+scripts/show-env-keys.ts
+scripts/verify-html-check.ts
+
+# Project documentation (tracked separately in docs/)
+PROJECT.md
+ORIGINAL_REQUEST.md

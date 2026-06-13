@@ -17,7 +17,7 @@ import { EmptyState } from '@/components/EmptyState';
 import { ThemeToggle } from '@/components/ThemeToggle';
 import { Header } from '@/components/Header';
 import { AlertCircle } from 'lucide-react';
-import type { TimetableEntry, RawTimetableJSON } from '@/lib/types';
+import type { TimetableEntry, RawTimetableJSON, SummerCourseCatalogEntry } from '@/lib/types';
 import { DAYS_ORDER } from '@/lib/types';
 
 // eslint-disable-next-line
@@ -79,25 +79,56 @@ function TimetablePageInner() {
   const [saveFeedback, setSaveFeedback] = useState('');
   const [repeatPromptCourse, setRepeatPromptCourse] = useState<{ key: CourseKey, section: string } | null>(null);
 
+  const [entries, setEntries] = useState<TimetableEntry[]>(allEntries);
+  const [isSummer, setIsSummer] = useState<boolean>(false);
+  const [summerSelections, setSummerSelections] = useState<Record<string, string>>({});
+  const [summerCatalog, setSummerCatalog] = useState<SummerCourseCatalogEntry[]>([]);
+  const [loadingSummer, setLoadingSummer] = useState<boolean>(false);
+
+  useEffect(() => {
+    const activeSemester = localStorage.getItem('fsc_active_semester');
+    if (activeSemester === 'summer') {
+      setIsSummer(true);
+      const storedSelections = localStorage.getItem('fsc_summer_courses');
+      if (storedSelections) setSummerSelections(JSON.parse(storedSelections));
+      setLoadingSummer(true);
+      fetch('/api/timetable', { cache: 'no-store' })
+        .then(res => res.ok ? res.json() : { entries: [], catalog: [] })
+        .then(data => {
+          setEntries(data.entries ?? []);
+          setSummerCatalog(data.catalog ?? []);
+          setLoadingSummer(false);
+        })
+        .catch(err => {
+          console.error('Error fetching summer timetable:', err);
+          setEntries(allEntries);
+          setLoadingSummer(false);
+        });
+    } else {
+      setIsSummer(false);
+      setEntries(allEntries);
+    }
+  }, []);
+
   const preferenceScopeKey = useMemo(() => `${batch}|${dept}`, [batch, dept]);
 
   const contextEntries = useMemo(() => {
-    return allEntries.filter(e => {
+    return entries.filter(e => {
       if (e.batch !== batch) return false;
       if (!isDepartmentMatch(e.department, dept)) return false;
       return true;
     });
-  }, [batch, dept]);
+  }, [batch, dept, entries]);
 
   const defaultEntries = useMemo(() => {
-    return filterTimetable(allEntries, {
+    return filterTimetable(entries, {
       batch,
       department: dept,
       section,
       query: '',
       includeRepeats,
     });
-  }, [batch, dept, section, includeRepeats]);
+  }, [batch, dept, section, includeRepeats, entries]);
 
   const defaultSectionByCourse = useMemo(() => {
     const map = new Map<CourseKey, string>();
@@ -196,6 +227,24 @@ function TimetablePageInner() {
   }, [defaultSectionByCourse, cleanedManualSectionByCourse]);
 
   const filtered = useMemo(() => {
+    if (isSummer) {
+      const result = entries.filter(e => {
+        // summerSelections keys are course sheetNames; values are the chosen section
+        if (!summerSelections[e.courseName]) return false;
+        const selectedSection = summerSelections[e.courseName];
+        // If the entry has no section (grid-parsed summer schedules), show it for any selection
+        if (!e.section || !selectedSection || selectedSection === 'A') return true;
+        return e.section === selectedSection;
+      });
+      const q = query.toLowerCase().trim();
+      if (!q) return result;
+      return result.filter(e =>
+        e.courseName.toLowerCase().includes(q) ||
+        e.room.toLowerCase().includes(q) ||
+        e.section.toLowerCase().includes(q)
+      );
+    }
+
     const activeCourseKeys = new Set<CourseKey>([
       ...defaultSectionByCourse.keys(),
       ...Object.keys(cleanedManualSectionByCourse),
@@ -234,6 +283,9 @@ function TimetablePageInner() {
       e.section.toLowerCase().includes(q)
     );
   }, [
+    isSummer,
+    entries,
+    summerSelections,
     cleanedManualSectionByCourse,
     contextEntries,
     defaultSectionByCourse,
@@ -277,6 +329,26 @@ function TimetablePageInner() {
       return next;
     });
   };
+
+  // Summer-specific: remove a course by its name from summerSelections
+  const removeSummerCourse = (courseName: string) => {
+    setSummerSelections(prev => {
+      const next = { ...prev };
+      delete next[courseName];
+      localStorage.setItem('fsc_summer_courses', JSON.stringify(next));
+      return next;
+    });
+  };
+
+  // Summer-specific: update section for a course in summerSelections
+  const updateSummerCourseSection = (courseName: string, section: string) => {
+    setSummerSelections(prev => {
+      const next = { ...prev, [courseName]: section };
+      localStorage.setItem('fsc_summer_courses', JSON.stringify(next));
+      return next;
+    });
+  };
+
 
   const toggleOtherCourse = (courseKey: CourseKey, targetSection: string) => {
     // If it's a repeat course and master toggle is off, show the prompt
@@ -472,11 +544,18 @@ function TimetablePageInner() {
   const accentColor = `var(--accent-${dept.toLowerCase()})`;
   const accentBg    = `var(--accent-${dept.toLowerCase()}-bg)`;
 
+  /** Resolve alias: returns displayName if set in catalog, otherwise raw sheetName */
+  const summerDisplayName = (sheetName: string): string => {
+    if (!isSummer || summerCatalog.length === 0) return sheetName;
+    const entry = summerCatalog.find(c => c.sheetName === sheetName);
+    return entry?.displayName ?? sheetName;
+  };
+
   return (
     <div className="min-h-dvh flex flex-col">
 
       {/* ── Sticky header ─────────────────────────────────────────────────── */}
-      <Header rightActions={<TimetableExportButton entries={filtered} />}>
+      <Header rightActions={<TimetableExportButton entries={filtered} isSummer={isSummer} />}>
         <div className="flex flex-1 items-center gap-2 md:gap-3 w-full max-w-full min-w-0">
           <button
             onClick={() => router.back()}
@@ -491,12 +570,15 @@ function TimetablePageInner() {
           <div className="flex-1 flex items-center gap-2 min-w-0">
             <span
               className="font-mono text-sm font-medium px-2 py-0.5 rounded shrink-0"
-              style={{ backgroundColor: accentBg, color: accentColor }}
+              style={{
+                backgroundColor: isSummer ? 'var(--accent-cs-bg)' : accentBg,
+                color: isSummer ? 'var(--accent-cs)' : accentColor
+              }}
             >
-              {dept}
+              {isSummer ? 'SUMMER' : dept}
             </span>
             <span className="font-mono text-sm text-[var(--color-text-secondary)] truncate">
-              Batch {batch} · Section {section}
+              {isSummer ? 'Summer Semester 2026' : `Batch ${batch} · Section ${section}`}
             </span>
           </div>
         </div>
@@ -508,18 +590,27 @@ function TimetablePageInner() {
 
         {/* ── Desktop Sidebar ───────────────────────────────────────────── */}
         <aside className="hidden md:flex md:w-56 lg:w-64 flex-col gap-4 p-6 border-r border-[var(--color-border)] sticky top-14 h-[calc(100dvh-56px)] overflow-y-auto">
-          <div>
-            <p className="font-mono text-[10px] uppercase tracking-widest text-[var(--color-text-tertiary)] mb-1">Batch</p>
-            <p className="font-mono text-sm font-medium">{batch}</p>
-          </div>
-          <div>
-            <p className="font-mono text-[10px] uppercase tracking-widest text-[var(--color-text-tertiary)] mb-1">Department</p>
-            <p className="font-mono text-sm font-medium" style={{ color: accentColor }}>{dept}</p>
-          </div>
-          <div>
-            <p className="font-mono text-[10px] uppercase tracking-widest text-[var(--color-text-tertiary)] mb-1">Section</p>
-            <p className="font-mono text-sm font-medium">{section}</p>
-          </div>
+          {isSummer ? (
+            <div>
+              <p className="font-mono text-[10px] uppercase tracking-widest text-[var(--color-text-tertiary)] mb-1">Semester</p>
+              <p className="font-mono text-sm font-medium">Summer 2026</p>
+            </div>
+          ) : (
+            <>
+              <div>
+                <p className="font-mono text-[10px] uppercase tracking-widest text-[var(--color-text-tertiary)] mb-1">Batch</p>
+                <p className="font-mono text-sm font-medium">{batch}</p>
+              </div>
+              <div>
+                <p className="font-mono text-[10px] uppercase tracking-widest text-[var(--color-text-tertiary)] mb-1">Department</p>
+                <p className="font-mono text-sm font-medium" style={{ color: accentColor }}>{dept}</p>
+              </div>
+              <div>
+                <p className="font-mono text-[10px] uppercase tracking-widest text-[var(--color-text-tertiary)] mb-1">Section</p>
+                <p className="font-mono text-sm font-medium">{section}</p>
+              </div>
+            </>
+          )}
           <div className="h-px bg-[var(--color-border)]" />
           <div>
             <p className="font-mono text-[10px] uppercase tracking-widest text-[var(--color-text-tertiary)] mb-1">Found</p>
@@ -555,46 +646,54 @@ function TimetablePageInner() {
           </div>
 
           {/* Include Repeats toggle */}
-          <div className="h-px bg-[var(--color-border)]" />
-          <div>
-            <p className="font-mono text-[10px] uppercase tracking-widest text-[var(--color-text-tertiary)] mb-2">Repeat Courses</p>
-            <button
-              id="sidebar-repeats-toggle"
-              role="switch"
-              aria-checked={includeRepeats}
-              onClick={() => handleToggleRepeats(!includeRepeats)}
-              className="flex items-center justify-between w-full h-8 px-3 rounded border font-mono text-xs font-medium transition-all duration-150 focus-visible:outline-none focus-visible:ring-2"
-              style={includeRepeats ? {
-                backgroundColor: 'var(--color-text-primary)',
-                color: 'var(--color-bg)',
-                borderColor: 'transparent',
-              } : {
-                borderColor: 'var(--color-border-strong)',
-                color: 'var(--color-text-secondary)',
-              }}
-            >
-              <span>{includeRepeats ? 'Included' : 'Excluded'}</span>
-              <span className="opacity-60 text-[10px]">{includeRepeats ? '●' : '○'}</span>
-            </button>
-          </div>
+          {!isSummer && (
+            <>
+              <div className="h-px bg-[var(--color-border)]" />
+              <div>
+                <p className="font-mono text-[10px] uppercase tracking-widest text-[var(--color-text-tertiary)] mb-2">Repeat Courses</p>
+                <button
+                  id="sidebar-repeats-toggle"
+                  role="switch"
+                  aria-checked={includeRepeats}
+                  onClick={() => handleToggleRepeats(!includeRepeats)}
+                  className="flex items-center justify-between w-full h-8 px-3 rounded border font-mono text-xs font-medium transition-all duration-150 focus-visible:outline-none focus-visible:ring-2"
+                  style={includeRepeats ? {
+                    backgroundColor: 'var(--color-text-primary)',
+                    color: 'var(--color-bg)',
+                    borderColor: 'transparent',
+                  } : {
+                    borderColor: 'var(--color-border-strong)',
+                    color: 'var(--color-text-secondary)',
+                  }}
+                >
+                  <span>{includeRepeats ? 'Included' : 'Excluded'}</span>
+                  <span className="opacity-60 text-[10px]">{includeRepeats ? '●' : '○'}</span>
+                </button>
+              </div>
+            </>
+          )}
 
           <div className="mt-auto flex flex-col gap-2">
-            <button
-              onClick={persistResultPreferences}
-              className="h-9 rounded border border-[var(--color-border-strong)] font-mono text-[10px] text-[var(--color-text-primary)] hover:bg-[var(--color-bg-subtle)]"
-            >
-              Save Preferences
-            </button>
-            {saveFeedback && (
-              <p className="font-mono text-[10px] text-[var(--color-text-tertiary)]">{saveFeedback}</p>
+            {!isSummer && (
+              <>
+                <button
+                  onClick={persistResultPreferences}
+                  className="h-9 rounded border border-[var(--color-border-strong)] font-mono text-[10px] text-[var(--color-text-primary)] hover:bg-[var(--color-bg-subtle)]"
+                >
+                  Save Preferences
+                </button>
+                {saveFeedback && (
+                  <p className="font-mono text-[10px] text-[var(--color-text-tertiary)]">{saveFeedback}</p>
+                )}
+              </>
             )}
             <button
               onClick={() => router.push('/')}
               className="text-xs text-[var(--color-text-secondary)] underline underline-offset-2 text-left hover:text-[var(--color-text-primary)] focus-visible:outline-none focus-visible:ring-2"
             >
-              Change filters
+              {isSummer ? 'Change courses' : 'Change filters'}
             </button>
-            <TimetableExportButton entries={filtered} variant="sidebar" />
+            <TimetableExportButton entries={filtered} variant="sidebar" isSummer={isSummer} />
           </div>
         </aside>
 
@@ -664,7 +763,7 @@ function TimetablePageInner() {
           </div>
 
           {/* Other Courses UI */}
-          {batch === '2022' && electiveGroups && (
+          {!isSummer && batch === '2022' && electiveGroups && (
             <div className="border-b border-[var(--color-border)] bg-[var(--color-bg-subtle)]/30">
               <button
                 onClick={() => setIsOtherCoursesExpanded(!isOtherCoursesExpanded)}
@@ -971,15 +1070,26 @@ function TimetablePageInner() {
             ) : viewMode === 'list' ? (
               <ListView
                 grouped={reorderedGrouped}
-                dept={dept}
+                dept={isSummer ? 'cs' : dept}
                 conflicts={conflicts}
                 onSelect={setSelected}
-                onRemoveCourse={(entry: TimetableEntry) => removeCourseByKey(makeCourseKey(entry))}
-                onChangeCourseSection={(entry: TimetableEntry, nextSection: string) => updateCourseSection(makeCourseKey(entry), nextSection)}
-                getAvailableSections={(entry: TimetableEntry) => courseSectionsListByKey.get(makeCourseKey(entry)) ?? []}
+                onRemoveCourse={isSummer
+                  ? (entry: TimetableEntry) => removeSummerCourse(entry.courseName)
+                  : (entry: TimetableEntry) => removeCourseByKey(makeCourseKey(entry))}
+                onChangeCourseSection={isSummer
+                  ? (entry: TimetableEntry, nextSection: string) => updateSummerCourseSection(entry.courseName, nextSection)
+                  : (entry: TimetableEntry, nextSection: string) => updateCourseSection(makeCourseKey(entry), nextSection)}
+                getAvailableSections={isSummer
+                  ? (entry: TimetableEntry) => {
+                      // Build sections list from all entries for this course
+                      const secs = [...new Set(entries.filter(e => e.courseName === entry.courseName && e.section).map(e => e.section))].filter(Boolean);
+                      return secs.length > 0 ? secs : [];
+                    }
+                  : (entry: TimetableEntry) => courseSectionsListByKey.get(makeCourseKey(entry)) ?? []}
+                resolveDisplayName={summerDisplayName}
               />
             ) : (
-              <GridView entries={filtered} dept={dept} conflicts={conflicts} onSelect={setSelected} />
+              <GridView entries={filtered} dept={dept} conflicts={conflicts} onSelect={setSelected} resolveDisplayName={summerDisplayName} />
             )}
           </div>
         </div>
@@ -991,6 +1101,8 @@ function TimetablePageInner() {
           entry={selected}
           dept={dept}
           onClose={() => setSelected(null)}
+          isSummer={isSummer}
+          displayName={summerDisplayName(selected.courseName)}
         />
       )}
     </div>
@@ -1007,6 +1119,7 @@ function ListView({
   onRemoveCourse,
   onChangeCourseSection,
   getAvailableSections,
+  resolveDisplayName,
 }: {
   grouped: { day: string; entries: TimetableEntry[]; isToday: boolean; dateStr: string }[];
   dept: string;
@@ -1015,6 +1128,7 @@ function ListView({
   onRemoveCourse: (e: TimetableEntry) => void;
   onChangeCourseSection: (e: TimetableEntry, section: string) => void;
   getAvailableSections: (e: TimetableEntry) => string[];
+  resolveDisplayName?: (courseName: string) => string;
 }) {
   return (
     <>
@@ -1072,6 +1186,7 @@ function ListView({
                     onRemove={() => onRemoveCourse(entry)}
                     onChangeSection={(nextSection) => onChangeCourseSection(entry, nextSection)}
                     availableSections={getAvailableSections(entry)}
+                    displayName={resolveDisplayName ? resolveDisplayName(entry.courseName) : undefined}
                   />
                 );
               })}
@@ -1099,11 +1214,13 @@ function GridView({
   dept,
   conflicts,
   onSelect,
+  resolveDisplayName,
 }: {
   entries: TimetableEntry[];
   dept: string;
   conflicts: Set<string>;
   onSelect: (e: TimetableEntry) => void;
+  resolveDisplayName?: (courseName: string) => string;
 }) {
   const accentColor = `var(--accent-${dept.toLowerCase()})`;
   const accentBg    = `var(--accent-${dept.toLowerCase()}-bg)`;
@@ -1203,7 +1320,7 @@ function GridView({
                         >
                           <div className="flex flex-col h-full w-full justify-between gap-1 p-1 md:p-2">
                             <div className="min-w-0">
-                              <p className="font-bold leading-tight line-clamp-2 uppercase break-words">{e.courseName}</p>
+                              <p className="font-bold leading-tight line-clamp-2 uppercase break-words">{resolveDisplayName ? resolveDisplayName(e.courseName) : e.courseName}</p>
                               <p className="mt-0.5 opacity-80 font-mono text-[8.5px] whitespace-nowrap overflow-hidden text-ellipsis">{formatTimeRange(e.time)}</p>
                             </div>
                             <p className="font-medium opacity-80 self-end text-[8.5px] truncate max-w-full">{e.room}</p>

@@ -9,9 +9,11 @@ interface Props {
   entry: TimetableEntry;
   dept: string;
   onClose: () => void;
+  isSummer?: boolean;
+  displayName?: string; // alias override for summer mode
 }
 
-export function TimetableDetail({ entry, dept, onClose }: Props) {
+export function TimetableDetail({ entry, dept, onClose, isSummer, displayName }: Props) {
   const { drawerRef, handleRef, backdropRef, closeDrawer } = useMobileSwipe({ onClose, defaultHeightStr: '85dvh' });
 
   // Lock body scroll on mobile when sheet is open
@@ -56,7 +58,7 @@ export function TimetableDetail({ entry, dept, onClose }: Props) {
         ref={drawerRef}
         role="dialog"
         aria-modal="true"
-        aria-label={`${entry.courseName} timetable details`}
+        aria-label={`${displayName ?? entry.courseName} timetable details`}
         className="fixed z-40 bottom-0 left-0 right-0 rounded-t-2xl overflow-y-auto md:bottom-0 md:top-14 md:left-auto md:right-0 md:w-96 md:rounded-none md:rounded-l-2xl md:max-h-[calc(100dvh-56px)] animate-in slide-in-from-bottom-4 md:slide-in-from-right-4 duration-300 ease-out h-[85dvh] md:h-auto"
         style={{
           backgroundColor: 'var(--color-bg-raised)',
@@ -77,7 +79,7 @@ export function TimetableDetail({ entry, dept, onClose }: Props) {
             >
               {entry.department} · {entry.section}
             </span>
-            <h2 className="mt-2 font-display text-xl leading-tight">{entry.courseName}</h2>
+            <h2 className="mt-2 font-display text-xl leading-tight">{displayName ?? entry.courseName}</h2>
           </div>
           <button
             onClick={closeDrawer}
@@ -112,7 +114,7 @@ export function TimetableDetail({ entry, dept, onClose }: Props) {
           {/* Actions */}
           <div className="mt-4 flex flex-col gap-2">
             <button
-              onClick={() => downloadTimetableICS([entry])}
+              onClick={() => downloadTimetableICS([entry], isSummer)}
               className="w-full h-11 rounded-md border border-[var(--color-border-strong)] font-body text-sm font-medium text-[var(--color-text-primary)] active:scale-[0.98] transition-transform hover:bg-[var(--color-bg-subtle)] focus-visible:outline-none focus-visible:ring-2"
             >
               Add to calendar (.ics)

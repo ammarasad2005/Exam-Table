@@ -6,9 +6,58 @@ import urllib.parse
 import re
 import json
 import sys
+import os
 from datetime import date, timedelta
 import zipfile
 import xml.etree.ElementTree as ET
+
+# ==============================================================================
+# ADMIN PANEL OVERRIDE: Fetch course mappings from Supabase if override is ON.
+# Reads NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_ANON_KEY from .env.local
+# ==============================================================================
+def _load_dotenv(path=".env.local"):
+    """Minimal .env.local parser — sets os.environ for keys not already set."""
+    try:
+        with open(path, "r") as f:
+            for line in f:
+                line = line.strip()
+                if not line or line.startswith("#") or "=" not in line:
+                    continue
+                key, _, val = line.partition("=")
+                key = key.strip()
+                val = val.strip().strip('"').strip("'")
+                if key and key not in os.environ:
+                    os.environ[key] = val
+    except FileNotFoundError:
+        pass
+
+_load_dotenv()
+
+def _fetch_admin_mappings():
+    supabase_url = os.environ.get("NEXT_PUBLIC_SUPABASE_URL", "").rstrip("/")
+    supabase_key = os.environ.get("NEXT_PUBLIC_SUPABASE_ANON_KEY", "")
+    if not supabase_url or not supabase_key:
+        return None, False
+    try:
+        url = (
+            f"{supabase_url}/rest/v1/semester_settings"
+            f"?id=eq.1&select=regular_course_mappings,override_course_mappings"
+        )
+        req = urllib.request.Request(url, headers={
+            "apikey": supabase_key,
+            "Authorization": f"Bearer {supabase_key}",
+        })
+        resp = urllib.request.urlopen(req, timeout=6)
+        rows = json.loads(resp.read().decode("utf-8"))
+        if rows:
+            row = rows[0]
+            mappings = row.get("regular_course_mappings")
+            override = bool(row.get("override_course_mappings", False))
+            return mappings, override
+    except Exception as e:
+        print(f"⚠  Could not fetch admin mappings from Supabase: {e}")
+    return None, False
+
 
 # ==============================================================================
 # INPUT VARIABLE: Paste your Google Sheets string here.
@@ -49,6 +98,21 @@ VALID_COURSES_MAP = {
         "CY": ["OOP", "OOP Lab", "DLD", "DLD Lab", "MV Calculus", "AP", "Exp Writing", "Exp Writing Lab", "Seerah & UHQ-I"]
     }
 }
+
+# ==============================================================================
+# RESOLVE: Which mapping to use (admin override vs hardcoded)
+# ==============================================================================
+_admin_mappings, _override_enabled = _fetch_admin_mappings()
+
+if _override_enabled and _admin_mappings and isinstance(_admin_mappings, dict):
+    EFFECTIVE_COURSES_MAP = _admin_mappings
+    print("✅ Using admin-defined course mappings from Supabase (override is ON).")
+else:
+    EFFECTIVE_COURSES_MAP = VALID_COURSES_MAP
+    if _override_enabled and not _admin_mappings:
+        print("⚠  Override is ON but no admin mappings found in DB — falling back to hardcoded VALID_COURSES_MAP.")
+    else:
+        print("ℹ  Using hardcoded VALID_COURSES_MAP (override is OFF).")
 
 DAY_ALIASES = {
     "mon": "Monday",
@@ -112,10 +176,10 @@ DAY_INDEX = {name: idx for idx, name in enumerate(CANONICAL_DAYS)}
 # HELPER: Batch reverse-lookup (returns ALL possible batches, not just the first)
 # ==============================================================================
 def find_possible_batches(course_name, dept=None):
-    """Returns every batch in VALID_COURSES_MAP that lists (dept, course_name)."""
+    """Returns every batch in EFFECTIVE_COURSES_MAP that lists (dept, course_name)."""
     lookup_name = course_name[:-4].strip() if course_name.lower().endswith("lab") else course_name
     possible = []
-    for b, departments in VALID_COURSES_MAP.items():
+    for b, departments in EFFECTIVE_COURSES_MAP.items():
         if dept:
             if dept in departments:
                 courses = departments[dept]

@@ -27,10 +27,14 @@ import {
   Lightbulb,
   Bug,
   Star,
-  HelpCircle
+  HelpCircle,
+  Settings
 } from 'lucide-react'
 import { Header } from '@/components/Header'
+import { supabase } from '@/lib/supabase'
 import { useToast } from '@/hooks/use-toast'
+import type { SummerCourseCatalogEntry, RegularCourseMappings } from '@/lib/types'
+import { HARDCODED_VALID_COURSES_MAP } from '@/lib/types'
 import {
   AlertDialog,
   AlertDialogAction,
@@ -67,7 +71,22 @@ export default function AdminPage() {
   // State Management
   const [checkingAuth, setCheckingAuth] = useState(true)
   const [authenticated, setAuthenticated] = useState(false)
-  const [adminView, setAdminView] = useState<'items' | 'feedback'>('items')
+  const [adminView, setAdminView] = useState<'items' | 'feedback' | 'settings'>('items')
+
+  // Settings Form State
+  const [semesterType, setSemesterType] = useState<'regular' | 'summer'>('regular')
+  const [bypassCoursesConfig, setBypassCoursesConfig] = useState(false)
+  const [googleSheetsUrl, setGoogleSheetsUrl] = useState('')
+  const [courseMappings, setCourseMappings] = useState('[]') // Used for regular (legacy fallback)
+  const [summerCatalog, setSummerCatalog] = useState<SummerCourseCatalogEntry[]>([]) // Used for summer
+  // Regular semester course mappings (admin-editable, mirrors VALID_COURSES_MAP)
+  const [regularMappings, setRegularMappings] = useState<RegularCourseMappings>({})
+  const [overrideCourseMappings, setOverrideCourseMappings] = useState(false)
+  const [activeBatchTab, setActiveBatchTab] = useState('2025')
+  const [newCourseInput, setNewCourseInput] = useState<Record<string, string>>({}) // key: `${batch}|${dept}`
+  const [savingSettings, setSavingSettings] = useState(false)
+  const [loadingSettings, setLoadingSettings] = useState(false)
+  const [refreshingCatalog, setRefreshingCatalog] = useState(false)
   
   // Login Form State
   const [usernameInput, setUsernameInput] = useState('')
@@ -153,6 +172,164 @@ export default function AdminPage() {
     }
   }, [toast])
 
+  // Fetch settings from database
+  const fetchSettings = useCallback(async () => {
+    setLoadingSettings(true)
+    try {
+      const { data, error } = await supabase
+        .from('semester_settings')
+        .select('*')
+        .eq('id', 1)
+        .single()
+      
+      if (error) {
+        console.error('Error fetching settings:', error)
+        toast({
+          title: 'Error',
+          description: 'Failed to load semester settings.',
+          variant: 'destructive'
+        })
+      } else if (data) {
+        setSemesterType(data.semester_type)
+        setBypassCoursesConfig(data.bypass_courses_config)
+        setGoogleSheetsUrl(data.google_sheets_url)
+        setOverrideCourseMappings(data.override_course_mappings ?? false)
+        if (data.regular_course_mappings && typeof data.regular_course_mappings === 'object') {
+          setRegularMappings(data.regular_course_mappings as RegularCourseMappings)
+        } else {
+          setRegularMappings({})
+        }
+
+        if (data.semester_type === 'summer') {
+          setSummerCatalog(Array.isArray(data.course_mappings) ? data.course_mappings : [])
+          setCourseMappings('[]')
+        } else {
+          setCourseMappings(JSON.stringify(data.course_mappings, null, 2))
+          setSummerCatalog([])
+        }
+      }
+    } catch (err) {
+      console.error('Unexpected error fetching settings:', err)
+    } finally {
+      setLoadingSettings(false)
+    }
+  }, [toast])
+
+  const handleSaveSettings = async (e: React.FormEvent) => {
+    e.preventDefault()
+    setSavingSettings(true)
+
+    // In summer mode, we use summerCatalog array directly. In regular mode, we save regularMappings.
+    let parsedMappings: any[] | undefined = undefined;
+    if (semesterType === 'regular') {
+      // legacy course_mappings stays unchanged
+      try {
+        parsedMappings = JSON.parse(courseMappings)
+        if (!Array.isArray(parsedMappings)) throw new Error('Course mappings must be a JSON array.')
+      } catch (err: any) {
+        toast({ title: 'Invalid JSON', description: err.message || 'Course mappings must be a valid JSON array.', variant: 'destructive' })
+        setSavingSettings(false)
+        return
+      }
+    } else if (semesterType === 'summer') {
+      parsedMappings = summerCatalog
+    }
+
+    try {
+      const updatePayload: Record<string, any> = {
+          semester_type: semesterType,
+          bypass_courses_config: bypassCoursesConfig,
+          google_sheets_url: googleSheetsUrl,
+          override_course_mappings: overrideCourseMappings,
+          regular_course_mappings: Object.keys(regularMappings).length > 0 ? regularMappings : null,
+          updated_at: new Date().toISOString()
+        }
+        
+        // Save the chosen mappings list
+        if (parsedMappings !== undefined) {
+          updatePayload.course_mappings = parsedMappings
+        }
+
+        const { error } = await supabase
+          .from('semester_settings')
+          .update(updatePayload)
+          .eq('id', 1)
+
+      if (error) {
+        console.error('Error saving settings:', error)
+        toast({
+          title: 'Save Failed',
+          description: 'Failed to update semester settings in database.',
+          variant: 'destructive'
+        })
+      } else {
+        toast({
+          title: 'Settings Saved',
+          description: 'Semester configuration successfully updated.'
+        })
+      }
+    } catch (err) {
+      console.error('Unexpected error saving settings:', err)
+      toast({
+        title: 'Error',
+        description: 'An unexpected error occurred while saving settings.',
+        variant: 'destructive'
+      })
+    } finally {
+      setSavingSettings(false)
+    }
+  }
+
+  const handleRefreshSummerCatalog = async () => {
+    setRefreshingCatalog(true)
+    try {
+      const res = await fetch('/api/timetable', { cache: 'no-store' })
+      if (!res.ok) throw new Error('Failed to fetch catalog from API')
+      const data = await res.json()
+      const entries: any[] = data.entries || []
+      const uniqueSheetNames = Array.from(new Set(entries.map(e => e.courseName).filter(Boolean)))
+      
+      const newCatalog: SummerCourseCatalogEntry[] = uniqueSheetNames.map(name => ({
+        sheetName: name,
+        hidden: false,
+        displayName: null
+      }))
+      
+      // Merge: keep existing aliases/hidden states if they match by sheetName
+      setSummerCatalog(prev => {
+        const prevMap = new Map(prev.map(c => [c.sheetName, c]))
+        return newCatalog.map(nc => {
+          const existing = prevMap.get(nc.sheetName)
+          if (existing) {
+            return { ...nc, displayName: existing.displayName, hidden: existing.hidden }
+          }
+          return nc
+        })
+      })
+
+      toast({
+        title: 'Catalog Refreshed',
+        description: `Loaded ${newCatalog.length} unique courses from the Google Sheet.`,
+      })
+    } catch (err: any) {
+      toast({
+        title: 'Refresh Failed',
+        description: err.message || 'Failed to refresh catalog.',
+        variant: 'destructive'
+      })
+    } finally {
+      setRefreshingCatalog(false)
+    }
+  }
+
+  const updateSummerCatalogEntry = (index: number, updates: Partial<SummerCourseCatalogEntry>) => {
+    setSummerCatalog(prev => {
+      const next = [...prev]
+      next[index] = { ...next[index], ...updates }
+      return next
+    })
+  }
+
   // Check Authentication Status
   const checkAuth = useCallback(async () => {
     try {
@@ -162,13 +339,14 @@ export default function AdminPage() {
       if (data.authenticated) {
         fetchItems()
         fetchFeedback()
+        fetchSettings()
       }
     } catch (err) {
       console.error('Auth check failed:', err)
     } finally {
       setCheckingAuth(false)
     }
-  }, [fetchItems, fetchFeedback])
+  }, [fetchItems, fetchFeedback, fetchSettings])
 
   useEffect(() => {
     checkAuth()
@@ -200,6 +378,7 @@ export default function AdminPage() {
         })
         fetchItems()
         fetchFeedback()
+        fetchSettings()
       } else {
         const data = await res.json()
         setLoginError(data.error || 'Invalid credentials.')
@@ -558,11 +737,12 @@ export default function AdminPage() {
                     onClick={() => {
                       fetchItems()
                       fetchFeedback()
+                      fetchSettings()
                     }}
                     className="px-4 py-2.5 rounded-xl border font-bold text-xs uppercase tracking-[0.08em] hover:bg-[var(--color-bg-subtle)] transition-all flex items-center gap-1.5"
                     style={{ borderColor: 'var(--color-border)' }}
                   >
-                    <RefreshCw size={12} className={(loadingItems || loadingFeedback) ? 'animate-spin' : ''} />
+                    <RefreshCw size={12} className={(loadingItems || loadingFeedback || loadingSettings) ? 'animate-spin' : ''} />
                     Refresh
                   </button>
                   <button
@@ -598,6 +778,17 @@ export default function AdminPage() {
                 >
                   <MessageSquare size={13} />
                   Student Suggestions ({feedbackList.length})
+                </button>
+                <button
+                  onClick={() => setAdminView('settings')}
+                  className={`px-5 py-3 font-black text-xs uppercase tracking-[0.08em] border-b-2 transition-all flex items-center gap-2 ${
+                    adminView === 'settings'
+                      ? 'border-orange-500 text-orange-500 font-black'
+                      : 'border-transparent text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)]'
+                  }`}
+                >
+                  <Settings size={13} />
+                  Semester Settings
                 </button>
               </div>
 
@@ -828,7 +1019,7 @@ export default function AdminPage() {
                     )}
                   </div>
                 </>
-              ) : (
+              ) : adminView === 'feedback' ? (
                 <>
                   {/* Statistics Grid Cards (Feedback) */}
                   <div className="grid grid-cols-2 lg:grid-cols-5 gap-4">
@@ -1023,6 +1214,299 @@ export default function AdminPage() {
                     )}
                   </div>
                 </>
+              ) : (
+                /* ==========================================
+                   3. SETTINGS VIEW
+                   ========================================== */
+                <motion.div
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  className="max-w-3xl space-y-6"
+                >
+                  <div 
+                    className="rounded-2xl p-6 border shadow-sm space-y-6"
+                    style={{
+                      backgroundColor: 'rgba(255, 255, 255, 0.01)',
+                      borderColor: 'var(--color-border)'
+                    }}
+                  >
+                    <div>
+                      <h3 className="text-base font-extrabold uppercase tracking-wider text-[var(--color-text-primary)]">
+                        Semester Configurations
+                      </h3>
+                      <p className="text-xs text-[var(--color-text-secondary)] mt-1">
+                        Configure the active semester settings, toggle Google Sheets bypass, and map courses to custom batches.
+                      </p>
+                    </div>
+
+                    {loadingSettings ? (
+                      <div className="flex flex-col items-center justify-center py-10 text-[var(--color-text-secondary)]">
+                        <RefreshCw className="animate-spin text-orange-500 mb-2" size={24} />
+                        <p className="text-xs font-semibold">Loading current settings...</p>
+                      </div>
+                    ) : (
+                      <form onSubmit={handleSaveSettings} className="space-y-6">
+                        {/* Active Semester */}
+                        <div className="space-y-2">
+                          <label className="text-[10px] font-black uppercase tracking-[0.1em] text-[var(--color-text-secondary)]">
+                            Active Semester Selector
+                          </label>
+                          <select
+                            value={semesterType}
+                            onChange={(e) => setSemesterType(e.target.value as 'regular' | 'summer')}
+                            className="w-full rounded-xl px-4 py-3 text-sm font-semibold border bg-[var(--color-bg-subtle)] outline-none transition-all focus:border-orange-500/50"
+                            style={{ borderColor: 'var(--color-border)', color: 'var(--color-text-primary)' }}
+                          >
+                            <option value="regular">Regular Semester</option>
+                            <option value="summer">Summer Semester</option>
+                          </select>
+                        </div>
+
+                        {/* Bypass configuration checkbox */}
+                        <div className="flex items-center gap-3 p-4 rounded-xl border bg-[var(--color-bg-subtle)]/40" style={{ borderColor: 'var(--color-border)' }}>
+                          <input
+                            type="checkbox"
+                            id="bypass-courses-config"
+                            checked={bypassCoursesConfig}
+                            onChange={(e) => setBypassCoursesConfig(e.target.checked)}
+                            className="h-4.5 w-4.5 rounded border-gray-300 text-orange-600 focus:ring-orange-500 accent-orange-500"
+                          />
+                          <label htmlFor="bypass-courses-config" className="text-xs font-bold text-[var(--color-text-primary)] cursor-pointer select-none">
+                            Bypass code's configuration for courses
+                          </label>
+                        </div>
+
+                        {/* Google Sheets URL */}
+                        <div className="space-y-2">
+                          <label className="text-[10px] font-black uppercase tracking-[0.1em] text-[var(--color-text-secondary)]">
+                            Google Sheets URL
+                          </label>
+                          <input
+                            type="url"
+                            value={googleSheetsUrl}
+                            onChange={(e) => setGoogleSheetsUrl(e.target.value)}
+                            placeholder="https://docs.google.com/spreadsheets/d/SpreadsheetID/edit#gid=GID"
+                            className="w-full rounded-xl px-4 py-3 text-sm outline-none transition-all border bg-[var(--color-bg-subtle)] focus:border-orange-500/50"
+                            style={{ borderColor: 'var(--color-border)', color: 'var(--color-text-primary)' }}
+                          />
+                          <p className="text-[10px] text-[var(--color-text-secondary)] italic font-medium mt-1">
+                            URL of the Google Sheet containing summer courses timetable data. Make sure it is shared publicly (&quot;Anyone with the link can view&quot;).
+                          </p>
+                        </div>
+
+        {/* Regular Semester — Course Mappings Editor */}
+                        {semesterType === 'regular' && (
+                          <div className="space-y-4">
+                            {/* Header + Override Toggle */}
+                            <div className="flex items-start justify-between gap-3 p-4 rounded-xl border bg-[var(--color-bg-subtle)]/40" style={{ borderColor: 'var(--color-border)' }}>
+                              <div>
+                                <p className="text-xs font-black uppercase tracking-[0.1em] text-[var(--color-text-primary)] mb-1">Course → Batch/Dept Mappings</p>
+                                <p className="text-[10px] text-[var(--color-text-secondary)]">
+                                  {overrideCourseMappings
+                                    ? '✅ Admin mappings are ACTIVE — the Python script uses these instead of the hardcoded VALID_COURSES_MAP.'
+                                    : '⚠️ Override is OFF — the Python script uses the hardcoded VALID_COURSES_MAP. Mappings below are saved but not applied.'}
+                                </p>
+                              </div>
+                              <div className="flex flex-col items-end gap-2 shrink-0">
+                                <label className="flex items-center gap-2 cursor-pointer select-none">
+                                  <span className="text-[10px] font-bold text-[var(--color-text-secondary)] uppercase tracking-wider whitespace-nowrap">Use Admin Mappings</span>
+                                  <input
+                                    type="checkbox"
+                                    checked={overrideCourseMappings}
+                                    onChange={(e) => setOverrideCourseMappings(e.target.checked)}
+                                    className="h-4 w-4 rounded border-gray-300 text-orange-600 focus:ring-orange-500 accent-orange-500"
+                                  />
+                                </label>
+                                <button
+                                  type="button"
+                                  onClick={() => setRegularMappings(JSON.parse(JSON.stringify(HARDCODED_VALID_COURSES_MAP)))}
+                                  className="px-3 py-1.5 text-[10px] font-bold uppercase tracking-wider rounded-lg border border-[var(--color-border-strong)] bg-[var(--color-bg-raised)] text-[var(--color-text-secondary)] hover:border-orange-500 hover:text-orange-600 transition-colors"
+                                >
+                                  Load from Code
+                                </button>
+                              </div>
+                            </div>
+
+                            {/* Batch Tabs */}
+                            <div className="flex gap-1 border-b border-[var(--color-border)] pb-0">
+                              {['2025', '2024', '2023', '2022'].map(batch => (
+                                <button
+                                  key={batch}
+                                  type="button"
+                                  onClick={() => setActiveBatchTab(batch)}
+                                  className={`px-4 py-2 text-[10px] font-black uppercase tracking-wider border-b-2 transition-all ${
+                                    activeBatchTab === batch
+                                      ? 'border-orange-500 text-orange-500'
+                                      : 'border-transparent text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)]'
+                                  }`}
+                                >
+                                  {batch}
+                                </button>
+                              ))}
+                            </div>
+
+                            {/* Department Rows for active batch */}
+                            <div className="space-y-3">
+                              {(['CS','SE','AI','DS','CY'] as const).map(dept => {
+                                const courses = regularMappings[activeBatchTab]?.[dept] ?? []
+                                const inputKey = `${activeBatchTab}|${dept}`
+                                return (
+                                  <div key={dept} className="p-3 rounded-xl border" style={{ borderColor: 'var(--color-border)' }}>
+                                    <p className="text-[10px] font-black uppercase tracking-widest text-[var(--color-text-secondary)] mb-2"
+                                      style={{ color: `var(--accent-${dept.toLowerCase()})` }}>
+                                      {dept}
+                                    </p>
+                                    {/* Course pills */}
+                                    <div className="flex flex-wrap gap-1.5 mb-2">
+                                      {courses.map((course, ci) => (
+                                        <span
+                                          key={ci}
+                                          className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-semibold border bg-[var(--color-bg-subtle)] text-[var(--color-text-primary)] border-[var(--color-border-strong)]"
+                                        >
+                                          {course}
+                                          <button
+                                            type="button"
+                                            onClick={() => {
+                                              setRegularMappings(prev => ({
+                                                ...prev,
+                                                [activeBatchTab]: {
+                                                  ...prev[activeBatchTab],
+                                                  [dept]: prev[activeBatchTab]?.[dept]?.filter((_, i) => i !== ci) ?? []
+                                                }
+                                              }))
+                                            }}
+                                            className="text-[var(--color-text-tertiary)] hover:text-red-500 transition-colors ml-0.5"
+                                            title={`Remove ${course}`}
+                                          >
+                                            ×
+                                          </button>
+                                        </span>
+                                      ))}
+                                      {courses.length === 0 && (
+                                        <span className="text-[10px] italic text-[var(--color-text-tertiary)]">No courses — add below</span>
+                                      )}
+                                    </div>
+                                    {/* Add course input */}
+                                    <div className="flex gap-2">
+                                      <input
+                                        type="text"
+                                        placeholder="Add course name…"
+                                        value={newCourseInput[inputKey] ?? ''}
+                                        onChange={(e) => setNewCourseInput(prev => ({ ...prev, [inputKey]: e.target.value }))}
+                                        onKeyDown={(e) => {
+                                          if (e.key === 'Enter') {
+                                            e.preventDefault()
+                                            const val = (newCourseInput[inputKey] ?? '').trim()
+                                            if (!val) return
+                                            setRegularMappings(prev => ({
+                                              ...prev,
+                                              [activeBatchTab]: {
+                                                ...prev[activeBatchTab],
+                                                [dept]: [...(prev[activeBatchTab]?.[dept] ?? []), val]
+                                              }
+                                            }))
+                                            setNewCourseInput(prev => ({ ...prev, [inputKey]: '' }))
+                                          }
+                                        }}
+                                        className="flex-1 rounded-lg px-3 py-1.5 text-[11px] outline-none border bg-[var(--color-bg-subtle)] focus:border-orange-500/50 transition-all"
+                                        style={{ borderColor: 'var(--color-border)', color: 'var(--color-text-primary)' }}
+                                      />
+                                      <button
+                                        type="button"
+                                        onClick={() => {
+                                          const val = (newCourseInput[inputKey] ?? '').trim()
+                                          if (!val) return
+                                          setRegularMappings(prev => ({
+                                            ...prev,
+                                            [activeBatchTab]: {
+                                              ...prev[activeBatchTab],
+                                              [dept]: [...(prev[activeBatchTab]?.[dept] ?? []), val]
+                                            }
+                                          }))
+                                          setNewCourseInput(prev => ({ ...prev, [inputKey]: '' }))
+                                        }}
+                                        className="px-3 py-1.5 rounded-lg text-[10px] font-bold border border-orange-500/40 text-orange-600 hover:bg-orange-50 dark:hover:bg-orange-950/30 transition-colors"
+                                      >
+                                        + Add
+                                      </button>
+                                    </div>
+                                  </div>
+                                )
+                              })}
+                            </div>
+                          </div>
+                        )}
+
+                        {semesterType === 'summer' && (
+                          <div className="space-y-4">
+                            <div className="flex flex-col md:flex-row md:items-center justify-between gap-3">
+                              <div>
+                                <h3 className="text-sm font-bold text-[var(--color-text-primary)]">Summer Course Catalog</h3>
+                                <p className="text-[10px] text-[var(--color-text-secondary)]">
+                                  Manage course visibility and set display aliases for the student timetable checklist.
+                                </p>
+                              </div>
+                              <button
+                                type="button"
+                                onClick={handleRefreshSummerCatalog}
+                                disabled={refreshingCatalog}
+                                className="px-4 py-2 text-[10px] font-bold uppercase tracking-wider bg-[var(--color-bg-raised)] border border-[var(--color-border-strong)] rounded-lg text-[var(--color-text-primary)] hover:border-orange-500 hover:text-orange-600 transition-colors flex items-center gap-2 disabled:opacity-50"
+                              >
+                                {refreshingCatalog ? <RefreshCw size={12} className="animate-spin" /> : <RefreshCw size={12} />}
+                                Refresh from Sheet
+                              </button>
+                            </div>
+
+                            {summerCatalog.length === 0 ? (
+                              <div className="p-6 text-center border border-dashed border-[var(--color-border)] rounded-xl bg-[var(--color-bg-subtle)]/50">
+                                <p className="text-xs text-[var(--color-text-tertiary)] italic">No courses loaded. Click "Refresh from Sheet" to populate.</p>
+                              </div>
+                            ) : (
+                              <div className="space-y-2 max-h-[400px] overflow-y-auto pr-2">
+                                {summerCatalog.map((entry, idx) => (
+                                  <div key={idx} className={`p-3 rounded-xl border transition-colors flex flex-col md:flex-row md:items-center gap-3 ${entry.hidden ? 'bg-[var(--color-bg-subtle)] border-[var(--color-border)] opacity-60' : 'bg-[var(--color-bg-raised)] border-[var(--color-border-strong)]'}`}>
+                                    <div className="flex-1 min-w-0">
+                                      <p className="text-[10px] font-mono text-[var(--color-text-tertiary)] uppercase tracking-wider mb-1 truncate" title={entry.sheetName}>
+                                        {entry.sheetName}
+                                      </p>
+                                      <input
+                                        type="text"
+                                        placeholder="Display Alias (optional)"
+                                        value={entry.displayName || ''}
+                                        onChange={(e) => updateSummerCatalogEntry(idx, { displayName: e.target.value || null })}
+                                        className="w-full bg-transparent text-sm font-medium text-[var(--color-text-primary)] outline-none placeholder:text-[var(--color-text-tertiary)] focus:border-orange-500 border-b border-transparent transition-colors py-0.5"
+                                      />
+                                    </div>
+                                    <button
+                                      type="button"
+                                      onClick={() => updateSummerCatalogEntry(idx, { hidden: !entry.hidden })}
+                                      className={`px-3 py-1.5 rounded-lg text-[10px] font-bold uppercase tracking-wider transition-all border ${entry.hidden ? 'bg-[var(--color-bg-raised)] border-[var(--color-border)] text-[var(--color-text-secondary)] hover:bg-[var(--color-bg-subtle)]' : 'bg-orange-50 border-orange-200 text-orange-700 hover:bg-orange-100 dark:bg-orange-950/30 dark:border-orange-800 dark:text-orange-400'}`}
+                                    >
+                                      {entry.hidden ? 'Hidden' : 'Visible'}
+                                    </button>
+                                  </div>
+                                ))}
+                              </div>
+                            )}
+                          </div>
+                        )}
+
+                        {/* Save Button */}
+                        <button
+                          type="submit"
+                          disabled={savingSettings}
+                          className="w-full md:w-auto px-6 py-3 rounded-xl bg-orange-600 hover:bg-orange-500 text-white font-black text-xs uppercase tracking-[0.12em] transition-all flex items-center justify-center gap-2 shadow-lg shadow-orange-600/25 active:scale-[0.98] disabled:opacity-50"
+                        >
+                          {savingSettings ? (
+                            <RefreshCw size={14} className="animate-spin" />
+                          ) : (
+                            'Save Configurations'
+                          )}
+                        </button>
+                      </form>
+                    )}
+                  </div>
+                </motion.div>
               )}
             </motion.div>
           )}

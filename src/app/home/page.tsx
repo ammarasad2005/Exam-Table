@@ -5,7 +5,7 @@ import { DepartmentPill } from '@/components/DepartmentPill';
 import { ThemeToggle } from '@/components/ThemeToggle';
 import { SCHOOLS, SCHOOL_DEPARTMENTS, DEPARTMENT_LABELS } from '@/lib/types';
 import { flattenTimetable, getAvailableSections } from '@/lib/timetable-filter';
-import type { RawTimetableJSON, TimetableEntry } from '@/lib/types';
+import type { RawTimetableJSON, TimetableEntry, SummerCourseCatalogEntry } from '@/lib/types';
 import { AlertCircle, Terminal, ShieldAlert } from 'lucide-react';
 import { DesktopTicker } from '@/components/DesktopTicker';
 import { DEPT_ACCENT } from '@/lib/faculty';
@@ -13,6 +13,7 @@ import type { DeptFileKey } from '@/lib/faculty';
 
 import { useTheme } from '@/lib/theme';
 import { Header } from '@/components/Header';
+import { supabase } from '@/lib/supabase';
 
 
 // eslint-disable-next-line
@@ -73,6 +74,12 @@ export default function SetupPage() {
   const [feature, setFeature] = useState<Feature>('timetable');
   const [mode, setMode] = useState<Mode>('default');
 
+  // Summer mode states
+  const [isSummerMode, setIsSummerMode] = useState<boolean>(false);
+  const [summerCoursesList, setSummerCoursesList] = useState<TimetableEntry[]>([]);
+  const [summerCatalog, setSummerCatalog] = useState<SummerCourseCatalogEntry[]>([]);
+  const [selectedSummerCourses, setSelectedSummerCourses] = useState<Record<string, string>>({});
+
   // Shared form state
   const [batch, setBatch] = useState<string>('-');
   const [school, setSchool] = useState<string>('-');
@@ -120,6 +127,65 @@ export default function SetupPage() {
     setIsConfigLoaded(true);
   }, []);
 
+  // Check semester settings and fetch summer courses if active
+  // Helper: load and apply the API response (entries + catalog)
+  function applySummerAPIResponse(data: { entries?: TimetableEntry[]; catalog?: SummerCourseCatalogEntry[] }) {
+    setSummerCoursesList(data.entries ?? []);
+    setSummerCatalog(data.catalog ?? []);
+  }
+
+  useEffect(() => {
+    // Quick load from local storage cache
+    const savedActiveSemester = localStorage.getItem('fsc_active_semester');
+    if (savedActiveSemester === 'summer') {
+      setIsSummerMode(true);
+      fetch('/api/timetable', { cache: 'no-store' })
+        .then(res => res.ok ? res.json() : { entries: [], catalog: [] })
+        .then(data => {
+          applySummerAPIResponse(data);
+          const storedSelections = localStorage.getItem('fsc_summer_courses');
+          if (storedSelections) setSelectedSummerCourses(JSON.parse(storedSelections));
+        })
+        .catch(err => console.error('Error fetching initial summer courses:', err));
+    }
+
+    async function checkSemesterType() {
+      try {
+        const { data, error } = await supabase
+          .from('semester_settings')
+          .select('*')
+          .eq('id', 1)
+          .single();
+
+        if (!error && data) {
+          const isSummer = data.semester_type === 'summer';
+          setIsSummerMode(isSummer);
+          localStorage.setItem('fsc_active_semester', data.semester_type);
+
+          if (isSummer) {
+            const res = await fetch('/api/timetable', { cache: 'no-store' });
+            if (res.ok) {
+              const apiData = await res.json();
+              applySummerAPIResponse(apiData);
+              const storedSelections = localStorage.getItem('fsc_summer_courses');
+              if (storedSelections) setSelectedSummerCourses(JSON.parse(storedSelections));
+            }
+          } else {
+            setSummerCoursesList([]);
+            setSummerCatalog([]);
+          }
+        } else {
+          localStorage.setItem('fsc_active_semester', 'regular');
+          setIsSummerMode(false);
+        }
+      } catch (err) {
+        console.error('Error checking semester type:', err);
+      }
+    }
+    checkSemesterType();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
 
 
   // Reset typing animation whenever feature changes
@@ -134,6 +200,58 @@ export default function SetupPage() {
     }, 22);
     return () => clearInterval(iv);
   }, [feature, fullText]);
+
+  // Build unique course list for the student checklist.
+  // If a catalog exists: use it (respecting hidden flag + alias).
+  // If catalog is empty: fall back to raw entries (auto-derive, all visible).
+  const uniqueCourses = useMemo(() => {
+    // Build sections map from entries (keyed by sheetName)
+    const sectionsMap = new Map<string, string[]>();
+    summerCoursesList.forEach(entry => {
+      if (!entry.courseName) return;
+      const secs = sectionsMap.get(entry.courseName) ?? [];
+      const sec = entry.section || 'A';
+      if (!secs.includes(sec)) secs.push(sec);
+      sectionsMap.set(entry.courseName, secs);
+    });
+
+    if (summerCatalog.length > 0) {
+      // Admin has a catalog — respect hidden, apply aliases
+      return summerCatalog
+        .filter(c => !c.hidden)
+        .map(c => ({
+          sheetName: c.sheetName,
+          displayName: c.displayName ?? c.sheetName,
+          sections: sectionsMap.get(c.sheetName) ?? ['A'],
+        }))
+        .sort((a, b) => a.displayName.localeCompare(b.displayName));
+    }
+
+    // No catalog yet — derive from raw entries with raw names
+    return Array.from(sectionsMap.entries())
+      .map(([sheetName, sections]) => ({ sheetName, displayName: sheetName, sections }))
+      .sort((a, b) => a.displayName.localeCompare(b.displayName));
+  }, [summerCoursesList, summerCatalog]);
+
+  // Keys in selectedSummerCourses are always sheetName (for matching), not displayName
+  const handleToggleSummerCourse = (sheetName: string, defaultSection: string) => {
+    setSelectedSummerCourses(prev => {
+      const next = { ...prev };
+      if (next[sheetName]) {
+        delete next[sheetName];
+      } else {
+        next[sheetName] = defaultSection;
+      }
+      return next;
+    });
+  };
+
+  const handleSummerSectionChange = (sheetName: string, sectionVal: string) => {
+    setSelectedSummerCourses(prev => {
+      if (!prev[sheetName]) return prev;
+      return { ...prev, [sheetName]: sectionVal };
+    });
+  };
 
   // Dynamically derive available sections from loaded timetable data
   const availableSections = useMemo(
@@ -176,6 +294,11 @@ export default function SetupPage() {
     }
     if (feature === 'faculty') {
       handleFacultyClick();
+      return;
+    }
+    if (isSummerMode) {
+      localStorage.setItem('fsc_summer_courses', JSON.stringify(selectedSummerCourses));
+      router.push('/timetable');
       return;
     }
     if (feature === 'exams') {
@@ -244,11 +367,13 @@ export default function SetupPage() {
       : (batch === '-' || !dept || !section)
   );
 
-  const ctaDisabled = (feature === 'rooms' || feature === 'faculty')
-    ? false
-    : feature === 'exams'
-      ? examCtaDisabled
-      : timetableCtaDisabled;
+  const ctaDisabled = isSummerMode
+    ? Object.keys(selectedSummerCourses).length === 0
+    : (feature === 'rooms' || feature === 'faculty')
+      ? false
+      : feature === 'exams'
+        ? examCtaDisabled
+        : timetableCtaDisabled;
 
   // ─── Shared UI pieces ──────────────────────────────────────────────────────
 
@@ -485,6 +610,51 @@ export default function SetupPage() {
     </div>
   ) : null;
 
+  const summerCheckboxList = isSummerMode ? (
+    <div className="space-y-4 max-h-[300px] overflow-y-auto pr-1 border border-[var(--color-border-strong)] rounded-lg p-3 bg-[var(--color-bg-subtle)]">
+      <p className="font-mono text-[10px] uppercase tracking-widest text-[var(--color-text-tertiary)] mb-2 sticky top-0 bg-[var(--color-bg-subtle)] pb-1 border-b border-[var(--color-border)]">
+        Select Summer Courses
+      </p>
+      {uniqueCourses.length === 0 ? (
+        <p className="text-xs text-[var(--color-text-tertiary)] italic py-4 text-center">
+          No summer courses loaded from timetable API.
+        </p>
+      ) : (
+        <div className="space-y-2.5">
+          {uniqueCourses.map(({ sheetName, displayName, sections }) => {
+            const isChecked = !!selectedSummerCourses[sheetName];
+            const selectedSection = selectedSummerCourses[sheetName] || sections[0] || 'A';
+            return (
+              <div key={sheetName} className="flex items-center justify-between gap-3 text-xs">
+                <label className="flex items-center gap-2 cursor-pointer select-none text-[var(--color-text-primary)] font-medium flex-1 truncate">
+                  <input
+                    type="checkbox"
+                    checked={isChecked}
+                    onChange={() => handleToggleSummerCourse(sheetName, sections[0] || 'A')}
+                    className="h-4 w-4 rounded border-gray-300 text-orange-600 focus:ring-orange-500 accent-orange-500"
+                  />
+                  {/* Show alias if set, otherwise raw sheet name */}
+                  <span className="truncate" title={sheetName}>{displayName}</span>
+                </label>
+
+                <select
+                  value={selectedSection}
+                  disabled={!isChecked}
+                  onChange={(e) => handleSummerSectionChange(sheetName, e.target.value)}
+                  className="h-8 rounded border border-[var(--color-border-strong)] bg-[var(--color-bg-raised)] font-mono text-[11px] px-1.5 focus:outline-none focus:ring-1 focus:ring-orange-500 disabled:opacity-40 disabled:cursor-not-allowed"
+                >
+                  {sections.map(sec => (
+                    <option key={sec} value={sec}>{sec}</option>
+                  ))}
+                </select>
+              </div>
+            );
+          })}
+        </div>
+      )}
+    </div>
+  ) : null;
+
   const prefButton = feature === 'timetable' && mode === 'default' && (userConfig || (batch !== '-' && dept && section)) && (
     <button
       onClick={userConfig ? clearPreferences : savePreferences}
@@ -640,6 +810,8 @@ export default function SetupPage() {
                 })}
               </div>
             </div>
+          ) : isSummerMode ? (
+            summerCheckboxList
           ) : (
             <>
               {modeSelector}
@@ -808,6 +980,8 @@ export default function SetupPage() {
                       })}
                     </div>
                   </div>
+                ) : isSummerMode ? (
+                  summerCheckboxList
                 ) : (
                   <>
                     {modeSelector}
