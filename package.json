@@ -3,7 +3,7 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "prebuild": "ts-node scripts/parse-excel.ts && ts-node scripts/setup-settings-db.ts",
+    "prebuild": "ts-node scripts/parse-excel.ts",
     "build": "next build",
     "dev": "ts-node scripts/parse-excel.ts && next dev",
     "start": "next start",

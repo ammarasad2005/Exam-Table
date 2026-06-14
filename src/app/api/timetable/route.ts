@@ -243,93 +243,13 @@ export async function GET(_req: NextRequest) {
 
     // ── Determine entries source ──────────────────────────────────────────────
     let entries: TimetableEntry[] = [];
-    let usedFallback = false;
-
-    if (settings.bypass_courses_config === true) {
-      const { spreadsheetId } = extractSheetInfo(settings.google_sheets_url || '');
-      if (!spreadsheetId) {
-        console.error('[GViz Fetch Error] Invalid Google Sheets URL (no Spreadsheet ID found):', settings.google_sheets_url);
-        usedFallback = true;
-      } else {
-        const DAYS = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
-        
-        try {
-          // R1: Fetch sheets concurrently for all specified days
-          const fetchPromises = DAYS.map(async (day) => {
-            const csvUrl = `https://docs.google.com/spreadsheets/d/${spreadsheetId}/gviz/tq?tqx=out:csv&sheet=${encodeURIComponent(day)}`;
-            try {
-              const csvRes = await fetch(csvUrl, { next: { revalidate: 300 } });
-              if (!csvRes.ok) {
-                throw new Error(`HTTP ${csvRes.status}: ${csvRes.statusText}`);
-              }
-              const csvText = await csvRes.text();
-              
-              const trimmed = csvText.trim();
-              const lowerTrimmed = trimmed.toLowerCase();
-              if (
-                lowerTrimmed.startsWith('<html>') ||
-                lowerTrimmed.startsWith('<html') ||
-                lowerTrimmed.startsWith('<!doctype html')
-              ) {
-                throw new Error('Received HTML instead of CSV (spreadsheet may be private or invalid)');
-              }
-
-              if (!csvText || csvText.trim() === '') {
-                throw new Error('Received empty CSV content');
-              }
-              
-              const rows = parseCSV(csvText);
-              const dayEntries = processCSVRows(rows, day);
-              return { day, entries: dayEntries, success: true };
-            } catch (err) {
-              const errorMsg = err instanceof Error ? err.message : String(err);
-              // R2: Gracefully log warnings for failed sheets and skip them
-              console.warn(`[GViz Fetch Warning] Skipped sheet for day "${day}" due to error:`, errorMsg);
-              return { day, entries: [], success: false };
-            }
-          });
-
-          const results = await Promise.all(fetchPromises);
-          
-          const allEntries: TimetableEntry[] = [];
-          let successCount = 0;
-          
-          for (const res of results) {
-            if (res.success) {
-              allEntries.push(...res.entries);
-              successCount++;
-            }
-          }
-
-          // R3: Handle completely inaccessible sheets
-          if (successCount === 0) {
-            console.error(`[GViz Fetch Error] Google Spreadsheet (ID: ${spreadsheetId}) is completely inaccessible or all sheets failed to fetch.`);
-            usedFallback = true;
-          } else {
-            entries = allEntries;
-            if (successCount < DAYS.length) {
-              const failedDays = results.filter(r => !r.success).map(r => r.day);
-              console.warn(`[GViz Fetch Warning] Timetable partially loaded. Failed days: ${failedDays.join(', ')}`);
-            }
-          }
-        } catch (err) {
-          console.error('[GViz Fetch Error] Unexpected error during parallel fetch processing:', err);
-          usedFallback = true;
-        }
-      }
-    } else {
-      usedFallback = true;
-    }
-
-    if (usedFallback) {
-      // Build catalog from local fallback entries if in summer mode
-      try {
-        // eslint-disable-next-line @typescript-eslint/no-require-imports
-        const timetableRaw = require('../../../../public/data/timetable.json');
-        entries = flattenTimetable(timetableRaw);
-      } catch {
-        return NextResponse.json({ error: 'Failed to retrieve timetable data' }, { status: 500 });
-      }
+    try {
+      // eslint-disable-next-line @typescript-eslint/no-require-imports
+      const timetableRaw = require('../../../../public/data/timetable.json');
+      entries = flattenTimetable(timetableRaw);
+    } catch (err) {
+      console.error('Error reading/flattening local timetable:', err);
+      return NextResponse.json({ error: 'Failed to retrieve timetable data' }, { status: 500 });
     }
 
     // ── Build catalog ─────────────────────────────────────────────────────────

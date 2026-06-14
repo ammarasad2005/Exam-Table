@@ -30,9 +30,12 @@ jobs:
         with:
           python-version: '3.11'
 
-      # 3. Run the Python script to regenerate timetable.json
+      # 3. Run the dispatcher Python script to regenerate timetable.json
       - name: Generate timetable.json
-        run: python3 all_courses_schedule.py
+        run: python3 scripts/run_parser.py
+        env:
+          NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
+          NEXT_PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.NEXT_PUBLIC_SUPABASE_ANON_KEY }}
 
       # 4. Copy the fresh timetable.json into the Next.js public/data folder
       - name: Copy timetable.json to frontend public/data

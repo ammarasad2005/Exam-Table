@@ -87,6 +87,7 @@ export default function AdminPage() {
   const [savingSettings, setSavingSettings] = useState(false)
   const [loadingSettings, setLoadingSettings] = useState(false)
   const [refreshingCatalog, setRefreshingCatalog] = useState(false)
+  const [refetchingTimetable, setRefetchingTimetable] = useState(false)
   
   // Login Form State
   const [usernameInput, setUsernameInput] = useState('')
@@ -281,20 +282,143 @@ export default function AdminPage() {
   }
 
   const handleRefreshSummerCatalog = async () => {
+    if (!googleSheetsUrl) {
+      toast({
+        title: 'Error',
+        description: 'Please enter a Google Sheets URL first.',
+        variant: 'destructive',
+      })
+      return
+    }
+
+    const match = googleSheetsUrl.match(/\/spreadsheets\/d\/([a-zA-Z0-9-_]+)/);
+    const spreadsheetId = match ? match[1] : null;
+    if (!spreadsheetId) {
+      toast({
+        title: 'Error',
+        description: 'Invalid Google Sheets URL. Could not find Spreadsheet ID.',
+        variant: 'destructive',
+      })
+      return
+    }
+
     setRefreshingCatalog(true)
     try {
-      const res = await fetch('/api/timetable', { cache: 'no-store' })
-      if (!res.ok) throw new Error('Failed to fetch catalog from API')
-      const data = await res.json()
-      const entries: any[] = data.entries || []
-      const uniqueSheetNames = Array.from(new Set(entries.map(e => e.courseName).filter(Boolean)))
-      
+      const DAYS = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+      const fetchedCourses = new Set<string>();
+
+      // Helper to split CSV row safely handling quotes
+      const parseCSVLine = (line: string): string[] => {
+        const result = [];
+        let current = '';
+        let inQuotes = false;
+        for (let i = 0; i < line.length; i++) {
+          const char = line[i];
+          if (char === '"') {
+            inQuotes = !inQuotes;
+          } else if (char === ',' && !inQuotes) {
+            result.push(current.trim());
+            current = '';
+          } else {
+            current += char;
+          }
+        }
+        result.push(current.trim());
+        return result;
+      };
+
+      const promises = DAYS.map(async (day) => {
+        const csvUrl = `https://docs.google.com/spreadsheets/d/${spreadsheetId}/gviz/tq?tqx=out:csv&sheet=${encodeURIComponent(day)}`;
+        try {
+          const res = await fetch(csvUrl);
+          if (!res.ok) return;
+          const text = await res.text();
+          if (text.toLowerCase().includes('<!doctype html') || text.toLowerCase().includes('<html')) {
+            // Probably private or invalid
+            return;
+          }
+
+          const lines = text.split('\n');
+          if (lines.length < 2) return;
+
+          // Detect format
+          let isGridFormat = false;
+          for (let i = 0; i < Math.min(lines.length, 5); i++) {
+            const row = parseCSVLine(lines[i]);
+            const firstCell = row[0]?.toLowerCase() || '';
+            if (firstCell === 'room' || firstCell === 'rooms' || firstCell === 'lab' || firstCell === 'labs') {
+              isGridFormat = true;
+              break;
+            }
+          }
+
+          if (isGridFormat) {
+            let hasHeaders = false;
+            for (const line of lines) {
+              const row = parseCSVLine(line);
+              if (row.length === 0 || !row[0]) continue;
+              const firstCell = row[0].toLowerCase();
+              if (firstCell === 'room' || firstCell === 'rooms' || firstCell === 'lab' || firstCell === 'labs') {
+                hasHeaders = true;
+                continue;
+              }
+              if (hasHeaders) {
+                // Room row: check grid cells
+                for (let col = 1; col < row.length; col++) {
+                  const cell = row[col];
+                  if (cell && !cell.toLowerCase().includes('reserved') && !cell.toLowerCase().includes('students')) {
+                    // Extract course name (strip section info e.g. "OOP (A)")
+                    const cleanCell = cell.replace(/\s*\([^)]*\)\s*$/, '').trim();
+                    if (cleanCell) {
+                      fetchedCourses.add(cleanCell);
+                    }
+                  }
+                }
+              }
+            }
+          } else {
+            // Flat Table format
+            const headers = parseCSVLine(lines[0]).map(h => h.toLowerCase());
+            let courseIdx = -1;
+            for (let idx = 0; idx < headers.length; idx++) {
+              if (headers[idx].includes('course') || headers[idx].includes('subject') || headers[idx].includes('class')) {
+                courseIdx = idx;
+                break;
+              }
+            }
+            if (courseIdx !== -1) {
+              for (let i = 1; i < lines.length; i++) {
+                const row = parseCSVLine(lines[i]);
+                if (row.length > courseIdx) {
+                  const cell = row[courseIdx];
+                  if (cell) {
+                    const cleanCell = cell.replace(/\s*\([^)]*\)\s*$/, '').trim();
+                    if (cleanCell) {
+                      fetchedCourses.add(cleanCell);
+                    }
+                  }
+                }
+              }
+            }
+          }
+        } catch (e) {
+          console.warn(`Failed to fetch/parse sheet for ${day}:`, e);
+        }
+      });
+
+      await Promise.all(promises);
+
+      if (fetchedCourses.size === 0) {
+        throw new Error('No courses could be parsed from the Google Sheet. Please verify the URL and ensure the sheet is shared publicly ("Anyone with the link can view").');
+      }
+
+      const uniqueSheetNames = Array.from(fetchedCourses).sort();
       const newCatalog: SummerCourseCatalogEntry[] = uniqueSheetNames.map(name => ({
         sheetName: name,
         hidden: false,
         displayName: null
       }))
-      
+
       // Merge: keep existing aliases/hidden states if they match by sheetName
       setSummerCatalog(prev => {
         const prevMap = new Map(prev.map(c => [c.sheetName, c]))
@@ -309,7 +433,7 @@ export default function AdminPage() {
 
       toast({
         title: 'Catalog Refreshed',
-        description: `Loaded ${newCatalog.length} unique courses from the Google Sheet.`,
+        description: `Successfully loaded ${newCatalog.length} unique courses directly from Google Sheets!`,
       })
     } catch (err: any) {
       toast({
@@ -319,6 +443,29 @@ export default function AdminPage() {
       })
     } finally {
       setRefreshingCatalog(false)
+    }
+  }
+
+  const handleHardRefetchTimetable = async () => {
+    setRefetchingTimetable(true)
+    try {
+      const res = await fetch('/api/admin/refetch-timetable', { method: 'POST' })
+      const data = await res.json()
+      if (!res.ok) {
+        throw new Error(data.error || 'Failed to trigger timetable refetch.')
+      }
+      toast({
+        title: 'Refetch Triggered',
+        description: data.message || 'GitHub workflow triggered. The timetable will be updated shortly.',
+      })
+    } catch (err: any) {
+      toast({
+        title: 'Refetch Failed',
+        description: err.message || 'Failed to trigger timetable refetch.',
+        variant: 'destructive'
+      })
+    } finally {
+      setRefetchingTimetable(false)
     }
   }
 
@@ -1262,20 +1409,6 @@ export default function AdminPage() {
                           </select>
                         </div>
 
-                        {/* Bypass configuration checkbox */}
-                        <div className="flex items-center gap-3 p-4 rounded-xl border bg-[var(--color-bg-subtle)]/40" style={{ borderColor: 'var(--color-border)' }}>
-                          <input
-                            type="checkbox"
-                            id="bypass-courses-config"
-                            checked={bypassCoursesConfig}
-                            onChange={(e) => setBypassCoursesConfig(e.target.checked)}
-                            className="h-4.5 w-4.5 rounded border-gray-300 text-orange-600 focus:ring-orange-500 accent-orange-500"
-                          />
-                          <label htmlFor="bypass-courses-config" className="text-xs font-bold text-[var(--color-text-primary)] cursor-pointer select-none">
-                            Bypass code's configuration for courses
-                          </label>
-                        </div>
-
                         {/* Google Sheets URL */}
                         <div className="space-y-2">
                           <label className="text-[10px] font-black uppercase tracking-[0.1em] text-[var(--color-text-secondary)]">
@@ -1290,8 +1423,19 @@ export default function AdminPage() {
                             style={{ borderColor: 'var(--color-border)', color: 'var(--color-text-primary)' }}
                           />
                           <p className="text-[10px] text-[var(--color-text-secondary)] italic font-medium mt-1">
-                            URL of the Google Sheet containing summer courses timetable data. Make sure it is shared publicly (&quot;Anyone with the link can view&quot;).
+                            URL of the Google Sheet containing the timetable data. Make sure it is shared publicly (&quot;Anyone with the link can view&quot;).
                           </p>
+                          <div className="pt-1">
+                            <button
+                              type="button"
+                              onClick={handleHardRefetchTimetable}
+                              disabled={refetchingTimetable || !googleSheetsUrl}
+                              className="w-full flex items-center justify-center gap-2 px-4 py-3 text-xs font-black uppercase tracking-[0.12em] rounded-xl border border-[var(--color-border-strong)] bg-[var(--color-bg-raised)] text-[var(--color-text-primary)] hover:border-orange-500 hover:text-orange-500 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
+                            >
+                              <RefreshCw className={`h-3.5 w-3.5 ${refetchingTimetable ? 'animate-spin' : ''}`} />
+                              {refetchingTimetable ? 'Refetching Timetable...' : 'Hard Refetch Timetable'}
+                            </button>
+                          </div>
                         </div>
 
         {/* Regular Semester — Course Mappings Editor */}

@@ -37,11 +37,11 @@ def _fetch_admin_mappings():
     supabase_url = os.environ.get("NEXT_PUBLIC_SUPABASE_URL", "").rstrip("/")
     supabase_key = os.environ.get("NEXT_PUBLIC_SUPABASE_ANON_KEY", "")
     if not supabase_url or not supabase_key:
-        return None, False
+        return None, False, None
     try:
         url = (
             f"{supabase_url}/rest/v1/semester_settings"
-            f"?id=eq.1&select=regular_course_mappings,override_course_mappings"
+            f"?id=eq.1&select=regular_course_mappings,override_course_mappings,google_sheets_url"
         )
         req = urllib.request.Request(url, headers={
             "apikey": supabase_key,
@@ -53,10 +53,11 @@ def _fetch_admin_mappings():
             row = rows[0]
             mappings = row.get("regular_course_mappings")
             override = bool(row.get("override_course_mappings", False))
-            return mappings, override
+            gs_url = row.get("google_sheets_url")
+            return mappings, override, gs_url
     except Exception as e:
-        print(f"⚠  Could not fetch admin mappings from Supabase: {e}")
-    return None, False
+        print(f"⚠  Could not fetch admin settings from Supabase: {e}")
+    return None, False, None
 
 
 # ==============================================================================
@@ -102,7 +103,13 @@ VALID_COURSES_MAP = {
 # ==============================================================================
 # RESOLVE: Which mapping to use (admin override vs hardcoded)
 # ==============================================================================
-_admin_mappings, _override_enabled = _fetch_admin_mappings()
+_admin_mappings, _override_enabled, _db_sheets_url = _fetch_admin_mappings()
+
+if _db_sheets_url and _db_sheets_url.strip():
+    SHEET_INPUT = _db_sheets_url.strip()
+    print(f"✅ Loaded Google Sheets URL from Supabase: {SHEET_INPUT}")
+else:
+    print(f"ℹ  Using default/hardcoded Google Sheets URL: {SHEET_INPUT}")
 
 if _override_enabled and _admin_mappings and isinstance(_admin_mappings, dict):
     EFFECTIVE_COURSES_MAP = _admin_mappings
