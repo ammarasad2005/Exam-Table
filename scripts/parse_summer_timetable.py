@@ -8,6 +8,7 @@ import zipfile
 import io
 import csv
 import xml.etree.ElementTree as ET
+from datetime import date, timedelta
 
 CANONICAL_DAYS = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"]
 DAY_ALIASES = {
@@ -18,6 +19,121 @@ DAY_ALIASES = {
     "fri": "Friday", "friday": "Friday",
     "sat": "Saturday", "saturday": "Saturday",
 }
+
+MONTH_NUM_MAP = {
+    "jan": 1, "january": 1,
+    "feb": 2, "february": 2,
+    "mar": 3, "march": 3,
+    "apr": 4, "april": 4,
+    "may": 5,
+    "jun": 6, "june": 6,
+    "jul": 7, "july": 7,
+    "aug": 8, "august": 8,
+    "sep": 9, "sept": 9, "september": 9,
+    "oct": 10, "october": 10,
+    "nov": 11, "november": 11,
+    "dec": 12, "december": 12,
+}
+
+MONTH_PATTERN = r"(?:jan(?:uary)?|feb(?:ruary)?|mar(?:ch)?|apr(?:il)?|may|jun(?:e)?|jul(?:y)?|aug(?:ust)?|sep(?:t(?:ember)?)?|oct(?:ober)?|nov(?:ember)?|dec(?:ember)?)"
+DATE_PATTERNS = [
+    re.compile(rf"(?i)\b(?P<day>\d{{1,2}})(?:st|nd|rd|th)?\s*[-/,]?\s*(?P<month>{MONTH_PATTERN})\.?\s*(?:[-/,]?\s*(?P<year>\d{{4}}))?\b"),
+    re.compile(rf"(?i)\b(?P<month>{MONTH_PATTERN})\.?\s*[-/,]?\s*(?P<day>\d{{1,2}})(?:st|nd|rd|th)?\s*(?:[-/,]?\s*(?P<year>\d{{4}}))?\b"),
+]
+
+DAY_INDEX = {name: idx for idx, name in enumerate(CANONICAL_DAYS)}
+
+def extract_date_label(sheet_title):
+    parsed, explicit_year = parse_sheet_date(sheet_title, date.today())
+    if not parsed:
+        return ""
+    label = parsed.strftime("%d %b")
+    if explicit_year:
+        label = f"{label} {parsed.year}"
+    return label
+
+def parse_sheet_date(sheet_title, reference_day):
+    for pattern in DATE_PATTERNS:
+        match = pattern.search(sheet_title)
+        if not match:
+            continue
+
+        day_num = int(match.group("day"))
+        month_token = match.group("month").lower().rstrip('.')
+        month_num = MONTH_NUM_MAP.get(month_token)
+        if not month_num:
+            continue
+
+        year_group = match.groupdict().get("year")
+        explicit_year = bool(year_group)
+
+        if explicit_year:
+            try:
+                return date(int(year_group), month_num, day_num), True
+            except ValueError:
+                continue
+
+        candidates = []
+        for candidate_year in (reference_day.year - 1, reference_day.year, reference_day.year + 1):
+            try:
+                d = date(candidate_year, month_num, day_num)
+                candidates.append(d)
+            except ValueError:
+                continue
+
+        if not candidates:
+            continue
+
+        best = min(candidates, key=lambda d: abs((d - reference_day).days))
+        return best, False
+
+    return None, False
+
+def resolve_timetable_sheets(sheet_id, sheet_names):
+    resolved = []
+    used = set()
+    today = date.today()
+    week_start = today - timedelta(days=today.weekday())
+
+    for day in CANONICAL_DAYS:
+        target_date = week_start + timedelta(days=DAY_INDEX[day])
+        matched_sheets = []
+        for sheet_name in sheet_names:
+            if sheet_name in used:
+                continue
+            if resolve_day_name(sheet_name) == day:
+                matched_sheets.append(sheet_name)
+
+        if matched_sheets:
+            enriched = []
+            for title in matched_sheets:
+                parsed_date, explicit_year = parse_sheet_date(title, target_date)
+                enriched.append((title, parsed_date, explicit_year))
+
+            dated = [item for item in enriched if item[1] is not None]
+            if dated:
+                matched_sheet, parsed_sheet_date, explicit_year = min(
+                    dated,
+                    key=lambda item: (
+                        abs((item[1] - target_date).days),
+                        0 if (item[1] - target_date).days <= 0 else 1,
+                        -len(item[0]),
+                        sheet_names.index(item[0]),
+                    ),
+                )
+                date_label = parsed_sheet_date.strftime("%d %b")
+                if explicit_year:
+                    date_label = f"{date_label} {parsed_sheet_date.year}"
+            else:
+                matched_sheet = max(matched_sheets, key=lambda title: (len(title), -sheet_names.index(title)))
+                date_label = extract_date_label(matched_sheet)
+
+            resolved.append({"day": day, "sheet_name": matched_sheet, "date": date_label})
+            used.add(matched_sheet)
+        else:
+            resolved.append({"day": day, "sheet_name": day, "date": ""})
+
+    return resolved
 
 def _load_dotenv():
     try:
@@ -87,7 +203,12 @@ def resolve_day_name(sheet_title):
     if not prefix_match:
         return None
     prefix = prefix_match.group(1).lower()
-    return DAY_ALIASES.get(prefix)
+    if prefix in DAY_ALIASES:
+        return DAY_ALIASES[prefix]
+    for short_name, canonical in DAY_ALIASES.items():
+        if prefix.startswith(short_name):
+            return canonical
+    return None
 
 def parse_csv(csv_text):
     f = io.StringIO(csv_text)
@@ -213,23 +334,25 @@ def main():
         print(f"Error resolving worksheet names: {e}")
         sheet_names = CANONICAL_DAYS
 
-    # Match tabs to weekdays, prioritizing longer sheet names (e.g. "Tuesday" over "Tue")
-    day_to_sheets = {}
-    for name in sheet_names:
-        day_name = resolve_day_name(name)
-        if day_name:
-            existing = day_to_sheets.get(day_name)
-            if not existing or len(name) > len(existing):
-                day_to_sheets[day_name] = name
-
+    # Match tabs using date proximity and aliases
+    day_sheets = resolve_timetable_sheets(sheet_id, sheet_names)
+    timetable_meta = {"days": {}}
     all_entries = []
 
-    for day in CANONICAL_DAYS:
-        sheet_name = day_to_sheets.get(day)
-        if not sheet_name:
-            print(f"ℹ  No matching sheet found for {day}, skipping.")
-            continue
+    for day_info in day_sheets:
+        day = day_info["day"]
+        sheet_name = day_info["sheet_name"]
         
+        timetable_meta["days"][day] = {
+            "sheetName": sheet_name,
+        }
+        if day_info.get("date"):
+            timetable_meta["days"][day]["date"] = day_info["date"]
+
+        if sheet_name not in sheet_names:
+            print(f"ℹ  No matching sheet found in workbook for {day} (expected '{sheet_name}'), skipping.")
+            continue
+
         print(f"Downloading and parsing sheet: {sheet_name} ({day})")
         csv_url = f"https://docs.google.com/spreadsheets/d/{sheet_id}/gviz/tq?tqx=out:csv&sheet={urllib.parse.quote(sheet_name)}"
         try:
@@ -279,11 +402,7 @@ def main():
         })
 
     # Add meta information
-    nested_timetable["__meta__"] = {
-        "days": {
-            day: {"sheetName": day, "date": ""} for day in CANONICAL_DAYS
-        }
-    }
+    nested_timetable["__meta__"] = timetable_meta
 
     # Save to timetable.json
     out_path = "timetable.json"
