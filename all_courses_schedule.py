@@ -199,26 +199,42 @@ def find_possible_batches(course_name, dept=None):
     return possible
 
 def fetch_workbook_sheet_names(sheet_id):
+    api_key = os.environ.get("GOOGLE_SHEETS_API_KEY")
+    if api_key:
+        api_url = f"https://sheets.googleapis.com/v4/spreadsheets/{sheet_id}?fields=sheets.properties.title&key={api_key}"
+        try:
+            req = urllib.request.Request(api_url, headers={"User-Agent": "Mozilla/5.0"})
+            with urllib.request.urlopen(req, timeout=6) as response:
+                data = json.loads(response.read().decode("utf-8"))
+                sheet_names = [sheet["properties"]["title"] for sheet in data.get("sheets", [])]
+                if sheet_names:
+                    print(f"Successfully fetched {len(sheet_names)} sheet names via official Google Sheets API.")
+                    return sheet_names
+        except Exception as e:
+            print(f"Warning: Official Google Sheets API call failed: {e}. Falling back to scraping/zip methods.")
+
     html_url = f"https://docs.google.com/spreadsheets/d/{sheet_id}/edit?usp=sharing"
     request = urllib.request.Request(html_url, headers={"User-Agent": "Mozilla/5.0"})
-    html = urllib.request.urlopen(request).read().decode("utf-8", errors="ignore")
+    try:
+        html = urllib.request.urlopen(request).read().decode("utf-8", errors="ignore")
+        sheet_pattern = re.compile(
+            r'(?i)\b(?:monday|tuesday|wednesday|thursday|friday|saturday|mon|tue|wed|thu|fri|sat)(?:\s*\([^)]{1,40}\))?'
+        )
+        sheet_names = []
+        seen = set()
 
-    sheet_pattern = re.compile(
-        r'(?i)\b(?:monday|tuesday|wednesday|thursday|friday|saturday|mon|tue|wed|thu|fri|sat)(?:\s*\([^)]{1,40}\))?'
-    )
-    sheet_names = []
-    seen = set()
+        for match in sheet_pattern.finditer(html):
+            title = match.group(0).strip()
+            normalized = title.lower()
+            if normalized in seen:
+                continue
+            seen.add(normalized)
+            sheet_names.append(title)
 
-    for match in sheet_pattern.finditer(html):
-        title = match.group(0).strip()
-        normalized = title.lower()
-        if normalized in seen:
-            continue
-        seen.add(normalized)
-        sheet_names.append(title)
-
-    if sheet_names:
-        return sheet_names
+        if sheet_names:
+            return sheet_names
+    except Exception as e:
+        print(f"HTML workbook inspection failed: {e}. Falling back to zip method.")
 
     export_url = f"https://docs.google.com/spreadsheets/d/{sheet_id}/export?format=xlsx"
     response = urllib.request.urlopen(export_url)

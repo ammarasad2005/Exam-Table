@@ -167,6 +167,20 @@ def fetch_google_sheets_url():
     return None
 
 def fetch_workbook_sheet_names(sheet_id):
+    api_key = os.environ.get("GOOGLE_SHEETS_API_KEY")
+    if api_key:
+        api_url = f"https://sheets.googleapis.com/v4/spreadsheets/{sheet_id}?fields=sheets.properties.title&key={api_key}"
+        try:
+            req = urllib.request.Request(api_url, headers={"User-Agent": "Mozilla/5.0"})
+            with urllib.request.urlopen(req, timeout=6) as response:
+                data = json.loads(response.read().decode("utf-8"))
+                sheet_names = [sheet["properties"]["title"] for sheet in data.get("sheets", [])]
+                if sheet_names:
+                    print(f"Successfully fetched {len(sheet_names)} sheet names via official Google Sheets API.")
+                    return sheet_names
+        except Exception as e:
+            print(f"Warning: Official Google Sheets API call failed: {e}. Falling back to scraping/zip methods.")
+
     html_url = f"https://docs.google.com/spreadsheets/d/{sheet_id}/edit?usp=sharing"
     request = urllib.request.Request(html_url, headers={"User-Agent": "Mozilla/5.0"})
     try:
