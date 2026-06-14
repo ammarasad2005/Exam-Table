@@ -82,6 +82,14 @@ export default function AdminPage() {
   // Regular semester course mappings (admin-editable, mirrors VALID_COURSES_MAP)
   const [regularMappings, setRegularMappings] = useState<RegularCourseMappings>({})
   const [overrideCourseMappings, setOverrideCourseMappings] = useState(false)
+  const [sheetNameMappings, setSheetNameMappings] = useState<Record<string, string>>({
+    Monday: '',
+    Tuesday: '',
+    Wednesday: '',
+    Thursday: '',
+    Friday: '',
+    Saturday: ''
+  })
   const [activeBatchTab, setActiveBatchTab] = useState('2025')
   const [newCourseInput, setNewCourseInput] = useState<Record<string, string>>({}) // key: `${batch}|${dept}`
   const [savingSettings, setSavingSettings] = useState(false)
@@ -195,6 +203,25 @@ export default function AdminPage() {
         setBypassCoursesConfig(data.bypass_courses_config)
         setGoogleSheetsUrl(data.google_sheets_url)
         setOverrideCourseMappings(data.override_course_mappings ?? false)
+        if (data.sheet_name_mappings && typeof data.sheet_name_mappings === 'object') {
+          setSheetNameMappings({
+            Monday: (data.sheet_name_mappings as any).Monday || '',
+            Tuesday: (data.sheet_name_mappings as any).Tuesday || '',
+            Wednesday: (data.sheet_name_mappings as any).Wednesday || '',
+            Thursday: (data.sheet_name_mappings as any).Thursday || '',
+            Friday: (data.sheet_name_mappings as any).Friday || '',
+            Saturday: (data.sheet_name_mappings as any).Saturday || ''
+          })
+        } else {
+          setSheetNameMappings({
+            Monday: '',
+            Tuesday: '',
+            Wednesday: '',
+            Thursday: '',
+            Friday: '',
+            Saturday: ''
+          })
+        }
         if (data.regular_course_mappings && typeof data.regular_course_mappings === 'object') {
           setRegularMappings(data.regular_course_mappings as RegularCourseMappings)
         } else {
@@ -243,6 +270,7 @@ export default function AdminPage() {
           google_sheets_url: googleSheetsUrl,
           override_course_mappings: overrideCourseMappings,
           regular_course_mappings: Object.keys(regularMappings).length > 0 ? regularMappings : null,
+          sheet_name_mappings: sheetNameMappings,
           updated_at: new Date().toISOString()
         }
         
@@ -1435,6 +1463,36 @@ export default function AdminPage() {
                               <RefreshCw className={`h-3.5 w-3.5 ${refetchingTimetable ? 'animate-spin' : ''}`} />
                               {refetchingTimetable ? 'Refetching Timetable...' : 'Hard Refetch Timetable'}
                             </button>
+                          </div>
+                        </div>
+
+                        {/* Sheet Name Mappings (Explicit Tab Matching) */}
+                        <div className="space-y-4 pt-4 border-t" style={{ borderColor: 'var(--color-border)' }}>
+                          <div>
+                            <label className="text-[10px] font-black uppercase tracking-[0.1em] text-[var(--color-text-primary)]">
+                              Explicit Sheet Name Mappings (Optional)
+                            </label>
+                            <p className="text-[10px] text-[var(--color-text-secondary)] italic font-medium mt-1">
+                              Optionally type the exact Google Sheets tab names for each day (e.g. &quot;Tuesday (18 May)&quot;) to completely bypass the date/alias resolution guessing logic. Leave a field blank to let the parser automatically find the sheet.
+                            </p>
+                          </div>
+                          
+                          <div className="grid grid-cols-2 gap-3">
+                            {['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'].map((day) => (
+                              <div key={day} className="space-y-1">
+                                <label className="text-[9px] font-bold uppercase tracking-wider text-[var(--color-text-secondary)]">
+                                  {day}
+                                </label>
+                                <input
+                                  type="text"
+                                  value={sheetNameMappings[day] || ''}
+                                  onChange={(e) => setSheetNameMappings(prev => ({ ...prev, [day]: e.target.value }))}
+                                  placeholder={`Auto-detect ${day}`}
+                                  className="w-full rounded-xl px-3 py-2 text-xs outline-none transition-all border bg-[var(--color-bg-subtle)] focus:border-orange-500/50"
+                                  style={{ borderColor: 'var(--color-border)', color: 'var(--color-text-primary)' }}
+                                />
+                              </div>
+                            ))}
                           </div>
                         </div>
 

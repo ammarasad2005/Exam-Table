@@ -129,6 +129,7 @@ CREATE TABLE IF NOT EXISTS semester_settings (
   bypass_courses_config BOOLEAN NOT NULL DEFAULT false,
   google_sheets_url TEXT NOT NULL DEFAULT '',
   course_mappings JSONB NOT NULL DEFAULT '[]'::jsonb,
+  sheet_name_mappings JSONB NOT NULL DEFAULT '{}'::jsonb,
   updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
@@ -145,7 +146,7 @@ ON semester_settings FOR UPDATE
 USING (true);
 
 -- Seed initial default settings row
-INSERT INTO semester_settings (id, semester_type, bypass_courses_config, google_sheets_url, course_mappings)
-VALUES (1, 'regular', false, '', '[]')
+INSERT INTO semester_settings (id, semester_type, bypass_courses_config, google_sheets_url, course_mappings, sheet_name_mappings)
+VALUES (1, 'regular', false, '', '[]', '{}')
 ON CONFLICT (id) DO NOTHING;
 

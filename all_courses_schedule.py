@@ -37,11 +37,11 @@ def _fetch_admin_mappings():
     supabase_url = os.environ.get("NEXT_PUBLIC_SUPABASE_URL", "").rstrip("/")
     supabase_key = os.environ.get("NEXT_PUBLIC_SUPABASE_ANON_KEY", "")
     if not supabase_url or not supabase_key:
-        return None, False, None
+        return None, False, None, {}
     try:
         url = (
             f"{supabase_url}/rest/v1/semester_settings"
-            f"?id=eq.1&select=regular_course_mappings,override_course_mappings,google_sheets_url"
+            f"?id=eq.1&select=regular_course_mappings,override_course_mappings,google_sheets_url,sheet_name_mappings"
         )
         req = urllib.request.Request(url, headers={
             "apikey": supabase_key,
@@ -54,10 +54,11 @@ def _fetch_admin_mappings():
             mappings = row.get("regular_course_mappings")
             override = bool(row.get("override_course_mappings", False))
             gs_url = row.get("google_sheets_url")
-            return mappings, override, gs_url
+            sheet_mappings = row.get("sheet_name_mappings") or {}
+            return mappings, override, gs_url, sheet_mappings
     except Exception as e:
         print(f"⚠  Could not fetch admin settings from Supabase: {e}")
-    return None, False, None
+    return None, False, None, {}
 
 
 # ==============================================================================
@@ -103,7 +104,7 @@ VALID_COURSES_MAP = {
 # ==============================================================================
 # RESOLVE: Which mapping to use (admin override vs hardcoded)
 # ==============================================================================
-_admin_mappings, _override_enabled, _db_sheets_url = _fetch_admin_mappings()
+_admin_mappings, _override_enabled, _db_sheets_url, _sheet_name_mappings = _fetch_admin_mappings()
 
 if _db_sheets_url and _db_sheets_url.strip():
     SHEET_INPUT = _db_sheets_url.strip()
@@ -307,7 +308,7 @@ def parse_sheet_date(sheet_title, reference_day):
 
     return None, False
 
-def resolve_timetable_sheets(sheet_id):
+def resolve_timetable_sheets(sheet_id, explicit_mappings=None):
     try:
         sheet_names = fetch_workbook_sheet_names(sheet_id)
         print(f"Resolved workbook sheet names: {', '.join(sheet_names)}")
@@ -324,6 +325,19 @@ def resolve_timetable_sheets(sheet_id):
     week_start = today - timedelta(days=today.weekday())
 
     for day in CANONICAL_DAYS:
+        # Check if there is an explicit sheet name mapping defined for this day
+        if explicit_mappings and explicit_mappings.get(day):
+            explicit_sheet = explicit_mappings[day].strip()
+            if explicit_sheet:
+                # If explicit name is set, use it directly!
+                resolved.append({
+                    "day": day,
+                    "sheet_name": explicit_sheet,
+                    "date": extract_date_label(explicit_sheet),
+                })
+                used.add(explicit_sheet)
+                continue
+
         target_date = week_start + timedelta(days=DAY_INDEX[day])
         matched_sheets = []
         for sheet_name in sheet_names:
@@ -451,7 +465,7 @@ if not sheet_id or sheet_id.startswith("http"):
 print(f"Using Spreadsheet ID: {sheet_id}")
 print("Fetching and parsing unified timetable (2-pass constraint satisfaction)...")
 
-day_sheets = resolve_timetable_sheets(sheet_id)
+day_sheets = resolve_timetable_sheets(sheet_id, _sheet_name_mappings)
 
 # Regex patterns
 repeat_pattern = re.compile(r'^([^(]+?)\s*\(\s*([A-Z]{2,}(?:\/[A-Z]{2,})?)\s*-\s*([A-Z0-9]+)\s*,\s*(\d{2})\s*\)')

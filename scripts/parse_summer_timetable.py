@@ -89,13 +89,26 @@ def parse_sheet_date(sheet_title, reference_day):
 
     return None, False
 
-def resolve_timetable_sheets(sheet_id, sheet_names):
+def resolve_timetable_sheets(sheet_id, sheet_names, explicit_mappings=None):
     resolved = []
     used = set()
     today = date.today()
     week_start = today - timedelta(days=today.weekday())
 
     for day in CANONICAL_DAYS:
+        # Check if there is an explicit sheet name mapping defined for this day
+        if explicit_mappings and explicit_mappings.get(day):
+            explicit_sheet = explicit_mappings[day].strip()
+            if explicit_sheet:
+                # If explicit name is set, use it directly!
+                resolved.append({
+                    "day": day,
+                    "sheet_name": explicit_sheet,
+                    "date": extract_date_label(explicit_sheet),
+                })
+                used.add(explicit_sheet)
+                continue
+
         target_date = week_start + timedelta(days=DAY_INDEX[day])
         matched_sheets = []
         for sheet_name in sheet_names:
@@ -147,13 +160,13 @@ def _load_dotenv():
 
 _load_dotenv()
 
-def fetch_google_sheets_url():
+def fetch_db_settings():
     supabase_url = os.environ.get("NEXT_PUBLIC_SUPABASE_URL", "").rstrip("/")
     supabase_key = os.environ.get("NEXT_PUBLIC_SUPABASE_ANON_KEY", "")
     if not supabase_url or not supabase_key:
-        return None
+        return None, {}
     try:
-        url = f"{supabase_url}/rest/v1/semester_settings?id=eq.1&select=google_sheets_url"
+        url = f"{supabase_url}/rest/v1/semester_settings?id=eq.1&select=google_sheets_url,sheet_name_mappings"
         req = urllib.request.Request(url, headers={
             "apikey": supabase_key,
             "Authorization": f"Bearer {supabase_key}",
@@ -161,10 +174,11 @@ def fetch_google_sheets_url():
         resp = urllib.request.urlopen(req, timeout=6)
         rows = json.loads(resp.read().decode("utf-8"))
         if rows:
-            return rows[0].get("google_sheets_url")
+            row = rows[0]
+            return row.get("google_sheets_url"), row.get("sheet_name_mappings") or {}
     except Exception as e:
-        print(f"⚠  Could not fetch Google Sheets URL from Supabase: {e}")
-    return None
+        print(f"⚠  Could not fetch settings from Supabase: {e}")
+    return None, {}
 
 def fetch_workbook_sheet_names(sheet_id):
     api_key = os.environ.get("GOOGLE_SHEETS_API_KEY")
@@ -329,7 +343,7 @@ def process_sheet_rows(rows, day_name):
     return entries
 
 def main():
-    gs_url = fetch_google_sheets_url()
+    gs_url, sheet_mappings = fetch_db_settings()
     if not gs_url:
         print("Error: Could not retrieve Google Sheets URL from Supabase.")
         sys.exit(1)
@@ -349,7 +363,7 @@ def main():
         sheet_names = CANONICAL_DAYS
 
     # Match tabs using date proximity and aliases
-    day_sheets = resolve_timetable_sheets(sheet_id, sheet_names)
+    day_sheets = resolve_timetable_sheets(sheet_id, sheet_names, sheet_mappings)
     timetable_meta = {"days": {}}
     all_entries = []
 
