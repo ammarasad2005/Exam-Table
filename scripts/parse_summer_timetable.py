@@ -213,12 +213,14 @@ def main():
         print(f"Error resolving worksheet names: {e}")
         sheet_names = CANONICAL_DAYS
 
-    # Match tabs to weekdays
+    # Match tabs to weekdays, prioritizing longer sheet names (e.g. "Tuesday" over "Tue")
     day_to_sheets = {}
     for name in sheet_names:
         day_name = resolve_day_name(name)
         if day_name:
-            day_to_sheets[day_name] = name
+            existing = day_to_sheets.get(day_name)
+            if not existing or len(name) > len(existing):
+                day_to_sheets[day_name] = name
 
     all_entries = []
 
