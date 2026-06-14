@@ -1603,7 +1603,7 @@ export default function AdminPage() {
 
                             {summerCatalog.length === 0 ? (
                               <div className="p-6 text-center border border-dashed border-[var(--color-border)] rounded-xl bg-[var(--color-bg-subtle)]/50">
-                                <p className="text-xs text-[var(--color-text-tertiary)] italic">No courses loaded. Click "Refresh from Sheet" to populate.</p>
+                                <p className="text-xs text-[var(--color-text-tertiary)] italic">No courses loaded. Click &quot;Refresh from Sheet&quot; to populate.</p>
                               </div>
                             ) : (
                               <div className="space-y-2 max-h-[400px] overflow-y-auto pr-2">

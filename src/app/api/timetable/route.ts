@@ -214,7 +214,7 @@ function autoBuildCatalog(entries: TimetableEntry[]): SummerCourseCatalogEntry[]
 
 function serveLocalFallback(catalog: SummerCourseCatalogEntry[] = []) {
   try {
-    // eslint-disable-next-line @typescript-eslint/no-require-imports
+    // eslint-disable-next-line
     const timetableRaw = require('../../../../public/data/timetable.json');
     const entries = flattenTimetable(timetableRaw);
     return NextResponse.json({ entries, catalog });
@@ -244,7 +244,7 @@ export async function GET(_req: NextRequest) {
     // ── Determine entries source ──────────────────────────────────────────────
     let entries: TimetableEntry[] = [];
     try {
-      // eslint-disable-next-line @typescript-eslint/no-require-imports
+      // eslint-disable-next-line
       const timetableRaw = require('../../../../public/data/timetable.json');
       entries = flattenTimetable(timetableRaw);
     } catch (err) {
