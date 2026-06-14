@@ -24,6 +24,10 @@ const ROOM_CALENDAR = buildRoomCalendar(timetableRaw);
 
 const ACTIVE_DAYS = DAYS_OF_WEEK.filter(d => {
   if (d === 'Saturday') {
+    const metaDays = (timetableRaw as any).__meta__?.days;
+    if (Array.isArray(metaDays)) {
+      return metaDays.some((item: any) => item.day === 'Saturday');
+    }
     return !!(timetableRaw as any).__meta__?.days?.Saturday;
   }
   return true;

@@ -71,12 +71,15 @@ export interface TimetableEntry {
 export const TIMETABLE_META_KEY = '__meta__';
 
 export interface TimetableSheetMeta {
+  day: string;
   sheetName: string;
   date?: string;
+  isoDate?: string;
+  isMakeup?: boolean;
 }
 
 export interface TimetableMetadata {
-  days: Record<string, TimetableSheetMeta>;
+  days: TimetableSheetMeta[];
 }
 
 export type TimetableSlot = {

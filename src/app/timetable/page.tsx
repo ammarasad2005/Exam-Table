@@ -8,6 +8,7 @@ import {
   detectConflicts,
   formatTimeRange,
   parseTimeToMinutes,
+  parseTimeRange,
 } from '@/lib/timetable-filter';
 import { TimetableCard } from '@/components/TimetableCard';
 import { TimetableDetail } from '@/components/TimetableDetail';
@@ -490,42 +491,75 @@ function TimetablePageInner() {
 
   const reorderedGrouped = useMemo(() => {
     const today = new Date();
-    const todayName = today.toLocaleDateString('en-US', { weekday: 'long' });
-    const todayDateStr = today.toLocaleDateString('en-US', { day: 'numeric', month: 'short' });
+    const year = today.getFullYear();
+    const month = String(today.getMonth() + 1).padStart(2, '0');
+    const dayStr = String(today.getDate()).padStart(2, '0');
+    const todayISO = `${year}-${month}-${dayStr}`;
+    const todayDayName = today.toLocaleDateString('en-US', { weekday: 'long' });
 
-    const groupedMap = new Map(grouped.map(g => [g.day, g.entries]));
+    // 1. Get the list of days from metadata
+    const rawDaysList = Array.isArray(timetableRaw.__meta__?.days)
+      ? timetableRaw.__meta__.days
+      : DAYS_ORDER.map(d => ({
+          day: d,
+          sheetName: d,
+          date: '',
+          isoDate: '',
+          isMakeup: false
+        }));
 
-    const result: { day: string; entries: TimetableEntry[]; isToday: boolean; dateStr: string }[] = [];
-
-    // 1. Always add Today first
-    result.push({
-      day: todayName,
-      entries: groupedMap.get(todayName) || [],
-      isToday: true,
-      dateStr: todayDateStr
+    // 2. Filter out past sheets (Option B)
+    const activeDays = rawDaysList.filter(d => {
+      if (d.isoDate) {
+        return d.isoDate >= todayISO;
+      }
+      return true;
     });
 
-    // 2. Add others from DAYS_ORDER in ascending order
-    for (const day of DAYS_ORDER) {
-      if (day === todayName) continue;
-      const entries = groupedMap.get(day);
-      if (entries && entries.length > 0) {
-        // Calculate date for this day in the current week
-        const dayJsIdx = (DAYS_ORDER.indexOf(day) + 1) % 7; // Mon=1, ..., Sat=6
-        const todayJsIdx = today.getDay(); // Sun=0, Mon=1, ...
-        const diff = dayJsIdx - todayJsIdx;
-        const d = new Date(today);
-        d.setDate(today.getDate() + diff);
-        const dateStr = d.toLocaleDateString('en-US', { day: 'numeric', month: 'short' });
+    // 3. Sort active days chronologically by isoDate
+    activeDays.sort((a, b) => {
+      if (a.isoDate && b.isoDate) {
+        return a.isoDate.localeCompare(b.isoDate);
+      }
+      if (a.isoDate) return -1;
+      if (b.isoDate) return 1;
+      // fallback: preserve order in rawDaysList
+      return rawDaysList.indexOf(a) - rawDaysList.indexOf(b);
+    });
 
+    // 4. Identify "Today" index
+    let todayIndex = activeDays.findIndex(d => d.isoDate === todayISO);
+    if (todayIndex === -1) {
+      todayIndex = activeDays.findIndex(d => d.day.toLowerCase() === todayDayName.toLowerCase());
+    }
+
+    const groupedMap = new Map(grouped.map(g => [g.day, g.entries]));
+    const result: {
+      day: string;
+      dayName: string;
+      entries: TimetableEntry[];
+      isToday: boolean;
+      dateStr: string;
+      isMakeup: boolean;
+    }[] = [];
+
+    activeDays.forEach((d, idx) => {
+      const isToday = idx === todayIndex;
+      const entries = groupedMap.get(d.sheetName) || [];
+
+      // Include the day if it is Today (even if 0 classes) OR if it has entries > 0
+      if (isToday || entries.length > 0) {
         result.push({
-          day,
+          day: d.sheetName,
+          dayName: d.day,
           entries,
-          isToday: false,
-          dateStr
+          isToday,
+          dateStr: d.date || '',
+          isMakeup: d.isMakeup ?? false
         });
       }
-    }
+    });
+
     return result;
   }, [grouped]);
 
@@ -1089,7 +1123,7 @@ function TimetablePageInner() {
                 resolveDisplayName={summerDisplayName}
               />
             ) : (
-              <GridView entries={filtered} dept={dept} conflicts={conflicts} onSelect={setSelected} resolveDisplayName={summerDisplayName} />
+              <GridView groupedDays={reorderedGrouped} dept={dept} conflicts={conflicts} onSelect={setSelected} resolveDisplayName={summerDisplayName} />
             )}
           </div>
         </div>
@@ -1121,7 +1155,14 @@ function ListView({
   getAvailableSections,
   resolveDisplayName,
 }: {
-  grouped: { day: string; entries: TimetableEntry[]; isToday: boolean; dateStr: string }[];
+  grouped: {
+    day: string;
+    dayName: string;
+    entries: TimetableEntry[];
+    isToday: boolean;
+    dateStr: string;
+    isMakeup: boolean;
+  }[];
   dept: string;
   conflicts: Set<string>;
   onSelect: (e: TimetableEntry) => void;
@@ -1132,7 +1173,7 @@ function ListView({
 }) {
   return (
     <>
-      {grouped.map(({ day, entries, isToday, dateStr }) => (
+      {grouped.map(({ day, dayName, entries, isToday, dateStr, isMakeup }) => (
         <section 
           key={day} 
           className={`mt-6 first:mt-4 transition-all duration-500 ${
@@ -1163,7 +1204,9 @@ function ListView({
                 ? 'text-sm font-black text-[var(--color-text-primary)]' 
                 : 'text-[11px] font-bold text-[var(--color-text-tertiary)] uppercase'
             }`}>
-              {isToday ? `TODAY (${day}, ${dateStr})` : `${day.toUpperCase()} ${dateStr}`}
+              {isToday 
+                ? `TODAY (${dayName.toUpperCase()}${isMakeup ? ' (MAKEUP)' : ''}${dateStr ? ` ${dateStr.toUpperCase()}` : ''})` 
+                : `${dayName.toUpperCase()}${isMakeup ? ' (MAKEUP)' : ''}${dateStr ? ` ${dateStr.toUpperCase()}` : ''}`}
             </h2>
           </div>
 
@@ -1200,23 +1243,26 @@ function ListView({
 
 // ─── Grid View ────────────────────────────────────────────────────────────────
 
-import { parseTimeRange } from '@/lib/timetable-filter';
-
-// ─── Grid View ────────────────────────────────────────────────────────────────
-
 const GRID_START = 8 * 60; // 08:00
 const GRID_END   = 18.5 * 60; // 18:30 (last slot ends at 17:00 + 90min)
 const PX_PER_MIN = 1.35;
 const TIME_COL_WIDTH = 56;
 
 function GridView({
-  entries,
+  groupedDays,
   dept,
   conflicts,
   onSelect,
   resolveDisplayName,
 }: {
-  entries: TimetableEntry[];
+  groupedDays: {
+    day: string;
+    dayName: string;
+    entries: TimetableEntry[];
+    isToday: boolean;
+    dateStr: string;
+    isMakeup: boolean;
+  }[];
   dept: string;
   conflicts: Set<string>;
   onSelect: (e: TimetableEntry) => void;
@@ -1224,7 +1270,7 @@ function GridView({
 }) {
   const accentColor = `var(--accent-${dept.toLowerCase()})`;
   const accentBg    = `var(--accent-${dept.toLowerCase()}-bg)`;
-  const dayCount = DAYS_ORDER.length;
+  const dayCount = groupedDays.length;
   const gridTemplateColumns = `${TIME_COL_WIDTH}px repeat(${dayCount}, minmax(0, 1fr))`;
 
   const totalHeight = (GRID_END - GRID_START) * PX_PER_MIN;
@@ -1245,12 +1291,21 @@ function GridView({
           style={{ gridTemplateColumns }}
         >
           <div className="h-10 border-r border-[var(--color-border)] sticky left-0 z-30 bg-[var(--color-bg-raised)]" /> {/* Spacer for time column */}
-          {DAYS_ORDER.map(day => (
-            <div key={day} className="text-center font-mono text-[10px] uppercase tracking-widest text-[var(--color-text-tertiary)] flex items-center justify-center border-r border-[var(--color-border)] last:border-r-0">
-              {day.slice(0, 3)}
-              <span className="hidden md:inline ml-1">{day.slice(3)}</span>
-            </div>
-          ))}
+          {groupedDays.map(d => {
+            const shortDay = d.dayName.slice(0, 3).toUpperCase();
+            const label = d.isMakeup ? `${shortDay} (MKP)` : shortDay;
+            return (
+              <div 
+                key={d.day} 
+                className={`text-center font-mono text-[10px] uppercase tracking-widest flex flex-col items-center justify-center border-r border-[var(--color-border)] last:border-r-0 py-1 ${
+                  d.isToday ? 'bg-[var(--color-text-primary)]/5 font-bold text-[var(--color-text-primary)]' : 'text-[var(--color-text-tertiary)]'
+                }`}
+              >
+                <span>{label}</span>
+                {d.dateStr && <span className="text-[8px] opacity-80 mt-0.5">{d.dateStr}</span>}
+              </div>
+            );
+          })}
         </div>
 
         {/* Grid Body */}
@@ -1278,8 +1333,8 @@ function GridView({
             {/* Vertical lines */}
             <div className="absolute inset-0 grid" style={{ gridTemplateColumns }}>
               <div className="border-r border-[var(--color-border)] bg-[var(--color-bg-subtle)]/30 sticky left-0 z-20" />
-              {DAYS_ORDER.map(day => (
-                <div key={day} className="border-r border-[var(--color-border)] last:border-r-0" />
+              {groupedDays.map(d => (
+                <div key={d.day} className={`border-r border-[var(--color-border)] last:border-r-0 ${d.isToday ? 'bg-[var(--color-text-primary)]/[0.02]' : ''}`} />
               ))}
             </div>
           </div>
@@ -1287,47 +1342,45 @@ function GridView({
           {/* Classes Layer */}
           <div className="col-start-2 relative h-full" style={{ gridColumn: `2 / span ${dayCount}` }}>
             <div className="absolute inset-0 grid h-full" style={{ gridTemplateColumns: `repeat(${dayCount}, minmax(0, 1fr))` }}>
-              {DAYS_ORDER.map((day, dayIdx) => (
-                <div key={day} className="relative h-full px-0.5 md:px-1">
-                  {entries
-                    .filter(e => e.day === day)
-                    .map((e, idx) => {
-                      const [start, end] = parseTimeRange(e.time);
-                      const top = (start - GRID_START) * PX_PER_MIN;
-                      const height = (end - start) * PX_PER_MIN;
-                      const key = `${e.day}|${e.time}|${e.courseName}|${e.section}`;
-                      const isConflict = conflicts.has(key);
-                      const isRepeat = e.category === 'repeat';
+              {groupedDays.map((d, dayIdx) => (
+                <div key={d.day} className="relative h-full px-0.5 md:px-1">
+                  {d.entries.map((e, idx) => {
+                    const [start, end] = parseTimeRange(e.time);
+                    const top = (start - GRID_START) * PX_PER_MIN;
+                    const height = (end - start) * PX_PER_MIN;
+                    const key = `${e.day}|${e.time}|${e.courseName}|${e.section}`;
+                    const isConflict = conflicts.has(key);
+                    const isRepeat = e.category === 'repeat';
 
-                      return (
-                        <button
-                          key={idx}
-                          onClick={() => onSelect(e)}
-                          className="absolute left-0.5 right-0.5 md:left-1 md:right-1 rounded-md text-[9px] md:text-[10px] transition-all hover:ring-1 hover:ring-[var(--color-text-tertiary)] active:scale-[0.98] focus-visible:outline-none overflow-hidden text-left flex items-center justify-center"
-                          style={{
-                            top: `${top}px`,
-                            height: `${height}px`,
-                            background: isConflict 
-                              ? (isRepeat ? 'repeating-linear-gradient(45deg, #fef2f2, #fef2f2 10px, #fff1f2 10px, #fff1f2 20px)' : '#fef2f2')
-                              : (isRepeat 
-                                ? 'linear-gradient(135deg, var(--color-bg-raised) 50%, color-mix(in srgb, var(--color-bg-raised) 80%, #f59e0b 20%))'
-                                : accentBg),
-                            color: isConflict ? '#dc2626' : accentColor,
-                            borderLeft: isConflict ? '2px solid #f87171' : (isRepeat ? '2px solid #f59e0b' : `2px solid ${accentColor}`),
-                            boxShadow: 'var(--shadow-card)',
-                            zIndex: isConflict ? 10 : 1,
-                          }}
-                        >
-                          <div className="flex flex-col h-full w-full justify-between gap-1 p-1 md:p-2">
-                            <div className="min-w-0">
-                              <p className="font-bold leading-tight line-clamp-2 uppercase break-words">{resolveDisplayName ? resolveDisplayName(e.courseName) : e.courseName}</p>
-                              <p className="mt-0.5 opacity-80 font-mono text-[8.5px] whitespace-nowrap overflow-hidden text-ellipsis">{formatTimeRange(e.time)}</p>
-                            </div>
-                            <p className="font-medium opacity-80 self-end text-[8.5px] truncate max-w-full">{e.room}</p>
+                    return (
+                      <button
+                        key={idx}
+                        onClick={() => onSelect(e)}
+                        className="absolute left-0.5 right-0.5 md:left-1 md:right-1 rounded-md text-[9px] md:text-[10px] transition-all hover:ring-1 hover:ring-[var(--color-text-tertiary)] active:scale-[0.98] focus-visible:outline-none overflow-hidden text-left flex items-center justify-center"
+                        style={{
+                          top: `${top}px`,
+                          height: `${height}px`,
+                          background: isConflict 
+                            ? (isRepeat ? 'repeating-linear-gradient(45deg, #fef2f2, #fef2f2 10px, #fff1f2 10px, #fff1f2 20px)' : '#fef2f2')
+                            : (isRepeat 
+                              ? 'linear-gradient(135deg, var(--color-bg-raised) 50%, color-mix(in srgb, var(--color-bg-raised) 80%, #f59e0b 20%))'
+                              : accentBg),
+                          color: isConflict ? '#dc2626' : accentColor,
+                          borderLeft: isConflict ? '2px solid #f87171' : (isRepeat ? '2px solid #f59e0b' : `2px solid ${accentColor}`),
+                          boxShadow: 'var(--shadow-card)',
+                          zIndex: isConflict ? 10 : 1,
+                        }}
+                      >
+                        <div className="flex flex-col h-full w-full justify-between gap-1 p-1 md:p-2">
+                          <div className="min-w-0">
+                            <p className="font-bold leading-tight line-clamp-2 uppercase break-words">{resolveDisplayName ? resolveDisplayName(e.courseName) : e.courseName}</p>
+                            <p className="mt-0.5 opacity-80 font-mono text-[8.5px] whitespace-nowrap overflow-hidden text-ellipsis">{formatTimeRange(e.time)}</p>
                           </div>
-                        </button>
-                      );
-                    })}
+                          <p className="font-medium opacity-80 self-end text-[8.5px] truncate max-w-full">{e.room}</p>
+                        </div>
+                      </button>
+                    );
+                  })}
                 </div>
               ))}
             </div>

@@ -90,61 +90,136 @@ def parse_sheet_date(sheet_title, reference_day):
     return None, False
 
 def resolve_timetable_sheets(sheet_id, sheet_names, explicit_mappings=None):
-    resolved = []
-    used = set()
+    try:
+        sheet_names = fetch_workbook_sheet_names(sheet_id)
+        print(f"Resolved workbook sheet names: {', '.join(sheet_names)}")
+    except Exception as exc:
+        print(f"Warning: Could not inspect workbook tabs; falling back to canonical day names. Error: {exc}")
+        return [
+            {"day": day, "sheet_name": day, "date": "", "isoDate": (date.today() - timedelta(days=date.today().weekday()) + timedelta(days=DAY_INDEX[day])).strftime("%Y-%m-%d"), "isMakeup": False}
+            for day in CANONICAL_DAYS
+        ]
+
     today = date.today()
     week_start = today - timedelta(days=today.weekday())
 
-    for day in CANONICAL_DAYS:
-        # Check if there is an explicit sheet name mapping defined for this day
-        if explicit_mappings and explicit_mappings.get(day):
-            explicit_sheet = explicit_mappings[day].strip()
-            if explicit_sheet:
-                # If explicit name is set, use it directly!
-                resolved.append({
-                    "day": day,
-                    "sheet_name": explicit_sheet,
-                    "date": extract_date_label(explicit_sheet),
-                })
-                used.add(explicit_sheet)
+    # 1. Try LLM resolution if GROQ_API_KEY is present
+    api_key = os.environ.get("GROQ_API_KEY", "").strip()
+    llm_resolved = None
+    if api_key:
+        print("Attempting to resolve sheet names via Groq LLM...")
+        llm_resolved = resolve_sheets_via_llm(sheet_names, api_key)
+
+    resolved = []
+    used = set()
+
+    if llm_resolved:
+        print(f"LLM successfully resolved sheets: {json.dumps(llm_resolved)}")
+        for item in llm_resolved:
+            sheet_name = item.get("sheet_name")
+            day = item.get("canonical_day")
+            parsed_date_str = item.get("parsed_date")
+            is_makeup = bool(item.get("is_makeup", False))
+
+            if not sheet_name or not day or day not in CANONICAL_DAYS or sheet_name not in sheet_names:
                 continue
 
-        target_date = week_start + timedelta(days=DAY_INDEX[day])
-        matched_sheets = []
-        for sheet_name in sheet_names:
-            if sheet_name in used:
-                continue
-            if resolve_day_name(sheet_name) == day:
-                matched_sheets.append(sheet_name)
-
-        if matched_sheets:
-            enriched = []
-            for title in matched_sheets:
-                parsed_date, explicit_year = parse_sheet_date(title, target_date)
-                enriched.append((title, parsed_date, explicit_year))
-
-            dated = [item for item in enriched if item[1] is not None]
-            if dated:
-                matched_sheet, parsed_sheet_date, explicit_year = min(
-                    dated,
-                    key=lambda item: (
-                        abs((item[1] - target_date).days),
-                        0 if (item[1] - target_date).days <= 0 else 1,
-                        -len(item[0]),
-                        sheet_names.index(item[0]),
-                    ),
-                )
-                date_label = parsed_sheet_date.strftime("%d %b")
-                if explicit_year:
-                    date_label = f"{date_label} {parsed_sheet_date.year}"
+            # Date calculations
+            if parsed_date_str:
+                parsed_d, explicit_year = parse_sheet_date(sheet_name, today)
+                if parsed_d:
+                    date_label = parsed_d.strftime("%d %b")
+                    iso_label = parsed_d.strftime("%Y-%m-%d")
+                else:
+                    date_label = parsed_date_str
+                    iso_label = today.strftime("%Y-%m-%d")
             else:
-                matched_sheet = max(matched_sheets, key=lambda title: (len(title), -sheet_names.index(title)))
-                date_label = extract_date_label(matched_sheet)
+                target_date = week_start + timedelta(days=DAY_INDEX[day])
+                date_label = target_date.strftime("%d %b")
+                iso_label = target_date.strftime("%Y-%m-%d")
 
-            resolved.append({"day": day, "sheet_name": matched_sheet, "date": date_label})
-            used.add(matched_sheet)
-        else:
-            resolved.append({"day": day, "sheet_name": day, "date": ""})
+            resolved.append({
+                "day": day,
+                "sheet_name": sheet_name,
+                "date": date_label,
+                "isoDate": iso_label,
+                "isMakeup": is_makeup
+            })
+            used.add(sheet_name)
+
+    # 2. If LLM resolution is not available or returned nothing, fall back to current heuristics/explicit mappings
+    if not resolved:
+        print("Falling back to deterministic date-proximity and alias heuristics.")
+        for day in CANONICAL_DAYS:
+            # Check if there is an explicit sheet name mapping defined for this day
+            if explicit_mappings and explicit_mappings.get(day):
+                explicit_sheet = explicit_mappings[day].strip()
+                if explicit_sheet:
+                    parsed_d, explicit_year = parse_sheet_date(explicit_sheet, today)
+                    if parsed_d:
+                        date_label = parsed_d.strftime("%d %b")
+                        iso_label = parsed_d.strftime("%Y-%m-%d")
+                    else:
+                        target_date = week_start + timedelta(days=DAY_INDEX[day])
+                        date_label = extract_date_label(explicit_sheet) or target_date.strftime("%d %b")
+                        iso_label = target_date.strftime("%Y-%m-%d")
+
+                    resolved.append({
+                        "day": day,
+                        "sheet_name": explicit_sheet,
+                        "date": date_label,
+                        "isoDate": iso_label,
+                        "isMakeup": "makeup" in explicit_sheet.lower() or "rescheduled" in explicit_sheet.lower()
+                    })
+                    used.add(explicit_sheet)
+                    continue
+
+            target_date = week_start + timedelta(days=DAY_INDEX[day])
+            matched_sheets = []
+            for sheet_name in sheet_names:
+                if sheet_name in used:
+                    continue
+                if resolve_day_name(sheet_name) == day:
+                    matched_sheets.append(sheet_name)
+
+            if matched_sheets:
+                enriched = []
+                for title in matched_sheets:
+                    parsed_date, explicit_year = parse_sheet_date(title, target_date)
+                    enriched.append((title, parsed_date, explicit_year))
+
+                dated = [item for item in enriched if item[1] is not None]
+                if dated:
+                    matched_sheet, parsed_sheet_date, explicit_year = min(
+                        dated,
+                        key=lambda item: (
+                            abs((item[1] - target_date).days),
+                            0 if (item[1] - target_date).days <= 0 else 1,
+                            -len(item[0]),
+                            sheet_names.index(item[0]),
+                        ),
+                    )
+                    date_label = parsed_sheet_date.strftime("%d %b")
+                    iso_label = parsed_sheet_date.strftime("%Y-%m-%d")
+                else:
+                    matched_sheet = max(matched_sheets, key=lambda title: (len(title), -sheet_names.index(title)))
+                    date_label = extract_date_label(matched_sheet)
+                    parsed_d, explicit_year = parse_sheet_date(matched_sheet, target_date)
+                    iso_label = parsed_d.strftime("%Y-%m-%d") if parsed_d else target_date.strftime("%Y-%m-%d")
+
+                used.add(matched_sheet)
+            else:
+                matched_sheet = day
+                date_label = ""
+                iso_label = target_date.strftime("%Y-%m-%d")
+
+            resolved.append({
+                "day": day,
+                "sheet_name": matched_sheet,
+                "date": date_label,
+                "isoDate": iso_label,
+                "isMakeup": "makeup" in matched_sheet.lower() or "rescheduled" in matched_sheet.lower()
+            })
 
     return resolved
 
@@ -224,6 +299,64 @@ def fetch_workbook_sheet_names(sheet_id):
     root = ET.fromstring(workbook_xml)
     namespace = {"main": "http://schemas.openxmlformats.org/spreadsheetml/2006/main"}
     return [sheet.attrib["name"] for sheet in root.findall("main:sheets/main:sheet", namespace)]
+
+def resolve_sheets_via_llm(sheet_names, api_key, model="llama-3.3-70b-versatile"):
+    import urllib.request
+    import json
+    
+    API_URL = "https://api.groq.com/openai/v1/chat/completions"
+    
+    system_prompt = (
+        "You are an expert scheduler assistant. Your task is to analyze a list of sheet names from a university timetable workbook "
+        "and determine which sheets correspond to weekdays (Monday, Tuesday, Wednesday, Thursday, Friday, Saturday).\n\n"
+        "Rules:\n"
+        "1. Identify the weekday for each sheet name (e.g. 'Mon', 'Monday', 'Tuesday (18 May)', 'Thu (Makeup)' represent Monday, Monday, Tuesday, Thursday respectively).\n"
+        "2. Detect if the sheet name contains an explicit date. Extract that date in a clean format like 'DD Mmm' (e.g., '18 May', '05 Jun'). If no explicit date is mentioned in the sheet name, return null.\n"
+        "3. Detect if the sheet name suggests it is a makeup/rescheduled day (e.g., contains 'makeup', 'make-up', 'rescheduled', 're-scheduled', etc.).\n"
+        "4. Ignore sheets that are not day timetables (e.g. 'Instructions', 'Teacher Info', 'Main', 'Index', 'Settings').\n"
+        "5. Respond ONLY with a valid JSON object containing a 'sheets' key whose value is an array of objects. Each object in the array must have these exact keys:\n"
+        "   - 'sheet_name': the exact sheet name string\n"
+        "   - 'canonical_day': one of 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'\n"
+        "   - 'parsed_date': 'DD Mmm' (e.g., '19 May') or null\n"
+        "   - 'is_makeup': true or false"
+    )
+    
+    user_prompt = f"Analyze these sheet names: {json.dumps(sheet_names)}"
+    
+    payload = {
+        "model": model,
+        "temperature": 0,
+        "response_format": {"type": "json_object"},
+        "messages": [
+            {"role": "system", "content": system_prompt},
+            {"role": "user", "content": user_prompt}
+        ]
+    }
+    
+    headers = {
+        "Content-Type": "application/json",
+        "Authorization": f"Bearer {api_key}"
+    }
+    
+    try:
+        req = urllib.request.Request(
+            API_URL,
+            data=json.dumps(payload).encode("utf-8"),
+            headers=headers,
+            method="POST"
+        )
+        with urllib.request.urlopen(req, timeout=12) as response:
+            resp_data = json.loads(response.read().decode("utf-8"))
+            content = resp_data["choices"][0]["message"]["content"]
+            result = json.loads(content)
+            if isinstance(result, dict) and "sheets" in result:
+                return result["sheets"]
+            if isinstance(result, list):
+                return result
+            print(f"Warning: Unexpected LLM response format: {content}")
+    except Exception as e:
+        print(f"Warning: Failed to resolve sheet names via Groq LLM: {e}")
+    return None
 
 def resolve_day_name(sheet_title):
     cleaned = re.sub(r"\s*\([^)]*\)\s*$", "", sheet_title).strip()
@@ -364,18 +497,20 @@ def main():
 
     # Match tabs using date proximity and aliases
     day_sheets = resolve_timetable_sheets(sheet_id, sheet_names, sheet_mappings)
-    timetable_meta = {"days": {}}
+    timetable_meta = {"days": []}
     all_entries = []
 
     for day_info in day_sheets:
         day = day_info["day"]
         sheet_name = day_info["sheet_name"]
         
-        timetable_meta["days"][day] = {
+        timetable_meta["days"].append({
+            "day": day,
             "sheetName": sheet_name,
-        }
-        if day_info.get("date"):
-            timetable_meta["days"][day]["date"] = day_info["date"]
+            "date": day_info.get("date", ""),
+            "isoDate": day_info.get("isoDate", ""),
+            "isMakeup": day_info.get("isMakeup", False)
+        })
 
         if sheet_name not in sheet_names:
             print(f"ℹ  No matching sheet found in workbook for {day} (expected '{sheet_name}'), skipping.")
@@ -387,7 +522,7 @@ def main():
             req = urllib.request.Request(csv_url, headers={"User-Agent": "Mozilla/5.0"})
             csv_text = urllib.request.urlopen(req).read().decode("utf-8")
             rows = parse_csv(csv_text)
-            day_entries = process_sheet_rows(rows, day)
+            day_entries = process_sheet_rows(rows, sheet_name)
             all_entries.extend(day_entries)
             print(f"✅ Parsed {len(day_entries)} slots for {day}")
         except Exception as e:

@@ -103,10 +103,12 @@ export function groupByDayTimetable(
   entries: TimetableEntry[]
 ): { day: string; entries: TimetableEntry[] }[] {
   const map = new Map<string, TimetableEntry[]>();
-  for (const day of DAYS_ORDER) map.set(day, []);
 
   for (const e of entries) {
-    if (map.has(e.day)) map.get(e.day)!.push(e);
+    if (!map.has(e.day)) {
+      map.set(e.day, []);
+    }
+    map.get(e.day)!.push(e);
   }
 
   // Sort each day's entries by start time
@@ -115,7 +117,6 @@ export function groupByDayTimetable(
   }
 
   return [...map.entries()]
-    .filter(([, dayEntries]) => dayEntries.length > 0)
     .map(([day, dayEntries]) => ({ day, entries: dayEntries }));
 }
 
