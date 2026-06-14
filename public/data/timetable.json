@@ -511,25 +511,49 @@
     }
   },
   "__meta__": {
-    "days": {
-      "Monday": {
-        "sheetName": "Monday"
+    "days": [
+      {
+        "day": "Monday",
+        "sheetName": "Monday",
+        "date": "",
+        "isoDate": "2026-06-08",
+        "isMakeup": false
       },
-      "Tuesday": {
-        "sheetName": "Tuesday"
+      {
+        "day": "Tuesday",
+        "sheetName": "Tuesday",
+        "date": "",
+        "isoDate": "2026-06-09",
+        "isMakeup": false
       },
-      "Wednesday": {
-        "sheetName": "Wednesday"
+      {
+        "day": "Wednesday",
+        "sheetName": "Wednesday",
+        "date": "",
+        "isoDate": "2026-06-10",
+        "isMakeup": false
       },
-      "Thursday": {
-        "sheetName": "Thursday"
+      {
+        "day": "Thursday",
+        "sheetName": "Thursday",
+        "date": "",
+        "isoDate": "2026-06-11",
+        "isMakeup": false
       },
-      "Friday": {
-        "sheetName": "Friday"
+      {
+        "day": "Friday",
+        "sheetName": "Friday",
+        "date": "",
+        "isoDate": "2026-06-12",
+        "isMakeup": false
       },
-      "Saturday": {
-        "sheetName": "Saturday"
+      {
+        "day": "Saturday",
+        "sheetName": "Saturday",
+        "date": "",
+        "isoDate": "2026-06-13",
+        "isMakeup": false
       }
-    }
+    ]
   }
 }
