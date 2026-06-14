@@ -37,6 +37,7 @@ jobs:
           NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
           NEXT_PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.NEXT_PUBLIC_SUPABASE_ANON_KEY }}
           GOOGLE_SHEETS_API_KEY: ${{ secrets.GOOGLE_SHEETS_API_KEY }}
+          GROQ_API_KEY: ${{ secrets.GROQ_API_KEY }}
 
       # 4. Copy the fresh timetable.json into the Next.js public/data folder
       - name: Copy timetable.json to frontend public/data
