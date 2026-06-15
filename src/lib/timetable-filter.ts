@@ -5,6 +5,21 @@ import { DAYS_ORDER, TIMETABLE_META_KEY } from './types';
 // Converts the nested Python output into a flat TimetableEntry[].
 // Structure: batch → dept → "regular"|"repeat" → courseName → section → day → [{room,time}]
 
+/**
+ * Extracts a specific time slot written in parentheses inside the course name,
+ * returning the cleaned course name and the extracted time slot if found.
+ */
+export function extractTimeFromCourseName(courseName: string): { cleanName: string; time: string | null } {
+  const timeRegex = /\((1?\d:\d{2})\s*[-–]\s*(1?\d:\d{2})\)/;
+  const match = courseName.match(timeRegex);
+  if (match) {
+    const time = `${match[1]}-${match[2]}`;
+    const cleanName = courseName.replace(timeRegex, '').replace(/\s+/g, ' ').trim();
+    return { cleanName, time };
+  }
+  return { cleanName: courseName, time: null };
+}
+
 export function flattenTimetable(raw: RawTimetableJSON): TimetableEntry[] {
   const entries: TimetableEntry[] = [];
 
@@ -16,6 +31,7 @@ export function flattenTimetable(raw: RawTimetableJSON): TimetableEntry[] {
       for (const category of ['regular', 'repeat'] as const) {
         const courseMap = cats[category] ?? {};
         for (const courseName of Object.keys(courseMap)) {
+          const { cleanName, time: extractedTime } = extractTimeFromCourseName(courseName);
           const sectionMap = courseMap[courseName];
           for (const section of Object.keys(sectionMap)) {
             const dayMap = sectionMap[section];
@@ -23,14 +39,14 @@ export function flattenTimetable(raw: RawTimetableJSON): TimetableEntry[] {
               const slots = dayMap[day];
               for (const slot of slots) {
                 entries.push({
-                  courseName,
+                  courseName: cleanName,
                   batch,
                   department: dept,
                   section,
                   day,
-                  time: slot.time ?? 'TBA',
+                  time: (extractedTime || slot.time) ?? 'TBA',
                   room: slot.room ?? 'TBA',
-                  type: courseName.toLowerCase().endsWith('lab') ? 'lab' : 'lecture',
+                  type: cleanName.toLowerCase().endsWith('lab') ? 'lab' : 'lecture',
                   category,
                   rescheduled: slot.rescheduled ?? false,
                   exam: slot.exam ?? false,

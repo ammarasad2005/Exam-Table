@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { supabase } from '@/lib/supabase';
-import { flattenTimetable, findMatchingCatalogEntry } from '@/lib/timetable-filter';
+import { flattenTimetable, findMatchingCatalogEntry, extractTimeFromCourseName } from '@/lib/timetable-filter';
 import type { TimetableEntry, SummerCourseCatalogEntry } from '@/lib/types';
 
 export const dynamic = 'force-dynamic';
@@ -118,13 +118,15 @@ function processCSVRows(rows: string[][], defaultDay?: string): TimetableEntry[]
           const type: 'lecture' | 'lab' =
             cell.toLowerCase().includes('lab') ? 'lab' : 'lecture';
 
+          const { cleanName, time: extractedTime } = extractTimeFromCourseName(cell);
+
           entries.push({
-            courseName: cell,
+            courseName: cleanName,
             batch: '',
             department: '',
             section: '',
             day: defaultDay || '',
-            time: timeSlot,
+            time: extractedTime || timeSlot,
             room: room,
             type: type,
             category: 'regular',
@@ -173,13 +175,15 @@ function processCSVRows(rows: string[][], defaultDay?: string): TimetableEntry[]
     const rawDay = String(getValue('day', row, '')).trim();
     const day = rawDay || defaultDay || '';
 
+    const { cleanName, time: extractedTime } = extractTimeFromCourseName(courseName);
+
     entries.push({
-      courseName,
+      courseName: cleanName,
       batch:         String(getValue('batch', row, '')),
       department:    String(getValue('department', row, '')),
       section:       String(getValue('section', row, '')),
       day,
-      time:          String(getValue('time', row, '')),
+      time:          extractedTime || String(getValue('time', row, '')),
       room:          String(getValue('room', row, '')),
       type,
       category:      String(getValue('category', row, 'regular')) as 'regular' | 'repeat',
