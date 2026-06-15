@@ -1,8 +1,8 @@
 {
-  "filtered_at": "2026-06-08T11:07:57.679259",
+  "filtered_at": "2026-06-15T12:28:59.518056",
   "date_range": "2026-06-01 to 2026-07-31",
-  "total_original": 27,
-  "total_filtered": 14,
+  "total_original": 39,
+  "total_filtered": 16,
   "events": [
     {
       "event_name": "Project Presentation",
@@ -47,6 +47,12 @@
       "event_location": "Auditorium D  &C-109 by Mr. Zeeshan CSO"
     },
     {
+      "event_name": "Class",
+      "date": "June 15",
+      "time": "1:00 pm - 3:00 pm",
+      "event_location": "Auditorium D Block by Mr. Fahad"
+    },
+    {
       "event_name": "Recruitment Drive",
       "date": "June 16",
       "time": "9:00 am - 5:00 am",
@@ -56,7 +62,7 @@
       "event_name": "Hackthon",
       "date": "June 16",
       "time": "9:00 am - 6:00 pm",
-      "event_location": "Auditorium D Block by Ms. laraib"
+      "event_location": "Auditorium A and D Block by Ms. laraib"
     },
     {
       "event_name": "Recruitment Drive",
@@ -65,22 +71,28 @@
       "event_location": "Auditorium D  &MEDC 117 by Mr. Zeeshan CSO"
     },
     {
-      "event_name": "Recruitment Drive",
-      "date": "June 17",
-      "time": "9:00 am - 5:00 am",
-      "event_location": "Auditorium D  &MEDC 117 by Mr. Zeeshan CSO"
-    },
-    {
       "event_name": "Hackthon",
       "date": "June 17",
       "time": "9:00 am - 6:00 pm",
-      "event_location": "Auditorium D Block by Ms. laraib"
+      "event_location": "Auditorium A and D Block by Ms. laraib"
+    },
+    {
+      "event_name": "Workshop On CEPT (EE)",
+      "date": "June 17",
+      "time": "10:00 am - 4:30 pm",
+      "event_location": "MEDC 117 by Ms. Soha (EE)"
     },
     {
       "event_name": "Hackthon Closing Ceremony",
       "date": "June 18",
       "time": "9:00 am - 8:00 pm",
-      "event_location": "Auditorium A Block by Mr. Junaid"
+      "event_location": "Auditorium A Block & MEDC-117 by Mr. Junaid"
+    },
+    {
+      "event_name": "Workshop On CEPT (EE)",
+      "date": "June 18",
+      "time": "10:00 am - 4:30 pm",
+      "event_location": "MEDC 118 by Mr. Atif Baig(EE)"
     },
     {
       "event_name": "EE Event",
