@@ -91,6 +91,7 @@ function CustomTimetableInner() {
   const [editingBundleId, setEditingBundleId] = useState<string|null>(null);
   const [isSaving, setIsSaving] = useState(false);
   const [newBundleName, setNewBundleName] = useState('');
+  const [semesterName, setSemesterName] = useState<string>('Spring 2026');
   const [exclusivityError, setExclusivityError] = useState<string | null>(null);
   const [renamingId, setRenamingId] = useState<string|null>(null);
   const [tempName, setTempName] = useState('');
@@ -133,6 +134,27 @@ function CustomTimetableInner() {
         console.error('Failed to parse bundles', e);
       }
     }
+    const savedSemesterName = localStorage.getItem('fsc_semester_name');
+    if (savedSemesterName) {
+      setSemesterName(savedSemesterName);
+    }
+    async function loadSemesterSettings() {
+      try {
+        const { supabase } = await import('@/lib/supabase');
+        const { data, error } = await supabase
+          .from('semester_settings')
+          .select('semester_name')
+          .eq('id', 1)
+          .single();
+        if (!error && data?.semester_name) {
+          setSemesterName(data.semester_name);
+          localStorage.setItem('fsc_semester_name', data.semester_name);
+        }
+      } catch (err) {
+        console.error(err);
+      }
+    }
+    loadSemesterSettings();
     setIsLoaded(true);
   }, []);
 
@@ -795,7 +817,7 @@ function CustomTimetableInner() {
           <div className="bg-[var(--color-bg-raised)] border border-[var(--color-border-strong)] rounded-2xl p-6 w-full max-w-sm shadow-xl animate-in zoom-in-95 duration-200">
             <h3 className="font-display text-xl mb-4">Save Course Bundle</h3>
             <p className="text-xs text-[var(--color-text-secondary)] mb-4 leading-relaxed">
-              Give this set of courses a name like &quot;Semester 6&quot; or &quot;Fall 2026&quot;. You can load it later with one click.
+              Give this set of courses a name like &quot;Semester 6&quot; or &quot;{semesterName}&quot;. You can load it later with one click.
             </p>
             <input
               autoFocus

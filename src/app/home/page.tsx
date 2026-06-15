@@ -79,6 +79,7 @@ export default function SetupPage() {
   const [summerCoursesList, setSummerCoursesList] = useState<TimetableEntry[]>([]);
   const [summerCatalog, setSummerCatalog] = useState<SummerCourseCatalogEntry[]>([]);
   const [selectedSummerCourses, setSelectedSummerCourses] = useState<Record<string, string>>({});
+  const [semesterName, setSemesterName] = useState<string>('Spring 2026');
 
   // Shared form state
   const [batch, setBatch] = useState<string>('-');
@@ -87,7 +88,7 @@ export default function SetupPage() {
   const [section, setSection] = useState<string>('');
 
   // Typing animation
-  const fullText = HERO_TEXTS[feature];
+  const fullText = HERO_TEXTS[feature].replace('Spring 2026', semesterName);
   const [displayText, setDisplayText] = useState('');
   const [isTypingComplete, setIsTypingComplete] = useState(false);
 
@@ -113,6 +114,10 @@ export default function SetupPage() {
       } catch (e) {
         console.error('Failed to parse user config', e);
       }
+    }
+    const savedSemesterName = localStorage.getItem('fsc_semester_name');
+    if (savedSemesterName) {
+      setSemesterName(savedSemesterName);
     }
     
     const storedBundles = localStorage.getItem('fsc_custom_bundles');
@@ -161,6 +166,10 @@ export default function SetupPage() {
           const isSummer = data.semester_type === 'summer';
           setIsSummerMode(isSummer);
           localStorage.setItem('fsc_active_semester', data.semester_type);
+          if (data.semester_name) {
+            setSemesterName(data.semester_name);
+            localStorage.setItem('fsc_semester_name', data.semester_name);
+          }
 
           if (isSummer) {
             const res = await fetch('/api/timetable', { cache: 'no-store' });
@@ -1007,10 +1016,10 @@ export default function SetupPage() {
                 {feature === 'exams'
                   ? 'Data updates for all examinations.'
                   : feature === 'timetable'
-                    ? 'Time-Table for Spring 2026.'
+                    ? `Time-Table for ${semesterName}.`
                     : feature === 'faculty'
                       ? 'Faculty members across 9 departments.'
-                      : 'Room availability from Spring 2026 timetable.'}
+                      : `Room availability from ${semesterName} timetable.`}
               </p>
 
             </div>

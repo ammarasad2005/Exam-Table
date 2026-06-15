@@ -80,6 +80,7 @@ async function run() {
         semester_type TEXT NOT NULL DEFAULT 'regular' CHECK (semester_type IN ('regular', 'summer')),
         bypass_courses_config BOOLEAN NOT NULL DEFAULT false,
         google_sheets_url TEXT NOT NULL DEFAULT '',
+        semester_name TEXT NOT NULL DEFAULT 'Spring 2026',
         course_mappings JSONB NOT NULL DEFAULT '[]'::jsonb,
         sheet_name_mappings JSONB NOT NULL DEFAULT '{}'::jsonb,
         updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
@@ -90,6 +91,12 @@ async function run() {
     await client.query(`
       ALTER TABLE semester_settings 
       ADD COLUMN IF NOT EXISTS sheet_name_mappings JSONB NOT NULL DEFAULT '{}'::jsonb;
+    `);
+
+    console.log("Migrating table 'semester_settings' to include 'semester_name'...");
+    await client.query(`
+      ALTER TABLE semester_settings 
+      ADD COLUMN IF NOT EXISTS semester_name TEXT NOT NULL DEFAULT 'Spring 2026';
     `);
     
     console.log("Enabling Row Level Security...");
@@ -110,8 +117,8 @@ async function run() {
     
     console.log("Seeding default row...");
     await client.query(`
-      INSERT INTO semester_settings (id, semester_type, bypass_courses_config, google_sheets_url, course_mappings, sheet_name_mappings)
-      VALUES (1, 'regular', false, '', '[]'::jsonb, '{}'::jsonb)
+      INSERT INTO semester_settings (id, semester_type, bypass_courses_config, google_sheets_url, semester_name, course_mappings, sheet_name_mappings)
+      VALUES (1, 'regular', false, '', 'Spring 2026', '[]'::jsonb, '{}'::jsonb)
       ON CONFLICT (id) DO NOTHING;
     `);
     

@@ -167,6 +167,7 @@ export default function RootPage() {
   const [bundles, setBundles] = useState<Bundle[]>([]);
   const [mounted, setMounted] = useState(false);
   const [isSummerMode, setIsSummerMode] = useState<boolean>(false);
+  const [semesterName, setSemesterName] = useState<string>('Spring 2026');
   const [summerCoursesList, setSummerCoursesList] = useState<TimetableEntry[]>([]);
   const [summerSelections, setSummerSelections] = useState<Record<string, string>>({});
 
@@ -177,6 +178,8 @@ export default function RootPage() {
       if (stored) setUserConfig(JSON.parse(stored));
       const storedBundles = localStorage.getItem('fsc_custom_bundles');
       if (storedBundles) setBundles(JSON.parse(storedBundles));
+      const savedSemesterName = localStorage.getItem('fsc_semester_name');
+      if (savedSemesterName) setSemesterName(savedSemesterName);
     } catch { }
 
     const savedActiveSemester = localStorage.getItem('fsc_active_semester');
@@ -205,6 +208,10 @@ export default function RootPage() {
           const isSummer = data.semester_type === 'summer';
           setIsSummerMode(isSummer);
           localStorage.setItem('fsc_active_semester', data.semester_type);
+          if (data.semester_name) {
+            setSemesterName(data.semester_name);
+            localStorage.setItem('fsc_semester_name', data.semester_name);
+          }
 
           if (isSummer) {
             const res = await fetch('/api/timetable', { cache: 'no-store' });
@@ -324,7 +331,7 @@ export default function RootPage() {
           {/* Footer strip */}
           <div className="mt-10 pt-6 border-t border-[var(--color-border)]">
             <p className="font-mono text-[10px] text-[var(--color-text-tertiary)] uppercase tracking-widest text-center flex items-center justify-center gap-1">
-              FAST NUCES · Islamabad Campus · Spring 2026
+              FAST NUCES · Islamabad Campus · {semesterName}
               <a 
                 href="/admin" 
                 className="hover:text-orange-500 transition-colors duration-150 p-1 ml-0.5 opacity-40 hover:opacity-100"
@@ -485,7 +492,7 @@ export default function RootPage() {
             {/* Footer strip */}
             <div className="mt-10 pt-6 border-t border-[var(--color-border)]">
               <p className="font-mono text-[10px] text-[var(--color-text-tertiary)] uppercase tracking-widest text-center flex items-center justify-center gap-1">
-                FAST NUCES · Islamabad Campus · Spring 2026
+                FAST NUCES · Islamabad Campus · {semesterName}
                 <a 
                   href="/admin" 
                   className="hover:text-orange-500 transition-colors duration-150 p-1 ml-0.5 opacity-40 hover:opacity-100"

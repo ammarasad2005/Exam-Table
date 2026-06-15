@@ -12,7 +12,32 @@ interface Props {
 export function ExportButton({ entries, variant = 'header', config }: Props) {
   const [open, setOpen] = useState(false);
   const [isExporting, setIsExporting] = useState(false);
+  const [semesterName, setSemesterName] = useState<string>('Spring 2026');
   const dropdownRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const savedSemesterName = localStorage.getItem('fsc_semester_name');
+    if (savedSemesterName) {
+      setSemesterName(savedSemesterName);
+    }
+    async function loadSemesterSettings() {
+      try {
+        const { supabase } = await import('@/lib/supabase');
+        const { data, error } = await supabase
+          .from('semester_settings')
+          .select('semester_name')
+          .eq('id', 1)
+          .single();
+        if (!error && data?.semester_name) {
+          setSemesterName(data.semester_name);
+          localStorage.setItem('fsc_semester_name', data.semester_name);
+        }
+      } catch (err) {
+        console.error(err);
+      }
+    }
+    loadSemesterSettings();
+  }, []);
 
   useEffect(() => {
     function handleClickOutside(event: MouseEvent) {
@@ -67,7 +92,7 @@ export function ExportButton({ entries, variant = 'header', config }: Props) {
               setIsExporting(true);
               try {
                 // @ts-ignore
-                await downloadTimetableImage(entries, config);
+                await downloadTimetableImage(entries, { ...config, semesterName });
               } catch (e) {
                 alert('Failed to generate image. Please try again.');
               } finally {

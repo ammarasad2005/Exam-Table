@@ -75,6 +75,7 @@ export default function AdminPage() {
 
   // Settings Form State
   const [semesterType, setSemesterType] = useState<'regular' | 'summer'>('regular')
+  const [semesterName, setSemesterName] = useState('Spring 2026')
   const [bypassCoursesConfig, setBypassCoursesConfig] = useState(false)
   const [googleSheetsUrl, setGoogleSheetsUrl] = useState('')
   const [courseMappings, setCourseMappings] = useState('[]') // Used for regular (legacy fallback)
@@ -200,6 +201,7 @@ export default function AdminPage() {
         })
       } else if (data) {
         setSemesterType(data.semester_type)
+        setSemesterName(data.semester_name ?? 'Spring 2026')
         setBypassCoursesConfig(data.bypass_courses_config)
         setGoogleSheetsUrl(data.google_sheets_url)
         setOverrideCourseMappings(data.override_course_mappings ?? false)
@@ -266,6 +268,7 @@ export default function AdminPage() {
     try {
       const updatePayload: Record<string, any> = {
           semester_type: semesterType,
+          semester_name: semesterName,
           bypass_courses_config: bypassCoursesConfig,
           google_sheets_url: googleSheetsUrl,
           override_course_mappings: overrideCourseMappings,
@@ -1435,6 +1438,25 @@ export default function AdminPage() {
                             <option value="regular">Regular Semester</option>
                             <option value="summer">Summer Semester</option>
                           </select>
+                        </div>
+
+                        {/* Active Semester Name */}
+                        <div className="space-y-2">
+                          <label className="text-[10px] font-black uppercase tracking-[0.1em] text-[var(--color-text-secondary)]">
+                            Active Semester Name
+                          </label>
+                          <input
+                            type="text"
+                            value={semesterName}
+                            onChange={(e) => setSemesterName(e.target.value)}
+                            placeholder="e.g. Spring 2026"
+                            className="w-full rounded-xl px-4 py-3 text-sm outline-none transition-all border bg-[var(--color-bg-subtle)] focus:border-orange-500/50"
+                            style={{ borderColor: 'var(--color-border)', color: 'var(--color-text-primary)' }}
+                            required
+                          />
+                          <p className="text-[10px] text-[var(--color-text-secondary)] italic font-medium mt-1">
+                            Name used globally across all headers, footers, lists, and pages (e.g. &quot;Spring 2026&quot;).
+                          </p>
                         </div>
 
                         {/* Google Sheets URL */}

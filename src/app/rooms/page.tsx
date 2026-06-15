@@ -1,6 +1,7 @@
 'use client';
 import { useMemo, useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
+import { supabase } from '@/lib/supabase';
 import { Header } from '@/components/Header';
 import { ThemeToggle } from '@/components/ThemeToggle';
 import {
@@ -386,6 +387,32 @@ function CalendarGrid({ onSelect }: { onSelect: (cell: CalendarCell) => void }) 
 export default function RoomsPage() {
   const router = useRouter();
 
+  const [semesterName, setSemesterName] = useState<string>(() => {
+    if (typeof window !== 'undefined') {
+      return localStorage.getItem('fsc_semester_name') || 'Spring 2026';
+    }
+    return 'Spring 2026';
+  });
+
+  useEffect(() => {
+    async function loadSemesterSettings() {
+      try {
+        const { data, error } = await supabase
+          .from('semester_settings')
+          .select('semester_name')
+          .eq('id', 1)
+          .single();
+        if (!error && data?.semester_name) {
+          setSemesterName(data.semester_name);
+          localStorage.setItem('fsc_semester_name', data.semester_name);
+        }
+      } catch (err) {
+        console.error(err);
+      }
+    }
+    loadSemesterSettings();
+  }, []);
+
   const [selectedDay, setSelectedDay] = useState<string>('');
   const [selectedSlot, setSelectedSlot] = useState<string>('');
   const [viewMode, setViewMode] = useState<ViewMode>(null);
@@ -471,7 +498,7 @@ export default function RoomsPage() {
               Find a <span className="italic">free room.</span>
             </h1>
             <p className="mt-3 font-body text-sm text-[var(--color-text-secondary)] max-w-md leading-relaxed">
-              Real-time vacancy data for Spring 2026.
+              Real-time vacancy data for {semesterName}.
               Click any cell below to view a beautified list of available rooms.
             </p>
           </div>

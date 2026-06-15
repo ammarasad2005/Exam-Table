@@ -776,6 +776,32 @@ function sortItems(items: LostFoundItem[], sortBy: SortOption, urgentIds?: strin
 // ─── Component: Footer (shared) ─────────────────────────────────────────────
 
 function Footer({ onQuickLink }: { onQuickLink?: (action: string) => void }) {
+  const [semesterName, setSemesterName] = useState<string>(() => {
+    if (typeof window !== 'undefined') {
+      return localStorage.getItem('fsc_semester_name') || 'Spring 2026';
+    }
+    return 'Spring 2026';
+  });
+
+  useEffect(() => {
+    async function loadSemesterName() {
+      try {
+        const { data, error } = await supabase
+          .from('semester_settings')
+          .select('semester_name')
+          .eq('id', 1)
+          .single();
+        if (!error && data?.semester_name) {
+          setSemesterName(data.semester_name);
+          localStorage.setItem('fsc_semester_name', data.semester_name);
+        }
+      } catch (err) {
+        console.error(err);
+      }
+    }
+    loadSemesterName();
+  }, []);
+
   return (
     <footer
       className="mt-auto pt-8 pb-5 no-print"
@@ -813,7 +839,7 @@ function Footer({ onQuickLink }: { onQuickLink?: (action: string) => void }) {
         className="font-mono text-[11px] uppercase tracking-[0.1em] text-center mb-1 flex items-center justify-center gap-1"
         style={{ color: 'var(--color-text-tertiary)' }}
       >
-        FAST NUCES &middot; Islamabad Campus &middot; Spring 2026
+        FAST NUCES &middot; Islamabad Campus &middot; {semesterName}
         <a 
           href="/admin" 
           className="hover:text-orange-500 transition-colors duration-150 p-1 ml-0.5 opacity-40 hover:opacity-100"

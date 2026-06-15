@@ -82,11 +82,34 @@ function TimetablePageInner() {
 
   const [entries, setEntries] = useState<TimetableEntry[]>(allEntries);
   const [isSummer, setIsSummer] = useState<boolean>(false);
+  const [semesterName, setSemesterName] = useState<string>('Spring 2026');
   const [summerSelections, setSummerSelections] = useState<Record<string, string>>({});
   const [summerCatalog, setSummerCatalog] = useState<SummerCourseCatalogEntry[]>([]);
   const [loadingSummer, setLoadingSummer] = useState<boolean>(false);
 
   useEffect(() => {
+    const savedSemesterName = localStorage.getItem('fsc_semester_name');
+    if (savedSemesterName) {
+      setSemesterName(savedSemesterName);
+    }
+    async function loadSemesterSettings() {
+      try {
+        const { supabase } = await import('@/lib/supabase');
+        const { data, error } = await supabase
+          .from('semester_settings')
+          .select('semester_name')
+          .eq('id', 1)
+          .single();
+        if (!error && data?.semester_name) {
+          setSemesterName(data.semester_name);
+          localStorage.setItem('fsc_semester_name', data.semester_name);
+        }
+      } catch (err) {
+        console.error(err);
+      }
+    }
+    loadSemesterSettings();
+
     const activeSemester = localStorage.getItem('fsc_active_semester');
     if (activeSemester === 'summer') {
       setIsSummer(true);
@@ -612,7 +635,7 @@ function TimetablePageInner() {
               {isSummer ? 'SUMMER' : dept}
             </span>
             <span className="font-mono text-sm text-[var(--color-text-secondary)] truncate">
-              {isSummer ? 'Summer Semester 2026' : `Batch ${batch} · Section ${section}`}
+              {isSummer ? semesterName : `Batch ${batch} · Section ${section}`}
             </span>
           </div>
         </div>
@@ -627,7 +650,7 @@ function TimetablePageInner() {
           {isSummer ? (
             <div>
               <p className="font-mono text-[10px] uppercase tracking-widest text-[var(--color-text-tertiary)] mb-1">Semester</p>
-              <p className="font-mono text-sm font-medium">Summer 2026</p>
+              <p className="font-mono text-sm font-medium">{semesterName}</p>
             </div>
           ) : (
             <>
