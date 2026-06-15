@@ -49,10 +49,11 @@ type ViewMode = 'list' | 'grid';
 
 
 function makeRow(id: string): CourseRow {
+  const defaultBatch = availableBatches[0] ?? '2024';
   return {
     id,
-    batch: availableBatches[0] ?? '2024',
-    stream: '',
+    batch: defaultBatch,
+    stream: defaultBatch === 'Summer' ? 'CS' : '',
     category: 'regular',
     selection: '',
     errorBatch: false,
@@ -1112,8 +1113,8 @@ function RowEditor({ row, index, matchCount, showMatchHint, onUpdate, onRemove, 
       </div>
 
       <div className="flex flex-col gap-2">
-        {/* Top 3 fields in a row */}
-        <div className="grid grid-cols-3 gap-2">
+        {/* Top fields in a row */}
+        <div className={`grid ${row.batch === 'Summer' ? 'grid-cols-2' : 'grid-cols-3'} gap-2`}>
           {/* Batch */}
           <div className="flex flex-col gap-1">
             <label className="font-mono text-[9px] uppercase tracking-widest text-[var(--color-text-tertiary)]">
@@ -1121,7 +1122,14 @@ function RowEditor({ row, index, matchCount, showMatchHint, onUpdate, onRemove, 
             </label>
             <select
               value={row.batch}
-              onChange={e => onUpdate({ batch: e.target.value, selection: '', errorBatch: false, errorSelection: false })}
+              onChange={e => {
+                const val = e.target.value;
+                if (val === 'Summer') {
+                  onUpdate({ batch: val, stream: 'CS', selection: '', errorBatch: false, errorStream: false, errorSelection: false });
+                } else {
+                  onUpdate({ batch: val, selection: '', errorBatch: false, errorSelection: false });
+                }
+              }}
               className={`h-9 px-2 rounded-md border text-xs font-mono bg-[var(--color-bg)] appearance-none focus:outline-none focus:ring-2 focus:ring-[var(--accent-cs)] cursor-pointer ${row.errorBatch ? errorBase : normalBase}`}
               aria-invalid={row.errorBatch}
             >
@@ -1132,22 +1140,24 @@ function RowEditor({ row, index, matchCount, showMatchHint, onUpdate, onRemove, 
           </div>
 
           {/* Department */}
-          <div className="flex flex-col gap-1">
-            <label className="font-mono text-[9px] uppercase tracking-widest text-[var(--color-text-tertiary)]">
-              Dept
-            </label>
-            <select
-              value={row.stream}
-              onChange={e => onUpdate({ stream: e.target.value, selection: '', errorStream: false, errorSelection: false })}
-              className={`h-9 px-2 rounded-md border text-xs font-mono bg-[var(--color-bg)] appearance-none focus:outline-none focus:ring-2 focus:ring-[var(--accent-cs)] cursor-pointer ${row.errorStream ? errorBase : normalBase}`}
-              aria-invalid={row.errorStream}
-            >
-              <option value="" disabled>—</option>
-              {TIMETABLE_DEPTS.map(d => (
-                <option key={d} value={d}>{d}</option>
-              ))}
-            </select>
-          </div>
+          {row.batch !== 'Summer' && (
+            <div className="flex flex-col gap-1">
+              <label className="font-mono text-[9px] uppercase tracking-widest text-[var(--color-text-tertiary)]">
+                Dept
+              </label>
+              <select
+                value={row.stream}
+                onChange={e => onUpdate({ stream: e.target.value, selection: '', errorStream: false, errorSelection: false })}
+                className={`h-9 px-2 rounded-md border text-xs font-mono bg-[var(--color-bg)] appearance-none focus:outline-none focus:ring-2 focus:ring-[var(--accent-cs)] cursor-pointer ${row.errorStream ? errorBase : normalBase}`}
+                aria-invalid={row.errorStream}
+              >
+                <option value="" disabled>—</option>
+                {TIMETABLE_DEPTS.map(d => (
+                  <option key={d} value={d}>{d}</option>
+                ))}
+              </select>
+            </div>
+          )}
 
           {/* Category */}
           <div className="flex flex-col gap-1">

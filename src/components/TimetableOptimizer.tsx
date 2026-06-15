@@ -751,14 +751,16 @@ export function TimetableOptimizer() {
                     </select>
                   </div>
 
-                  <div className="flex-1 min-w-[80px]">
-                    <label className="block text-xs font-medium text-[var(--color-text-tertiary)] mb-1 uppercase tracking-wider">Dept</label>
-                    <select
-                      className="w-full p-2 border border-[var(--color-border)] rounded-md outline-none focus:ring-2 focus:ring-[var(--accent-cs)] text-sm bg-[var(--color-bg)] text-[var(--color-text-primary)]"
-                      value={row.dept} onChange={e => updateRowField(idx, 'dept', e.target.value)}>
-                      {availableDepts.map((d: string) => <option key={d} value={d}>{d}</option>)}
-                    </select>
-                  </div>
+                  {row.year !== 'Summer' && (
+                    <div className="flex-1 min-w-[80px]">
+                      <label className="block text-xs font-medium text-[var(--color-text-tertiary)] mb-1 uppercase tracking-wider">Dept</label>
+                      <select
+                        className="w-full p-2 border border-[var(--color-border)] rounded-md outline-none focus:ring-2 focus:ring-[var(--accent-cs)] text-sm bg-[var(--color-bg)] text-[var(--color-text-primary)]"
+                        value={row.dept} onChange={e => updateRowField(idx, 'dept', e.target.value)}>
+                        {availableDepts.map((d: string) => <option key={d} value={d}>{d}</option>)}
+                      </select>
+                    </div>
+                  )}
 
                   <div className="flex-1 min-w-[80px]">
                     <label className="block text-xs font-medium text-[var(--color-text-tertiary)] mb-1 uppercase tracking-wider">Type</label>
@@ -829,7 +831,11 @@ export function TimetableOptimizer() {
                 className="w-full p-2 border border-[var(--color-border-strong)] rounded-md outline-none focus:ring-2 focus:ring-[var(--accent-cs)] text-sm bg-[var(--color-bg)] text-[var(--color-text-primary)]"
                 value={defaultBatch}
                 onChange={e => {
-                  setDefaultBatch(e.target.value);
+                  const val = e.target.value;
+                  setDefaultBatch(val);
+                  if (val === 'Summer') {
+                    setDefaultDept('CS');
+                  }
                   setResult(null);
                   setDefaultCoursesVerified(false);
                   setDefaultCourseSelections([]);
@@ -838,21 +844,23 @@ export function TimetableOptimizer() {
                 {availableYears.map((y: string) => <option key={y} value={y}>{y}</option>)}
               </select>
             </div>
-            <div className="flex-1">
-              <label className="block text-xs font-medium text-[var(--color-text-tertiary)] mb-1 uppercase tracking-wider">Department</label>
-              <select
-                className="w-full p-2 border border-[var(--color-border-strong)] rounded-md outline-none focus:ring-2 focus:ring-[var(--accent-cs)] text-sm bg-[var(--color-bg)] text-[var(--color-text-primary)]"
-                value={defaultDept}
-                onChange={e => {
-                  setDefaultDept(e.target.value);
-                  setResult(null);
-                  setDefaultCoursesVerified(false);
-                  setDefaultCourseSelections([]);
-                }}
-              >
-                {ObjectKeys(dynamicTimetableData[defaultBatch] || {}).map((d: string) => <option key={d} value={d}>{d}</option>)}
-              </select>
-            </div>
+            {defaultBatch !== 'Summer' && (
+              <div className="flex-1">
+                <label className="block text-xs font-medium text-[var(--color-text-tertiary)] mb-1 uppercase tracking-wider">Department</label>
+                <select
+                  className="w-full p-2 border border-[var(--color-border-strong)] rounded-md outline-none focus:ring-2 focus:ring-[var(--accent-cs)] text-sm bg-[var(--color-bg)] text-[var(--color-text-primary)]"
+                  value={defaultDept}
+                  onChange={e => {
+                    setDefaultDept(e.target.value);
+                    setResult(null);
+                    setDefaultCoursesVerified(false);
+                    setDefaultCourseSelections([]);
+                  }}
+                >
+                  {ObjectKeys(dynamicTimetableData[defaultBatch] || {}).map((d: string) => <option key={d} value={d}>{d}</option>)}
+                </select>
+              </div>
+            )}
             <div className="flex items-end">
               <button
                 onClick={handleProceed}
