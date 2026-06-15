@@ -10,8 +10,8 @@ import { Header } from '@/components/Header';
 
 import { ThemeToggle } from '@/components/ThemeToggle';
 import { ShieldAlert, AlertCircle, Info } from 'lucide-react';
-import { flattenTimetable, groupByDayTimetable, detectConflicts, formatTimeRange, parseTimeRange } from '@/lib/timetable-filter';
-import type { TimetableEntry, RawTimetableJSON } from '@/lib/types';
+import { flattenTimetable, groupByDayTimetable, detectConflicts, formatTimeRange, parseTimeRange, findMatchingCatalogEntry } from '@/lib/timetable-filter';
+import type { TimetableEntry, RawTimetableJSON, SummerCourseCatalogEntry } from '@/lib/types';
 import { DAYS_ORDER } from '@/lib/types';
 
 // eslint-disable-next-line
@@ -62,10 +62,10 @@ function makeRow(id: string): CourseRow {
   };
 }
 
-function findClasses(entry: CourseRow): TimetableEntry[] {
+function findClasses(entry: CourseRow, entries: TimetableEntry[] = allTimetableEntries): TimetableEntry[] {
   if (!entry.batch || !entry.stream || !entry.category || !entry.selection) return [];
   const [courseName, section] = entry.selection.split(' | ');
-  return allTimetableEntries.filter(e =>
+  return entries.filter(e =>
     e.batch === entry.batch &&
     e.department === entry.stream &&
     e.category === entry.category &&
@@ -97,6 +97,23 @@ function CustomTimetableInner() {
   const [tempName, setTempName] = useState('');
   const [activeBundleId, setActiveBundleId] = useState<string|null>(null);
   const [isLoaded, setIsLoaded] = useState(false);
+  const [isSummer, setIsSummer] = useState(false);
+  const [summerCatalog, setSummerCatalog] = useState<SummerCourseCatalogEntry[]>([]);
+  const [timetableEntries, setTimetableEntries] = useState<TimetableEntry[]>(allTimetableEntries);
+
+  useEffect(() => {
+    const activeSemester = localStorage.getItem('fsc_active_semester');
+    if (activeSemester === 'summer') {
+      setIsSummer(true);
+      fetch('/api/timetable', { cache: 'no-store' })
+        .then(res => res.ok ? res.json() : { entries: [], catalog: [] })
+        .then(data => {
+          if (data.entries) setTimetableEntries(data.entries);
+          if (data.catalog) setSummerCatalog(data.catalog);
+        })
+        .catch(err => console.error('Error fetching custom timetable summer entries:', err));
+    }
+  }, []);
 
 
 
@@ -276,13 +293,13 @@ function CustomTimetableInner() {
     const seen = new Set<string>();
     const result: TimetableEntry[] = [];
     for (const row of rows) {
-      for (const slot of findClasses(row)) {
+      for (const slot of findClasses(row, timetableEntries)) {
         const key = `${slot.day}|${slot.time}|${slot.courseName}|${slot.section}`;
         if (!seen.has(key)) { seen.add(key); result.push(slot); }
       }
     }
     return result; // Order matters less here because groupByDay sorts them
-  }, [saved, rows]);
+  }, [saved, rows, timetableEntries]);
 
   const filtered = useMemo(() => {
     if (!query.trim()) return savedMatches;
@@ -372,9 +389,8 @@ function CustomTimetableInner() {
 
   // ── Per-row "not found" hint ─────────────────────────────────────────────
   const rowMatches = useMemo(() =>
-    rows.map(r => ({ id: r.id, count: findClasses(r).length })),
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    [rows]
+    rows.map(r => ({ id: r.id, count: findClasses(r, timetableEntries).length })),
+    [rows, timetableEntries]
   );
 
   const anyError = saved === false && rows.some(r => r.errorBatch || r.errorStream || r.errorCategory || r.errorSelection);
@@ -447,6 +463,8 @@ function CustomTimetableInner() {
                       onUpdate={patch => updateRow(row.id, patch)}
                       onRemove={() => removeRow(row.id)}
                       canRemove={rows.length > 1}
+                      timetableEntries={timetableEntries}
+                      summerCatalog={summerCatalog}
                     />
                   ))}
                 </div>
@@ -598,6 +616,8 @@ function CustomTimetableInner() {
                       onUpdate={patch => updateRow(row.id, patch)}
                       onRemove={() => removeRow(row.id)}
                       canRemove={rows.length > 1}
+                      timetableEntries={timetableEntries}
+                      summerCatalog={summerCatalog}
                     />
                   ))}
                 </div>
@@ -1021,26 +1041,31 @@ interface RowEditorProps {
   onUpdate: (patch: Partial<CourseRow>) => void;
   onRemove: () => void;
   canRemove: boolean;
+  timetableEntries: TimetableEntry[];
+  summerCatalog: SummerCourseCatalogEntry[];
 }
 
-function RowEditor({ row, index, matchCount, showMatchHint, onUpdate, onRemove, canRemove }: RowEditorProps) {
+function RowEditor({ row, index, matchCount, showMatchHint, onUpdate, onRemove, canRemove, timetableEntries, summerCatalog }: RowEditorProps) {
   const errorBase = 'border-red-400 ring-1 ring-red-400';
   const normalBase = 'border-[var(--color-border-strong)]';
 
   const availableCourses = useMemo(() => {
     if (!row.batch || !row.stream || !row.category) return [];
-    const coursesMap = new Map<string, string>();
-    for (const e of allTimetableEntries) {
+    const coursesMap = new Map<string, { key: string; label: string }>();
+    for (const e of timetableEntries) {
       if (e.batch === row.batch && e.department === row.stream && e.category === row.category) {
-        const label = `${e.courseName} | ${e.section}`;
-        if (!coursesMap.has(label)) {
-          coursesMap.set(label, label);
+        const catalogEntry = findMatchingCatalogEntry(e.courseName, summerCatalog);
+        const displayName = catalogEntry?.displayName ?? e.courseName;
+        const key = `${e.courseName} | ${e.section}`;
+        const label = `${displayName} | ${e.section}`;
+        if (!coursesMap.has(key)) {
+          coursesMap.set(key, { key, label });
         }
       }
     }
-    return Array.from(coursesMap.entries()).map(([key, label]) => ({ key, label }))
+    return Array.from(coursesMap.values())
       .sort((a, b) => a.label.localeCompare(b.label));
-  }, [row.batch, row.stream, row.category]);
+  }, [row.batch, row.stream, row.category, timetableEntries, summerCatalog]);
 
   function handleCourseKeyDown(e: React.KeyboardEvent<HTMLSelectElement>) {
     if (!/^[a-z]$/i.test(e.key)) return;

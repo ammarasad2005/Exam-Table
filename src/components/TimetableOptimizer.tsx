@@ -1,11 +1,42 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { ShieldAlert, ExternalLink } from 'lucide-react';
 import { useMobileSwipe } from '@/hooks/useMobileSwipe';
+import { findMatchingCatalogEntry } from '@/lib/timetable-filter';
+import type { SummerCourseCatalogEntry, TimetableEntry } from '@/lib/types';
 
 // eslint-disable-next-line
 const timetableData: any = require('../../public/data/timetable.json');
+
+function nestTimetableEntries(entries: TimetableEntry[]): any {
+  const nested: any = {};
+  for (const e of entries) {
+    const batch = e.batch || 'Summer';
+    const dept = e.department || 'CS';
+    const cat = e.category || 'regular';
+    const course = e.courseName;
+    const sec = e.section || 'A';
+    const day = e.day;
+
+    if (!nested[batch]) nested[batch] = {};
+    if (!nested[batch][dept]) nested[batch][dept] = {};
+    if (!nested[batch][dept][cat]) nested[batch][dept][cat] = {};
+    if (!nested[batch][dept][cat][course]) nested[batch][dept][cat][course] = {};
+    if (!nested[batch][dept][cat][course][sec]) nested[batch][dept][cat][course][sec] = {};
+    if (!nested[batch][dept][cat][course][sec][day]) nested[batch][dept][cat][course][sec][day] = [];
+
+    nested[batch][dept][cat][course][sec][day].push({
+      room: e.room,
+      time: e.time,
+      rescheduled: e.rescheduled,
+      exam: e.exam,
+      is_elective: e.isElective,
+      elective_group: e.electiveGroup
+    });
+  }
+  return nested;
+}
 
 interface CourseRow {
   year: string;
@@ -52,12 +83,36 @@ const AFTERNOON_FATIGUE_END_MINUTES = 15 * 60 + 50;
 
 export function TimetableOptimizer() {
   const ObjectKeys = (obj: any) => (obj ? Object.keys(obj) : []);
-  const availableYears = ObjectKeys(timetableData).filter((k: string) => k !== '__meta__');
+
+  const [dynamicTimetableData, setDynamicTimetableData] = useState<any>(timetableData);
+  const [summerCatalog, setSummerCatalog] = useState<SummerCourseCatalogEntry[]>([]);
+
+  useEffect(() => {
+    const activeSemester = localStorage.getItem('fsc_active_semester');
+    if (activeSemester === 'summer') {
+      fetch('/api/timetable', { cache: 'no-store' })
+        .then(res => res.ok ? res.json() : { entries: [], catalog: [] })
+        .then(data => {
+          if (data.entries && data.entries.length > 0) {
+            const nested = nestTimetableEntries(data.entries);
+            setDynamicTimetableData(nested);
+          }
+          if (data.catalog) {
+            setSummerCatalog(data.catalog);
+          }
+        })
+        .catch(err => console.error('Error fetching dynamic timetable for optimizer:', err));
+    }
+  }, []);
+
+  const availableYears = useMemo(() => {
+    return ObjectKeys(dynamicTimetableData).filter((k: string) => k !== '__meta__');
+  }, [dynamicTimetableData]);
 
   const getDefaultRow = (): CourseRow => {
     const defaultYear = availableYears[0] || '';
-    const defaultDept = ObjectKeys(timetableData[defaultYear])[0] || '';
-    const defaultType = ObjectKeys(timetableData[defaultYear]?.[defaultDept])[0] || '';
+    const defaultDept = ObjectKeys(dynamicTimetableData[defaultYear])[0] || '';
+    const defaultType = ObjectKeys(dynamicTimetableData[defaultYear]?.[defaultDept])[0] || '';
     return { year: defaultYear, dept: defaultDept, type: defaultType, course: '', preferredSection: '' };
   };
 
@@ -90,12 +145,23 @@ export function TimetableOptimizer() {
 
   // --- State ---
   const [inputMode, setInputMode] = useState<'default' | 'custom'>('custom');
-  const [defaultBatch, setDefaultBatch] = useState(availableYears[0] || '');
+  const [defaultBatch, setDefaultBatch] = useState('');
   const [defaultDept, setDefaultDept] = useState('CS');
   const [defaultCoursesVerified, setDefaultCoursesVerified] = useState(false);
   const [isDefaultDrawerOpen, setIsDefaultDrawerOpen] = useState(false);
   const [defaultCourseSelections, setDefaultCourseSelections] = useState<{ course: string, type: string, selected: boolean }[]>([]);
   const [selectedCourses, setSelectedCourses] = useState<CourseRow[]>([getDefaultRow()]);
+
+  useEffect(() => {
+    if (availableYears.length > 0) {
+      const defaultYear = availableYears[0];
+      const defaultDept = ObjectKeys(dynamicTimetableData[defaultYear])[0] || '';
+      const defaultType = ObjectKeys(dynamicTimetableData[defaultYear]?.[defaultDept])[0] || '';
+      setSelectedCourses([{ year: defaultYear, dept: defaultDept, type: defaultType, course: '', preferredSection: '' }]);
+      setDefaultBatch(defaultYear);
+      setDefaultDept(defaultDept);
+    }
+  }, [availableYears, dynamicTimetableData]);
   const [hasPreferences, setHasPreferences] = useState(false);
   const [optimizationMode, setOptimizationMode] = useState('balanced');
   const [customWeights, setCustomWeights] = useState({
@@ -114,7 +180,7 @@ export function TimetableOptimizer() {
   };
 
   const loadDefaultCoursesForVerification = (batch: string, dept: string) => {
-    const yearData = timetableData[batch];
+    const yearData = dynamicTimetableData[batch];
     const courses: { course: string, type: string, selected: boolean }[] = [];
     if (yearData && yearData[dept]) {
       const deptData = yearData[dept];
@@ -156,14 +222,14 @@ export function TimetableOptimizer() {
     row[field] = value;
 
     if (field === 'year') {
-      const depts = ObjectKeys(timetableData[value]);
+      const depts = ObjectKeys(dynamicTimetableData[value]);
       row.dept = depts[0] || '';
-      const types = ObjectKeys(timetableData[value]?.[row.dept]);
+      const types = ObjectKeys(dynamicTimetableData[value]?.[row.dept]);
       row.type = types[0] || '';
       row.course = '';
       row.preferredSection = '';
     } else if (field === 'dept') {
-      const types = ObjectKeys(timetableData[row.year]?.[value]);
+      const types = ObjectKeys(dynamicTimetableData[row.year]?.[value]);
       row.type = types[0] || '';
       row.course = '';
       row.preferredSection = '';
@@ -373,7 +439,7 @@ export function TimetableOptimizer() {
 
     const courseData: Record<string, any> = {};
     for (const item of coursesToOptimize) {
-      const data = timetableData[item.year]?.[item.dept]?.[item.type]?.[item.course];
+      const data = dynamicTimetableData[item.year]?.[item.dept]?.[item.type]?.[item.course];
       if (!data) {
         setError(`Data for '${item.course}' is missing.`);
         return;
@@ -667,11 +733,11 @@ export function TimetableOptimizer() {
         <>
           <div className="space-y-4 mb-6">
             {selectedCourses.map((row, idx) => {
-              const availableDepts = ObjectKeys(timetableData[row.year]);
-              const availableTypes = ObjectKeys(timetableData[row.year]?.[row.dept]);
-              const availableCourses = ObjectKeys(timetableData[row.year]?.[row.dept]?.[row.type]);
+              const availableDepts = ObjectKeys(dynamicTimetableData[row.year]);
+              const availableTypes = ObjectKeys(dynamicTimetableData[row.year]?.[row.dept]);
+              const availableCourses = ObjectKeys(dynamicTimetableData[row.year]?.[row.dept]?.[row.type]);
               const availableSections = row.course
-                ? ObjectKeys(timetableData[row.year]?.[row.dept]?.[row.type]?.[row.course])
+                ? ObjectKeys(dynamicTimetableData[row.year]?.[row.dept]?.[row.type]?.[row.course])
                 : [];
 
               return (
@@ -711,9 +777,11 @@ export function TimetableOptimizer() {
                       onChange={e => updateRowField(idx, 'course', e.target.value)}
                     >
                       <option value="">-- Select Course --</option>
-                      {availableCourses.map((c: string) => (
-                        <option key={c} value={c}>{c}</option>
-                      ))}
+                      {availableCourses.map((c: string) => {
+                        const catalogEntry = findMatchingCatalogEntry(c, summerCatalog);
+                        const label = catalogEntry?.displayName ?? c;
+                        return <option key={c} value={c}>{label}</option>;
+                      })}
                     </select>
                   </div>
 
@@ -782,7 +850,7 @@ export function TimetableOptimizer() {
                   setDefaultCourseSelections([]);
                 }}
               >
-                {ObjectKeys(timetableData[defaultBatch] || {}).map((d: string) => <option key={d} value={d}>{d}</option>)}
+                {ObjectKeys(dynamicTimetableData[defaultBatch] || {}).map((d: string) => <option key={d} value={d}>{d}</option>)}
               </select>
             </div>
             <div className="flex items-end">
@@ -853,7 +921,9 @@ export function TimetableOptimizer() {
                         }}
                       />
                       <div className="flex flex-col min-w-0">
-                        <span className={`font-bold text-sm truncate ${item.selected ? 'text-[var(--color-text-primary)]' : 'text-[var(--color-text-secondary)]'}`}>{item.course}</span>
+                        <span className={`font-bold text-sm truncate ${item.selected ? 'text-[var(--color-text-primary)]' : 'text-[var(--color-text-secondary)]'}`}>
+                          {findMatchingCatalogEntry(item.course, summerCatalog)?.displayName ?? item.course}
+                        </span>
                         <span className="font-mono text-[10px] uppercase tracking-wider text-[var(--color-text-tertiary)] truncate">{item.type}</span>
                       </div>
                     </label>
@@ -995,7 +1065,9 @@ export function TimetableOptimizer() {
                     {option.schedule.map((item, idx) => (
                       <li key={idx} className="flex justify-between items-center p-3 bg-[var(--color-bg)] rounded-lg border border-[var(--color-border)] shadow-sm hover:border-[var(--color-border-strong)] transition-colors">
                         <div className="flex flex-col pr-2">
-                          <span className="font-bold text-[var(--color-text-primary)] text-sm">{item.course}</span>
+                          <span className="font-bold text-[var(--color-text-primary)] text-sm">
+                            {findMatchingCatalogEntry(item.course, summerCatalog)?.displayName ?? item.course}
+                          </span>
                         </div>
                         <div className="flex items-center gap-2 flex-shrink-0">
                           {item.isLocked && <span className="text-xs font-bold text-[var(--accent-ee)]">🔒</span>}
