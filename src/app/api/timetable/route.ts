@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { supabase } from '@/lib/supabase';
-import { flattenTimetable } from '@/lib/timetable-filter';
+import { flattenTimetable, findMatchingCatalogEntry } from '@/lib/timetable-filter';
 import type { TimetableEntry, SummerCourseCatalogEntry } from '@/lib/types';
 
 export const dynamic = 'force-dynamic';
@@ -266,16 +266,29 @@ export async function GET(_req: NextRequest) {
 
       if (isEmptyCatalog) {
         // First-time: auto-generate from entries (all visible, no aliases)
+        // Normalize courseName first
+        entries = entries.map(e => ({
+          ...e,
+          courseName: e.courseName.replace(/\s*\([^)]*\)\s*$/, '').trim()
+        }));
         catalog = autoBuildCatalog(entries);
       } else {
         // Admin has curated the catalog — serve as-is
         catalog = rawMappings as SummerCourseCatalogEntry[];
         
-        // Strictly filter the returned entries to exclude those that are explicitly marked as hidden
-        const hiddenSheetNames = new Set(
-          catalog.filter(c => c.hidden).map(c => c.sheetName)
-        );
-        entries = entries.filter(e => !hiddenSheetNames.has(e.courseName));
+        // Strict whitelist: Only allow entries that match a catalog course where hidden is false.
+        // Also normalize the returned entries' courseNames to match the catalog's exact sheetName.
+        const filteredEntries: TimetableEntry[] = [];
+        for (const e of entries) {
+          const catalogEntry = findMatchingCatalogEntry(e.courseName, catalog);
+          if (catalogEntry && !catalogEntry.hidden) {
+            filteredEntries.push({
+              ...e,
+              courseName: catalogEntry.sheetName // Canonical name
+            });
+          }
+        }
+        entries = filteredEntries;
       }
     }
     // Regular semester: catalog stays [] — frontend ignores it

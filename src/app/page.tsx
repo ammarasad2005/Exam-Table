@@ -4,7 +4,7 @@ import { useRouter } from 'next/navigation';
 import { Header } from '@/components/Header';
 import { DesktopTicker } from '@/components/DesktopTicker';
 import { flattenTimetable } from '@/lib/timetable-filter';
-import type { RawTimetableJSON, TimetableEntry } from '@/lib/types';
+import type { RawTimetableJSON, TimetableEntry, SummerCourseCatalogEntry } from '@/lib/types';
 
 // eslint-disable-next-line
 const timetableRaw: RawTimetableJSON = require('../../public/data/timetable.json');
@@ -170,6 +170,7 @@ export default function RootPage() {
   const [semesterName, setSemesterName] = useState<string>('Spring 2026');
   const [summerCoursesList, setSummerCoursesList] = useState<TimetableEntry[]>([]);
   const [summerSelections, setSummerSelections] = useState<Record<string, string>>({});
+  const [summerCatalog, setSummerCatalog] = useState<SummerCourseCatalogEntry[]>([]);
 
   useEffect(() => {
     setMounted(true);
@@ -186,9 +187,10 @@ export default function RootPage() {
     if (savedActiveSemester === 'summer') {
       setIsSummerMode(true);
       fetch('/api/timetable', { cache: 'no-store' })
-        .then(res => res.ok ? res.json() : { entries: [] })
+        .then(res => res.ok ? res.json() : { entries: [], catalog: [] })
         .then(data => {
           setSummerCoursesList(data.entries ?? []);
+          setSummerCatalog(data.catalog ?? []);
           const storedSelections = localStorage.getItem('fsc_summer_courses');
           if (storedSelections) setSummerSelections(JSON.parse(storedSelections));
         })
@@ -218,11 +220,13 @@ export default function RootPage() {
             if (res.ok) {
               const apiData = await res.json();
               setSummerCoursesList(apiData.entries ?? []);
+              setSummerCatalog(apiData.catalog ?? []);
               const storedSelections = localStorage.getItem('fsc_summer_courses');
               if (storedSelections) setSummerSelections(JSON.parse(storedSelections));
             }
           } else {
             setSummerCoursesList([]);
+            setSummerCatalog([]);
           }
         } else {
           localStorage.setItem('fsc_active_semester', 'regular');
@@ -398,6 +402,7 @@ export default function RootPage() {
                 bundles={bundles}
                 isSummer={isSummerMode}
                 summerSelections={summerSelections}
+                summerCatalog={summerCatalog}
               />
             )}
 

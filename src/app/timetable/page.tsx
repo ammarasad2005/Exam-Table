@@ -9,6 +9,7 @@ import {
   formatTimeRange,
   parseTimeToMinutes,
   parseTimeRange,
+  findMatchingCatalogEntry,
 } from '@/lib/timetable-filter';
 import { TimetableCard } from '@/components/TimetableCard';
 import { TimetableDetail } from '@/components/TimetableDetail';
@@ -253,15 +254,22 @@ function TimetablePageInner() {
   const filtered = useMemo(() => {
     if (isSummer) {
       const result = entries.filter(e => {
-        // Strictly filter out courses that are marked as hidden in the catalog
-        if (summerCatalog.length > 0) {
-          const catalogEntry = summerCatalog.find(c => c.sheetName === e.courseName);
+        const isCatalogEmpty = summerCatalog.length === 0;
+        const catalogEntry = findMatchingCatalogEntry(e.courseName, summerCatalog);
+
+        // Whitelist logic: If catalog is configured, must match a visible (non-hidden) course
+        if (!isCatalogEmpty) {
+          if (!catalogEntry || catalogEntry.hidden) return false;
+        } else {
           if (catalogEntry && catalogEntry.hidden) return false;
         }
 
+        // Resolve canonical name for looking up user selections
+        const canonicalName = catalogEntry ? catalogEntry.sheetName : e.courseName;
+
         // summerSelections keys are course sheetNames; values are the chosen section
-        if (!summerSelections[e.courseName]) return false;
-        const selectedSection = summerSelections[e.courseName];
+        if (!summerSelections[canonicalName]) return false;
+        const selectedSection = summerSelections[canonicalName];
         // If the entry has no section (grid-parsed summer schedules), show it for any selection
         if (!e.section || !selectedSection || selectedSection === 'A') return true;
         return e.section === selectedSection;
@@ -362,9 +370,11 @@ function TimetablePageInner() {
 
   // Summer-specific: remove a course by its name from summerSelections
   const removeSummerCourse = (courseName: string) => {
+    const catalogEntry = findMatchingCatalogEntry(courseName, summerCatalog);
+    const key = catalogEntry ? catalogEntry.sheetName : courseName;
     setSummerSelections(prev => {
       const next = { ...prev };
-      delete next[courseName];
+      delete next[key];
       localStorage.setItem('fsc_summer_courses', JSON.stringify(next));
       return next;
     });
@@ -372,8 +382,10 @@ function TimetablePageInner() {
 
   // Summer-specific: update section for a course in summerSelections
   const updateSummerCourseSection = (courseName: string, section: string) => {
+    const catalogEntry = findMatchingCatalogEntry(courseName, summerCatalog);
+    const key = catalogEntry ? catalogEntry.sheetName : courseName;
     setSummerSelections(prev => {
-      const next = { ...prev, [courseName]: section };
+      const next = { ...prev, [key]: section };
       localStorage.setItem('fsc_summer_courses', JSON.stringify(next));
       return next;
     });
@@ -610,7 +622,7 @@ function TimetablePageInner() {
   /** Resolve alias: returns displayName if set in catalog, otherwise raw sheetName */
   const summerDisplayName = (sheetName: string): string => {
     if (!isSummer || summerCatalog.length === 0) return sheetName;
-    const entry = summerCatalog.find(c => c.sheetName === sheetName);
+    const entry = findMatchingCatalogEntry(sheetName, summerCatalog);
     return entry?.displayName ?? sheetName;
   };
 

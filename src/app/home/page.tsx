@@ -4,7 +4,7 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import { DepartmentPill } from '@/components/DepartmentPill';
 import { ThemeToggle } from '@/components/ThemeToggle';
 import { SCHOOLS, SCHOOL_DEPARTMENTS, DEPARTMENT_LABELS } from '@/lib/types';
-import { flattenTimetable, getAvailableSections } from '@/lib/timetable-filter';
+import { flattenTimetable, getAvailableSections, findMatchingCatalogEntry } from '@/lib/timetable-filter';
 import type { RawTimetableJSON, TimetableEntry, SummerCourseCatalogEntry } from '@/lib/types';
 import { AlertCircle, Terminal, ShieldAlert } from 'lucide-react';
 import { DesktopTicker } from '@/components/DesktopTicker';
@@ -224,20 +224,44 @@ export default function SetupPage() {
       sectionsMap.set(entry.courseName, secs);
     });
 
-    // Build unique courses checklist. By default, all courses in the spreadsheet are visible.
-    // We only exclude those that are explicitly hidden in the admin panel.
-    const coursesFromSheet = Array.from(sectionsMap.entries()).map(([sheetName, sections]) => {
-      const catalogEntry = summerCatalog.find(c => c.sheetName === sheetName);
-      
-      return {
-        sheetName,
-        displayName: catalogEntry?.displayName ?? sheetName,
-        hidden: catalogEntry ? catalogEntry.hidden : false, // visible by default
-        sections
-      };
+    const isCatalogEmpty = summerCatalog.length === 0;
+
+    // Resolve canonical sheetNames and merge sections
+    const canonicalCoursesMap = new Map<string, { displayName: string; hidden: boolean; sections: string[] }>();
+
+    Array.from(sectionsMap.entries()).forEach(([sheetName, sections]) => {
+      const catalogEntry = findMatchingCatalogEntry(sheetName, summerCatalog);
+      const canonicalKey = catalogEntry ? catalogEntry.sheetName : sheetName;
+      const displayName = catalogEntry?.displayName ?? canonicalKey;
+      const isHidden = catalogEntry 
+        ? catalogEntry.hidden 
+        : !isCatalogEmpty; // Whitelist logic: hide if catalog is configured but this course is not in it
+
+      const existing = canonicalCoursesMap.get(canonicalKey);
+      if (existing) {
+        // Merge sections
+        const mergedSecs = [...new Set([...existing.sections, ...sections])];
+        canonicalCoursesMap.set(canonicalKey, {
+          displayName,
+          hidden: isHidden,
+          sections: mergedSecs
+        });
+      } else {
+        canonicalCoursesMap.set(canonicalKey, {
+          displayName,
+          hidden: isHidden,
+          sections
+        });
+      }
     });
 
-    return coursesFromSheet
+    return Array.from(canonicalCoursesMap.entries())
+      .map(([sheetName, data]) => ({
+        sheetName,
+        displayName: data.displayName,
+        hidden: data.hidden,
+        sections: data.sections
+      }))
       .filter(c => !c.hidden)
       .sort((a, b) => a.displayName.localeCompare(b.displayName));
   }, [summerCoursesList, summerCatalog]);
@@ -930,6 +954,7 @@ export default function SetupPage() {
                 bundles={bundles} 
                 isSummer={isSummerMode}
                 summerSelections={selectedSummerCourses}
+                summerCatalog={summerCatalog}
             />
 
 

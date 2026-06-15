@@ -2,8 +2,9 @@
 
 import { useState, useEffect, useMemo } from 'react';
 import { parseTimeRange, formatDuration } from '@/lib/dates';
-import { DAYS_ORDER, type TimetableEntry, type RawTimetableJSON } from '@/lib/types';
+import { DAYS_ORDER, type TimetableEntry, type RawTimetableJSON, type SummerCourseCatalogEntry } from '@/lib/types';
 import { ShieldAlert } from 'lucide-react';
+import { findMatchingCatalogEntry } from '@/lib/timetable-filter';
 import {
   getLiveTimetableEntries,
   RESULT_PREFS_STORAGE_KEY,
@@ -26,6 +27,7 @@ interface DesktopTickerProps {
   bundles: Bundle[];
   isSummer?: boolean;
   summerSelections?: Record<string, string>;
+  summerCatalog?: SummerCourseCatalogEntry[];
 }
 
 interface OngoingClass extends TimetableEntry {
@@ -46,6 +48,7 @@ export function DesktopTicker({
   bundles,
   isSummer = false,
   summerSelections = {},
+  summerCatalog = [],
 }: DesktopTickerProps) {
 
   const [now, setNow] = useState(new Date());
@@ -101,8 +104,11 @@ export function DesktopTicker({
   const relevantEntries = useMemo(() => {
     if (isSummer) {
       const filtered = allTimetableEntries.filter(e => {
-        if (!summerSelections[e.courseName]) return false;
-        const selectedSection = summerSelections[e.courseName];
+        const catalogEntry = findMatchingCatalogEntry(e.courseName, summerCatalog);
+        const canonicalName = catalogEntry ? catalogEntry.sheetName : e.courseName;
+
+        if (!summerSelections[canonicalName]) return false;
+        const selectedSection = summerSelections[canonicalName];
         if (!e.section || !selectedSection || selectedSection === 'A') return true;
         return e.section === selectedSection;
       });

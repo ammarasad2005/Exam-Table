@@ -1,4 +1,4 @@
-import type { TimetableEntry, RawTimetableJSON, TimetableBatchMap } from './types';
+import type { TimetableEntry, RawTimetableJSON, TimetableBatchMap, SummerCourseCatalogEntry } from './types';
 import { DAYS_ORDER, TIMETABLE_META_KEY } from './types';
 
 // ─── Flatten ─────────────────────────────────────────────────────────────────
@@ -281,4 +281,50 @@ export function formatTimeRange(t: string): string {
     return `${formatTime(parts[0])} – ${formatTime(parts[1])}`;
   }
   return formatTime(t);
+}
+
+/**
+ * Finds a matching entry in the summer course catalog for a given sheet name.
+ * Uses fuzzy matching (ignoring trailing sections/times in parentheses,
+ * normalizing spaces and case-insensitively checking prefixes).
+ */
+export function findMatchingCatalogEntry(
+  courseName: string,
+  catalog: SummerCourseCatalogEntry[]
+): SummerCourseCatalogEntry | undefined {
+  if (!catalog || catalog.length === 0) return undefined;
+
+  const clean = (s: string) =>
+    s
+      .replace(/\s*\([^)]*\)\s*$/, '') // Remove trailing parentheses content
+      .replace(/\s+/g, ' ')            // Normalize multiple spaces
+      .trim()
+      .toLowerCase();
+
+  const cleanedCourse = clean(courseName);
+
+  // Sort catalog by sheetName length descending to match the most specific name first
+  const sortedCatalog = [...catalog].sort(
+    (a, b) => b.sheetName.length - a.sheetName.length
+  );
+
+  // 1. Try exact match on cleaned names
+  for (const c of sortedCatalog) {
+    if (clean(c.sheetName) === cleanedCourse) {
+      return c;
+    }
+  }
+
+  // 2. Try prefix/contains match on cleaned names
+  for (const c of sortedCatalog) {
+    const cleanedSheet = clean(c.sheetName);
+    if (
+      cleanedCourse.startsWith(cleanedSheet) ||
+      cleanedSheet.startsWith(cleanedCourse)
+    ) {
+      return c;
+    }
+  }
+
+  return undefined;
 }
