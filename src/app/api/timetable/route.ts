@@ -247,6 +247,9 @@ export async function GET(_req: NextRequest) {
       // eslint-disable-next-line
       const timetableRaw = require('../../../../public/data/timetable.json');
       entries = flattenTimetable(timetableRaw);
+      if (isSummer) {
+        entries = entries.filter(e => e.batch === 'Summer');
+      }
     } catch (err) {
       console.error('Error reading/flattening local timetable:', err);
       return NextResponse.json({ error: 'Failed to retrieve timetable data' }, { status: 500 });
