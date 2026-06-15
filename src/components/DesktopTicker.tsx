@@ -181,12 +181,34 @@ export function DesktopTicker({
       };
     }
 
-    // Filter out past classes
+    // Filter out past classes (e.g. classes whose end times have already passed today or in the past days)
     const activeEntries = relevantEntries.filter(e => {
       const meta = sheetToMeta[e.day];
-      if (meta?.isoDate) {
-        return meta.isoDate >= todayISO;
+      const canonicalDay = meta?.day ?? e.day;
+      const isoDate = meta?.isoDate ?? '';
+
+      // 1. If date is strictly in the past, skip
+      if (isoDate && isoDate < todayISO) return false;
+
+      // 2. If date is today, check if class end time has passed
+      if (isoDate && isoDate === todayISO) {
+        const { end } = parseTimeRange(e.time);
+        if (currentMins >= end) return false;
       }
+
+      // 3. Fallback: if no isoDate, check if canonical day matches today and end time has passed
+      if (!isoDate && canonicalDay === currentDay) {
+        const { end } = parseTimeRange(e.time);
+        if (currentMins >= end) return false;
+      }
+      
+      // 4. Fallback: check if canonical day is strictly in the past
+      if (!isoDate && canonicalDay !== currentDay) {
+        const nextDayIdx = DAYS_ORDER.indexOf(canonicalDay);
+        const curDayIdx = DAYS_ORDER.indexOf(currentDay);
+        if (nextDayIdx < curDayIdx) return false;
+      }
+
       return true;
     });
 
