@@ -36,7 +36,7 @@
             ]
           }
         },
-        "LA": {
+        "AP": {
           "A": {
             "Monday": [
               {
@@ -70,7 +70,7 @@
             ]
           }
         },
-        "AP": {
+        "LA": {
           "A": {
             "Monday": [
               {
@@ -448,7 +448,7 @@
           "A": {
             "Monday": [
               {
-                "room": "DLD Lab",
+                "room": "Digital Lab",
                 "time": "02:25-05:10",
                 "rescheduled": false,
                 "exam": false,
@@ -458,7 +458,7 @@
             ],
             "Wednesday": [
               {
-                "room": "A-Mehran 1",
+                "room": "Digital Lab",
                 "time": "02:25-05:10",
                 "rescheduled": false,
                 "exam": false,
