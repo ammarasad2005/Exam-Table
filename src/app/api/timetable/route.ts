@@ -270,6 +270,12 @@ export async function GET(_req: NextRequest) {
       } else {
         // Admin has curated the catalog — serve as-is
         catalog = rawMappings as SummerCourseCatalogEntry[];
+        
+        // Strictly filter the returned entries to only include those that are visible (not hidden)
+        const visibleSheetNames = new Set(
+          catalog.filter(c => !c.hidden).map(c => c.sheetName)
+        );
+        entries = entries.filter(e => visibleSheetNames.has(e.courseName));
       }
     }
     // Regular semester: catalog stays [] — frontend ignores it

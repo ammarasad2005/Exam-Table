@@ -253,6 +253,12 @@ function TimetablePageInner() {
   const filtered = useMemo(() => {
     if (isSummer) {
       const result = entries.filter(e => {
+        // Strictly filter out courses that are marked as hidden in the catalog
+        if (summerCatalog.length > 0) {
+          const catalogEntry = summerCatalog.find(c => c.sheetName === e.courseName);
+          if (catalogEntry && catalogEntry.hidden) return false;
+        }
+
         // summerSelections keys are course sheetNames; values are the chosen section
         if (!summerSelections[e.courseName]) return false;
         const selectedSection = summerSelections[e.courseName];
