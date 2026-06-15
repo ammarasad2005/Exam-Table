@@ -48,8 +48,10 @@ interface Bundle {
 type ViewMode = 'list' | 'grid';
 
 
-function makeRow(id: string): CourseRow {
-  const defaultBatch = availableBatches[0] ?? '2024';
+function makeRow(id: string, isSummerMode: boolean): CourseRow {
+  const defaultBatch = isSummerMode
+    ? 'Summer'
+    : (availableBatches.filter(b => b !== 'Summer')[0] ?? '2024');
   return {
     id,
     batch: defaultBatch,
@@ -78,7 +80,7 @@ function findClasses(entry: CourseRow, entries: TimetableEntry[] = allTimetableE
 function CustomTimetableInner() {
   const router = useRouter();
   const baseId = useId();
-  const [rows, setRows] = useState<CourseRow[]>([makeRow(`${baseId}-0`)]);
+  const [rows, setRows] = useState<CourseRow[]>([]);
   const [nextIdx, setNextIdx] = useState(1);
   const [saved, setSaved] = useState(false);
   const [query, setQuery] = useState('');
@@ -104,8 +106,10 @@ function CustomTimetableInner() {
 
   useEffect(() => {
     const activeSemester = localStorage.getItem('fsc_active_semester');
-    if (activeSemester === 'summer') {
-      setIsSummer(true);
+    const isSummerMode = activeSemester === 'summer';
+    setIsSummer(isSummerMode);
+
+    if (isSummerMode) {
       fetch('/api/timetable', { cache: 'no-store' })
         .then(res => res.ok ? res.json() : { entries: [], catalog: [] })
         .then(data => {
@@ -114,12 +118,7 @@ function CustomTimetableInner() {
         })
         .catch(err => console.error('Error fetching custom timetable summer entries:', err));
     }
-  }, []);
 
-
-
-  // Load bundles and PREVIEW from localStorage on mount
-  useEffect(() => {
     // Check for a preview first
     const previewData = localStorage.getItem('fsc_timetable_preview');
     if (previewData) {
@@ -156,6 +155,10 @@ function CustomTimetableInner() {
     if (savedSemesterName) {
       setSemesterName(savedSemesterName);
     }
+
+    // Set initial row if empty
+    setRows([makeRow(`${baseId}-0`, isSummerMode)]);
+
     async function loadSemesterSettings() {
       try {
         const { supabase } = await import('@/lib/supabase');
@@ -174,7 +177,7 @@ function CustomTimetableInner() {
     }
     loadSemesterSettings();
     setIsLoaded(true);
-  }, []);
+  }, [baseId]);
 
 
   // Save bundles to localStorage whenever they change, but ONLY after initial load
@@ -198,7 +201,7 @@ function CustomTimetableInner() {
   function addRow() {
     const id = `${baseId}-${nextIdx}`;
     setNextIdx(n => n + 1);
-    setRows(prev => [...prev, makeRow(id)]);
+    setRows(prev => [...prev, makeRow(id, isSummer)]);
     setSaved(false);
   }
 
@@ -466,6 +469,7 @@ function CustomTimetableInner() {
                       canRemove={rows.length > 1}
                       timetableEntries={timetableEntries}
                       summerCatalog={summerCatalog}
+                      isSummer={isSummer}
                     />
                   ))}
                 </div>
@@ -619,6 +623,7 @@ function CustomTimetableInner() {
                       canRemove={rows.length > 1}
                       timetableEntries={timetableEntries}
                       summerCatalog={summerCatalog}
+                      isSummer={isSummer}
                     />
                   ))}
                 </div>
@@ -1044,11 +1049,19 @@ interface RowEditorProps {
   canRemove: boolean;
   timetableEntries: TimetableEntry[];
   summerCatalog: SummerCourseCatalogEntry[];
+  isSummer: boolean;
 }
 
-function RowEditor({ row, index, matchCount, showMatchHint, onUpdate, onRemove, canRemove, timetableEntries, summerCatalog }: RowEditorProps) {
+function RowEditor({ row, index, matchCount, showMatchHint, onUpdate, onRemove, canRemove, timetableEntries, summerCatalog, isSummer }: RowEditorProps) {
   const errorBase = 'border-red-400 ring-1 ring-red-400';
   const normalBase = 'border-[var(--color-border-strong)]';
+
+  const batchesList = useMemo(() => {
+    if (isSummer) {
+      return availableBatches.filter(b => b === 'Summer');
+    }
+    return availableBatches.filter(b => b !== 'Summer');
+  }, [isSummer]);
 
   const availableCourses = useMemo(() => {
     if (!row.batch || !row.stream || !row.category) return [];
@@ -1114,7 +1127,7 @@ function RowEditor({ row, index, matchCount, showMatchHint, onUpdate, onRemove, 
 
       <div className="flex flex-col gap-2">
         {/* Top fields in a row */}
-        <div className={`grid ${row.batch === 'Summer' ? 'grid-cols-2' : 'grid-cols-3'} gap-2`}>
+        <div className={`grid ${isSummer ? 'grid-cols-1' : 'grid-cols-3'} gap-2`}>
           {/* Batch */}
           <div className="flex flex-col gap-1">
             <label className="font-mono text-[9px] uppercase tracking-widest text-[var(--color-text-tertiary)]">
@@ -1127,20 +1140,20 @@ function RowEditor({ row, index, matchCount, showMatchHint, onUpdate, onRemove, 
                 if (val === 'Summer') {
                   onUpdate({ batch: val, stream: 'CS', category: 'regular', selection: '', errorBatch: false, errorStream: false, errorCategory: false, errorSelection: false });
                 } else {
-                  onUpdate({ batch: val, selection: '', errorBatch: false, errorSelection: false });
+                  onUpdate({ batch: val, stream: '', selection: '', errorBatch: false, errorStream: false, errorCategory: false, errorSelection: false });
                 }
               }}
               className={`h-9 px-2 rounded-md border text-xs font-mono bg-[var(--color-bg)] appearance-none focus:outline-none focus:ring-2 focus:ring-[var(--accent-cs)] cursor-pointer ${row.errorBatch ? errorBase : normalBase}`}
               aria-invalid={row.errorBatch}
             >
-              {availableBatches.map(b => (
+              {batchesList.map(b => (
                 <option key={b} value={b}>{b}</option>
               ))}
             </select>
           </div>
 
           {/* Department */}
-          {row.batch !== 'Summer' && (
+          {!isSummer && (
             <div className="flex flex-col gap-1">
               <label className="font-mono text-[9px] uppercase tracking-widest text-[var(--color-text-tertiary)]">
                 Dept
@@ -1160,7 +1173,7 @@ function RowEditor({ row, index, matchCount, showMatchHint, onUpdate, onRemove, 
           )}
 
           {/* Category */}
-          {row.batch !== 'Summer' && (
+          {!isSummer && (
             <div className="flex flex-col gap-1">
               <label className="font-mono text-[9px] uppercase tracking-widest text-[var(--color-text-tertiary)]">
                 Category

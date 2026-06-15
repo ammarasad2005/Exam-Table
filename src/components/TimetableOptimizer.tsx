@@ -86,10 +86,13 @@ export function TimetableOptimizer() {
 
   const [dynamicTimetableData, setDynamicTimetableData] = useState<any>(timetableData);
   const [summerCatalog, setSummerCatalog] = useState<SummerCourseCatalogEntry[]>([]);
+  const [isSummer, setIsSummer] = useState<boolean>(false);
 
   useEffect(() => {
     const activeSemester = localStorage.getItem('fsc_active_semester');
-    if (activeSemester === 'summer') {
+    const isSummerMode = activeSemester === 'summer';
+    setIsSummer(isSummerMode);
+    if (isSummerMode) {
       fetch('/api/timetable', { cache: 'no-store' })
         .then(res => res.ok ? res.json() : { entries: [], catalog: [] })
         .then(data => {
@@ -106,8 +109,13 @@ export function TimetableOptimizer() {
   }, []);
 
   const availableYears = useMemo(() => {
-    return ObjectKeys(dynamicTimetableData).filter((k: string) => k !== '__meta__');
-  }, [dynamicTimetableData]);
+    const keys = ObjectKeys(dynamicTimetableData).filter((k: string) => k !== '__meta__');
+    if (isSummer) {
+      return keys.filter((k: string) => k === 'Summer');
+    } else {
+      return keys.filter((k: string) => k !== 'Summer');
+    }
+  }, [dynamicTimetableData, isSummer]);
 
   const getDefaultRow = (): CourseRow => {
     const defaultYear = availableYears[0] || '';
@@ -751,7 +759,7 @@ export function TimetableOptimizer() {
                     </select>
                   </div>
 
-                  {row.year !== 'Summer' && (
+                  {!isSummer && (
                     <div className="flex-1 min-w-[80px]">
                       <label className="block text-xs font-medium text-[var(--color-text-tertiary)] mb-1 uppercase tracking-wider">Dept</label>
                       <select
@@ -762,7 +770,7 @@ export function TimetableOptimizer() {
                     </div>
                   )}
 
-                  {row.year !== 'Summer' && (
+                  {!isSummer && (
                     <div className="flex-1 min-w-[80px]">
                       <label className="block text-xs font-medium text-[var(--color-text-tertiary)] mb-1 uppercase tracking-wider">Type</label>
                       <select
@@ -835,7 +843,7 @@ export function TimetableOptimizer() {
                 onChange={e => {
                   const val = e.target.value;
                   setDefaultBatch(val);
-                  if (val === 'Summer') {
+                  if (val === 'Summer' || isSummer) {
                     setDefaultDept('CS');
                   }
                   setResult(null);
@@ -846,7 +854,7 @@ export function TimetableOptimizer() {
                 {availableYears.map((y: string) => <option key={y} value={y}>{y}</option>)}
               </select>
             </div>
-            {defaultBatch !== 'Summer' && (
+            {!isSummer && (
               <div className="flex-1">
                 <label className="block text-xs font-medium text-[var(--color-text-tertiary)] mb-1 uppercase tracking-wider">Department</label>
                 <select
