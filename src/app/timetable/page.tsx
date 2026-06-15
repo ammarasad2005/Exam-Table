@@ -324,6 +324,7 @@ function TimetablePageInner() {
     isSummer,
     entries,
     summerSelections,
+    summerCatalog,
     cleanedManualSectionByCourse,
     contextEntries,
     defaultSectionByCourse,

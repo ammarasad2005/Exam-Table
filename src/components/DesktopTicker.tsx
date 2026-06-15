@@ -150,7 +150,7 @@ export function DesktopTicker({
     }
 
     return [];
-  }, [isSummer, summerSelections, userConfig, bundles, allTimetableEntries, resultPreferences]);
+  }, [isSummer, summerSelections, summerCatalog, userConfig, bundles, allTimetableEntries, resultPreferences]);
 
   const currentDay = now.toLocaleDateString('en-US', { weekday: 'long' });
   const currentMins = now.getHours() * 60 + now.getMinutes();
