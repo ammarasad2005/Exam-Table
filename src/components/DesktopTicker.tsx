@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useMemo } from 'react';
 import { parseTimeRange, formatDuration } from '@/lib/dates';
-import { DAYS_ORDER, type TimetableEntry } from '@/lib/types';
+import { DAYS_ORDER, type TimetableEntry, type RawTimetableJSON } from '@/lib/types';
 import { ShieldAlert } from 'lucide-react';
 import {
   getLiveTimetableEntries,
@@ -10,6 +10,9 @@ import {
   type TimetableResultPreference,
   type UserConfig,
 } from '@/lib/timetable-live';
+
+// eslint-disable-next-line
+const timetableRaw: RawTimetableJSON = require('../../public/data/timetable.json');
 
 interface Bundle {
   id: string;
@@ -21,6 +24,8 @@ interface DesktopTickerProps {
   allTimetableEntries: TimetableEntry[];
   userConfig: UserConfig | null;
   bundles: Bundle[];
+  isSummer?: boolean;
+  summerSelections?: Record<string, string>;
 }
 
 interface OngoingClass extends TimetableEntry {
@@ -35,7 +40,13 @@ type TickerStatus =
   | { type: 'ongoing'; classes: OngoingClass[] }
   | { type: 'next'; classes: UpcomingClass[] };
 
-export function DesktopTicker({ allTimetableEntries, userConfig, bundles }: DesktopTickerProps) {
+export function DesktopTicker({
+  allTimetableEntries,
+  userConfig,
+  bundles,
+  isSummer = false,
+  summerSelections = {},
+}: DesktopTickerProps) {
 
   const [now, setNow] = useState(new Date());
   const [mounted, setMounted] = useState(false);
@@ -69,9 +80,42 @@ export function DesktopTicker({ allTimetableEntries, userConfig, bundles }: Desk
     }
   }, [userConfig]);
 
-  // ─── Timetable Logic (Hooks must be called before early returns) ────────
+  // Build sheet name to meta mapping
+  const sheetToMeta = useMemo(() => {
+    const map: Record<string, { day: string; isoDate: string; isMakeup: boolean; date: string }> = {};
+    const daysList = timetableRaw.__meta__?.days;
+    if (Array.isArray(daysList)) {
+      daysList.forEach(d => {
+        map[d.sheetName] = {
+          day: d.day,
+          isoDate: d.isoDate || '',
+          isMakeup: !!d.isMakeup,
+          date: d.date || '',
+        };
+      });
+    }
+    return map;
+  }, []);
 
+  // ─── Timetable Logic ──────────────────────────────────────────────────
   const relevantEntries = useMemo(() => {
+    if (isSummer) {
+      const filtered = allTimetableEntries.filter(e => {
+        if (!summerSelections[e.courseName]) return false;
+        const selectedSection = summerSelections[e.courseName];
+        if (!e.section || !selectedSection || selectedSection === 'A') return true;
+        return e.section === selectedSection;
+      });
+      // Deduplicate
+      const seen = new Set<string>();
+      return filtered.filter(entry => {
+        const key = `${entry.day}|${entry.time}|${entry.courseName}|${entry.section}|${entry.category}|${entry.department}|${entry.room}`;
+        if (seen.has(key)) return false;
+        seen.add(key);
+        return entry.time && (entry.time.includes('-') || entry.time.includes(' to '));
+      });
+    }
+
     if (userConfig) {
       return getLiveTimetableEntries(allTimetableEntries, userConfig, resultPreferences);
     }
@@ -100,18 +144,29 @@ export function DesktopTicker({ allTimetableEntries, userConfig, bundles }: Desk
     }
 
     return [];
-  }, [userConfig, bundles, allTimetableEntries, resultPreferences]);
-
-
+  }, [isSummer, summerSelections, userConfig, bundles, allTimetableEntries, resultPreferences]);
 
   const currentDay = now.toLocaleDateString('en-US', { weekday: 'long' });
   const currentMins = now.getHours() * 60 + now.getMinutes();
 
+  // local date YYYY-MM-DD
+  const year = now.getFullYear();
+  const month = String(now.getMonth() + 1).padStart(2, '0');
+  const dayStr = String(now.getDate()).padStart(2, '0');
+  const todayISO = `${year}-${month}-${dayStr}`;
+
   const status = useMemo((): TickerStatus | null => {
     if (relevantEntries.length === 0) return null;
 
+    // A class is ongoing if today's date matches the sheet's isoDate, or falls back to canonical weekday
     const ongoing = relevantEntries.filter(e => {
-      if (e.day !== currentDay) return false;
+      const meta = sheetToMeta[e.day];
+      const canonicalDay = meta?.day ?? e.day;
+      const isoDate = meta?.isoDate ?? '';
+
+      const isToday = isoDate ? (isoDate === todayISO) : (canonicalDay === currentDay);
+      if (!isToday) return false;
+
       const { start, end } = parseTimeRange(e.time);
       return currentMins >= start && currentMins < end;
     });
@@ -121,58 +176,91 @@ export function DesktopTicker({ allTimetableEntries, userConfig, bundles }: Desk
         type: 'ongoing',
         classes: ongoing.map(e => ({
           ...e,
-          remaining: parseTimeRange(e.time).end - currentMins
-        }))
+          remaining: parseTimeRange(e.time).end - currentMins,
+        })),
       };
     }
 
-    const sorted = [...relevantEntries].sort((a, b) => {
-      const dayA = DAYS_ORDER.indexOf(a.day);
-      const dayB = DAYS_ORDER.indexOf(b.day);
-      if (dayA !== dayB) return dayA - dayB;
+    // Filter out past classes
+    const activeEntries = relevantEntries.filter(e => {
+      const meta = sheetToMeta[e.day];
+      if (meta?.isoDate) {
+        return meta.isoDate >= todayISO;
+      }
+      return true;
+    });
+
+    if (activeEntries.length === 0) return null;
+
+    // Sort active entries chronologically
+    const sorted = [...activeEntries].sort((a, b) => {
+      const metaA = sheetToMeta[a.day];
+      const metaB = sheetToMeta[b.day];
+
+      if (metaA?.isoDate && metaB?.isoDate) {
+        if (metaA.isoDate !== metaB.isoDate) {
+          return metaA.isoDate.localeCompare(metaB.isoDate);
+        }
+      } else if (metaA?.isoDate) {
+        return -1;
+      } else if (metaB?.isoDate) {
+        return 1;
+      } else {
+        const dayA = DAYS_ORDER.indexOf(metaA?.day ?? a.day);
+        const dayB = DAYS_ORDER.indexOf(metaB?.day ?? b.day);
+        if (dayA !== dayB) return dayA - dayB;
+      }
+
       return parseTimeRange(a.time).start - parseTimeRange(b.time).start;
     });
 
-    const nextIdx = sorted.findIndex(e => {
-      const eDayIdx = DAYS_ORDER.indexOf(e.day);
-      const cDayIdx = DAYS_ORDER.indexOf(currentDay);
-      if (eDayIdx > cDayIdx) return true;
-      if (eDayIdx === cDayIdx && parseTimeRange(e.time).start > currentMins) return true;
-      return false;
-    });
-
-    const nextClass = nextIdx !== -1 ? sorted[nextIdx] : sorted[0];
-    const allNext = sorted.filter(e => e.day === nextClass.day && parseTimeRange(e.time).start === parseTimeRange(nextClass.time).start);
+    const nextClass = sorted[0];
+    const { start: nextStartMins } = parseTimeRange(nextClass.time);
+    
+    // Find all next classes starting at the same time on the same day
+    const allNext = sorted.filter(e => 
+      e.day === nextClass.day && 
+      parseTimeRange(e.time).start === nextStartMins
+    );
 
     let minsUntil = 0;
-    const { start } = parseTimeRange(nextClass.time);
-    if (nextClass.day === currentDay) {
-      minsUntil = start - currentMins;
+    const metaNext = sheetToMeta[nextClass.day];
+
+    if (metaNext?.isoDate) {
+      const sh = Math.floor(nextStartMins / 60);
+      const sm = nextStartMins % 60;
+      const [ny, nm, nd] = metaNext.isoDate.split('-').map(Number);
+      const targetDate = new Date(ny, nm - 1, nd, sh, sm, 0);
+      const diffMs = targetDate.getTime() - now.getTime();
+      minsUntil = Math.max(0, Math.floor(diffMs / 60000));
     } else {
-      const nextDayIdx = DAYS_ORDER.indexOf(nextClass.day);
-      const curDayIdx = DAYS_ORDER.indexOf(currentDay);
-      let daysDiff = (nextDayIdx - curDayIdx + 7) % 7;
-      if (daysDiff === 0 && start <= currentMins) daysDiff = 7;
-      minsUntil = daysDiff * 24 * 60 - currentMins + start;
+      const canonicalNextDay = metaNext?.day ?? nextClass.day;
+      if (canonicalNextDay === currentDay) {
+        minsUntil = nextStartMins - currentMins;
+      } else {
+        const nextDayIdx = DAYS_ORDER.indexOf(canonicalNextDay);
+        const curDayIdx = DAYS_ORDER.indexOf(currentDay);
+        let daysDiff = (nextDayIdx - curDayIdx + 7) % 7;
+        if (daysDiff === 0 && nextStartMins <= currentMins) daysDiff = 7;
+        minsUntil = daysDiff * 24 * 60 - currentMins + nextStartMins;
+      }
     }
 
     return {
       type: 'next',
       classes: allNext.map(e => ({
         ...e,
-        until: minsUntil
-      }))
+        until: minsUntil,
+      })),
     };
-  }, [relevantEntries, currentDay, currentMins]);
+  }, [relevantEntries, currentDay, currentMins, todayISO, sheetToMeta, now]);
 
   // ─── Early Return for Hydration (Must be after all Hooks) ───────────────
-
   if (!mounted) {
     return <div className="hidden md:block mb-12 h-[180px] opacity-0" aria-hidden="true" />;
   }
 
   // ─── Rendering Logic ──────────────────────────────────────────────────────
-
   const timeFull = now.toLocaleTimeString('en-US', {
     hour: '2-digit',
     minute: '2-digit',
@@ -205,7 +293,9 @@ export function DesktopTicker({ allTimetableEntries, userConfig, bundles }: Desk
         </div>
         <div className="mt-6 border-t border-[var(--color-border)] pt-4 opacity-50">
           <p className="text-[11px] text-[var(--color-text-tertiary)] max-w-sm leading-relaxed font-mono">
-            No preferences detected. Live class tracking will appear here once saved.
+            {isSummer 
+              ? 'No summer courses selected. Live class tracking will appear here once selected.'
+              : 'No preferences detected. Live class tracking will appear here once saved.'}
           </p>
         </div>
       </div>
@@ -246,21 +336,22 @@ export function DesktopTicker({ allTimetableEntries, userConfig, bundles }: Desk
 
           <div className="flex flex-col gap-1.5">
             {status.classes.map((cls, idx) => {
-              const accentColor = `var(--accent-${cls.department.toLowerCase()})`;
+              const deptCode = cls.department?.toLowerCase() || 'cs';
+              const accentColor = `var(--accent-${deptCode})`;
               const label = status.type === 'ongoing' 
                 ? `${formatDuration((cls as OngoingClass).remaining)} left` 
                 : `starts in ${formatDuration((cls as UpcomingClass).until)}`;
               
               const pillStyle = {
-                borderColor: `rgba(var(--accent-rgb-${cls.department.toLowerCase()}), 0.25)`,
+                borderColor: `rgba(var(--accent-rgb-${deptCode}), 0.25)`,
                 color: accentColor,
-                backgroundColor: `rgba(var(--accent-rgb-${cls.department.toLowerCase()}), 0.08)`
+                backgroundColor: `rgba(var(--accent-rgb-${deptCode}), 0.08)`
               };
 
               return (
                 <div key={idx} className="grid grid-cols-3 gap-2 w-full max-w-xl">
                   <div className="h-12 px-4 flex items-center justify-center rounded-md border font-mono text-sm font-bold shadow-sm whitespace-nowrap" style={pillStyle}>
-                    {cls.room}
+                    {cls.room || 'TBA'}
                   </div>
                   
                   <div className="h-12 px-4 flex items-center justify-center rounded-md border font-mono text-sm font-bold shadow-sm truncate text-center" style={pillStyle}>

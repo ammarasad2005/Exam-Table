@@ -166,6 +166,9 @@ export default function RootPage() {
   const [userConfig, setUserConfig] = useState<UserConfig | null>(null);
   const [bundles, setBundles] = useState<Bundle[]>([]);
   const [mounted, setMounted] = useState(false);
+  const [isSummerMode, setIsSummerMode] = useState<boolean>(false);
+  const [summerCoursesList, setSummerCoursesList] = useState<TimetableEntry[]>([]);
+  const [summerSelections, setSummerSelections] = useState<Record<string, string>>({});
 
   useEffect(() => {
     setMounted(true);
@@ -175,6 +178,54 @@ export default function RootPage() {
       const storedBundles = localStorage.getItem('fsc_custom_bundles');
       if (storedBundles) setBundles(JSON.parse(storedBundles));
     } catch { }
+
+    const savedActiveSemester = localStorage.getItem('fsc_active_semester');
+    if (savedActiveSemester === 'summer') {
+      setIsSummerMode(true);
+      fetch('/api/timetable', { cache: 'no-store' })
+        .then(res => res.ok ? res.json() : { entries: [] })
+        .then(data => {
+          setSummerCoursesList(data.entries ?? []);
+          const storedSelections = localStorage.getItem('fsc_summer_courses');
+          if (storedSelections) setSummerSelections(JSON.parse(storedSelections));
+        })
+        .catch(err => console.error('Error fetching initial summer courses:', err));
+    }
+
+    async function checkSemesterType() {
+      try {
+        const { supabase } = await import('@/lib/supabase');
+        const { data, error } = await supabase
+          .from('semester_settings')
+          .select('*')
+          .eq('id', 1)
+          .single();
+
+        if (!error && data) {
+          const isSummer = data.semester_type === 'summer';
+          setIsSummerMode(isSummer);
+          localStorage.setItem('fsc_active_semester', data.semester_type);
+
+          if (isSummer) {
+            const res = await fetch('/api/timetable', { cache: 'no-store' });
+            if (res.ok) {
+              const apiData = await res.json();
+              setSummerCoursesList(apiData.entries ?? []);
+              const storedSelections = localStorage.getItem('fsc_summer_courses');
+              if (storedSelections) setSummerSelections(JSON.parse(storedSelections));
+            }
+          } else {
+            setSummerCoursesList([]);
+          }
+        } else {
+          localStorage.setItem('fsc_active_semester', 'regular');
+          setIsSummerMode(false);
+        }
+      } catch (err) {
+        console.error('Error checking semester type:', err);
+      }
+    }
+    checkSemesterType();
   }, []);
 
   // Typing animation on mount
@@ -335,9 +386,11 @@ export default function RootPage() {
             {/* Clock + Next Up */}
             {mounted && (
               <DesktopTicker
-                allTimetableEntries={allTimetableEntries}
+                allTimetableEntries={isSummerMode ? summerCoursesList : allTimetableEntries}
                 userConfig={userConfig}
                 bundles={bundles}
+                isSummer={isSummerMode}
+                summerSelections={summerSelections}
               />
             )}
 

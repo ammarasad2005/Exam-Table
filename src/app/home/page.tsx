@@ -916,9 +916,11 @@ export default function SetupPage() {
             </div>
 
             <DesktopTicker 
-                allTimetableEntries={allTimetableEntries} 
+                allTimetableEntries={isSummerMode ? summerCoursesList : allTimetableEntries} 
                 userConfig={userConfig} 
                 bundles={bundles} 
+                isSummer={isSummerMode}
+                summerSelections={selectedSummerCourses}
             />
 
 
