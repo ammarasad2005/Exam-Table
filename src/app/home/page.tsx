@@ -224,21 +224,21 @@ export default function SetupPage() {
       sectionsMap.set(entry.courseName, secs);
     });
 
-    if (summerCatalog.length > 0) {
-      // Admin has a catalog — respect hidden, apply aliases
-      return summerCatalog
-        .filter(c => !c.hidden)
-        .map(c => ({
-          sheetName: c.sheetName,
-          displayName: c.displayName ?? c.sheetName,
-          sections: sectionsMap.get(c.sheetName) ?? ['A'],
-        }))
-        .sort((a, b) => a.displayName.localeCompare(b.displayName));
-    }
+    // Build unique courses checklist. By default, all courses in the spreadsheet are visible.
+    // We only exclude those that are explicitly hidden in the admin panel.
+    const coursesFromSheet = Array.from(sectionsMap.entries()).map(([sheetName, sections]) => {
+      const catalogEntry = summerCatalog.find(c => c.sheetName === sheetName);
+      
+      return {
+        sheetName,
+        displayName: catalogEntry?.displayName ?? sheetName,
+        hidden: catalogEntry ? catalogEntry.hidden : false, // visible by default
+        sections
+      };
+    });
 
-    // No catalog yet — derive from raw entries with raw names
-    return Array.from(sectionsMap.entries())
-      .map(([sheetName, sections]) => ({ sheetName, displayName: sheetName, sections }))
+    return coursesFromSheet
+      .filter(c => !c.hidden)
       .sort((a, b) => a.displayName.localeCompare(b.displayName));
   }, [summerCoursesList, summerCatalog]);
 
