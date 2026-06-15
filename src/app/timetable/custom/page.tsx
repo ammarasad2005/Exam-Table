@@ -1125,7 +1125,7 @@ function RowEditor({ row, index, matchCount, showMatchHint, onUpdate, onRemove, 
               onChange={e => {
                 const val = e.target.value;
                 if (val === 'Summer') {
-                  onUpdate({ batch: val, stream: 'CS', selection: '', errorBatch: false, errorStream: false, errorSelection: false });
+                  onUpdate({ batch: val, stream: 'CS', category: 'regular', selection: '', errorBatch: false, errorStream: false, errorCategory: false, errorSelection: false });
                 } else {
                   onUpdate({ batch: val, selection: '', errorBatch: false, errorSelection: false });
                 }
@@ -1160,21 +1160,23 @@ function RowEditor({ row, index, matchCount, showMatchHint, onUpdate, onRemove, 
           )}
 
           {/* Category */}
-          <div className="flex flex-col gap-1">
-            <label className="font-mono text-[9px] uppercase tracking-widest text-[var(--color-text-tertiary)]">
-              Category
-            </label>
-            <select
-              value={row.category}
-              onChange={e => onUpdate({ category: e.target.value, selection: '', errorCategory: false, errorSelection: false })}
-              className={`h-9 px-2 rounded-md border text-xs font-mono bg-[var(--color-bg)] appearance-none focus:outline-none focus:ring-2 focus:ring-[var(--accent-cs)] cursor-pointer ${row.errorCategory ? errorBase : normalBase}`}
-              aria-invalid={row.errorCategory}
-            >
-              {CATEGORIES.map(c => (
-                <option key={c} value={c}>{c === 'regular' ? 'Regular' : 'Repeat'}</option>
-              ))}
-            </select>
-          </div>
+          {row.batch !== 'Summer' && (
+            <div className="flex flex-col gap-1">
+              <label className="font-mono text-[9px] uppercase tracking-widest text-[var(--color-text-tertiary)]">
+                Category
+              </label>
+              <select
+                value={row.category}
+                onChange={e => onUpdate({ category: e.target.value, selection: '', errorCategory: false, errorSelection: false })}
+                className={`h-9 px-2 rounded-md border text-xs font-mono bg-[var(--color-bg)] appearance-none focus:outline-none focus:ring-2 focus:ring-[var(--accent-cs)] cursor-pointer ${row.errorCategory ? errorBase : normalBase}`}
+                aria-invalid={row.errorCategory}
+              >
+                {CATEGORIES.map(c => (
+                  <option key={c} value={c}>{c === 'regular' ? 'Regular' : 'Repeat'}</option>
+                ))}
+              </select>
+            </div>
+          )}
         </div>
 
         {/* Course Selection (Full width below) */}

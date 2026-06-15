@@ -762,14 +762,16 @@ export function TimetableOptimizer() {
                     </div>
                   )}
 
-                  <div className="flex-1 min-w-[80px]">
-                    <label className="block text-xs font-medium text-[var(--color-text-tertiary)] mb-1 uppercase tracking-wider">Type</label>
-                    <select
-                      className="w-full p-2 border border-[var(--color-border)] rounded-md outline-none focus:ring-2 focus:ring-[var(--accent-cs)] text-sm bg-[var(--color-bg)] text-[var(--color-text-primary)]"
-                      value={row.type} onChange={e => updateRowField(idx, 'type', e.target.value)}>
-                      {availableTypes.map((t: string) => <option key={t} value={t}>{t}</option>)}
-                    </select>
-                  </div>
+                  {row.year !== 'Summer' && (
+                    <div className="flex-1 min-w-[80px]">
+                      <label className="block text-xs font-medium text-[var(--color-text-tertiary)] mb-1 uppercase tracking-wider">Type</label>
+                      <select
+                        className="w-full p-2 border border-[var(--color-border)] rounded-md outline-none focus:ring-2 focus:ring-[var(--accent-cs)] text-sm bg-[var(--color-bg)] text-[var(--color-text-primary)]"
+                        value={row.type} onChange={e => updateRowField(idx, 'type', e.target.value)}>
+                        {availableTypes.map((t: string) => <option key={t} value={t}>{t}</option>)}
+                      </select>
+                    </div>
+                  )}
 
                   <div className="flex-[2] min-w-[150px]">
                     <label className="block text-xs font-bold text-[var(--color-text-primary)] mb-1">Course</label>
