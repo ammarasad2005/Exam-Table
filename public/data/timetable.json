@@ -82,7 +82,7 @@
                 "elective_group": null
               }
             ],
-            "Tuesday": [
+            "Wednesday": [
               {
                 "room": "C-301",
                 "time": "12:10-01:55",
@@ -91,8 +91,10 @@
                 "is_elective": false,
                 "elective_group": null
               }
-            ],
-            "Wednesday": [
+            ]
+          },
+          "Cancelled": {
+            "Tuesday": [
               {
                 "room": "C-301",
                 "time": "12:10-01:55",
