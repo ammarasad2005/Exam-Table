@@ -21,6 +21,7 @@ import { Header } from '@/components/Header';
 import { AlertCircle } from 'lucide-react';
 import type { TimetableEntry, RawTimetableJSON, SummerCourseCatalogEntry } from '@/lib/types';
 import { DAYS_ORDER } from '@/lib/types';
+import { MakeupDaysSidebar } from '@/components/MakeupDaysSidebar';
 
 // eslint-disable-next-line
 const timetableRaw: RawTimetableJSON = require('../../../public/data/timetable.json');
@@ -80,6 +81,37 @@ function TimetablePageInner() {
   const [isOtherCoursesExpanded, setIsOtherCoursesExpanded] = useState(false);
   const [saveFeedback, setSaveFeedback] = useState('');
   const [repeatPromptCourse, setRepeatPromptCourse] = useState<{ key: CourseKey, section: string } | null>(null);
+  const [isMakeupSidebarOpen, setIsMakeupSidebarOpen] = useState(false);
+
+  const rawDaysList = useMemo(() => {
+    return Array.isArray(timetableRaw.__meta__?.days)
+      ? timetableRaw.__meta__.days
+      : DAYS_ORDER.map(d => ({
+          day: d,
+          sheetName: d,
+          date: '',
+          isoDate: '',
+          isMakeup: false
+        }));
+  }, []);
+
+  const currentMonthMakeupDays = useMemo(() => {
+    const today = new Date();
+    const currentYear = today.getFullYear();
+    const currentMonth = today.getMonth();
+    return rawDaysList.filter(d => {
+      if (!d.isMakeup && !d.date) return false;
+      if (d.isoDate) {
+        const [y, m] = d.isoDate.split('-').map(Number);
+        return y === currentYear && (m - 1) === currentMonth;
+      }
+      return false;
+    });
+  }, [rawDaysList]);
+
+  const currentMonthName = useMemo(() => {
+    return new Date().toLocaleDateString('en-US', { month: 'long' });
+  }, []);
 
   const [entries, setEntries] = useState<TimetableEntry[]>(allEntries);
   const [isSummer, setIsSummer] = useState<boolean>(false);
@@ -533,47 +565,55 @@ function TimetablePageInner() {
 
   const reorderedGrouped = useMemo(() => {
     const today = new Date();
-    const year = today.getFullYear();
-    const month = String(today.getMonth() + 1).padStart(2, '0');
-    const dayStr = String(today.getDate()).padStart(2, '0');
-    const todayISO = `${year}-${month}-${dayStr}`;
+    const currentDayOfWeek = today.getDay();
+    const daysToMonday = currentDayOfWeek === 0 ? 6 : currentDayOfWeek - 1;
+
+    const monday = new Date(today);
+    monday.setDate(today.getDate() - daysToMonday);
+    monday.setHours(0, 0, 0, 0);
+
+    const sunday = new Date(monday);
+    sunday.setDate(monday.getDate() + 6);
+    sunday.setHours(23, 59, 59, 999);
+
+    const toISODate = (d: Date) => {
+      const y = d.getFullYear();
+      const m = String(d.getMonth() + 1).padStart(2, '0');
+      const date = String(d.getDate()).padStart(2, '0');
+      return `${y}-${m}-${date}`;
+    };
+
+    const mondayISO = toISODate(monday);
+    const sundayISO = toISODate(sunday);
+    const todayISO = toISODate(today);
     const todayDayName = today.toLocaleDateString('en-US', { weekday: 'long' });
 
-    // 1. Get the list of days from metadata
-    const rawDaysList = Array.isArray(timetableRaw.__meta__?.days)
-      ? timetableRaw.__meta__.days
-      : DAYS_ORDER.map(d => ({
-          day: d,
-          sheetName: d,
-          date: '',
-          isoDate: '',
-          isMakeup: false
-        }));
-
-    // 2. Filter out past sheets (Option B)
+    // 1. Filter rawDaysList to include only sheets in the current week (Monday-Sunday)
     const activeDays = rawDaysList.filter(d => {
       if (d.isoDate) {
-        return d.isoDate >= todayISO;
+        return d.isoDate >= mondayISO && d.isoDate <= sundayISO;
       }
       return true;
     });
 
-    // 3. Sort active days chronologically by isoDate
+    // 2. Sort active days: Today first, then other days Monday to Saturday/Sunday (today exclusive)
     activeDays.sort((a, b) => {
-      if (a.isoDate && b.isoDate) {
-        return a.isoDate.localeCompare(b.isoDate);
-      }
-      if (a.isoDate) return -1;
-      if (b.isoDate) return 1;
-      // fallback: preserve order in rawDaysList
-      return rawDaysList.indexOf(a) - rawDaysList.indexOf(b);
+      const isTodayA = a.isoDate === todayISO || a.day.toLowerCase() === todayDayName.toLowerCase();
+      const isTodayB = b.isoDate === todayISO || b.day.toLowerCase() === todayDayName.toLowerCase();
+
+      if (isTodayA) return -1;
+      if (isTodayB) return 1;
+
+      // Fallback: sort by their position in DAYS_ORDER
+      const getDayIndex = (dayName: string) => {
+        const idx = DAYS_ORDER.indexOf(dayName);
+        return idx === -1 ? 999 : idx;
+      };
+      return getDayIndex(a.day) - getDayIndex(b.day);
     });
 
-    // 4. Identify "Today" index
-    let todayIndex = activeDays.findIndex(d => d.isoDate === todayISO);
-    if (todayIndex === -1) {
-      todayIndex = activeDays.findIndex(d => d.day.toLowerCase() === todayDayName.toLowerCase());
-    }
+    // 3. Find Today's sheet name / index to identify which tab is Today
+    const todaySheetName = activeDays.find(d => d.isoDate === todayISO || d.day.toLowerCase() === todayDayName.toLowerCase())?.sheetName || '';
 
     const groupedMap = new Map(grouped.map(g => [g.day, g.entries]));
     const result: {
@@ -585,8 +625,8 @@ function TimetablePageInner() {
       isMakeup: boolean;
     }[] = [];
 
-    activeDays.forEach((d, idx) => {
-      const isToday = idx === todayIndex;
+    activeDays.forEach((d) => {
+      const isToday = d.sheetName === todaySheetName || d.isoDate === todayISO || d.day.toLowerCase() === todayDayName.toLowerCase();
       const entries = groupedMap.get(d.sheetName) || [];
 
       // Include the day if it is Today (even if 0 classes) OR if it has entries > 0
@@ -603,7 +643,7 @@ function TimetablePageInner() {
     });
 
     return result;
-  }, [grouped]);
+  }, [grouped, rawDaysList]);
 
   const handleEnableRepeatsFromPrompt = () => {
     if (repeatPromptCourse) {
@@ -656,6 +696,14 @@ function TimetablePageInner() {
             <span className="font-mono text-sm text-[var(--color-text-secondary)] truncate">
               {isSummer ? semesterName : `Batch ${batch} · Section ${section}`}
             </span>
+            {currentMonthMakeupDays.length > 0 && (
+              <button
+                onClick={() => setIsMakeupSidebarOpen(true)}
+                className="ml-2 font-mono text-[10px] md:text-xs font-bold px-2 py-0.5 rounded-full border border-amber-500/20 bg-amber-500/10 text-amber-600 dark:text-amber-400 hover:bg-amber-500/20 active:scale-95 transition-all shrink-0 flex items-center gap-1"
+              >
+                <span>📅</span> {currentMonthName} Makeup Days
+              </button>
+            )}
           </div>
         </div>
       </Header>
@@ -1179,6 +1227,15 @@ function TimetablePageInner() {
           onClose={() => setSelected(null)}
           isSummer={isSummer}
           displayName={summerDisplayName(selected.courseName)}
+        />
+      )}
+
+      {/* ── Makeup Days Sidebar ─────────────────────────────────────────── */}
+      {isMakeupSidebarOpen && (
+        <MakeupDaysSidebar
+          onClose={() => setIsMakeupSidebarOpen(false)}
+          makeupDays={currentMonthMakeupDays}
+          monthName={currentMonthName}
         />
       )}
     </div>
