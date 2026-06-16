@@ -183,43 +183,33 @@ def resolve_timetable_sheets(sheet_id, sheet_names, explicit_mappings=None):
                     matched_sheets.append(sheet_name)
 
             if matched_sheets:
-                enriched = []
-                for title in matched_sheets:
-                    parsed_date, explicit_year = parse_sheet_date(title, target_date)
-                    enriched.append((title, parsed_date, explicit_year))
+                for matched_sheet in matched_sheets:
+                    parsed_date, explicit_year = parse_sheet_date(matched_sheet, target_date)
+                    if parsed_date:
+                        date_label = parsed_date.strftime("%d %b")
+                        iso_label = parsed_date.strftime("%Y-%m-%d")
+                        is_makeup = True
+                    else:
+                        date_label = extract_date_label(matched_sheet) or ""
+                        iso_label = target_date.strftime("%Y-%m-%d")
+                        is_makeup = "makeup" in matched_sheet.lower() or "rescheduled" in matched_sheet.lower()
 
-                dated = [item for item in enriched if item[1] is not None]
-                if dated:
-                    matched_sheet, parsed_sheet_date, explicit_year = min(
-                        dated,
-                        key=lambda item: (
-                            abs((item[1] - target_date).days),
-                            0 if (item[1] - target_date).days <= 0 else 1,
-                            -len(item[0]),
-                            sheet_names.index(item[0]),
-                        ),
-                    )
-                    date_label = parsed_sheet_date.strftime("%d %b")
-                    iso_label = parsed_sheet_date.strftime("%Y-%m-%d")
-                else:
-                    matched_sheet = max(matched_sheets, key=lambda title: (len(title), -sheet_names.index(title)))
-                    date_label = extract_date_label(matched_sheet)
-                    parsed_d, explicit_year = parse_sheet_date(matched_sheet, target_date)
-                    iso_label = parsed_d.strftime("%Y-%m-%d") if parsed_d else target_date.strftime("%Y-%m-%d")
-
-                used.add(matched_sheet)
+                    resolved.append({
+                        "day": day,
+                        "sheet_name": matched_sheet,
+                        "date": date_label,
+                        "isoDate": iso_label,
+                        "isMakeup": is_makeup
+                    })
+                    used.add(matched_sheet)
             else:
-                matched_sheet = day
-                date_label = ""
-                iso_label = target_date.strftime("%Y-%m-%d")
-
-            resolved.append({
-                "day": day,
-                "sheet_name": matched_sheet,
-                "date": date_label,
-                "isoDate": iso_label,
-                "isMakeup": "makeup" in matched_sheet.lower() or "rescheduled" in matched_sheet.lower()
-            })
+                resolved.append({
+                    "day": day,
+                    "sheet_name": day,
+                    "date": "",
+                    "isoDate": target_date.strftime("%Y-%m-%d"),
+                    "isMakeup": False
+                })
 
     return resolved
 
@@ -335,7 +325,8 @@ def resolve_sheets_via_llm(sheet_names, api_key, model="llama-3.3-70b-versatile"
     
     headers = {
         "Content-Type": "application/json",
-        "Authorization": f"Bearer {api_key}"
+        "Authorization": f"Bearer {api_key}",
+        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
     }
     
     try:
