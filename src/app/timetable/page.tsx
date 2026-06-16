@@ -95,19 +95,201 @@ function TimetablePageInner() {
         }));
   }, []);
 
-  const currentMonthMakeupDays = useMemo(() => {
+  const resolvedData = useMemo(() => {
     const today = new Date();
+    today.setHours(0, 0, 0, 0);
+
     const currentYear = today.getFullYear();
-    const currentMonth = today.getMonth();
-    return rawDaysList.filter(d => {
-      if (!d.isMakeup && !d.date) return false;
-      if (d.isoDate) {
-        const [y, m] = d.isoDate.split('-').map(Number);
-        return y === currentYear && (m - 1) === currentMonth;
+
+    const currentDayOfWeek = today.getDay();
+    const daysToMonday = currentDayOfWeek === 0 ? 6 : currentDayOfWeek - 1;
+
+    const monday = new Date(today);
+    monday.setDate(today.getDate() - daysToMonday);
+    monday.setHours(0, 0, 0, 0);
+
+    const sunday = new Date(monday);
+    sunday.setDate(monday.getDate() + 6);
+    sunday.setHours(23, 59, 59, 999);
+
+    const thirtyDaysLater = new Date(today);
+    thirtyDaysLater.setDate(today.getDate() + 30);
+    thirtyDaysLater.setHours(23, 59, 59, 999);
+
+    const toISODate = (d: Date) => {
+      const y = d.getFullYear();
+      const m = String(d.getMonth() + 1).padStart(2, '0');
+      const date = String(d.getDate()).padStart(2, '0');
+      return `${y}-${m}-${date}`;
+    };
+
+    const mondayISO = toISODate(monday);
+    const sundayISO = toISODate(sunday);
+    const todayISO = toISODate(today);
+    const todayDayName = today.toLocaleDateString('en-US', { weekday: 'long' });
+
+    const parseExplicitDate = (sheetName: string): Date | null => {
+      const match = sheetName.match(/\(([^)]+)\)/);
+      if (!match) return null;
+      
+      const dateStr = match[1];
+      let parsed = Date.parse(dateStr);
+      if (isNaN(parsed)) {
+        const months = ['jan', 'feb', 'mar', 'apr', 'may', 'jun', 'jul', 'aug', 'sep', 'oct', 'nov', 'dec'];
+        const cleanStr = dateStr.toLowerCase().replace(/[^a-z0-9\s]/g, ' ');
+        const parts = cleanStr.split(/\s+/).filter(Boolean);
+        
+        let dayNum = 1;
+        let monthIndex = -1;
+        
+        for (const part of parts) {
+          const dayVal = parseInt(part);
+          if (!isNaN(dayVal) && dayVal >= 1 && dayVal <= 31) {
+            dayNum = dayVal;
+          } else {
+            const mIdx = months.findIndex(m => part.startsWith(m));
+            if (mIdx !== -1) {
+              monthIndex = mIdx;
+            }
+          }
+        }
+        
+        if (monthIndex !== -1) {
+          return new Date(currentYear, monthIndex, dayNum);
+        }
+      } else {
+        const d = new Date(parsed);
+        if (!/\d{4}/.test(dateStr)) {
+          d.setFullYear(currentYear);
+        }
+        return d;
       }
-      return false;
+      return null;
+    };
+
+    interface ResolvedSheet {
+      day: string;
+      sheetName: string;
+      isoDate: string;
+      isMakeup: boolean;
+      dateStr: string;
+      isDated: boolean;
+    }
+
+    const resolvedSheets: ResolvedSheet[] = [];
+    const sidebarMakeupDays: ResolvedSheet[] = [];
+
+    // Separate dated and undated sheets
+    const undatedSheets = rawDaysList.filter(d => !parseExplicitDate(d.sheetName));
+    const datedSheets = rawDaysList.filter(d => !!parseExplicitDate(d.sheetName));
+
+    const currentWeekDatedDays = new Set<string>();
+
+    // Process dated sheets
+    const processedDated = datedSheets.map(s => {
+      const dateObj = parseExplicitDate(s.sheetName);
+      if (!dateObj) return null;
+      dateObj.setHours(0, 0, 0, 0);
+
+      // Rule: must not have passed (date >= today) and must be within 30 days
+      if (dateObj < today || dateObj > thirtyDaysLater) {
+        return null;
+      }
+
+      const isoDate = toISODate(dateObj);
+      const isCurrentWeek = isoDate >= mondayISO && isoDate <= sundayISO;
+      const dateStr = dateObj.toLocaleDateString('en-US', { day: 'numeric', month: 'short' });
+
+      const res: ResolvedSheet = {
+        day: s.day,
+        sheetName: s.sheetName,
+        isoDate,
+        isMakeup: true,
+        dateStr,
+        isDated: true
+      };
+
+      if (isCurrentWeek) {
+        currentWeekDatedDays.add(s.day.toLowerCase());
+      }
+
+      return { res, isCurrentWeek };
+    }).filter(Boolean) as { res: ResolvedSheet; isCurrentWeek: boolean }[];
+
+    // Process undated sheets
+    undatedSheets.forEach(s => {
+      const dayIndex = DAYS_ORDER.indexOf(s.day);
+      const targetDate = new Date(monday);
+      targetDate.setDate(monday.getDate() + dayIndex);
+      targetDate.setHours(0, 0, 0, 0);
+
+      const hasCurrentWeekDated = currentWeekDatedDays.has(s.day.toLowerCase());
+
+      if (hasCurrentWeekDated) {
+        // Rule: assign to the NEXT week
+        const nextWeekDate = new Date(targetDate);
+        nextWeekDate.setDate(targetDate.getDate() + 7);
+        
+        resolvedSheets.push({
+          day: s.day,
+          sheetName: s.sheetName,
+          isoDate: toISODate(nextWeekDate),
+          isMakeup: false,
+          dateStr: nextWeekDate.toLocaleDateString('en-US', { day: 'numeric', month: 'short' }),
+          isDated: false
+        });
+      } else {
+        // Rule: assign to the current week
+        resolvedSheets.push({
+          day: s.day,
+          sheetName: s.sheetName,
+          isoDate: toISODate(targetDate),
+          isMakeup: false,
+          dateStr: targetDate.toLocaleDateString('en-US', { day: 'numeric', month: 'short' }),
+          isDated: false
+        });
+      }
     });
+
+    // Put dated sheets in resolvedSheets or sidebarMakeupDays
+    processedDated.forEach(({ res, isCurrentWeek }) => {
+      if (isCurrentWeek) {
+        resolvedSheets.push(res);
+      } else {
+        sidebarMakeupDays.push(res);
+      }
+    });
+
+    // Sort resolved sheets: Today first, then other days by isoDate / DAYS_ORDER index
+    resolvedSheets.sort((a, b) => {
+      const isTodayA = a.isoDate === todayISO || a.day.toLowerCase() === todayDayName.toLowerCase();
+      const isTodayB = b.isoDate === todayISO || b.day.toLowerCase() === todayDayName.toLowerCase();
+
+      if (isTodayA) return -1;
+      if (isTodayB) return 1;
+
+      const getDayIndex = (dayName: string) => {
+        const idx = DAYS_ORDER.indexOf(dayName);
+        return idx === -1 ? 999 : idx;
+      };
+
+      if (a.isoDate && b.isoDate) {
+        return a.isoDate.localeCompare(b.isoDate);
+      }
+      return getDayIndex(a.day) - getDayIndex(b.day);
+    });
+
+    return {
+      resolvedSheets,
+      sidebarMakeupDays,
+      todayISO,
+      todayDayName
+    };
   }, [rawDaysList]);
+
+  const currentMonthMakeupDays = useMemo(() => {
+    return resolvedData.sidebarMakeupDays;
+  }, [resolvedData]);
 
   const currentMonthName = useMemo(() => {
     return new Date().toLocaleDateString('en-US', { month: 'long' });
@@ -564,56 +746,7 @@ function TimetablePageInner() {
   const conflicts = useMemo(() => detectConflicts(filtered, includeRepeats), [filtered, includeRepeats]);
 
   const reorderedGrouped = useMemo(() => {
-    const today = new Date();
-    const currentDayOfWeek = today.getDay();
-    const daysToMonday = currentDayOfWeek === 0 ? 6 : currentDayOfWeek - 1;
-
-    const monday = new Date(today);
-    monday.setDate(today.getDate() - daysToMonday);
-    monday.setHours(0, 0, 0, 0);
-
-    const sunday = new Date(monday);
-    sunday.setDate(monday.getDate() + 6);
-    sunday.setHours(23, 59, 59, 999);
-
-    const toISODate = (d: Date) => {
-      const y = d.getFullYear();
-      const m = String(d.getMonth() + 1).padStart(2, '0');
-      const date = String(d.getDate()).padStart(2, '0');
-      return `${y}-${m}-${date}`;
-    };
-
-    const mondayISO = toISODate(monday);
-    const sundayISO = toISODate(sunday);
-    const todayISO = toISODate(today);
-    const todayDayName = today.toLocaleDateString('en-US', { weekday: 'long' });
-
-    // 1. Filter rawDaysList to include only sheets in the current week (Monday-Sunday)
-    const activeDays = rawDaysList.filter(d => {
-      if (d.isoDate) {
-        return d.isoDate >= mondayISO && d.isoDate <= sundayISO;
-      }
-      return true;
-    });
-
-    // 2. Sort active days: Today first, then other days Monday to Saturday/Sunday (today exclusive)
-    activeDays.sort((a, b) => {
-      const isTodayA = a.isoDate === todayISO || a.day.toLowerCase() === todayDayName.toLowerCase();
-      const isTodayB = b.isoDate === todayISO || b.day.toLowerCase() === todayDayName.toLowerCase();
-
-      if (isTodayA) return -1;
-      if (isTodayB) return 1;
-
-      // Fallback: sort by their position in DAYS_ORDER
-      const getDayIndex = (dayName: string) => {
-        const idx = DAYS_ORDER.indexOf(dayName);
-        return idx === -1 ? 999 : idx;
-      };
-      return getDayIndex(a.day) - getDayIndex(b.day);
-    });
-
-    // 3. Find Today's sheet name / index to identify which tab is Today
-    const todaySheetName = activeDays.find(d => d.isoDate === todayISO || d.day.toLowerCase() === todayDayName.toLowerCase())?.sheetName || '';
+    const { resolvedSheets, todayISO, todayDayName } = resolvedData;
 
     const groupedMap = new Map(grouped.map(g => [g.day, g.entries]));
     const result: {
@@ -625,25 +758,24 @@ function TimetablePageInner() {
       isMakeup: boolean;
     }[] = [];
 
-    activeDays.forEach((d) => {
-      const isToday = d.sheetName === todaySheetName || d.isoDate === todayISO || d.day.toLowerCase() === todayDayName.toLowerCase();
-      const entries = groupedMap.get(d.sheetName) || [];
+    resolvedSheets.forEach((s) => {
+      const isToday = s.isoDate === todayISO || s.day.toLowerCase() === todayDayName.toLowerCase();
+      const entries = groupedMap.get(s.sheetName) || [];
 
-      // Include the day if it is Today (even if 0 classes) OR if it has entries > 0
       if (isToday || entries.length > 0) {
         result.push({
-          day: d.sheetName,
-          dayName: d.day,
+          day: s.sheetName,
+          dayName: s.day,
           entries,
           isToday,
-          dateStr: d.date || '',
-          isMakeup: d.isMakeup ?? false
+          dateStr: s.dateStr || '',
+          isMakeup: s.isMakeup
         });
       }
     });
 
     return result;
-  }, [grouped, rawDaysList]);
+  }, [grouped, resolvedData]);
 
   const handleEnableRepeatsFromPrompt = () => {
     if (repeatPromptCourse) {
