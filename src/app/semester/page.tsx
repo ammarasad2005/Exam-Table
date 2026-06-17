@@ -51,7 +51,9 @@ const KEY_DATE_BADGES: Record<string, string> = {
 };
 
 // Calendar helpers
-const MONTH_NAMES = ['January', 'February', 'March', 'April', 'May', 'June'];
+// Full 12-month name table — required because semesters can span any month
+// (e.g. Summer 2026 = Jun–Aug, Fall 2026 = Aug–Jan). Previously only 6 entries.
+const MONTH_NAMES = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
 const MONTH_SHORT = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
 const DOW_SHORT = ['Su', 'Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa'];
 const WEEKDAY_SHORT = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
@@ -368,8 +370,72 @@ function KeyDatesSection() {
   );
 }
 
+// Derive the visible { year, month } tuples from the JSON's actual date range.
+// Scans every date in keyDates, holidays, and academicRanges, then walks
+// month-by-month from the earliest to the latest. Caps at 12 months to
+// guard against malformed data. Handles year boundaries (e.g. Fall 2026
+// spanning Aug 2026 → Jan 2027). Falls back to the current real-world
+// month ± 2 if the JSON contains no usable dates.
+function deriveVisibleMonths(calendar: SemesterCalendar): { year: number; month: number }[] {
+  const isoDates: string[] = [];
+  for (const k of calendar.keyDates) {
+    isoDates.push(k.date);
+    if (k.endDate) isoDates.push(k.endDate);
+  }
+  for (const h of calendar.holidays) {
+    isoDates.push(h.date);
+    if (h.endDate) isoDates.push(h.endDate);
+  }
+  for (const r of calendar.academicRanges) {
+    isoDates.push(r.startDate);
+    isoDates.push(r.endDate);
+  }
+
+  const parsed = isoDates
+    .map((s) => {
+      const [y, m, d] = s.split('-').map(Number);
+      return Number.isFinite(y) && Number.isFinite(m) && Number.isFinite(d)
+        ? new Date(Date.UTC(y, m - 1, d))
+        : null;
+    })
+    .filter((d): d is Date => d !== null);
+
+  if (parsed.length === 0) {
+    // Fallback: current month, previous month, next month
+    const now = new Date();
+    return [-1, 0, 1].map((offset) => {
+      const d = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth() + offset, 1));
+      return { year: d.getUTCFullYear(), month: d.getUTCMonth() };
+    });
+  }
+
+  let minDate = parsed[0];
+  let maxDate = parsed[0];
+  for (const d of parsed) {
+    if (d < minDate) minDate = d;
+    if (d > maxDate) maxDate = d;
+  }
+
+  const out: { year: number; month: number }[] = [];
+  let y = minDate.getUTCFullYear();
+  let m = minDate.getUTCMonth();
+  const endY = maxDate.getUTCFullYear();
+  const endM = maxDate.getUTCMonth();
+  // Safety cap: 12 months max
+  for (let i = 0; i < 12; i++) {
+    out.push({ year: y, month: m });
+    if (y === endY && m === endM) break;
+    m += 1;
+    if (m > 11) { m = 0; y += 1; }
+  }
+  return out;
+}
+
 function CalendarsSection({ compact = false, hideLabel = false }: { compact?: boolean; hideLabel?: boolean }) {
-  const months = [0, 1, 2, 3, 4, 5]; 
+  // Months/years are now derived from the JSON's actual date range,
+  // so the calendar grid auto-adapts to any semester shape (Spring Jan–Jun,
+  // Summer Jun–Aug, Fall Aug–Jan, etc.) without code edits.
+  const months = deriveVisibleMonths(semesterCalendar);
 
   return (
     <section>
@@ -394,9 +460,8 @@ function CalendarsSection({ compact = false, hideLabel = false }: { compact?: bo
       </div>
 
       <div className={`grid gap-4 ${compact ? 'grid-cols-1 xl:grid-cols-2' : 'grid-cols-2 md:grid-cols-3'}`}>
-        {months.map((mi) => {
-          const m1 = mi + 1; 
-          const year = 2026;
+        {months.map(({ year, month: mi }) => {
+          const m1 = mi + 1;
           const firstDay = new Date(year, mi, 1).getDay();
           const daysInMonth = new Date(year, mi + 1, 0).getDate();
           const cells: { d: number | null; kind: DayKind }[] = [];
@@ -406,7 +471,7 @@ function CalendarsSection({ compact = false, hideLabel = false }: { compact?: bo
 
           return (
             <div
-              key={mi}
+              key={`${year}-${mi}`}
               className={`rounded-2xl border ${compact ? 'p-3' : 'p-4'}`}
               style={{
                 borderColor: 'var(--color-border)',
