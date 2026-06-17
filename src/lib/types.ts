@@ -66,6 +66,8 @@ export interface TimetableEntry {
   exam?: boolean;                      // flags "Mid", "Exam", or "Sessional" slots
   isElective?: boolean;                // inferred from section range
   electiveGroup?: string | null;       // e.g. "G-I", "Gp-II"
+  cancelled?: boolean;                 // flags cancelled classes
+  reserved?: boolean;                  // flags reserved rooms
 }
 
 export const TIMETABLE_META_KEY = '__meta__';
@@ -89,6 +91,8 @@ export type TimetableSlot = {
   exam?: boolean;
   isElective?: boolean;
   elective_group?: string | null;
+  cancelled?: boolean;
+  reserved?: boolean;
 };
 
 export type TimetableDayMap = Record<string, TimetableSlot[]>;

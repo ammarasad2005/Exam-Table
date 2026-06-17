@@ -28,7 +28,7 @@ export function TimetableCard({
 }: Props) {
   const accentColor = `var(--accent-${dept.toLowerCase()})`;
   const accentBg    = `var(--accent-${dept.toLowerCase()}-bg)`;
-  const stripColor = conflicting ? '#f87171' : accentColor;
+  const stripColor = conflicting ? '#f87171' : entry.cancelled ? 'var(--color-text-tertiary)' : accentColor;
   const [isSectionMenuOpen, setIsSectionMenuOpen] = useState(false);
   const sectionMenuRef = useRef<HTMLDivElement | null>(null);
 
@@ -51,7 +51,7 @@ export function TimetableCard({
 
   return (
     <div
-      className="timetable-card group relative overflow-hidden w-full text-left border border-[var(--color-border)] rounded-lg p-4 flex flex-col gap-2 active:scale-[0.98] transition-all duration-100 focus-visible:outline-none focus-visible:ring-2"
+      className={`timetable-card group relative overflow-hidden w-full text-left border border-[var(--color-border)] rounded-lg p-4 flex flex-col gap-2 active:scale-[0.98] transition-all duration-100 focus-visible:outline-none focus-visible:ring-2 ${entry.cancelled ? 'opacity-65' : ''}`}
       style={{
         background: isRepeat
           ? 'linear-gradient(135deg, var(--color-bg-raised) 50%, color-mix(in srgb, var(--color-bg-raised) 80%, #f59e0b 20%))'
@@ -88,6 +88,11 @@ export function TimetableCard({
         </div>
 
         <div className="flex flex-wrap gap-1">
+          {entry.cancelled && (
+            <span className="font-mono text-[10px] font-medium px-1.5 py-0.5 rounded bg-gray-100 text-gray-600 dark:bg-gray-800 dark:text-gray-400 shrink-0">
+              🚫 Canceled
+            </span>
+          )}
           {isRepeat && (
             <span className="font-mono text-[10px] font-medium px-1.5 py-0.5 rounded shrink-0" style={{ backgroundColor: 'color-mix(in srgb, transparent 80%, #f59e0b 20%)', color: '#b45309' }}>
               Repeat
@@ -99,7 +104,7 @@ export function TimetableCard({
             </span>
           )}
           {entry.exam && (
-            <span className="font-mono text-[10px] font-medium px-1.5 py-0.5 rounded bg-red-100 text-red-600 dark:bg-rose-900/40 dark:text-rose-400 shrink-0">
+            <span className="font-mono text-[10px] font-medium px-1.5 py-0.5 rounded bg-red-100 text-red-600 dark:bg-red-900/40 dark:text-red-400 shrink-0">
               📅 Exam
             </span>
           )}
@@ -108,7 +113,7 @@ export function TimetableCard({
               ✨ Rescheduled
             </span>
           )}
-          {!conflicting && !entry.rescheduled && !entry.exam && (
+          {!conflicting && !entry.rescheduled && !entry.exam && !entry.cancelled && (
             <span
               className="font-mono text-[10px] font-medium px-1.5 py-0.5 rounded shrink-0"
               style={
@@ -124,7 +129,7 @@ export function TimetableCard({
       </div>
 
       {/* Course name */}
-      <p className="font-body text-sm font-medium text-[var(--color-text-primary)] leading-snug line-clamp-2">
+      <p className={`font-body text-sm font-medium text-[var(--color-text-primary)] leading-snug line-clamp-2 ${entry.cancelled ? 'line-through opacity-80' : ''}`}>
         {displayName ?? entry.courseName}
       </p>
 

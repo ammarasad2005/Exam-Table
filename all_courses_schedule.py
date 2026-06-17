@@ -694,6 +694,38 @@ for day_info in day_sheets:
                 if not val:
                     continue
 
+                val_lower = val.lower()
+                is_reserved = False
+                is_cancelled = False
+
+                if "reserved" in val_lower:
+                    time_slot = time_map.get(i, "Unknown Time")
+                    if time_slot == "Unknown Time":
+                        continue
+                    unambiguous_classes.append({
+                        "course_name": "Reserved",
+                        "dept":        "System",
+                        "section":     "Reserved",
+                        "normalized_section": "Reserved",
+                        "day":         day,
+                        "sheet_name":  sheet_name,
+                        "time":        time_slot,
+                        "room":        current_room,
+                        "category":    "regular",
+                        "batch":       "System",
+                        "is_rescheduled": False,
+                        "is_exam":     False,
+                        "isReserved":  True
+                    })
+                    continue
+
+                if "cancel" in val_lower or "cancle" in val_lower:
+                    is_cancelled = True
+                    # Remove the cancel keyword and any surrounding parens
+                    val = re.sub(r'(?i)\s*\(\s*(?:cancel|cancle)[a-z]*\s*\)\s*', ' ', val)
+                    val = re.sub(r'(?i)\s*\b(?:cancel|cancle)[a-z]*\b\s*', ' ', val)
+                    val = val.strip()
+
                 course_name = dept = section = batch = category = None
 
                 # Repeat courses carry the YY suffix, e.g. "AI (CS-A, 23)"
@@ -817,7 +849,8 @@ for day_info in day_sheets:
                     "is_saturday": is_saturday,
                     "bypasses_quota": bypasses_quota,
                     "is_exam":     is_exam,
-                    "quota":       quota
+                    "quota":       quota,
+                    "isCancelled":  is_cancelled
                 }
 
                 if category == "repeat":
@@ -1086,6 +1119,9 @@ def extract_section_letter(s):
 
 # FIRST PASS: Discover everything and count group occurrences
 for rec in unambiguous_classes:
+    if rec.get("isReserved"):
+        rec["normalized_section"] = rec["section"]
+        continue
     b, d, c, s = rec["batch"], rec["dept"], rec["course_name"], rec["section"]
     
     # 1. Find Group (Check III then II then I to avoid partial matches)
@@ -1137,15 +1173,19 @@ for rec in unambiguous_classes:
         continue
     seen_slots.add(slot_key)
     
-    # Inherit group
-    group = global_course_groups.get((batch, course_name))
-    
-    # Range-based detection
-    d_max = dept_max_sections.get((batch, dept), -1)
-    c_max = course_max_sections.get((batch, dept, course_name), -1)
-    
-    is_elective_by_range = (c_max < d_max) if d_max != -1 else False
-    is_elective = is_course_elective(rec) or (group is not None) or is_elective_by_range
+    if rec.get("isReserved"):
+        is_elective = False
+        group = None
+    else:
+        # Inherit group
+        group = global_course_groups.get((batch, course_name))
+        
+        # Range-based detection
+        d_max = dept_max_sections.get((batch, dept), -1)
+        c_max = course_max_sections.get((batch, dept, course_name), -1)
+        
+        is_elective_by_range = (c_max < d_max) if d_max != -1 else False
+        is_elective = is_course_elective(rec) or (group is not None) or is_elective_by_range
 
     # Debug specific problematic courses
     if any(k in course_name for k in ["Deep Learn", "Data Vis", "ML for Robo", "Agentic AI"]):
@@ -1166,14 +1206,18 @@ for rec in unambiguous_classes:
     if sheet_name not in target[course_name][section]:
         target[course_name][section][sheet_name] = []
 
-    target[course_name][section][sheet_name].append({
+    slot_data = {
         "room": room, 
         "time": actual_time,
         "rescheduled": rec.get("is_rescheduled", False),
         "is_elective": is_elective,
         "elective_group": group,
         "exam": rec.get("is_exam", False)
-    })
+    }
+    if rec.get("isCancelled"):
+        slot_data["cancelled"] = True
+        
+    target[course_name][section][sheet_name].append(slot_data)
 
 # ==============================================================================
 # OUTPUT

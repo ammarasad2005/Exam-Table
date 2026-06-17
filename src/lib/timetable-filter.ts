@@ -24,7 +24,7 @@ export function flattenTimetable(raw: RawTimetableJSON): TimetableEntry[] {
   const entries: TimetableEntry[] = [];
 
   for (const [batch, deptMap] of Object.entries(raw)) {
-    if (batch === TIMETABLE_META_KEY) continue;
+    if (batch === TIMETABLE_META_KEY || batch === 'System' || batch === 'Reserved') continue;
     const typedDeptMap = deptMap as unknown as TimetableBatchMap;
     for (const dept of Object.keys(typedDeptMap)) {
       const cats = typedDeptMap[dept];
@@ -52,6 +52,8 @@ export function flattenTimetable(raw: RawTimetableJSON): TimetableEntry[] {
                   exam: slot.exam ?? false,
                   isElective: (slot as any).is_elective ?? false,
                   electiveGroup: slot.elective_group ?? null,
+                  cancelled: slot.cancelled ?? false,
+                  reserved: slot.reserved ?? false,
                 });
               }
             }

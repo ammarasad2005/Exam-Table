@@ -367,14 +367,35 @@ def parse_csv(csv_text):
     reader = csv.reader(f)
     return list(reader)
 
-def extract_course_and_section(cell_content):
-    # Matches formats like "Object Oriented Programming (A)" or "OOP (A1)"
+def parse_cell_details(cell_content):
+    cell_content = cell_content.strip()
+    val = cell_content.lower()
+    
+    if not cell_content:
+        return "", "", False, False
+        
+    if "reserved" in val:
+        return "Reserved", "Reserved", True, False
+        
+    # Check cancellation
+    is_cancelled = False
+    if "cancel" in val or "cancle" in val:
+        is_cancelled = True
+        # Remove cancel keyword and any surrounding parens
+        cell_content = re.sub(r'(?i)\s*\(\s*(?:cancel|cancle)[a-z]*\s*\)\s*', ' ', cell_content)
+        cell_content = re.sub(r'(?i)\s*\b(?:cancel|cancle)[a-z]*\b\s*', ' ', cell_content)
+        cell_content = cell_content.strip()
+        
+    # Extract course name and section
     match = re.match(r'^([^(]+?)\s*\(\s*([A-Za-z0-9\-/]+)\s*\)', cell_content)
     if match:
         course_name = match.group(1).strip()
         section = match.group(2).strip()
-        return course_name, section
-    return cell_content.strip(), "A"
+    else:
+        course_name = cell_content
+        section = "A"
+        
+    return course_name, section, False, is_cancelled
 
 def process_sheet_rows(rows, day_name):
     if len(rows) < 2:
@@ -411,13 +432,15 @@ def process_sheet_rows(rows, day_name):
                     if not time_slot:
                         continue
                     
-                    course_name, section = extract_course_and_section(cell)
+                    course_name, section, is_reserved, is_cancelled = parse_cell_details(cell)
                     entries.append({
                         "courseName": course_name,
                         "section": section,
                         "day": day_name,
                         "time": time_slot,
-                        "room": room
+                        "room": room,
+                        "isReserved": is_reserved,
+                        "isCancelled": is_cancelled
                     })
     else:
         # Flat table format
@@ -447,7 +470,7 @@ def process_sheet_rows(rows, day_name):
             if not course_val:
                 continue
             
-            course_name, section = extract_course_and_section(course_val)
+            course_name, section, is_reserved, is_cancelled = parse_cell_details(course_val)
             # If section column is explicitly present, override
             if section_idx < len(row) and section_idx >= 0 and row[section_idx].strip():
                 section = row[section_idx].strip()
@@ -461,7 +484,9 @@ def process_sheet_rows(rows, day_name):
                 "section": section,
                 "day": day_val,
                 "time": time_val,
-                "room": room_val
+                "room": room_val,
+                "isReserved": is_reserved,
+                "isCancelled": is_cancelled
             })
 
     return entries
@@ -527,10 +552,14 @@ def main():
                 "regular": {},
                 "repeat": {}
             }
+        },
+        "System": {
+            "System": {
+                "regular": {},
+                "repeat": {}
+            }
         }
     }
-
-    regular_map = nested_timetable["Summer"]["CS"]["regular"]
 
     for entry in all_entries:
         course = entry["courseName"]
@@ -538,22 +567,33 @@ def main():
         day = entry["day"]
         room = entry["room"]
         time_slot = entry["time"]
+        is_reserved = entry.get("isReserved", False)
+        is_cancelled = entry.get("isCancelled", False)
 
-        if course not in regular_map:
-            regular_map[course] = {}
-        if sec not in regular_map[course]:
-            regular_map[course][sec] = {}
-        if day not in regular_map[course][sec]:
-            regular_map[course][sec][day] = []
+        if is_reserved:
+            target_map = nested_timetable["System"]["System"]["regular"]
+        else:
+            target_map = nested_timetable["Summer"]["CS"]["regular"]
 
-        regular_map[course][sec][day].append({
+        if course not in target_map:
+            target_map[course] = {}
+        if sec not in target_map[course]:
+            target_map[course][sec] = {}
+        if day not in target_map[course][sec]:
+            target_map[course][sec][day] = []
+
+        slot_data = {
             "room": room,
             "time": time_slot,
             "rescheduled": False,
             "exam": False,
             "is_elective": False,
             "elective_group": None
-        })
+        }
+        if is_cancelled:
+            slot_data["cancelled"] = True
+
+        target_map[course][sec][day].append(slot_data)
 
     # Add meta information
     nested_timetable["__meta__"] = timetable_meta

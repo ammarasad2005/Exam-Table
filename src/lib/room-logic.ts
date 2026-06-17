@@ -103,6 +103,7 @@ export function buildRoomCalendar(raw: RawTimetableJSON): RoomCalendar {
             for (const day of Object.keys(dayMap)) {
               const slots = dayMap[day];
               for (const slot of slots) {
+                if (slot.cancelled) continue;
                 addSlot(slot.room, day, slot.time);
               }
             }

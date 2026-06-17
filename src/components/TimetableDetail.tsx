@@ -104,12 +104,18 @@ export function TimetableDetail({ entry, dept, onClose, isSummer, displayName }:
           </div>
 
           {/* Type callout */}
-          <div
-            className="mt-4 px-4 py-3 rounded-md text-sm font-medium"
-            style={{ backgroundColor: isLab ? 'var(--accent-ds-bg)' : accentBg, color: isLab ? 'var(--accent-ds)' : accentColor }}
-          >
-            {isLab ? '🔬 Lab session — bring your laptop.' : '📖 Lecture — check course portal for updates.'}
-          </div>
+          {entry.cancelled ? (
+            <div className="mt-4 px-4 py-3 rounded-md text-sm font-medium bg-red-100 dark:bg-red-950/40 text-red-600 dark:text-red-400">
+              🚫 Canceled class. The room is free and the class is not occurring.
+            </div>
+          ) : (
+            <div
+              className="mt-4 px-4 py-3 rounded-md text-sm font-medium"
+              style={{ backgroundColor: isLab ? 'var(--accent-ds-bg)' : accentBg, color: isLab ? 'var(--accent-ds)' : accentColor }}
+            >
+              {isLab ? '🔬 Lab session — bring your laptop.' : '📖 Lecture — check course portal for updates.'}
+            </div>
+          )}
 
           {/* Actions */}
           <div className="mt-4 flex flex-col gap-2">

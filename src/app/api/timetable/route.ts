@@ -106,7 +106,7 @@ function processCSVRows(rows: string[][], defaultDay?: string): TimetableEntry[]
         const room = row[0]?.trim();
         
         // Skip empty or purely "Reserved" administrative rows
-        if (!room || room.toLowerCase().includes("reserved") || room.toLowerCase().includes("students")) continue;
+        if (!room) continue;
         
         for (let col = 1; col < row.length; col++) {
           const cell = row[col]?.trim();
@@ -115,16 +115,50 @@ function processCSVRows(rows: string[][], defaultDay?: string): TimetableEntry[]
           const timeSlot = currentTimeHeaders[col]?.trim();
           if (!timeSlot || timeSlot === '') continue; // Skip if no time header
 
-          const type: 'lecture' | 'lab' =
-            cell.toLowerCase().includes('lab') ? 'lab' : 'lecture';
+          const cellLower = cell.toLowerCase();
+          let courseName = cell;
+          let section = '';
+          let batch = '';
+          let department = '';
+          let reserved = false;
+          let cancelled = false;
 
-          const { cleanName, time: extractedTime } = extractTimeFromCourseName(cell);
+          if (cellLower.includes("reserved")) {
+            courseName = "Reserved";
+            section = "Reserved";
+            batch = "System";
+            department = "System";
+            reserved = true;
+          } else {
+            let cellText = cell;
+            if (cellLower.includes("cancel") || cellLower.includes("cancle")) {
+              cancelled = true;
+              cellText = cell.replace(/\s*\(\s*(?:cancel|cancle)[a-z]*\s*\)\s*/gi, ' ')
+                             .replace(/\s*\b(?:cancel|cancle)[a-z]*\b\s*/gi, ' ')
+                             .trim();
+            }
+
+            // Extract section if present (for summer, e.g. "Linear Algebra (A)")
+            const match = cellText.match(/^([^(]+?)\s*\(\s*([A-Za-z0-9\-/]+)\s*\)/);
+            if (match) {
+              courseName = match[1].trim();
+              section = match[2].trim();
+            } else {
+              courseName = cellText;
+              section = 'A';
+            }
+          }
+
+          const type: 'lecture' | 'lab' =
+            courseName.toLowerCase().includes('lab') ? 'lab' : 'lecture';
+
+          const { cleanName, time: extractedTime } = extractTimeFromCourseName(courseName);
 
           entries.push({
             courseName: cleanName,
-            batch: '',
-            department: '',
-            section: '',
+            batch,
+            department,
+            section,
             day: defaultDay || '',
             time: extractedTime || timeSlot,
             room: room,
@@ -134,6 +168,8 @@ function processCSVRows(rows: string[][], defaultDay?: string): TimetableEntry[]
             exam: false,
             isElective: false,
             electiveGroup: null,
+            cancelled,
+            reserved,
           });
         }
       }
@@ -163,8 +199,30 @@ function processCSVRows(rows: string[][], defaultDay?: string): TimetableEntry[]
   for (let i = 1; i < rows.length; i++) {
     const row = rows[i];
     if (row.length === 0 || row.every(c => c === '')) continue;
-    const courseName = String(getValue('courseName', row, '')).trim();
+    let courseName = String(getValue('courseName', row, '')).trim();
     if (!courseName) continue;
+
+    const courseLower = courseName.toLowerCase();
+    let reserved = false;
+    let cancelled = false;
+    let section = String(getValue('section', row, ''));
+    let batch = String(getValue('batch', row, ''));
+    let department = String(getValue('department', row, ''));
+
+    if (courseLower.includes("reserved")) {
+      courseName = "Reserved";
+      section = "Reserved";
+      batch = "System";
+      department = "System";
+      reserved = true;
+    } else {
+      if (courseLower.includes("cancel") || courseLower.includes("cancle")) {
+        cancelled = true;
+        courseName = courseName.replace(/\s*\(\s*(?:cancel|cancle)[a-z]*\s*\)\s*/gi, ' ')
+                               .replace(/\s*\b(?:cancel|cancle)[a-z]*\b\s*/gi, ' ')
+                               .trim();
+      }
+    }
 
     const typeVal = String(getValue('type', row, ''));
     const type: 'lecture' | 'lab' =
@@ -179,9 +237,9 @@ function processCSVRows(rows: string[][], defaultDay?: string): TimetableEntry[]
 
     entries.push({
       courseName: cleanName,
-      batch:         String(getValue('batch', row, '')),
-      department:    String(getValue('department', row, '')),
-      section:       String(getValue('section', row, '')),
+      batch,
+      department,
+      section,
       day,
       time:          extractedTime || String(getValue('time', row, '')),
       room:          String(getValue('room', row, '')),
@@ -191,6 +249,8 @@ function processCSVRows(rows: string[][], defaultDay?: string): TimetableEntry[]
       exam:          parseBoolean(getValue('exam', row, false)),
       isElective:    parseBoolean(getValue('isElective', row, false)),
       electiveGroup: (getValue('electiveGroup', row, null) as string | null) || null,
+      cancelled,
+      reserved,
     });
   }
   return entries;
