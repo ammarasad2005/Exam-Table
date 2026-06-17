@@ -4,49 +4,30 @@
   "generatedAt": "2026-06-17",
   "keyDates": [
     {
-      "label": "Announcement of Courses / Class Schedule",
-      "date": "2026-06-10",
-      "type": "academic",
-      "icon": "info"
-    },
-    {
-      "label": "Online Registration of Courses",
-      "date": "2026-06-11",
-      "endDate": "2026-06-17",
-      "type": "deadline",
-      "icon": "event_available"
-    },
-    {
       "label": "First day of classes",
       "date": "2026-06-15",
       "type": "academic",
       "icon": "school"
     },
     {
-      "label": "Deadline of Add and Drop of Courses / Labs",
+      "label": "Add & Drop of courses / labs",
       "date": "2026-06-20",
       "type": "deadline",
       "icon": "event_available"
     },
     {
-      "label": "Midterm Examination",
+      "label": "First Sessional Examination",
       "date": "2026-07-13",
       "endDate": "2026-07-14",
       "type": "exam",
       "icon": "quiz"
     },
     {
-      "label": "Announcement of Midterm results",
+      "label": "First Sessional results announced",
       "date": "2026-07-21",
       "endDate": "2026-07-22",
       "type": "academic",
       "icon": "info"
-    },
-    {
-      "label": "Feedback of faculty / courses",
-      "date": "2026-07-31",
-      "type": "deadline",
-      "icon": "event_available"
     },
     {
       "label": "Last day of classes",
@@ -55,7 +36,7 @@
       "icon": "school"
     },
     {
-      "label": "Deadline for withdrawal from courses",
+      "label": "Course withdrawal deadline / Makeup week",
       "date": "2026-08-07",
       "type": "deadline",
       "icon": "event_busy"
@@ -90,7 +71,7 @@
       "type": "classes"
     },
     {
-      "label": "Midterm Examination",
+      "label": "First Sessional Examination",
       "startDate": "2026-07-13",
       "endDate": "2026-07-14",
       "color": "orange",
@@ -105,5 +86,5 @@
     }
   ],
   "weekCount": 8,
-  "totalCreditHoursPerWeek": 18
+  "totalCreditHoursPerWeek": 16
 }
