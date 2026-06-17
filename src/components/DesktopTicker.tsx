@@ -382,99 +382,104 @@ export function DesktopTicker({
       };
     }
 
-    // Filter out past classes (e.g. classes whose end times have already passed today or in the past days)
-    const activeEntries = relevantEntries.filter(e => {
-      if (e.cancelled) return false;
+    const WEEKDAYS_MAP: Record<string, number> = {
+      Sunday: 0,
+      Monday: 1,
+      Tuesday: 2,
+      Wednesday: 3,
+      Thursday: 4,
+      Friday: 5,
+      Saturday: 6
+    };
+    const currentDayIdx = now.getDay();
+
+    const getNextOccurrence = (e: TimetableEntry) => {
+      if (e.cancelled) return null;
       const meta = sheetToMeta[e.day];
       const canonicalDay = meta?.day ?? e.day;
       const isoDate = meta?.isoDate ?? '';
+      const isMakeup = meta?.isMakeup ?? false;
+      const { start, end } = parseTimeRange(e.time);
 
-      // 1. If date is strictly in the past, skip
-      if (isoDate && isoDate < todayISO) return false;
+      if (isMakeup) {
+        if (!isoDate) return null;
+        if (isoDate < todayISO) return null;
+        if (isoDate === todayISO && currentMins >= end) return null;
 
-      // 2. If date is today, check if class end time has passed
-      if (isoDate && isoDate === todayISO) {
-        const { end } = parseTimeRange(e.time);
-        if (currentMins >= end) return false;
+        const [ny, nm, nd] = isoDate.split('-').map(Number);
+        const targetDate = new Date(ny, nm - 1, nd, Math.floor(start / 60), start % 60, 0);
+        const diffMs = targetDate.getTime() - now.getTime();
+        const minsUntil = Math.max(0, Math.floor(diffMs / 60000));
+        return { minsUntil, dateISO: isoDate };
+      } else {
+        const targetDayIdx = WEEKDAYS_MAP[canonicalDay];
+        if (targetDayIdx === undefined) return null;
+
+        let daysDiff = (targetDayIdx - currentDayIdx + 7) % 7;
+        if (daysDiff === 0 && currentMins >= end) {
+          daysDiff = 7;
+        }
+
+        const targetDate = new Date(now);
+        targetDate.setDate(now.getDate() + daysDiff);
+
+        const targetYear = targetDate.getFullYear();
+        const targetMonth = String(targetDate.getMonth() + 1).padStart(2, '0');
+        const targetDayStr = String(targetDate.getDate()).padStart(2, '0');
+        const dateISO = `${targetYear}-${targetMonth}-${targetDayStr}`;
+
+        const sh = Math.floor(start / 60);
+        const sm = start % 60;
+        const tDate = new Date(targetYear, targetDate.getMonth(), targetDate.getDate(), sh, sm, 0);
+        const diffMs = tDate.getTime() - now.getTime();
+        const minsUntil = Math.max(0, Math.floor(diffMs / 60000));
+
+        return { minsUntil, dateISO };
       }
+    };
 
-      // 3. Fallback: if no isoDate, check if canonical day matches today and end time has passed
-      if (!isoDate && canonicalDay === currentDay) {
-        const { end } = parseTimeRange(e.time);
-        if (currentMins >= end) return false;
-      }
-      
-      // 4. Fallback: check if canonical day is strictly in the past
-      if (!isoDate && canonicalDay !== currentDay) {
-        const nextDayIdx = DAYS_ORDER.indexOf(canonicalDay);
-        const curDayIdx = DAYS_ORDER.indexOf(currentDay);
-        if (nextDayIdx < curDayIdx) return false;
-      }
+    const upcomingWithOccurrence = relevantEntries
+      .map(e => {
+        // If it is ongoing right now, skip it from upcoming
+        const meta = sheetToMeta[e.day];
+        const canonicalDay = meta?.day ?? e.day;
+        const isoDate = meta?.isoDate ?? '';
+        const isToday = isoDate ? (isoDate === todayISO) : (canonicalDay === currentDay);
+        const { start, end } = parseTimeRange(e.time);
+        if (isToday && currentMins >= start && currentMins < end) {
+          return null;
+        }
 
-      return true;
-    });
+        const occurrence = getNextOccurrence(e);
+        if (!occurrence) return null;
+        return { entry: e, ...occurrence };
+      })
+      .filter(Boolean) as { entry: TimetableEntry; minsUntil: number; dateISO: string }[];
 
-    if (activeEntries.length === 0) return null;
+    if (upcomingWithOccurrence.length === 0) return null;
 
     // Sort active entries chronologically
-    const sorted = [...activeEntries].sort((a, b) => {
-      const metaA = sheetToMeta[a.day];
-      const metaB = sheetToMeta[b.day];
-
-      if (metaA?.isoDate && metaB?.isoDate) {
-        if (metaA.isoDate !== metaB.isoDate) {
-          return metaA.isoDate.localeCompare(metaB.isoDate);
-        }
-      } else if (metaA?.isoDate) {
-        return -1;
-      } else if (metaB?.isoDate) {
-        return 1;
-      } else {
-        const dayA = DAYS_ORDER.indexOf(metaA?.day ?? a.day);
-        const dayB = DAYS_ORDER.indexOf(metaB?.day ?? b.day);
-        if (dayA !== dayB) return dayA - dayB;
+    const sorted = [...upcomingWithOccurrence].sort((a, b) => {
+      if (a.dateISO !== b.dateISO) {
+        return a.dateISO.localeCompare(b.dateISO);
       }
-
-      return parseTimeRange(a.time).start - parseTimeRange(b.time).start;
+      return a.minsUntil - b.minsUntil;
     });
 
-    const nextClass = sorted[0];
-    const { start: nextStartMins } = parseTimeRange(nextClass.time);
+    const nextClassObj = sorted[0];
     
     // Find all next classes starting at the same time on the same day
-    const allNext = sorted.filter(e => 
-      e.day === nextClass.day && 
-      parseTimeRange(e.time).start === nextStartMins
+    const allNext = sorted.filter(item => 
+      item.entry.day === nextClassObj.entry.day && 
+      item.dateISO === nextClassObj.dateISO &&
+      item.minsUntil === nextClassObj.minsUntil
     );
-
-    let minsUntil = 0;
-    const metaNext = sheetToMeta[nextClass.day];
-
-    if (metaNext?.isoDate) {
-      const sh = Math.floor(nextStartMins / 60);
-      const sm = nextStartMins % 60;
-      const [ny, nm, nd] = metaNext.isoDate.split('-').map(Number);
-      const targetDate = new Date(ny, nm - 1, nd, sh, sm, 0);
-      const diffMs = targetDate.getTime() - now.getTime();
-      minsUntil = Math.max(0, Math.floor(diffMs / 60000));
-    } else {
-      const canonicalNextDay = metaNext?.day ?? nextClass.day;
-      if (canonicalNextDay === currentDay) {
-        minsUntil = nextStartMins - currentMins;
-      } else {
-        const nextDayIdx = DAYS_ORDER.indexOf(canonicalNextDay);
-        const curDayIdx = DAYS_ORDER.indexOf(currentDay);
-        let daysDiff = (nextDayIdx - curDayIdx + 7) % 7;
-        if (daysDiff === 0 && nextStartMins <= currentMins) daysDiff = 7;
-        minsUntil = daysDiff * 24 * 60 - currentMins + nextStartMins;
-      }
-    }
 
     return {
       type: 'next',
-      classes: allNext.map(e => ({
-        ...e,
-        until: minsUntil,
+      classes: allNext.map(item => ({
+        ...item.entry,
+        until: item.minsUntil,
       })),
     };
   }, [relevantEntries, currentDay, currentMins, todayISO, sheetToMeta, now]);
