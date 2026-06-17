@@ -83,22 +83,216 @@ export function DesktopTicker({
     }
   }, [userConfig]);
 
-  // Build sheet name to meta mapping
+  const rawDaysList = useMemo(() => {
+    return Array.isArray(timetableRaw.__meta__?.days)
+      ? timetableRaw.__meta__.days
+      : DAYS_ORDER.map(d => ({
+          day: d,
+          sheetName: d,
+          date: '',
+          isoDate: '',
+          isMakeup: false
+        }));
+  }, []);
+
+  const resolvedData = useMemo(() => {
+    const today = new Date(now);
+    today.setHours(0, 0, 0, 0);
+
+    const currentYear = today.getFullYear();
+
+    const currentDayOfWeek = today.getDay();
+    const daysToMonday = currentDayOfWeek === 0 ? 6 : currentDayOfWeek - 1;
+
+    const monday = new Date(today);
+    monday.setDate(today.getDate() - daysToMonday);
+    monday.setHours(0, 0, 0, 0);
+
+    const sunday = new Date(monday);
+    sunday.setDate(sunday.getDate() + 6);
+    sunday.setHours(23, 59, 59, 999);
+
+    const thirtyDaysLater = new Date(today);
+    thirtyDaysLater.setDate(today.getDate() + 30);
+    thirtyDaysLater.setHours(23, 59, 59, 999);
+
+    const toISODate = (d: Date) => {
+      const y = d.getFullYear();
+      const m = String(d.getMonth() + 1).padStart(2, '0');
+      const date = String(d.getDate()).padStart(2, '0');
+      return `${y}-${m}-${date}`;
+    };
+
+    const mondayISO = toISODate(monday);
+    const sundayISO = toISODate(sunday);
+    const todayISO = toISODate(today);
+    const todayDayName = today.toLocaleDateString('en-US', { weekday: 'long' });
+
+    const parseExplicitDate = (sheetName: string): Date | null => {
+      const match = sheetName.match(/\(([^)]+)\)/);
+      if (!match) return null;
+      
+      const dateStr = match[1];
+      let parsed = Date.parse(dateStr);
+      if (isNaN(parsed)) {
+        const months = ['jan', 'feb', 'mar', 'apr', 'may', 'jun', 'jul', 'aug', 'sep', 'oct', 'nov', 'dec'];
+        const cleanStr = dateStr.toLowerCase().replace(/[^a-z0-9\s]/g, ' ');
+        const parts = cleanStr.split(/\s+/).filter(Boolean);
+        
+        let dayNum = 1;
+        let monthIndex = -1;
+        
+        for (const part of parts) {
+          const dayVal = parseInt(part);
+          if (!isNaN(dayVal) && dayVal >= 1 && dayVal <= 31) {
+            dayNum = dayVal;
+          } else {
+            const mIdx = months.findIndex(m => part.startsWith(m));
+            if (mIdx !== -1) {
+              monthIndex = mIdx;
+            }
+          }
+        }
+        
+        if (monthIndex !== -1) {
+          return new Date(currentYear, monthIndex, dayNum);
+        }
+      } else {
+        const d = new Date(parsed);
+        if (!/\d{4}/.test(dateStr)) {
+          d.setFullYear(currentYear);
+        }
+        return d;
+      }
+      return null;
+    };
+
+    interface ResolvedSheet {
+      day: string;
+      sheetName: string;
+      isoDate: string;
+      isMakeup: boolean;
+      dateStr: string;
+      isDated: boolean;
+    }
+
+    const resolvedSheets: ResolvedSheet[] = [];
+    const sidebarMakeupDays: ResolvedSheet[] = [];
+
+    // Separate dated and undated sheets
+    const undatedSheets = rawDaysList.filter(d => !parseExplicitDate(d.sheetName));
+    const datedSheets = rawDaysList.filter(d => !!parseExplicitDate(d.sheetName));
+
+    const currentWeekDatedDays = new Set<string>();
+
+    // Process dated sheets
+    const processedDated = datedSheets.map(s => {
+      const dateObj = parseExplicitDate(s.sheetName);
+      if (!dateObj) return null;
+      dateObj.setHours(0, 0, 0, 0);
+
+      // Rule: must not have passed (date >= today) and must be within 30 days
+      if (dateObj < today || dateObj > thirtyDaysLater) {
+        return null;
+      }
+
+      const isoDate = toISODate(dateObj);
+      const isCurrentWeek = isoDate >= mondayISO && isoDate <= sundayISO;
+      const dateStr = dateObj.toLocaleDateString('en-US', { day: 'numeric', month: 'short' });
+
+      const res: ResolvedSheet = {
+        day: s.day,
+        sheetName: s.sheetName,
+        isoDate,
+        isMakeup: true,
+        dateStr,
+        isDated: true
+      };
+
+      if (isCurrentWeek) {
+        currentWeekDatedDays.add(s.day.toLowerCase());
+      }
+
+      return { res, isCurrentWeek };
+    }).filter(Boolean) as { res: ResolvedSheet; isCurrentWeek: boolean }[];
+
+    // Process undated sheets
+    undatedSheets.forEach(s => {
+      const dayIndex = DAYS_ORDER.indexOf(s.day);
+      const targetDate = new Date(monday);
+      targetDate.setDate(monday.getDate() + dayIndex);
+      targetDate.setHours(0, 0, 0, 0);
+
+      const hasCurrentWeekDated = currentWeekDatedDays.has(s.day.toLowerCase());
+
+      if (hasCurrentWeekDated) {
+        // Rule: assign to the NEXT week
+        const nextWeekDate = new Date(targetDate);
+        nextWeekDate.setDate(targetDate.getDate() + 7);
+        
+        resolvedSheets.push({
+          day: s.day,
+          sheetName: s.sheetName,
+          isoDate: toISODate(nextWeekDate),
+          isMakeup: false,
+          dateStr: nextWeekDate.toLocaleDateString('en-US', { day: 'numeric', month: 'short' }),
+          isDated: false
+        });
+      } else {
+        // Rule: assign to the current week
+        resolvedSheets.push({
+          day: s.day,
+          sheetName: s.sheetName,
+          isoDate: toISODate(targetDate),
+          isMakeup: false,
+          dateStr: targetDate.toLocaleDateString('en-US', { day: 'numeric', month: 'short' }),
+          isDated: false
+        });
+      }
+    });
+
+    // Put dated sheets in resolvedSheets or sidebarMakeupDays
+    processedDated.forEach(({ res, isCurrentWeek }) => {
+      if (isCurrentWeek) {
+        resolvedSheets.push(res);
+      } else {
+        sidebarMakeupDays.push(res);
+      }
+    });
+
+    return {
+      resolvedSheets,
+      sidebarMakeupDays,
+      todayISO,
+      todayDayName
+    };
+  }, [rawDaysList, now]);
+
+  // Build sheet name to meta mapping dynamically based on resolvedData
   const sheetToMeta = useMemo(() => {
     const map: Record<string, { day: string; isoDate: string; isMakeup: boolean; date: string }> = {};
-    const daysList = timetableRaw.__meta__?.days;
-    if (Array.isArray(daysList)) {
-      daysList.forEach(d => {
-        map[d.sheetName] = {
-          day: d.day,
-          isoDate: d.isoDate || '',
-          isMakeup: !!d.isMakeup,
-          date: d.date || '',
-        };
-      });
-    }
+    const { resolvedSheets, sidebarMakeupDays } = resolvedData;
+
+    resolvedSheets.forEach(d => {
+      map[d.sheetName] = {
+        day: d.day,
+        isoDate: d.isoDate,
+        isMakeup: d.isMakeup,
+        date: d.dateStr,
+      };
+    });
+
+    sidebarMakeupDays.forEach(d => {
+      map[d.sheetName] = {
+        day: d.day,
+        isoDate: d.isoDate,
+        isMakeup: d.isMakeup,
+        date: d.dateStr,
+      };
+    });
+
     return map;
-  }, []);
+  }, [resolvedData]);
 
   // ─── Timetable Logic ──────────────────────────────────────────────────
   const relevantEntries = useMemo(() => {
@@ -166,6 +360,7 @@ export function DesktopTicker({
 
     // A class is ongoing if today's date matches the sheet's isoDate, or falls back to canonical weekday
     const ongoing = relevantEntries.filter(e => {
+      if (e.cancelled) return false;
       const meta = sheetToMeta[e.day];
       const canonicalDay = meta?.day ?? e.day;
       const isoDate = meta?.isoDate ?? '';
@@ -189,6 +384,7 @@ export function DesktopTicker({
 
     // Filter out past classes (e.g. classes whose end times have already passed today or in the past days)
     const activeEntries = relevantEntries.filter(e => {
+      if (e.cancelled) return false;
       const meta = sheetToMeta[e.day];
       const canonicalDay = meta?.day ?? e.day;
       const isoDate = meta?.isoDate ?? '';
