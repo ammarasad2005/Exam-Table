@@ -2,46 +2,12 @@
   "Summer": {
     "CS": {
       "regular": {
-        "MV Calculus": {
-          "A": {
-            "Monday": [
-              {
-                "room": "C-301",
-                "time": "08:30-10:15",
-                "rescheduled": false,
-                "exam": false,
-                "is_elective": false,
-                "elective_group": null
-              }
-            ],
-            "Tuesday": [
-              {
-                "room": "C-301",
-                "time": "08:30-10:15",
-                "rescheduled": false,
-                "exam": false,
-                "is_elective": false,
-                "elective_group": null
-              }
-            ],
-            "Wednesday": [
-              {
-                "room": "C-301",
-                "time": "08:30-10:15",
-                "rescheduled": false,
-                "exam": false,
-                "is_elective": false,
-                "elective_group": null
-              }
-            ]
-          }
-        },
         "AP": {
-          "A": {
+          "B": {
             "Monday": [
               {
                 "room": "C-301",
-                "time": "10:20-12:05",
+                "time": "08:30-10:15",
                 "rescheduled": false,
                 "exam": false,
                 "is_elective": false,
@@ -51,7 +17,7 @@
             "Tuesday": [
               {
                 "room": "C-301",
-                "time": "10:20-12:05",
+                "time": "08:30-10:15",
                 "rescheduled": false,
                 "exam": false,
                 "is_elective": false,
@@ -61,21 +27,19 @@
             "Wednesday": [
               {
                 "room": "C-301",
-                "time": "10:20-12:05",
+                "time": "08:30-10:15",
                 "rescheduled": false,
                 "exam": false,
                 "is_elective": false,
                 "elective_group": null
               }
             ]
-          }
-        },
-        "LA": {
+          },
           "A": {
             "Monday": [
               {
                 "room": "C-301",
-                "time": "12:10-01:55",
+                "time": "10:20-12:05",
                 "rescheduled": false,
                 "exam": false,
                 "is_elective": false,
@@ -85,18 +49,17 @@
             "Tuesday": [
               {
                 "room": "C-301",
-                "time": "12:10-01:55",
+                "time": "10:20-12:05",
                 "rescheduled": false,
                 "exam": false,
                 "is_elective": false,
-                "elective_group": null,
-                "cancelled": true
+                "elective_group": null
               }
             ],
             "Wednesday": [
               {
                 "room": "C-301",
-                "time": "12:10-01:55",
+                "time": "10:20-12:05",
                 "rescheduled": false,
                 "exam": false,
                 "is_elective": false,
@@ -207,6 +170,74 @@
             ]
           }
         },
+        "MV Calculus": {
+          "A": {
+            "Monday": [
+              {
+                "room": "C-303",
+                "time": "08:30-10:15",
+                "rescheduled": false,
+                "exam": false,
+                "is_elective": false,
+                "elective_group": null
+              }
+            ],
+            "Tuesday": [
+              {
+                "room": "C-303",
+                "time": "08:30-10:15",
+                "rescheduled": false,
+                "exam": false,
+                "is_elective": false,
+                "elective_group": null
+              }
+            ],
+            "Wednesday": [
+              {
+                "room": "C-303",
+                "time": "08:30-10:15",
+                "rescheduled": false,
+                "exam": false,
+                "is_elective": false,
+                "elective_group": null
+              }
+            ]
+          }
+        },
+        "LA": {
+          "A": {
+            "Monday": [
+              {
+                "room": "C-303",
+                "time": "12:10-01:55",
+                "rescheduled": false,
+                "exam": false,
+                "is_elective": false,
+                "elective_group": null
+              }
+            ],
+            "Tuesday": [
+              {
+                "room": "C-303",
+                "time": "12:10-01:55",
+                "rescheduled": false,
+                "exam": false,
+                "is_elective": false,
+                "elective_group": null
+              }
+            ],
+            "Wednesday": [
+              {
+                "room": "C-303",
+                "time": "12:10-01:55",
+                "rescheduled": false,
+                "exam": false,
+                "is_elective": false,
+                "elective_group": null
+              }
+            ]
+          }
+        },
         "International Students": {
           "A": {
             "Monday": [
@@ -267,6 +298,154 @@
               {
                 "room": "C-311",
                 "time": "02:00-03:45",
+                "rescheduled": false,
+                "exam": false,
+                "is_elective": false,
+                "elective_group": null
+              }
+            ]
+          }
+        },
+        "Internship by Dr. Rizwan": {
+          "A": {
+            "Monday": [
+              {
+                "room": "D-301",
+                "time": "08:30-10:15",
+                "rescheduled": false,
+                "exam": false,
+                "is_elective": false,
+                "elective_group": null
+              }
+            ],
+            "Tuesday": [
+              {
+                "room": "D-301",
+                "time": "08:30-10:15",
+                "rescheduled": false,
+                "exam": false,
+                "is_elective": false,
+                "elective_group": null
+              }
+            ],
+            "Wednesday": [
+              {
+                "room": "D-301",
+                "time": "08:30-10:15",
+                "rescheduled": false,
+                "exam": false,
+                "is_elective": false,
+                "elective_group": null
+              }
+            ],
+            "Thursday": [
+              {
+                "room": "D-301",
+                "time": "08:30-10:15",
+                "rescheduled": false,
+                "exam": false,
+                "is_elective": false,
+                "elective_group": null
+              }
+            ],
+            "Friday": [
+              {
+                "room": "D-301",
+                "time": "08:30-10:15",
+                "rescheduled": false,
+                "exam": false,
+                "is_elective": false,
+                "elective_group": null
+              }
+            ]
+          }
+        },
+        "Internship by Mr. Mehmood ul Hassan": {
+          "A": {
+            "Monday": [
+              {
+                "room": "D-502",
+                "time": "08:30-10:15",
+                "rescheduled": false,
+                "exam": false,
+                "is_elective": false,
+                "elective_group": null
+              },
+              {
+                "room": "D-503",
+                "time": "08:30-10:15",
+                "rescheduled": false,
+                "exam": false,
+                "is_elective": false,
+                "elective_group": null
+              }
+            ],
+            "Tuesday": [
+              {
+                "room": "D-502",
+                "time": "08:30-10:15",
+                "rescheduled": false,
+                "exam": false,
+                "is_elective": false,
+                "elective_group": null
+              },
+              {
+                "room": "D-503",
+                "time": "08:30-10:15",
+                "rescheduled": false,
+                "exam": false,
+                "is_elective": false,
+                "elective_group": null
+              }
+            ],
+            "Wednesday": [
+              {
+                "room": "D-502",
+                "time": "08:30-10:15",
+                "rescheduled": false,
+                "exam": false,
+                "is_elective": false,
+                "elective_group": null
+              },
+              {
+                "room": "D-503",
+                "time": "08:30-10:15",
+                "rescheduled": false,
+                "exam": false,
+                "is_elective": false,
+                "elective_group": null
+              }
+            ],
+            "Thursday": [
+              {
+                "room": "D-502",
+                "time": "08:30-10:15",
+                "rescheduled": false,
+                "exam": false,
+                "is_elective": false,
+                "elective_group": null
+              },
+              {
+                "room": "D-503",
+                "time": "08:30-10:15",
+                "rescheduled": false,
+                "exam": false,
+                "is_elective": false,
+                "elective_group": null
+              }
+            ],
+            "Friday": [
+              {
+                "room": "D-502",
+                "time": "08:30-10:15",
+                "rescheduled": false,
+                "exam": false,
+                "is_elective": false,
+                "elective_group": null
+              },
+              {
+                "room": "D-503",
+                "time": "08:30-10:15",
                 "rescheduled": false,
                 "exam": false,
                 "is_elective": false,
