@@ -1,8 +1,8 @@
 {
-  "filtered_at": "2026-06-15T12:28:59.518056",
+  "filtered_at": "2026-06-22T12:15:34.565543",
   "date_range": "2026-06-01 to 2026-07-31",
-  "total_original": 39,
-  "total_filtered": 16,
+  "total_original": 69,
+  "total_filtered": 30,
   "events": [
     {
       "event_name": "Project Presentation",
@@ -41,6 +41,12 @@
       "event_location": "MEDC 118 By Ms Fasiha (FSM)"
     },
     {
+      "event_name": "Class",
+      "date": "June 11",
+      "time": "1:00 pm - 3:00 pm",
+      "event_location": "MEDC-118 by Ms. Fasiha"
+    },
+    {
       "event_name": "Recruitment Drive",
       "date": "June 15",
       "time": "9:00 am - 5:00 am",
@@ -65,8 +71,14 @@
       "event_location": "Auditorium A and D Block by Ms. laraib"
     },
     {
-      "event_name": "Recruitment Drive",
+      "event_name": "MS Thesis Defense",
       "date": "June 16",
+      "time": "12:00 pm - 1:00 pm",
+      "event_location": "MEDC-118 by Mr. Qaiser Shafi"
+    },
+    {
+      "event_name": "Recruitment Drive",
+      "date": "June 17",
       "time": "9:00 am - 5:00 am",
       "event_location": "Auditorium D  &MEDC 117 by Mr. Zeeshan CSO"
     },
@@ -83,6 +95,12 @@
       "event_location": "MEDC 117 by Ms. Soha (EE)"
     },
     {
+      "event_name": "MS Thesis Defense",
+      "date": "June 17",
+      "time": "5:00 pm - 7:00 pm",
+      "event_location": "MEDC-118 by Ms. Fasiha"
+    },
+    {
       "event_name": "Hackthon Closing Ceremony",
       "date": "June 18",
       "time": "9:00 am - 8:00 pm",
@@ -95,10 +113,76 @@
       "event_location": "MEDC 118 by Mr. Atif Baig(EE)"
     },
     {
-      "event_name": "EE Event",
+      "event_name": "MS Thesis Defense",
+      "date": "June 18",
+      "time": "5:00 pm - 6:00 pm",
+      "event_location": "MEDC 118 By Ms. Faisiha"
+    },
+    {
+      "event_name": "Lecture Of Dr. Aniqa (HOD FSM)",
+      "date": "June 22",
+      "time": "11:00 am - 1:30 pm",
+      "event_location": "MEDC 117 By Mr. Atif Baig"
+    },
+    {
+      "event_name": "MS Thesis Defense",
+      "date": "June 22",
+      "time": "11:30 am - 1:00 pm",
+      "event_location": "MEDC 118 By ms Fasiha"
+    },
+    {
+      "event_name": "MS Thesis Defense",
+      "date": "June 22",
+      "time": "2:30 pm - 3:30 pm",
+      "event_location": "MEDC 118 by Fasiha"
+    },
+    {
+      "event_name": "MS Thesis Defense",
+      "date": "June 22",
+      "time": "3:30 pm - 4:30 pm",
+      "event_location": "MEDC 118 by Ms Fasiha FSM"
+    },
+    {
+      "event_name": "HR Activity",
+      "date": "June 23",
+      "time": "8:00 am - 8:00 pm",
+      "event_location": "MEDC 117 by Mr. Adnan Shafaqat"
+    },
+    {
+      "event_name": "MS Defense",
+      "date": "June 23",
+      "time": "11:00 am - 1:00 pm",
+      "event_location": "MEDC-118 by Dr. Qaiser Shafi"
+    },
+    {
+      "event_name": "MS Thesis Defense",
+      "date": "June 23",
+      "time": "1:30 pm - 2:30 pm",
+      "event_location": "MEDC 118 by Fasiha FSM"
+    },
+    {
+      "event_name": "Admissions Activity",
+      "date": "June 29",
+      "time": "8:00 am - 2:00 am",
+      "event_location": "Auditorium D Block by Mr. Abdul Hameed"
+    },
+    {
+      "event_name": "Admissions Activity",
+      "date": "June 30",
+      "time": "8:00 am - 2:00 am",
+      "event_location": "Auditorium D Block by Mr. Abdul Hameed"
+    },
+    {
+      "event_name": "Admissions Activity",
+      "date": "July 1",
+      "time": "8:00 am - 2:00 am",
+      "event_location": "Auditorium D Block by Mr. Abdul Hameed"
+    },
+    {
+      "event_name": "Admissions Activity",
       "date": "July 2",
-      "time": "7:00 am - 7:00 pm",
-      "event_location": "D Block Audi by Dr. Saeed"
+      "time": "8:00 am - 2:00 am",
+      "event_location": "Auditorium D Block by Mr. Abdul Hameed"
     }
   ]
 }

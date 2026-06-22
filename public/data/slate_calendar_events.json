@@ -1,7 +1,7 @@
 {
-  "scraped_at": "2026-06-15T12:28:59.518056",
+  "scraped_at": "2026-06-22T12:15:34.565543",
   "date_range": "2026-06-01 to 2026-07-31",
-  "total_events": 39,
+  "total_events": 69,
   "events": [
     {
       "event_name": "Project Presentation",
@@ -40,16 +40,16 @@
       "event_location": "MEDC-118 by Dr. Daniyal"
     },
     {
-      "event_name": "Faculty Interviews FCS",
-      "date": "June 5",
-      "time": "9:00 am - 6:00 pm",
-      "event_location": "C-109 by Dr. Subhanullah"
-    },
-    {
       "event_name": "Application of AI In Engineering",
       "date": "June 5",
       "time": "9:00 am - 12:00 pm",
       "event_location": "MEDC 118 by Dr. Rashif Ramzan (EE)"
+    },
+    {
+      "event_name": "Faculty Interviews FCS",
+      "date": "June 5",
+      "time": "9:00 am - 6:00 pm",
+      "event_location": "C-109 by Dr. Subhanullah"
     },
     {
       "event_name": "Faculty Interviews FSM",
@@ -88,16 +88,16 @@
       "event_location": "C Block, C-109 by Ms. Soha (EE)"
     },
     {
-      "event_name": "Class",
-      "date": "June 11",
-      "time": "1:00 pm - 3:00 pm",
-      "event_location": "MEDC-118 by Ms. Fasiha"
-    },
-    {
       "event_name": "Interviews by Dr. Riffat",
       "date": "June 11",
       "time": "1:00 pm - 3:00 pm",
       "event_location": "CMR by Ms. Fasiha"
+    },
+    {
+      "event_name": "Class",
+      "date": "June 11",
+      "time": "1:00 pm - 3:00 pm",
+      "event_location": "MEDC-118 by Ms. Fasiha"
     },
     {
       "event_name": "MS BA Orientation",
@@ -130,12 +130,6 @@
       "event_location": "Auditorium D  &C-109 by Mr. Zeeshan CSO"
     },
     {
-      "event_name": "Hackthon",
-      "date": "June 16",
-      "time": "9:00 am - 6:00 pm",
-      "event_location": "Auditorium A and D Block by Ms. laraib"
-    },
-    {
       "event_name": "Academic Council Meeting",
       "date": "June 16",
       "time": "9:00 am - 4:00 pm",
@@ -146,6 +140,12 @@
       "date": "June 16",
       "time": "9:00 am - 5:00 am",
       "event_location": "Auditorium D  &MEDC 117 by Mr. Zeeshan CSO"
+    },
+    {
+      "event_name": "Hackthon",
+      "date": "June 16",
+      "time": "9:00 am - 6:00 pm",
+      "event_location": "Auditorium A and D Block by Ms. laraib"
     },
     {
       "event_name": "MS Thesis Defense",
@@ -203,15 +203,45 @@
     },
     {
       "event_name": "MS Thesis Defense",
-      "date": "June 19",
-      "time": "5:00 pm - 7:00 pm",
-      "event_location": "MEDC-118 by Ms. Fasiha"
+      "date": "June 18",
+      "time": "5:00 pm - 6:00 pm",
+      "event_location": "MEDC 118 By Ms. Faisiha"
     },
     {
       "event_name": "QEC Training",
       "date": "June 22",
       "time": "9:00 am - 6:00 pm",
       "event_location": "C-109 by Ms. Wardah"
+    },
+    {
+      "event_name": "Lecture Of Dr. Aniqa (HOD FSM)",
+      "date": "June 22",
+      "time": "11:00 am - 1:30 pm",
+      "event_location": "MEDC 117 By Mr. Atif Baig"
+    },
+    {
+      "event_name": "MS Thesis Defense",
+      "date": "June 22",
+      "time": "11:30 am - 1:00 pm",
+      "event_location": "MEDC 118 By ms Fasiha"
+    },
+    {
+      "event_name": "MS Thesis Defense",
+      "date": "June 22",
+      "time": "2:30 pm - 3:30 pm",
+      "event_location": "MEDC 118 by Fasiha"
+    },
+    {
+      "event_name": "MS Thesis Defense",
+      "date": "June 22",
+      "time": "3:30 pm - 4:30 pm",
+      "event_location": "MEDC 118 by Ms Fasiha FSM"
+    },
+    {
+      "event_name": "HR Activity",
+      "date": "June 23",
+      "time": "8:00 am - 8:00 pm",
+      "event_location": "MEDC 117 by Mr. Adnan Shafaqat"
     },
     {
       "event_name": "QEC Training",
@@ -226,16 +256,166 @@
       "event_location": "MEDC-118 by Dr. Qaiser Shafi"
     },
     {
+      "event_name": "MS Thesis Defense",
+      "date": "June 23",
+      "time": "1:30 pm - 2:30 pm",
+      "event_location": "MEDC 118 by Fasiha FSM"
+    },
+    {
       "event_name": "QEC Training",
       "date": "June 24",
       "time": "9:00 am - 6:00 pm",
       "event_location": "C-109 by Ms. Wardah"
     },
     {
+      "event_name": "Admissions Activity",
+      "date": "June 29",
+      "time": "8:00 am - 2:00 am",
+      "event_location": "Auditorium D Block by Mr. Abdul Hameed"
+    },
+    {
+      "event_name": "Admissions Activity",
+      "date": "June 30",
+      "time": "8:00 am - 2:00 am",
+      "event_location": "Auditorium D Block by Mr. Abdul Hameed"
+    },
+    {
+      "event_name": "Admissions Activity",
+      "date": "June 30",
+      "time": "8:00 am - 2:00 am",
+      "event_location": "Auditorium D Block by Mr. Abdul Hameed"
+    },
+    {
+      "event_name": "Admissions Activity",
+      "date": "July 1",
+      "time": "8:00 am - 2:00 am",
+      "event_location": "Auditorium D Block by Mr. Abdul Hameed"
+    },
+    {
+      "event_name": "Admissions Activity",
+      "date": "July 1",
+      "time": "8:00 am - 2:00 am",
+      "event_location": "Auditorium D Block by Mr. Abdul Hameed"
+    },
+    {
+      "event_name": "Admissions Activity",
+      "date": "July 2",
+      "time": "8:00 am - 2:00 am",
+      "event_location": "Auditorium D Block by Mr. Abdul Hameed"
+    },
+    {
       "event_name": "EE Event",
       "date": "July 2",
       "time": "7:00 am - 7:00 pm",
-      "event_location": "D Block Audi by Dr. Saeed"
+      "event_location": "D Block & A Block Audi by Dr. Saeed"
+    },
+    {
+      "event_name": "Admissions Activity",
+      "date": "July 2",
+      "time": "8:00 am - 2:00 am",
+      "event_location": "Auditorium D Block by Mr. Abdul Hameed"
+    },
+    {
+      "event_name": "Admissions Activity",
+      "date": "July 3",
+      "time": "8:00 am - 2:00 am",
+      "event_location": "Auditorium D Block by Mr. Abdul Hameed"
+    },
+    {
+      "event_name": "Admissions Activity",
+      "date": "July 3",
+      "time": "8:00 am - 2:00 am",
+      "event_location": "Auditorium D Block by Mr. Abdul Hameed"
+    },
+    {
+      "event_name": "Admissions Activity",
+      "date": "July 4",
+      "time": "8:00 am - 2:00 am",
+      "event_location": "Auditorium D Block by Mr. Abdul Hameed"
+    },
+    {
+      "event_name": "Admissions Activity",
+      "date": "July 4",
+      "time": "8:00 am - 2:00 am",
+      "event_location": "Auditorium D Block by Mr. Abdul Hameed"
+    },
+    {
+      "event_name": "Admissions Activity",
+      "date": "July 5",
+      "time": "8:00 am - 2:00 am",
+      "event_location": "Auditorium D Block by Mr. Abdul Hameed"
+    },
+    {
+      "event_name": "Admissions Activity",
+      "date": "July 5",
+      "time": "8:00 am - 2:00 am",
+      "event_location": "Auditorium D Block by Mr. Abdul Hameed"
+    },
+    {
+      "event_name": "Admissions Activity",
+      "date": "July 6",
+      "time": "8:00 am - 2:00 am",
+      "event_location": "Auditorium D Block by Mr. Abdul Hameed"
+    },
+    {
+      "event_name": "Admissions Activity",
+      "date": "July 6",
+      "time": "8:00 am - 2:00 am",
+      "event_location": "Auditorium D Block by Mr. Abdul Hameed"
+    },
+    {
+      "event_name": "Admissions Activity",
+      "date": "July 7",
+      "time": "8:00 am - 2:00 am",
+      "event_location": "Auditorium D Block by Mr. Abdul Hameed"
+    },
+    {
+      "event_name": "Admissions Activity",
+      "date": "July 7",
+      "time": "8:00 am - 2:00 am",
+      "event_location": "Auditorium D Block by Mr. Abdul Hameed"
+    },
+    {
+      "event_name": "Admissions Activity",
+      "date": "July 8",
+      "time": "8:00 am - 2:00 am",
+      "event_location": "Auditorium D Block by Mr. Abdul Hameed"
+    },
+    {
+      "event_name": "Admissions Activity",
+      "date": "July 8",
+      "time": "8:00 am - 2:00 am",
+      "event_location": "Auditorium D Block by Mr. Abdul Hameed"
+    },
+    {
+      "event_name": "Admissions Activity",
+      "date": "July 9",
+      "time": "8:00 am - 2:00 am",
+      "event_location": "Auditorium D Block by Mr. Abdul Hameed"
+    },
+    {
+      "event_name": "Admissions Activity",
+      "date": "July 9",
+      "time": "8:00 am - 2:00 am",
+      "event_location": "Auditorium D Block by Mr. Abdul Hameed"
+    },
+    {
+      "event_name": "Admissions Activity",
+      "date": "July 10",
+      "time": "8:00 am - 2:00 am",
+      "event_location": "Auditorium D Block by Mr. Abdul Hameed"
+    },
+    {
+      "event_name": "Admissions Activity",
+      "date": "July 10",
+      "time": "8:00 am - 2:00 am",
+      "event_location": "Auditorium D Block by Mr. Abdul Hameed"
+    },
+    {
+      "event_name": "Admissions Activity",
+      "date": "July 11",
+      "time": "8:00 am - 2:00 am",
+      "event_location": "Auditorium D Block by Mr. Abdul Hameed"
     }
   ]
 }
