@@ -66,6 +66,38 @@
                 "elective_group": null
               }
             ]
+          },
+          "C": {
+            "Monday": [
+              {
+                "room": "C-305",
+                "time": "10:20-12:05",
+                "rescheduled": false,
+                "exam": false,
+                "is_elective": false,
+                "elective_group": null
+              }
+            ],
+            "Tuesday": [
+              {
+                "room": "C-304",
+                "time": "10:20-12:05",
+                "rescheduled": false,
+                "exam": false,
+                "is_elective": false,
+                "elective_group": null
+              }
+            ],
+            "Wednesday": [
+              {
+                "room": "C-305",
+                "time": "10:20-12:05",
+                "rescheduled": false,
+                "exam": false,
+                "is_elective": false,
+                "elective_group": null
+              }
+            ]
           }
         },
         "Calculus": {
@@ -569,16 +601,6 @@
                 "is_elective": false,
                 "elective_group": null
               }
-            ],
-            "Thursday": [
-              {
-                "room": "A-Karakoram 3",
-                "time": "11:25-02:10",
-                "rescheduled": false,
-                "exam": false,
-                "is_elective": false,
-                "elective_group": null
-              }
             ]
           }
         },
@@ -597,6 +619,20 @@
             "Thursday": [
               {
                 "room": "C-311",
+                "time": "10:20-12:05",
+                "rescheduled": false,
+                "exam": false,
+                "is_elective": false,
+                "elective_group": null
+              }
+            ]
+          }
+        },
+        "OOP ReSch": {
+          "A": {
+            "Thursday": [
+              {
+                "room": "C-301",
                 "time": "10:20-12:05",
                 "rescheduled": false,
                 "exam": false,
