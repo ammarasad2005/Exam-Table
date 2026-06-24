@@ -122,6 +122,7 @@ function processCSVRows(rows: string[][], defaultDay?: string): TimetableEntry[]
           let department = '';
           let reserved = false;
           let cancelled = false;
+          let rescheduled = false;
 
           if (cellLower.includes("reserved")) {
             courseName = "Reserved";
@@ -133,9 +134,16 @@ function processCSVRows(rows: string[][], defaultDay?: string): TimetableEntry[]
             let cellText = cell;
             if (cellLower.includes("cancel") || cellLower.includes("cancle")) {
               cancelled = true;
-              cellText = cell.replace(/\s*\(\s*(?:cancel|cancle)[a-z]*\s*\)\s*/gi, ' ')
+              cellText = cellText.replace(/\s*\(\s*(?:cancel|cancle)[a-z]*\s*\)\s*/gi, ' ')
                              .replace(/\s*\b(?:cancel|cancle)[a-z]*\b\s*/gi, ' ')
                              .trim();
+            }
+
+            if (/\b(?:resched[a-z]*|resch)\b/i.test(cellText)) {
+              rescheduled = true;
+              cellText = cellText.replace(/\s*\(\s*(?:resched[a-z]*|resch)\s*\)\s*/gi, ' ')
+                                 .replace(/\s*\b(?:resched[a-z]*|resch)\b\s*/gi, ' ')
+                                 .trim();
             }
 
             // Extract section if present (for summer, e.g. "Linear Algebra (A)")
@@ -164,7 +172,7 @@ function processCSVRows(rows: string[][], defaultDay?: string): TimetableEntry[]
             room: room,
             type: type,
             category: 'regular',
-            rescheduled: false,
+            rescheduled: rescheduled,
             exam: false,
             isElective: false,
             electiveGroup: null,
@@ -205,6 +213,7 @@ function processCSVRows(rows: string[][], defaultDay?: string): TimetableEntry[]
     const courseLower = courseName.toLowerCase();
     let reserved = false;
     let cancelled = false;
+    let rescheduled = false;
     let section = String(getValue('section', row, ''));
     let batch = String(getValue('batch', row, ''));
     let department = String(getValue('department', row, ''));
@@ -220,6 +229,13 @@ function processCSVRows(rows: string[][], defaultDay?: string): TimetableEntry[]
         cancelled = true;
         courseName = courseName.replace(/\s*\(\s*(?:cancel|cancle)[a-z]*\s*\)\s*/gi, ' ')
                                .replace(/\s*\b(?:cancel|cancle)[a-z]*\b\s*/gi, ' ')
+                               .trim();
+      }
+
+      if (/\b(?:resched[a-z]*|resch)\b/i.test(courseName)) {
+        rescheduled = true;
+        courseName = courseName.replace(/\s*\(\s*(?:resched[a-z]*|resch)\s*\)\s*/gi, ' ')
+                               .replace(/\s*\b(?:resched[a-z]*|resch)\b\s*/gi, ' ')
                                .trim();
       }
     }
@@ -245,7 +261,7 @@ function processCSVRows(rows: string[][], defaultDay?: string): TimetableEntry[]
       room:          String(getValue('room', row, '')),
       type,
       category:      String(getValue('category', row, 'regular')) as 'regular' | 'repeat',
-      rescheduled:   parseBoolean(getValue('rescheduled', row, false)),
+      rescheduled:   rescheduled || parseBoolean(getValue('rescheduled', row, false)),
       exam:          parseBoolean(getValue('exam', row, false)),
       isElective:    parseBoolean(getValue('isElective', row, false)),
       electiveGroup: (getValue('electiveGroup', row, null) as string | null) || null,

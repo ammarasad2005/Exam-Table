@@ -10,7 +10,7 @@ import { DAYS_ORDER, TIMETABLE_META_KEY } from './types';
  * returning the cleaned course name and the extracted time slot if found.
  */
 export function extractTimeFromCourseName(courseName: string): { cleanName: string; time: string | null } {
-  const timeRegex = /\((1?\d:\d{2})\s*[-–]\s*(1?\d:\d{2})\)/;
+  const timeRegex = /(?:\()?([0-2]?\d:[0-5]\d)\s*[-–]\s*([0-2]?\d:[0-5]\d)(?:\))?/;
   const match = courseName.match(timeRegex);
   if (match) {
     const time = `${match[1]}-${match[2]}`;
