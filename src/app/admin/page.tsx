@@ -33,6 +33,7 @@ import {
 import { Header } from '@/components/Header'
 import { supabase } from '@/lib/supabase'
 import { useToast } from '@/hooks/use-toast'
+import { extractTimeFromCourseName } from '@/lib/timetable-filter'
 import type { SummerCourseCatalogEntry, RegularCourseMappings } from '@/lib/types'
 import { HARDCODED_VALID_COURSES_MAP } from '@/lib/types'
 import {
@@ -358,6 +359,27 @@ export default function AdminPage() {
         return result;
       };
 
+      const cleanCourseCell = (cellText: string): string => {
+        let cleaned = cellText;
+        if (cleaned.toLowerCase().includes("cancel") || cleaned.toLowerCase().includes("cancle")) {
+          cleaned = cleaned.replace(/\s*\(\s*(?:cancel|cancle)[a-z]*\s*\)\s*/gi, ' ')
+                           .replace(/\s*\b(?:cancel|cancle)[a-z]*\b\s*/gi, ' ')
+                           .trim();
+        }
+        if (/\b(?:resched[a-z]*|resch)\b/i.test(cleaned)) {
+          cleaned = cleaned.replace(/\s*\(\s*(?:resched[a-z]*|resch)\s*\)\s*/gi, ' ')
+                           .replace(/\s*\b(?:resched[a-z]*|resch)\b\s*/gi, ' ')
+                           .trim();
+        }
+        const match = cleaned.match(/^([^(]+?)\s*\(\s*([A-Za-z0-9\-/]+)\s*\)/);
+        if (match) {
+          cleaned = match[1].trim();
+        }
+        cleaned = cleaned.replace(/\s*\([^)]*\)\s*$/, '').trim();
+        const { cleanName } = extractTimeFromCourseName(cleaned);
+        return cleanName;
+      };
+
       const promises = DAYS.map(async (day) => {
         const csvUrl = `https://docs.google.com/spreadsheets/d/${spreadsheetId}/gviz/tq?tqx=out:csv&sheet=${encodeURIComponent(day)}`;
         try {
@@ -398,8 +420,8 @@ export default function AdminPage() {
                 for (let col = 1; col < row.length; col++) {
                   const cell = row[col];
                   if (cell && !cell.toLowerCase().includes('reserved') && !cell.toLowerCase().includes('students')) {
-                    // Extract course name (strip section info e.g. "OOP (A)")
-                    const cleanCell = cell.replace(/\s*\([^)]*\)\s*$/, '').trim();
+                    // Extract course name (strip section info, rescheduled, cancel, and times)
+                    const cleanCell = cleanCourseCell(cell);
                     if (cleanCell) {
                       fetchedCourses.add(cleanCell);
                     }
@@ -423,7 +445,7 @@ export default function AdminPage() {
                 if (row.length > courseIdx) {
                   const cell = row[courseIdx];
                   if (cell) {
-                    const cleanCell = cell.replace(/\s*\([^)]*\)\s*$/, '').trim();
+                    const cleanCell = cleanCourseCell(cell);
                     if (cleanCell) {
                       fetchedCourses.add(cleanCell);
                     }

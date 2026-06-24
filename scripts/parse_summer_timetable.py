@@ -372,10 +372,10 @@ def parse_cell_details(cell_content):
     val = cell_content.lower()
     
     if not cell_content:
-        return "", "", False, False
+        return "", "", False, False, False
         
     if "reserved" in val:
-        return "Reserved", "Reserved", True, False
+        return "Reserved", "Reserved", True, False, False
         
     # Check cancellation
     is_cancelled = False
@@ -384,6 +384,15 @@ def parse_cell_details(cell_content):
         # Remove cancel keyword and any surrounding parens
         cell_content = re.sub(r'(?i)\s*\(\s*(?:cancel|cancle)[a-z]*\s*\)\s*', ' ', cell_content)
         cell_content = re.sub(r'(?i)\s*\b(?:cancel|cancle)[a-z]*\b\s*', ' ', cell_content)
+        cell_content = cell_content.strip()
+        
+    # Check rescheduled
+    is_rescheduled = False
+    if re.search(r'(?i)\b(?:resched[a-z]*|resch)\b', cell_content):
+        is_rescheduled = True
+        # Remove rescheduled keyword and any surrounding parens
+        cell_content = re.sub(r'(?i)\s*\(\s*(?:resched[a-z]*|resch)\s*\)\s*', ' ', cell_content)
+        cell_content = re.sub(r'(?i)\s*\b(?:resched[a-z]*|resch)\b\s*', ' ', cell_content)
         cell_content = cell_content.strip()
         
     # Extract course name and section
@@ -395,7 +404,7 @@ def parse_cell_details(cell_content):
         course_name = cell_content
         section = "A"
         
-    return course_name, section, False, is_cancelled
+    return course_name, section, False, is_cancelled, is_rescheduled
 
 def process_sheet_rows(rows, day_name):
     if len(rows) < 2:
@@ -432,7 +441,7 @@ def process_sheet_rows(rows, day_name):
                     if not time_slot:
                         continue
                     
-                    course_name, section, is_reserved, is_cancelled = parse_cell_details(cell)
+                    course_name, section, is_reserved, is_cancelled, is_rescheduled = parse_cell_details(cell)
                     entries.append({
                         "courseName": course_name,
                         "section": section,
@@ -440,7 +449,8 @@ def process_sheet_rows(rows, day_name):
                         "time": time_slot,
                         "room": room,
                         "isReserved": is_reserved,
-                        "isCancelled": is_cancelled
+                        "isCancelled": is_cancelled,
+                        "isRescheduled": is_rescheduled
                     })
     else:
         # Flat table format
@@ -470,7 +480,7 @@ def process_sheet_rows(rows, day_name):
             if not course_val:
                 continue
             
-            course_name, section, is_reserved, is_cancelled = parse_cell_details(course_val)
+            course_name, section, is_reserved, is_cancelled, is_rescheduled = parse_cell_details(course_val)
             # If section column is explicitly present, override
             if section_idx < len(row) and section_idx >= 0 and row[section_idx].strip():
                 section = row[section_idx].strip()
@@ -486,7 +496,8 @@ def process_sheet_rows(rows, day_name):
                 "time": time_val,
                 "room": room_val,
                 "isReserved": is_reserved,
-                "isCancelled": is_cancelled
+                "isCancelled": is_cancelled,
+                "isRescheduled": is_rescheduled
             })
 
     return entries
@@ -569,6 +580,7 @@ def main():
         time_slot = entry["time"]
         is_reserved = entry.get("isReserved", False)
         is_cancelled = entry.get("isCancelled", False)
+        is_rescheduled = entry.get("isRescheduled", False)
 
         if is_reserved:
             target_map = nested_timetable["System"]["System"]["regular"]
@@ -585,7 +597,7 @@ def main():
         slot_data = {
             "room": room,
             "time": time_slot,
-            "rescheduled": False,
+            "rescheduled": is_rescheduled,
             "exam": False,
             "is_elective": False,
             "elective_group": None
