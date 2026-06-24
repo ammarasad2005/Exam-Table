@@ -300,6 +300,28 @@
                 "elective_group": null
               }
             ]
+          },
+          "B": {
+            "Monday": [
+              {
+                "room": "C-304",
+                "time": "08:30-10:15",
+                "rescheduled": false,
+                "exam": false,
+                "is_elective": false,
+                "elective_group": null
+              }
+            ],
+            "Tuesday": [
+              {
+                "room": "C-304",
+                "time": "08:30-10:15",
+                "rescheduled": false,
+                "exam": false,
+                "is_elective": false,
+                "elective_group": null
+              }
+            ]
           }
         },
         "OOP": {
