@@ -484,8 +484,8 @@ function TimetablePageInner() {
         // summerSelections keys are course sheetNames; values are the chosen section
         if (!summerSelections[canonicalName]) return false;
         const selectedSection = summerSelections[canonicalName];
-        // If the entry has no section (grid-parsed summer schedules), show it for any selection
-        if (!e.section || !selectedSection || selectedSection === 'A') return true;
+        // If the entry or selection has no section, show it
+        if (!e.section || !selectedSection) return true;
         return e.section === selectedSection;
       });
       const q = query.toLowerCase().trim();
