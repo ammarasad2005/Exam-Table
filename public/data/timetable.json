@@ -101,50 +101,6 @@
             ]
           }
         },
-        "Generative AI": {
-          "A": {
-            "Monday": [
-              {
-                "room": "C-301",
-                "time": "02:00-03:45",
-                "rescheduled": false,
-                "exam": false,
-                "is_elective": false,
-                "elective_group": null
-              }
-            ],
-            "Tuesday": [
-              {
-                "room": "C-301",
-                "time": "02:00-03:45",
-                "rescheduled": false,
-                "exam": false,
-                "is_elective": false,
-                "elective_group": null
-              }
-            ],
-            "Wednesday": [
-              {
-                "room": "C-301",
-                "time": "02:00-03:45",
-                "rescheduled": false,
-                "exam": false,
-                "is_elective": false,
-                "elective_group": null
-              }
-            ],
-            "Thursday": [
-              {
-                "room": "C-301",
-                "time": "02:00-03:45",
-                "rescheduled": true,
-                "exam": false,
-                "is_elective": false,
-                "elective_group": null
-              }
-            ]
-          }
-        },
         "Calculus": {
           "A": {
             "Monday": [
@@ -769,6 +725,30 @@
             ]
           }
         },
+        "Generative AI (02:00-04:45)": {
+          "A": {
+            "Tuesday": [
+              {
+                "room": "C-301",
+                "time": "02:00-03:45",
+                "rescheduled": false,
+                "exam": false,
+                "is_elective": false,
+                "elective_group": null
+              }
+            ],
+            "Wednesday": [
+              {
+                "room": "C-301",
+                "time": "02:00-03:45",
+                "rescheduled": false,
+                "exam": false,
+                "is_elective": false,
+                "elective_group": null
+              }
+            ]
+          }
+        },
         "PF": {
           "A": {
             "Tuesday": [
@@ -862,6 +842,20 @@
                 "room": "C-311",
                 "time": "10:20-12:05",
                 "rescheduled": false,
+                "exam": false,
+                "is_elective": false,
+                "elective_group": null
+              }
+            ]
+          }
+        },
+        "Generative AI": {
+          "A": {
+            "Thursday": [
+              {
+                "room": "C-301",
+                "time": "02:00-03:45",
+                "rescheduled": true,
                 "exam": false,
                 "is_elective": false,
                 "elective_group": null
