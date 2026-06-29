@@ -70,8 +70,8 @@
           "C": {
             "Monday": [
               {
-                "room": "C-305",
-                "time": "10:20-12:05",
+                "room": "C-308",
+                "time": "08:30-10:15",
                 "rescheduled": false,
                 "exam": false,
                 "is_elective": false,
@@ -81,8 +81,8 @@
             ],
             "Tuesday": [
               {
-                "room": "C-304",
-                "time": "10:20-12:05",
+                "room": "C-308",
+                "time": "08:30-10:15",
                 "rescheduled": false,
                 "exam": false,
                 "is_elective": false,
@@ -91,8 +91,8 @@
             ],
             "Wednesday": [
               {
-                "room": "C-305",
-                "time": "10:20-12:05",
+                "room": "C-304",
+                "time": "08:30-10:15",
                 "rescheduled": false,
                 "exam": false,
                 "is_elective": false,
@@ -246,6 +246,40 @@
             "Wednesday": [
               {
                 "room": "C-302",
+                "time": "12:10-01:55",
+                "rescheduled": false,
+                "exam": false,
+                "is_elective": false,
+                "elective_group": null
+              }
+            ]
+          }
+        },
+        "COAL": {
+          "A": {
+            "Monday": [
+              {
+                "room": "C-303",
+                "time": "12:10-01:55",
+                "rescheduled": false,
+                "exam": false,
+                "is_elective": false,
+                "elective_group": null
+              }
+            ],
+            "Tuesday": [
+              {
+                "room": "C-304",
+                "time": "12:10-01:55",
+                "rescheduled": false,
+                "exam": false,
+                "is_elective": false,
+                "elective_group": null
+              }
+            ],
+            "Wednesday": [
+              {
+                "room": "C-303",
                 "time": "12:10-01:55",
                 "rescheduled": false,
                 "exam": false,
@@ -687,6 +721,30 @@
             ]
           }
         },
+        "COAL Lab": {
+          "A": {
+            "Monday": [
+              {
+                "room": "A-Karakoram 3",
+                "time": "02:25-05:10",
+                "rescheduled": false,
+                "exam": false,
+                "is_elective": false,
+                "elective_group": null
+              }
+            ],
+            "Wednesday": [
+              {
+                "room": "A-Karakoram 3",
+                "time": "02:25-05:10",
+                "rescheduled": false,
+                "exam": false,
+                "is_elective": false,
+                "elective_group": null
+              }
+            ]
+          }
+        },
         "DLD Lab": {
           "A": {
             "Monday": [
@@ -703,20 +761,6 @@
               {
                 "room": "Digital Lab",
                 "time": "02:25-05:10",
-                "rescheduled": false,
-                "exam": false,
-                "is_elective": false,
-                "elective_group": null
-              }
-            ]
-          }
-        },
-        "COAL": {
-          "A": {
-            "Tuesday": [
-              {
-                "room": "C-304",
-                "time": "12:10-01:55",
                 "rescheduled": false,
                 "exam": false,
                 "is_elective": false,
