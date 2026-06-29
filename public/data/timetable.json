@@ -100,6 +100,50 @@
             ]
           }
         },
+        "Generative AI": {
+          "A": {
+            "Monday": [
+              {
+                "room": "C-301",
+                "time": "02:00-03:45",
+                "rescheduled": false,
+                "exam": false,
+                "is_elective": false,
+                "elective_group": null
+              }
+            ],
+            "Tuesday": [
+              {
+                "room": "C-301",
+                "time": "02:00-03:45",
+                "rescheduled": false,
+                "exam": false,
+                "is_elective": false,
+                "elective_group": null
+              }
+            ],
+            "Wednesday": [
+              {
+                "room": "C-301",
+                "time": "02:00-03:45",
+                "rescheduled": false,
+                "exam": false,
+                "is_elective": false,
+                "elective_group": null
+              }
+            ],
+            "Thursday": [
+              {
+                "room": "C-301",
+                "time": "02:00-03:45",
+                "rescheduled": true,
+                "exam": false,
+                "is_elective": false,
+                "elective_group": null
+              }
+            ]
+          }
+        },
         "Calculus": {
           "A": {
             "Monday": [
@@ -889,36 +933,36 @@
       {
         "day": "Monday",
         "sheetName": "Monday",
-        "date": "22 Jun",
-        "isoDate": "2026-06-22",
+        "date": "29 Jun",
+        "isoDate": "2026-06-29",
         "isMakeup": false
       },
       {
         "day": "Tuesday",
         "sheetName": "Tuesday",
-        "date": "23 Jun",
-        "isoDate": "2026-06-23",
+        "date": "30 Jun",
+        "isoDate": "2026-06-30",
         "isMakeup": false
       },
       {
         "day": "Wednesday",
         "sheetName": "Wednesday",
-        "date": "24 Jun",
-        "isoDate": "2026-06-24",
+        "date": "01 Jul",
+        "isoDate": "2026-07-01",
         "isMakeup": false
       },
       {
         "day": "Thursday",
         "sheetName": "Thursday",
-        "date": "25 Jun",
-        "isoDate": "2026-06-25",
+        "date": "02 Jul",
+        "isoDate": "2026-07-02",
         "isMakeup": false
       },
       {
         "day": "Friday",
         "sheetName": "Friday",
-        "date": "26 Jun",
-        "isoDate": "2026-06-26",
+        "date": "03 Jul",
+        "isoDate": "2026-07-03",
         "isMakeup": false
       }
     ]
