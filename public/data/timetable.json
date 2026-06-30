@@ -380,7 +380,8 @@
                 "rescheduled": false,
                 "exam": false,
                 "is_elective": false,
-                "elective_group": null
+                "elective_group": null,
+                "cancelled": true
               }
             ],
             "Wednesday": [
