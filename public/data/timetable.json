@@ -278,7 +278,7 @@
             "Monday": [
               {
                 "room": "D-311",
-                "time": "08:30-10:15",
+                "time": "10:20-12:05",
                 "rescheduled": false,
                 "exam": false,
                 "is_elective": false,
@@ -287,8 +287,8 @@
             ],
             "Tuesday": [
               {
-                "room": "D-311",
-                "time": "08:30-10:15",
+                "room": "D-306",
+                "time": "10:20-12:05",
                 "rescheduled": false,
                 "exam": false,
                 "is_elective": false,
@@ -298,7 +298,7 @@
             "Wednesday": [
               {
                 "room": "D-312",
-                "time": "08:30-10:15",
+                "time": "10:20-12:05",
                 "rescheduled": false,
                 "exam": false,
                 "is_elective": false,
@@ -345,7 +345,7 @@
             ],
             "Tuesday": [
               {
-                "room": "D-313",
+                "room": "D-306",
                 "time": "12:10-01:55",
                 "rescheduled": false,
                 "exam": false,
@@ -400,16 +400,6 @@
                 "room": "D-314",
                 "time": "08:30-10:15",
                 "rescheduled": false,
-                "exam": false,
-                "is_elective": false,
-                "elective_group": null
-              }
-            ],
-            "Thursday": [
-              {
-                "room": "D-314",
-                "time": "10:20-12:05",
-                "rescheduled": true,
                 "exam": false,
                 "is_elective": false,
                 "elective_group": null
