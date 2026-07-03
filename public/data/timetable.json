@@ -733,8 +733,7 @@
                 "rescheduled": false,
                 "exam": false,
                 "is_elective": false,
-                "elective_group": null,
-                "cancelled": true
+                "elective_group": null
               }
             ]
           }
