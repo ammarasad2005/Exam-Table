@@ -177,6 +177,38 @@
                 "elective_group": null
               }
             ]
+          },
+          "B": {
+            "Monday": [
+              {
+                "room": "D-306",
+                "time": "02:00-03:45",
+                "rescheduled": false,
+                "exam": false,
+                "is_elective": false,
+                "elective_group": null
+              }
+            ],
+            "Tuesday": [
+              {
+                "room": "D-306",
+                "time": "02:00-03:45",
+                "rescheduled": false,
+                "exam": false,
+                "is_elective": false,
+                "elective_group": null
+              }
+            ],
+            "Wednesday": [
+              {
+                "room": "D-306",
+                "time": "02:00-03:45",
+                "rescheduled": false,
+                "exam": false,
+                "is_elective": false,
+                "elective_group": null
+              }
+            ]
           }
         },
         "DLD": {
@@ -213,6 +245,40 @@
               {
                 "room": "D-305",
                 "time": "12:10-01:55",
+                "rescheduled": false,
+                "exam": false,
+                "is_elective": false,
+                "elective_group": null
+              }
+            ]
+          }
+        },
+        "Discrete St": {
+          "A": {
+            "Monday": [
+              {
+                "room": "D-306",
+                "time": "10:20-12:05",
+                "rescheduled": false,
+                "exam": false,
+                "is_elective": false,
+                "elective_group": null
+              }
+            ],
+            "Wednesday": [
+              {
+                "room": "D-304",
+                "time": "12:10-01:55",
+                "rescheduled": false,
+                "exam": false,
+                "is_elective": false,
+                "elective_group": null
+              }
+            ],
+            "Thursday": [
+              {
+                "room": "D-305",
+                "time": "10:20-12:05",
                 "rescheduled": false,
                 "exam": false,
                 "is_elective": false,
@@ -669,41 +735,6 @@
             ]
           }
         },
-        "Discrete St": {
-          "A": {
-            "Tuesday": [
-              {
-                "room": "D-312",
-                "time": "08:30-10:15",
-                "rescheduled": false,
-                "exam": false,
-                "is_elective": false,
-                "elective_group": null,
-                "cancelled": true
-              }
-            ],
-            "Wednesday": [
-              {
-                "room": "D-304",
-                "time": "12:10-01:55",
-                "rescheduled": false,
-                "exam": false,
-                "is_elective": false,
-                "elective_group": null
-              }
-            ],
-            "Thursday": [
-              {
-                "room": "D-305",
-                "time": "10:20-12:05",
-                "rescheduled": false,
-                "exam": false,
-                "is_elective": false,
-                "elective_group": null
-              }
-            ]
-          }
-        },
         "PF": {
           "A": {
             "Tuesday": [
@@ -728,8 +759,8 @@
             ],
             "Thursday": [
               {
-                "room": "D-305",
-                "time": "08:30-10:15",
+                "room": "D-306",
+                "time": "10:20-12:05",
                 "rescheduled": false,
                 "exam": false,
                 "is_elective": false,
