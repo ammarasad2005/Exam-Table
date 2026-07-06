@@ -1145,36 +1145,36 @@
       {
         "day": "Monday",
         "sheetName": "Monday",
-        "date": "29 Jun",
-        "isoDate": "2026-06-29",
+        "date": "06 Jul",
+        "isoDate": "2026-07-06",
         "isMakeup": false
       },
       {
         "day": "Tuesday",
         "sheetName": "Tuesday",
-        "date": "30 Jun",
-        "isoDate": "2026-06-30",
+        "date": "07 Jul",
+        "isoDate": "2026-07-07",
         "isMakeup": false
       },
       {
         "day": "Wednesday",
         "sheetName": "Wednesday",
-        "date": "01 Jul",
-        "isoDate": "2026-07-01",
+        "date": "08 Jul",
+        "isoDate": "2026-07-08",
         "isMakeup": false
       },
       {
         "day": "Thursday",
         "sheetName": "Thursday",
-        "date": "02 Jul",
-        "isoDate": "2026-07-02",
+        "date": "09 Jul",
+        "isoDate": "2026-07-09",
         "isMakeup": false
       },
       {
         "day": "Friday",
         "sheetName": "Friday",
-        "date": "03 Jul",
-        "isoDate": "2026-07-03",
+        "date": "10 Jul",
+        "isoDate": "2026-07-10",
         "isMakeup": false
       }
     ]
