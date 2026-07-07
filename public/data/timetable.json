@@ -261,8 +261,7 @@
                 "rescheduled": false,
                 "exam": false,
                 "is_elective": false,
-                "elective_group": null,
-                "cancelled": true
+                "elective_group": null
               }
             ],
             "Thursday": [
@@ -400,6 +399,38 @@
             "Wednesday": [
               {
                 "room": "D-314",
+                "time": "10:20-12:05",
+                "rescheduled": false,
+                "exam": false,
+                "is_elective": false,
+                "elective_group": null
+              }
+            ]
+          },
+          "C": {
+            "Monday": [
+              {
+                "room": "D-314",
+                "time": "10:20-12:05",
+                "rescheduled": false,
+                "exam": false,
+                "is_elective": false,
+                "elective_group": null
+              }
+            ],
+            "Tuesday": [
+              {
+                "room": "D-314",
+                "time": "10:20-12:05",
+                "rescheduled": false,
+                "exam": false,
+                "is_elective": false,
+                "elective_group": null
+              }
+            ],
+            "Wednesday": [
+              {
+                "room": "D-315",
                 "time": "10:20-12:05",
                 "rescheduled": false,
                 "exam": false,
@@ -616,6 +647,60 @@
               },
               {
                 "room": "D-402",
+                "time": "08:30-10:15",
+                "rescheduled": false,
+                "exam": false,
+                "is_elective": false,
+                "elective_group": null
+              }
+            ]
+          }
+        },
+        "KDD Lab Internship": {
+          "A": {
+            "Monday": [
+              {
+                "room": "D-403",
+                "time": "08:30-10:15",
+                "rescheduled": false,
+                "exam": false,
+                "is_elective": false,
+                "elective_group": null
+              }
+            ],
+            "Tuesday": [
+              {
+                "room": "D-403",
+                "time": "08:30-10:15",
+                "rescheduled": false,
+                "exam": false,
+                "is_elective": false,
+                "elective_group": null
+              }
+            ],
+            "Wednesday": [
+              {
+                "room": "D-403",
+                "time": "08:30-10:15",
+                "rescheduled": false,
+                "exam": false,
+                "is_elective": false,
+                "elective_group": null
+              }
+            ],
+            "Thursday": [
+              {
+                "room": "D-403",
+                "time": "08:30-10:15",
+                "rescheduled": false,
+                "exam": false,
+                "is_elective": false,
+                "elective_group": null
+              }
+            ],
+            "Friday": [
+              {
+                "room": "D-403",
                 "time": "08:30-10:15",
                 "rescheduled": false,
                 "exam": false,
@@ -969,6 +1054,20 @@
               {
                 "room": "C-311",
                 "time": "10:20-12:05",
+                "rescheduled": false,
+                "exam": false,
+                "is_elective": false,
+                "elective_group": null
+              }
+            ]
+          }
+        },
+        "Discrete St 12:10-12:40 Quiz": {
+          "A": {
+            "Thursday": [
+              {
+                "room": "D-305",
+                "time": "12:10-01:55",
                 "rescheduled": false,
                 "exam": false,
                 "is_elective": false,
