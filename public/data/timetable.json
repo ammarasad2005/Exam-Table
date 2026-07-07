@@ -901,6 +901,42 @@
                 "is_elective": false,
                 "elective_group": null
               }
+            ],
+            "Wednesday": [
+              {
+                "room": "D-304",
+                "time": "02:00-03:45",
+                "rescheduled": false,
+                "exam": false,
+                "is_elective": false,
+                "elective_group": null
+              },
+              {
+                "room": "D-304",
+                "time": "03:50-05:35",
+                "rescheduled": false,
+                "exam": false,
+                "is_elective": false,
+                "elective_group": null
+              }
+            ],
+            "Thursday": [
+              {
+                "room": "D-304",
+                "time": "02:00-03:45",
+                "rescheduled": false,
+                "exam": false,
+                "is_elective": false,
+                "elective_group": null
+              },
+              {
+                "room": "D-304",
+                "time": "03:50-05:35",
+                "rescheduled": false,
+                "exam": false,
+                "is_elective": false,
+                "elective_group": null
+              }
             ]
           }
         },
