@@ -1020,14 +1020,6 @@
                 "exam": false,
                 "is_elective": false,
                 "elective_group": null
-              },
-              {
-                "room": "D-306",
-                "time": "02:00-03:45",
-                "rescheduled": true,
-                "exam": false,
-                "is_elective": false,
-                "elective_group": null
               }
             ]
           }
