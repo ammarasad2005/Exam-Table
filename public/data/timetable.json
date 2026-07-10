@@ -1042,7 +1042,7 @@
           "A": {
             "Tuesday": [
               {
-                "room": "A-Karakoram 3",
+                "room": "Margala Lab-1",
                 "time": "02:25-05:10",
                 "rescheduled": false,
                 "exam": false,
@@ -1056,7 +1056,7 @@
           "A": {
             "Tuesday": [
               {
-                "room": "A-Mehran 1",
+                "room": "Margala Lab-3",
                 "time": "02:25-05:10",
                 "rescheduled": false,
                 "exam": false,
@@ -1191,6 +1191,30 @@
               {
                 "room": "D-315",
                 "time": "03:50-05:35",
+                "rescheduled": false,
+                "exam": false,
+                "is_elective": false,
+                "elective_group": null
+              },
+              {
+                "room": "D-316",
+                "time": "08:30-10:15",
+                "rescheduled": false,
+                "exam": false,
+                "is_elective": false,
+                "elective_group": null
+              },
+              {
+                "room": "D-316",
+                "time": "10:20-12:05",
+                "rescheduled": false,
+                "exam": false,
+                "is_elective": false,
+                "elective_group": null
+              },
+              {
+                "room": "D-316",
+                "time": "12:10-01:55",
                 "rescheduled": false,
                 "exam": false,
                 "is_elective": false,
