@@ -303,7 +303,7 @@ export function DesktopTicker({
 
         if (!summerSelections[canonicalName]) return false;
         const selectedSection = summerSelections[canonicalName];
-        if (!e.section || !selectedSection || selectedSection === 'A') return true;
+        if (!e.section || !selectedSection) return true;
         return e.section === selectedSection;
       });
       // Deduplicate
