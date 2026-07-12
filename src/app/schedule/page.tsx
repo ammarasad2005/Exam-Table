@@ -1,7 +1,7 @@
 'use client';
 import { useSearchParams, useRouter } from 'next/navigation';
-import { useMemo, useState, Suspense } from 'react';
-import { filterExams, groupByDay } from '@/lib/filter';
+import { useMemo, useState, useEffect, Suspense } from 'react';
+import { filterExams, filterSummerExams, groupByDay } from '@/lib/filter';
 import { sortByChronological } from '@/lib/dates';
 import { ExamCard } from '@/components/ExamCard';
 import { Header } from '@/components/Header';
@@ -13,9 +13,14 @@ import { EmptyState } from '@/components/EmptyState';
 import { ThemeToggle } from '@/components/ThemeToggle';
 import type { ExamEntry } from '@/lib/types';
 
+// Both JSON files are bundled at build time; the component picks the right one
+// at runtime based on the active semester type from localStorage.
+// The dispatcher (scripts/run-exam-parser.ts) generates the appropriate file
+// based on semester_settings.semester_type from Supabase.
 // eslint-disable-next-line
-const scheduleData = require('../../../public/data/schedule.json');
-const allExams = scheduleData as ExamEntry[];
+const regularScheduleData = require('../../../public/data/regular_schedule.json');
+// eslint-disable-next-line
+const summerScheduleData = require('../../../public/data/summer_schedule.json');
 
 function SchedulePageInner() {
   const params = useSearchParams();
@@ -24,20 +29,58 @@ function SchedulePageInner() {
   const school = params?.get('school') ?? '';
   const dept = params?.get('dept') ?? 'CS';
 
+  // Detect summer mode from localStorage (set by /home and / pages on mount)
+  const [isSummer, setIsSummer] = useState(false);
+  useEffect(() => {
+    const activeSemester = localStorage.getItem('fsc_active_semester');
+    const summer = activeSemester === 'summer';
+    setIsSummer(summer);
+    // Debug: log which mode and data source is active (helps verify deployment)
+    console.log('[Schedule] Summer mode:', summer, '| Entries:', summer ? summerScheduleData.length : regularScheduleData.length);
+  }, []);
+
   const [query, setQuery] = useState('');
   const [selected, setSelected] = useState<ExamEntry | null>(null);
 
+  // Pick the right dataset based on semester type
+  const allExams: ExamEntry[] = isSummer
+    ? (summerScheduleData as ExamEntry[])
+    : (regularScheduleData as ExamEntry[]);
+
   const filtered = useMemo(
     () => {
-      const filtered = filterExams(allExams, { batch, school, department: dept, query });
-      return filtered.sort(sortByChronological);
+      if (isSummer) {
+        // Summer mode: filter by selected courses (from localStorage) + free-text search
+        let selectedCourses: string[] = [];
+        try {
+          const stored = localStorage.getItem('fsc_summer_courses');
+          if (stored) {
+            const courseMap = JSON.parse(stored);
+            selectedCourses = Object.keys(courseMap);
+          }
+        } catch { /* ignore parse errors */ }
+
+        // Debug: trace what's being filtered
+        console.log('[Schedule] Summer filter — selectedCourses:', selectedCourses, '| total exams:', allExams.length);
+
+        const summerFiltered = filterSummerExams(allExams, { query, selectedCourses });
+        console.log('[Schedule] Summer filter — matched:', summerFiltered.length, 'exams:', summerFiltered.map(e => e.courseCode));
+        return summerFiltered.sort(sortByChronological);
+      } else {
+        // Regular mode: filter by batch/school/dept + free-text search
+        const regularFiltered = filterExams(allExams, { batch, school, department: dept, query });
+        return regularFiltered.sort(sortByChronological);
+      }
     },
-    [batch, school, dept, query]
+    [isSummer, allExams, batch, school, dept, query]
   );
 
   const grouped = useMemo(() => groupByDay(filtered), [filtered]);
 
-  const subtitle = dept === 'BBA' ? `BBA-${batch}` : `BS(${dept})-${batch}`;
+  // Subtitle differs in summer mode
+  const subtitle = isSummer
+    ? 'Summer 2026'
+    : (dept === 'BBA' ? `BBA-${batch}` : `BS(${dept})-${batch}`);
 
   return (
     <div className="min-h-dvh flex flex-col">
@@ -54,16 +97,33 @@ function SchedulePageInner() {
             </svg>
           </button>
           <div className="flex-1 flex items-center gap-2 min-w-0">
-            <span
-              className="font-mono text-sm font-medium px-2 py-0.5 rounded shrink-0"
-              style={{
-                backgroundColor: `var(--accent-${dept.toLowerCase()}-bg)`,
-                color: `var(--accent-${dept.toLowerCase()})`,
-              }}
-            >
-              {dept}
-            </span>
-            <span className="font-mono text-sm text-[var(--color-text-secondary)] truncate">Batch {batch}</span>
+            {isSummer ? (
+              <>
+                <span
+                  className="font-mono text-sm font-medium px-2 py-0.5 rounded shrink-0"
+                  style={{
+                    backgroundColor: `var(--accent-cs-bg)`,
+                    color: `var(--accent-cs)`,
+                  }}
+                >
+                  SUMMER
+                </span>
+                <span className="font-mono text-sm text-[var(--color-text-secondary)] truncate">Summer 2026 Exams</span>
+              </>
+            ) : (
+              <>
+                <span
+                  className="font-mono text-sm font-medium px-2 py-0.5 rounded shrink-0"
+                  style={{
+                    backgroundColor: `var(--accent-${dept.toLowerCase()}-bg)`,
+                    color: `var(--accent-${dept.toLowerCase()})`,
+                  }}
+                >
+                  {dept}
+                </span>
+                <span className="font-mono text-sm text-[var(--color-text-secondary)] truncate">Batch {batch}</span>
+              </>
+            )}
           </div>
         </div>
       </Header>
@@ -74,19 +134,36 @@ function SchedulePageInner() {
 
         {/* Sidebar (desktop only) */}
         <aside className="hidden md:flex md:w-56 lg:w-64 flex-col gap-4 p-6 border-r border-[var(--color-border)] sticky top-14 h-[calc(100dvh-56px)] overflow-y-auto">
-          <div>
-            <p className="font-mono text-[10px] uppercase tracking-widest text-[var(--color-text-tertiary)] mb-1">Batch</p>
-            <p className="font-mono text-sm font-medium">{batch}</p>
-          </div>
-          <div>
-            <p className="font-mono text-[10px] uppercase tracking-widest text-[var(--color-text-tertiary)] mb-1">Department</p>
-            <p
-              className="font-mono text-sm font-medium"
-              style={{ color: `var(--accent-${dept.toLowerCase()})` }}
-            >
-              {dept}
-            </p>
-          </div>
+          {isSummer ? (
+            <>
+              <div>
+                <p className="font-mono text-[10px] uppercase tracking-widest text-[var(--color-text-tertiary)] mb-1">Semester</p>
+                <p className="font-mono text-sm font-medium">Summer 2026</p>
+              </div>
+              <div>
+                <p className="font-mono text-[10px] uppercase tracking-widest text-[var(--color-text-tertiary)] mb-1">Scope</p>
+                <p className="font-mono text-sm font-medium" style={{ color: 'var(--accent-cs)' }}>
+                  All Courses
+                </p>
+              </div>
+            </>
+          ) : (
+            <>
+              <div>
+                <p className="font-mono text-[10px] uppercase tracking-widest text-[var(--color-text-tertiary)] mb-1">Batch</p>
+                <p className="font-mono text-sm font-medium">{batch}</p>
+              </div>
+              <div>
+                <p className="font-mono text-[10px] uppercase tracking-widest text-[var(--color-text-tertiary)] mb-1">Department</p>
+                <p
+                  className="font-mono text-sm font-medium"
+                  style={{ color: `var(--accent-${dept.toLowerCase()})` }}
+                >
+                  {dept}
+                </p>
+              </div>
+            </>
+          )}
           <div className="h-px bg-[var(--color-border)]" />
           <div>
             <p className="font-mono text-[10px] uppercase tracking-widest text-[var(--color-text-tertiary)] mb-1">Found</p>
@@ -98,7 +175,7 @@ function SchedulePageInner() {
               onClick={() => router.push('/')}
               className="text-xs text-[var(--color-text-secondary)] underline underline-offset-2 text-left hover:text-[var(--color-text-primary)] focus-visible:outline-none focus-visible:ring-2"
             >
-              Change filters
+              {isSummer ? 'Change courses' : 'Change filters'}
             </button>
             <ExportButton entries={filtered} variant="sidebar" config={{ isCustom: false, subtitle }} />
           </div>

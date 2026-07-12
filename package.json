@@ -3,9 +3,9 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "prebuild": "ts-node scripts/parse-excel.ts",
+    "prebuild": "ts-node scripts/run-exam-parser.ts",
     "build": "next build",
-    "dev": "ts-node scripts/parse-excel.ts && next dev",
+    "dev": "ts-node scripts/run-exam-parser.ts && next dev",
     "start": "next start",
     "type-check": "tsc --noEmit",
     "lint": "next lint",

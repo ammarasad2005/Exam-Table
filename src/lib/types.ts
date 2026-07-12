@@ -4,9 +4,11 @@ export interface ExamEntry {
   time: string;        // "09:00 AM – 11:00 AM"
   courseCode: string;  // "CS1004"
   courseName: string;
-  batch: string;       // "2023"
-  department: string;
-  school: string;
+  batch: string;       // "2023" or "Summer"
+  department: string;  // "CS" or "ALL" (summer)
+  school: string;      // "FSC", "FSM", or "FSE"
+  room?: string;       // summer only — comma-separated room list (e.g., "C-301, C-302")
+  sections?: string;   // summer only — raw section string for display (e.g., "A", "AB", "BAF-9A, 9B")
 }
 
 export const SCHOOLS = ['FSC', 'FSM', 'FSE'];

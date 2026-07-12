@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import type { ExamEntry } from '@/lib/types';
 
 // eslint-disable-next-line
-const schedule = require('../../../../public/data/schedule.json');
+const schedule = require('../../../../public/data/regular_schedule.json');
 
 export const runtime = 'edge';
 

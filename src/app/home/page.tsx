@@ -17,7 +17,7 @@ import { supabase } from '@/lib/supabase';
 
 
 // eslint-disable-next-line
-const scheduleRaw = require('../../../public/data/schedule.json');
+const scheduleRaw = require('../../../public/data/regular_schedule.json');
 const batches: string[] = [...new Set<string>(scheduleRaw.map((e: { batch: string }) => e.batch))]
   .sort()
   .reverse();
@@ -331,7 +331,12 @@ export default function SetupPage() {
     }
     if (isSummerMode) {
       localStorage.setItem('fsc_summer_courses', JSON.stringify(selectedSummerCourses));
-      router.push('/timetable');
+      // In summer mode, route to /schedule for exams, /timetable for timetable
+      if (feature === 'exams') {
+        router.push('/schedule?batch=Summer');
+      } else {
+        router.push('/timetable');
+      }
       return;
     }
     if (feature === 'exams') {
