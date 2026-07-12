@@ -33,7 +33,10 @@ function SchedulePageInner() {
   const [isSummer, setIsSummer] = useState(false);
   useEffect(() => {
     const activeSemester = localStorage.getItem('fsc_active_semester');
-    setIsSummer(activeSemester === 'summer');
+    const summer = activeSemester === 'summer';
+    setIsSummer(summer);
+    // Debug: log which mode and data source is active (helps verify deployment)
+    console.log('[Schedule] Summer mode:', summer, '| Entries:', summer ? summerScheduleData.length : regularScheduleData.length);
   }, []);
 
   const [query, setQuery] = useState('');
@@ -57,7 +60,11 @@ function SchedulePageInner() {
           }
         } catch { /* ignore parse errors */ }
 
+        // Debug: trace what's being filtered
+        console.log('[Schedule] Summer filter — selectedCourses:', selectedCourses, '| total exams:', allExams.length);
+
         const summerFiltered = filterSummerExams(allExams, { query, selectedCourses });
+        console.log('[Schedule] Summer filter — matched:', summerFiltered.length, 'exams:', summerFiltered.map(e => e.courseCode));
         return summerFiltered.sort(sortByChronological);
       } else {
         // Regular mode: filter by batch/school/dept + free-text search
