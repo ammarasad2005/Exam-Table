@@ -15,7 +15,7 @@ import { DEPARTMENTS, DEPARTMENT_LABELS } from '@/lib/types';
 import type { ExamEntry } from '@/lib/types';
 
 // eslint-disable-next-line
-const scheduleData = require('../../../public/data/schedule.json');
+const scheduleData = require('../../../public/data/regular_schedule.json');
 const allExams = scheduleData as ExamEntry[];
 
 // Derive available batches from data

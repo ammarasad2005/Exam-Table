@@ -55,6 +55,20 @@ export function ExamCard({ exam, dept, onClick }: Props) {
       <p className="font-mono text-xs text-[var(--color-text-secondary)]">
         {exam.time}
       </p>
+
+      {/* Room (summer only — only shown if present) */}
+      {exam.room && (
+        <p className="font-mono text-xs text-[var(--color-text-tertiary)]">
+          Room: {exam.room}
+        </p>
+      )}
+
+      {/* Sections (summer only — only shown if present and non-empty) */}
+      {exam.sections && (
+        <p className="font-mono text-[10px] text-[var(--color-text-tertiary)]">
+          Sections: {exam.sections}
+        </p>
+      )}
     </button>
   );
 }

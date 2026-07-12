@@ -11,6 +11,36 @@ export function filterExams(entries: ExamEntry[], filter: FilterState): ExamEntr
   });
 }
 
+/**
+ * Summer exam filter — does NOT filter by batch/school/department.
+ * Instead, optionally filters by the student's selected summer courses
+ * (course names from localStorage fsc_summer_courses), plus free-text search.
+ *
+ * If selectedCourses is empty or undefined, all summer exams are shown.
+ */
+export function filterSummerExams(
+  entries: ExamEntry[],
+  filter: { query: string; selectedCourses?: string[] }
+): ExamEntry[] {
+  const q = filter.query.toLowerCase().trim();
+  const courses = filter.selectedCourses ?? [];
+
+  return entries.filter(e => {
+    // If the student has selected specific summer courses, filter by name match
+    if (courses.length > 0) {
+      const matches = courses.some(course => {
+        const cl = course.toLowerCase().trim();
+        const el = e.courseName.toLowerCase().trim();
+        return el.includes(cl) || cl.includes(el);
+      });
+      if (!matches) return false;
+    }
+    // Apply free-text search
+    if (q && !e.courseCode.toLowerCase().includes(q) && !e.courseName.toLowerCase().includes(q)) return false;
+    return true;
+  });
+}
+
 export function groupByDay(entries: ExamEntry[]): { label: string; entries: ExamEntry[] }[] {
   const map = new Map<string, ExamEntry[]>();
   for (const e of entries) {
