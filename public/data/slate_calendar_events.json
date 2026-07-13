@@ -1,7 +1,7 @@
 {
-  "scraped_at": "2026-07-06T10:49:04.559645",
+  "scraped_at": "2026-07-13T09:38:02.775872",
   "date_range": "2026-07-01 to 2026-08-31",
-  "total_events": 34,
+  "total_events": 45,
   "events": [
     {
       "event_name": "Admissions Activity",
@@ -150,8 +150,14 @@
     {
       "event_name": "Course Allocation Meeting",
       "date": "July 7",
-      "time": "12:00 pm - 2:00 pm",
+      "time": "9:00 am - 5:00 pm",
       "event_location": "CMR By Ms. Fasiha FSM"
+    },
+    {
+      "event_name": "FSM Seminar",
+      "date": "July 7",
+      "time": "10:00 am - 2:00 pm",
+      "event_location": "MEDC-117 by Ms. Fasiha"
     },
     {
       "event_name": "Admissions Activity",
@@ -196,6 +202,12 @@
       "event_location": "Auditorium D Block by Mr. Abdul Hameed"
     },
     {
+      "event_name": "MS Thesis Defense",
+      "date": "July 10",
+      "time": "3:00 pm - 4:00 pm",
+      "event_location": "C-Block C109 By Babar Shahzad FSC"
+    },
+    {
       "event_name": "Admissions Activity",
       "date": "July 11",
       "time": "8:00 am - 2:00 am",
@@ -206,6 +218,60 @@
       "date": "July 13",
       "time": "9:00 am - 2:00 pm",
       "event_location": "MEDC-117 by Ms. Fasiha"
+    },
+    {
+      "event_name": "FSM Event",
+      "date": "July 13",
+      "time": "12:00 pm - 2:00 pm",
+      "event_location": "Central Meeting Room by Ms. Fasiha"
+    },
+    {
+      "event_name": "CSO Event",
+      "date": "July 14",
+      "time": "8:00 am - 6:00 pm",
+      "event_location": "Auditorium by Ms. Laraib"
+    },
+    {
+      "event_name": "Orientation 2026 Computing",
+      "date": "August 10",
+      "time": "8:00 am - 7:00 pm",
+      "event_location": "Auditorium A and C Block by Dr. Hasan Mujtaba"
+    },
+    {
+      "event_name": "Orientation 2026 Computing",
+      "date": "August 11",
+      "time": "8:00 am - 7:00 pm",
+      "event_location": "Auditorium A and C Block by Dr. Hasan Mujtaba"
+    },
+    {
+      "event_name": "Engineering Classes Series - FSE",
+      "date": "August 17",
+      "time": "2:00 pm - 5:00 pm",
+      "event_location": "Auditorium A Block by Mr. Tariq"
+    },
+    {
+      "event_name": "FSE Engineering Classes Series - II",
+      "date": "August 20",
+      "time": "2:00 pm - 5:00 pm",
+      "event_location": "Auditorium D Block by Mr. Tariq"
+    },
+    {
+      "event_name": "Engineering Classes Series - FSE",
+      "date": "August 24",
+      "time": "2:00 pm - 5:00 pm",
+      "event_location": "Auditorium A Block by Mr. Tariq"
+    },
+    {
+      "event_name": "FSE Engineering Classes Series - II",
+      "date": "August 27",
+      "time": "2:00 pm - 5:00 pm",
+      "event_location": "Auditorium D Block by Mr. Tariq"
+    },
+    {
+      "event_name": "Engineering Classes Series - FSE",
+      "date": "August 31",
+      "time": "2:00 pm - 5:00 pm",
+      "event_location": "Auditorium A Block by Mr. Tariq"
     }
   ]
 }
