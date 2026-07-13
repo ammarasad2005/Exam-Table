@@ -213,6 +213,16 @@
                 "is_elective": false,
                 "elective_group": null
               }
+            ],
+            "Thursday": [
+              {
+                "room": "D-311",
+                "time": "10:20-12:05",
+                "rescheduled": true,
+                "exam": false,
+                "is_elective": false,
+                "elective_group": null
+              }
             ]
           },
           "B": {
@@ -241,6 +251,16 @@
                 "room": "D-306",
                 "time": "02:00-03:45",
                 "rescheduled": false,
+                "exam": false,
+                "is_elective": false,
+                "elective_group": null
+              }
+            ],
+            "Thursday": [
+              {
+                "room": "D-311",
+                "time": "02:00-03:45",
+                "rescheduled": true,
                 "exam": false,
                 "is_elective": false,
                 "elective_group": null
@@ -1305,7 +1325,15 @@
                 "elective_group": null
               },
               {
-                "room": "C-110",
+                "room": "IT Lab 1",
+                "time": "08:30-10:15",
+                "rescheduled": false,
+                "exam": false,
+                "is_elective": false,
+                "elective_group": null
+              },
+              {
+                "room": "IT Lab 4",
                 "time": "08:30-10:15",
                 "rescheduled": false,
                 "exam": false,
@@ -1387,14 +1415,6 @@
                 "elective_group": null
               },
               {
-                "room": "D-303",
-                "time": "08:30-10:15",
-                "rescheduled": false,
-                "exam": false,
-                "is_elective": false,
-                "elective_group": null
-              },
-              {
                 "room": "D-501",
                 "time": "08:30-10:15",
                 "rescheduled": false,
@@ -1403,7 +1423,15 @@
                 "elective_group": null
               },
               {
-                "room": "C-110",
+                "room": "IT Lab 1",
+                "time": "08:30-10:15",
+                "rescheduled": false,
+                "exam": false,
+                "is_elective": false,
+                "elective_group": null
+              },
+              {
+                "room": "IT Lab 4",
                 "time": "08:30-10:15",
                 "rescheduled": false,
                 "exam": false,
@@ -1453,7 +1481,15 @@
                 "elective_group": null
               },
               {
-                "room": "C-110",
+                "room": "IT Lab 1",
+                "time": "08:30-10:15",
+                "rescheduled": false,
+                "exam": false,
+                "is_elective": false,
+                "elective_group": null
+              },
+              {
+                "room": "IT Lab 4",
                 "time": "08:30-10:15",
                 "rescheduled": false,
                 "exam": false,
@@ -1503,7 +1539,15 @@
                 "elective_group": null
               },
               {
-                "room": "C-110",
+                "room": "IT Lab 1",
+                "time": "08:30-10:15",
+                "rescheduled": false,
+                "exam": false,
+                "is_elective": false,
+                "elective_group": null
+              },
+              {
+                "room": "IT Lab 4",
                 "time": "08:30-10:15",
                 "rescheduled": false,
                 "exam": false,
@@ -1545,7 +1589,15 @@
                 "elective_group": null
               },
               {
-                "room": "C-110",
+                "room": "IT Lab 1",
+                "time": "08:30-10:15",
+                "rescheduled": false,
+                "exam": false,
+                "is_elective": false,
+                "elective_group": null
+              },
+              {
+                "room": "IT Lab 4",
                 "time": "08:30-10:15",
                 "rescheduled": false,
                 "exam": false,
