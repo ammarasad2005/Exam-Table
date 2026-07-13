@@ -33,6 +33,16 @@
                 "is_elective": false,
                 "elective_group": null
               }
+            ],
+            "Friday": [
+              {
+                "room": "D-305",
+                "time": "10:20-12:05",
+                "rescheduled": true,
+                "exam": false,
+                "is_elective": false,
+                "elective_group": null
+              }
             ]
           },
           "A": {
@@ -61,6 +71,16 @@
                 "room": "D-304",
                 "time": "10:20-12:05",
                 "rescheduled": false,
+                "exam": false,
+                "is_elective": false,
+                "elective_group": null
+              }
+            ],
+            "Friday": [
+              {
+                "room": "D-305",
+                "time": "08:30-10:15",
+                "rescheduled": true,
                 "exam": false,
                 "is_elective": false,
                 "elective_group": null
@@ -102,6 +122,24 @@
               {
                 "room": "D-306",
                 "time": "08:30-10:15",
+                "rescheduled": true,
+                "exam": false,
+                "is_elective": false,
+                "elective_group": null
+              }
+            ],
+            "Friday": [
+              {
+                "room": "D-304",
+                "time": "08:30-10:15",
+                "rescheduled": true,
+                "exam": false,
+                "is_elective": false,
+                "elective_group": null
+              },
+              {
+                "room": "D-304",
+                "time": "02:00-03:45",
                 "rescheduled": true,
                 "exam": false,
                 "is_elective": false,
@@ -264,6 +302,16 @@
                 "elective_group": null
               }
             ],
+            "Wednesday": [
+              {
+                "room": "D-304",
+                "time": "12:10-01:55",
+                "rescheduled": true,
+                "exam": false,
+                "is_elective": false,
+                "elective_group": null
+              }
+            ],
             "Thursday": [
               {
                 "room": "D-305",
@@ -307,6 +355,24 @@
                 "is_elective": false,
                 "elective_group": null
               }
+            ],
+            "Thursday": [
+              {
+                "room": "D-306",
+                "time": "12:10-01:55",
+                "rescheduled": true,
+                "exam": false,
+                "is_elective": false,
+                "elective_group": null
+              },
+              {
+                "room": "D-306",
+                "time": "02:00-03:45",
+                "rescheduled": true,
+                "exam": false,
+                "is_elective": false,
+                "elective_group": null
+              }
             ]
           },
           "A": {
@@ -335,6 +401,14 @@
                 "room": "D-314",
                 "time": "12:10-01:55",
                 "rescheduled": false,
+                "exam": false,
+                "is_elective": false,
+                "elective_group": null
+              },
+              {
+                "room": "D-314",
+                "time": "02:00-03:45",
+                "rescheduled": true,
                 "exam": false,
                 "is_elective": false,
                 "elective_group": null
@@ -1097,20 +1171,6 @@
                 "room": "D-305",
                 "time": "12:10-01:55",
                 "rescheduled": false,
-                "exam": false,
-                "is_elective": false,
-                "elective_group": null
-              }
-            ]
-          }
-        },
-        "Discrete St 09:00-10:45": {
-          "A": {
-            "Friday": [
-              {
-                "room": "D-304",
-                "time": "08:30-10:15",
-                "rescheduled": true,
                 "exam": false,
                 "is_elective": false,
                 "elective_group": null
