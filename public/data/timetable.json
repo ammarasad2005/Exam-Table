@@ -1218,6 +1218,30 @@
             ]
           }
         },
+        "MS Interviews": {
+          "A": {
+            "Thursday": [
+              {
+                "room": "C-110",
+                "time": "08:30-10:15",
+                "rescheduled": false,
+                "exam": false,
+                "is_elective": false,
+                "elective_group": null
+              }
+            ],
+            "Friday": [
+              {
+                "room": "C-110",
+                "time": "08:30-10:15",
+                "rescheduled": false,
+                "exam": false,
+                "is_elective": false,
+                "elective_group": null
+              }
+            ]
+          }
+        },
         "Discrete St 11:00-12:45": {
           "A": {
             "Friday": [
@@ -1559,7 +1583,7 @@
                 "elective_group": null
               },
               {
-                "room": "IT Lab 1",
+                "room": "IT Lab 2",
                 "time": "08:30-10:15",
                 "rescheduled": false,
                 "exam": false,
