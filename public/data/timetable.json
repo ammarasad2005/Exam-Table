@@ -1377,6 +1377,22 @@
                 "elective_group": null
               },
               {
+                "room": "IT Lab 2",
+                "time": "08:30-10:15",
+                "rescheduled": false,
+                "exam": false,
+                "is_elective": false,
+                "elective_group": null
+              },
+              {
+                "room": "IT Lab 3",
+                "time": "08:30-10:15",
+                "rescheduled": false,
+                "exam": false,
+                "is_elective": false,
+                "elective_group": null
+              },
+              {
                 "room": "IT Lab 4",
                 "time": "08:30-10:15",
                 "rescheduled": false,
@@ -1475,7 +1491,23 @@
                 "elective_group": null
               },
               {
-                "room": "Margalla lab IV",
+                "room": "IT Lab 2",
+                "time": "08:30-10:15",
+                "rescheduled": false,
+                "exam": false,
+                "is_elective": false,
+                "elective_group": null
+              },
+              {
+                "room": "IT Lab 3",
+                "time": "08:30-10:15",
+                "rescheduled": false,
+                "exam": false,
+                "is_elective": false,
+                "elective_group": null
+              },
+              {
+                "room": "IT Lab 4",
                 "time": "08:30-10:15",
                 "rescheduled": false,
                 "exam": false,
@@ -1533,6 +1565,22 @@
                 "elective_group": null
               },
               {
+                "room": "IT Lab 2",
+                "time": "08:30-10:15",
+                "rescheduled": false,
+                "exam": false,
+                "is_elective": false,
+                "elective_group": null
+              },
+              {
+                "room": "IT Lab 3",
+                "time": "08:30-10:15",
+                "rescheduled": false,
+                "exam": false,
+                "is_elective": false,
+                "elective_group": null
+              },
+              {
                 "room": "IT Lab 4",
                 "time": "08:30-10:15",
                 "rescheduled": false,
@@ -1583,7 +1631,23 @@
                 "elective_group": null
               },
               {
+                "room": "IT Lab 1",
+                "time": "08:30-10:15",
+                "rescheduled": false,
+                "exam": false,
+                "is_elective": false,
+                "elective_group": null
+              },
+              {
                 "room": "IT Lab 2",
+                "time": "08:30-10:15",
+                "rescheduled": false,
+                "exam": false,
+                "is_elective": false,
+                "elective_group": null
+              },
+              {
+                "room": "IT Lab 3",
                 "time": "08:30-10:15",
                 "rescheduled": false,
                 "exam": false,
@@ -1634,6 +1698,22 @@
               },
               {
                 "room": "IT Lab 1",
+                "time": "08:30-10:15",
+                "rescheduled": false,
+                "exam": false,
+                "is_elective": false,
+                "elective_group": null
+              },
+              {
+                "room": "IT Lab 2",
+                "time": "08:30-10:15",
+                "rescheduled": false,
+                "exam": false,
+                "is_elective": false,
+                "elective_group": null
+              },
+              {
+                "room": "IT Lab 3",
                 "time": "08:30-10:15",
                 "rescheduled": false,
                 "exam": false,
