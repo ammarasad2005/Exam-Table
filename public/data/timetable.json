@@ -1157,6 +1157,26 @@
                 "is_elective": false,
                 "elective_group": null
               }
+            ],
+            "Wednesday": [
+              {
+                "room": "Margala Lab-3",
+                "time": "02:25-05:10",
+                "rescheduled": true,
+                "exam": false,
+                "is_elective": false,
+                "elective_group": null
+              }
+            ],
+            "Friday": [
+              {
+                "room": "Margala Lab-3",
+                "time": "02:25-05:10",
+                "rescheduled": true,
+                "exam": false,
+                "is_elective": false,
+                "elective_group": null
+              }
             ]
           }
         },
@@ -1431,7 +1451,7 @@
                 "elective_group": null
               },
               {
-                "room": "IT Lab 4",
+                "room": "Margalla lab IV",
                 "time": "08:30-10:15",
                 "rescheduled": false,
                 "exam": false,
