@@ -1162,6 +1162,30 @@
             ]
           }
         },
+        "Rawal Lab-1 QEC Training on 22 and 23, 2026": {
+          "A": {
+            "Wednesday": [
+              {
+                "room": "Rawal Lab 1",
+                "time": "08:30-10:15",
+                "rescheduled": false,
+                "exam": false,
+                "is_elective": false,
+                "elective_group": null
+              }
+            ],
+            "Thursday": [
+              {
+                "room": "Rawal Lab 1",
+                "time": "08:30-10:15",
+                "rescheduled": false,
+                "exam": false,
+                "is_elective": false,
+                "elective_group": null
+              }
+            ]
+          }
+        },
         "Discrete St 12:10-12:40 Quiz": {
           "A": {
             "Thursday": [
