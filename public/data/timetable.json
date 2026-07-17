@@ -1238,6 +1238,20 @@
             ]
           }
         },
+        "DLD Lab Exam": {
+          "A": {
+            "Friday": [
+              {
+                "room": "Margala Lab-1",
+                "time": "02:25-05:10",
+                "rescheduled": false,
+                "exam": false,
+                "is_elective": false,
+                "elective_group": null
+              }
+            ]
+          }
+        },
         "DLD Lab (July 17, 2026)": {
           "A": {
             "Friday": [
