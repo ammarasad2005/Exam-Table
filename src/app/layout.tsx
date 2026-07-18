@@ -6,6 +6,7 @@ import { ThemeProvider } from '@/lib/theme';
 import { Navbar } from '@/components/Navbar';
 import { FloatingMenu } from '@/components/FloatingMenu';
 import { Analytics } from '@vercel/analytics/next';
+import { SpeedInsights } from '@vercel/speed-insights/next';
 import { Toaster } from '@/components/ui/toaster';
 import { FeedbackWidget } from '@/components/FeedbackWidget';
 import { GlobalShortcuts } from '@/components/GlobalShortcuts';
@@ -80,6 +81,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           <Toaster />
         </ThemeProvider>
         <Analytics />
+        <SpeedInsights />
       </body>
     </html>
   );
