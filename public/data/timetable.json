@@ -663,24 +663,6 @@
                 "elective_group": null
               }
             ],
-            "Tuesday": [
-              {
-                "room": "D-401",
-                "time": "08:30-10:15",
-                "rescheduled": false,
-                "exam": false,
-                "is_elective": false,
-                "elective_group": null
-              },
-              {
-                "room": "D-402",
-                "time": "08:30-10:15",
-                "rescheduled": false,
-                "exam": false,
-                "is_elective": false,
-                "elective_group": null
-              }
-            ],
             "Wednesday": [
               {
                 "room": "D-401",
@@ -735,53 +717,23 @@
                 "elective_group": null
               }
             ]
-          }
-        },
-        "KDD Lab Internship": {
-          "A": {
-            "Monday": [
-              {
-                "room": "D-403",
-                "time": "08:30-10:15",
-                "rescheduled": false,
-                "exam": false,
-                "is_elective": false,
-                "elective_group": null
-              }
-            ],
+          },
+          "C-301": {
             "Tuesday": [
               {
-                "room": "D-403",
+                "room": "D-401",
                 "time": "08:30-10:15",
                 "rescheduled": false,
                 "exam": false,
                 "is_elective": false,
                 "elective_group": null
               }
-            ],
-            "Wednesday": [
+            ]
+          },
+          "C-302": {
+            "Tuesday": [
               {
-                "room": "D-403",
-                "time": "08:30-10:15",
-                "rescheduled": false,
-                "exam": false,
-                "is_elective": false,
-                "elective_group": null
-              }
-            ],
-            "Thursday": [
-              {
-                "room": "D-403",
-                "time": "08:30-10:15",
-                "rescheduled": false,
-                "exam": false,
-                "is_elective": false,
-                "elective_group": null
-              }
-            ],
-            "Friday": [
-              {
-                "room": "D-403",
+                "room": "D-402",
                 "time": "08:30-10:15",
                 "rescheduled": false,
                 "exam": false,
