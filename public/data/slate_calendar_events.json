@@ -1,7 +1,7 @@
 {
-  "scraped_at": "2026-07-13T09:38:02.775872",
+  "scraped_at": "2026-07-20T09:25:32.073567",
   "date_range": "2026-07-01 to 2026-08-31",
-  "total_events": 45,
+  "total_events": 56,
   "events": [
     {
       "event_name": "Admissions Activity",
@@ -232,6 +232,54 @@
       "event_location": "Auditorium by Ms. Laraib"
     },
     {
+      "event_name": "Interviews",
+      "date": "July 21",
+      "time": "9:00 am - 8:00 pm",
+      "event_location": "MEDC-117 , 118 by Mr. Adnan Shafaqat"
+    },
+    {
+      "event_name": "Interviews",
+      "date": "July 22",
+      "time": "9:00 am - 8:00 pm",
+      "event_location": "MEDC-117 , 118 by Mr. Adnan Shafaqat"
+    },
+    {
+      "event_name": "GSC Meeting",
+      "date": "July 22",
+      "time": "11:00 am - 2:00 pm",
+      "event_location": "C-109 by Shakeel Kiyani"
+    },
+    {
+      "event_name": "Interviews",
+      "date": "July 23",
+      "time": "9:00 am - 8:00 pm",
+      "event_location": "MEDC-117 , 118 by Mr. Adnan Shafaqat"
+    },
+    {
+      "event_name": "IAB FSC",
+      "date": "August 5",
+      "time": "9:00 am - 2:00 pm",
+      "event_location": "C-109 by Ms. Neelofar"
+    },
+    {
+      "event_name": "OBs Sessions",
+      "date": "August 6",
+      "time": "9:00 am - 6:00 pm",
+      "event_location": "Auditorium D Block by Mr. Ikram"
+    },
+    {
+      "event_name": "Department Meeting & Workshop",
+      "date": "August 6",
+      "time": "10:00 am - 5:00 pm",
+      "event_location": "C-109 by Mr. Ikram"
+    },
+    {
+      "event_name": "CSO Event",
+      "date": "August 7",
+      "time": "8:00 am - 6:00 pm",
+      "event_location": "Auditorium D Block by Ms. Laraib"
+    },
+    {
       "event_name": "Orientation 2026 Computing",
       "date": "August 10",
       "time": "8:00 am - 7:00 pm",
@@ -242,6 +290,24 @@
       "date": "August 11",
       "time": "8:00 am - 7:00 pm",
       "event_location": "Auditorium A and C Block by Dr. Hasan Mujtaba"
+    },
+    {
+      "event_name": "Orientation FSM 2026",
+      "date": "August 12",
+      "time": "8:00 am - 7:00 pm",
+      "event_location": "Auditorium A & D Block by Dr. Sara Khan"
+    },
+    {
+      "event_name": "Orientation FSM",
+      "date": "August 13",
+      "time": "8:00 am - 7:00 pm",
+      "event_location": "Auditorium D Block by Dr. Sarah Khan"
+    },
+    {
+      "event_name": "Orientation FSE 2026",
+      "date": "August 13",
+      "time": "8:00 am - 10:00 pm",
+      "event_location": "Auditorium A Block by Dr. Tariq"
     },
     {
       "event_name": "Engineering Classes Series - FSE",
