@@ -95,7 +95,8 @@
                 "rescheduled": false,
                 "exam": false,
                 "is_elective": false,
-                "elective_group": null
+                "elective_group": null,
+                "cancelled": true
               }
             ],
             "Tuesday": [
@@ -319,16 +320,6 @@
                 "room": "D-306",
                 "time": "10:20-12:05",
                 "rescheduled": false,
-                "exam": false,
-                "is_elective": false,
-                "elective_group": null
-              }
-            ],
-            "Wednesday": [
-              {
-                "room": "D-304",
-                "time": "12:10-01:55",
-                "rescheduled": true,
                 "exam": false,
                 "is_elective": false,
                 "elective_group": null
@@ -800,6 +791,20 @@
             ]
           }
         },
+        "CSO Internship": {
+          "A": {
+            "Monday": [
+              {
+                "room": "D-404",
+                "time": "08:30-10:15",
+                "rescheduled": false,
+                "exam": false,
+                "is_elective": false,
+                "elective_group": null
+              }
+            ]
+          }
+        },
         "Internship by Mr. Mehmood ul Hassan": {
           "A": {
             "Monday": [
@@ -1162,6 +1167,20 @@
             ]
           }
         },
+        "Discrete St (Mid Term Exam)": {
+          "A": {
+            "Wednesday": [
+              {
+                "room": "D-311",
+                "time": "02:00-03:45",
+                "rescheduled": false,
+                "exam": false,
+                "is_elective": false,
+                "elective_group": null
+              }
+            ]
+          }
+        },
         "Rawal Lab-1 QEC Training on 22 and 23, 2026": {
           "A": {
             "Wednesday": [
@@ -1277,6 +1296,14 @@
           "Reserved": {
             "Monday": [
               {
+                "room": "D-312",
+                "time": "10:20-12:05",
+                "rescheduled": false,
+                "exam": false,
+                "is_elective": false,
+                "elective_group": null
+              },
+              {
                 "room": "D-315",
                 "time": "08:30-10:15",
                 "rescheduled": false,
@@ -1366,6 +1393,14 @@
               },
               {
                 "room": "IT Lab 4",
+                "time": "08:30-10:15",
+                "rescheduled": false,
+                "exam": false,
+                "is_elective": false,
+                "elective_group": null
+              },
+              {
+                "room": "C-110",
                 "time": "08:30-10:15",
                 "rescheduled": false,
                 "exam": false,
@@ -1464,6 +1499,14 @@
               },
               {
                 "room": "IT Lab 4",
+                "time": "08:30-10:15",
+                "rescheduled": false,
+                "exam": false,
+                "is_elective": false,
+                "elective_group": null
+              },
+              {
+                "room": "C-110",
                 "time": "08:30-10:15",
                 "rescheduled": false,
                 "exam": false,
