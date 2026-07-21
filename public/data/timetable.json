@@ -95,8 +95,7 @@
                 "rescheduled": false,
                 "exam": false,
                 "is_elective": false,
-                "elective_group": null,
-                "cancelled": true
+                "elective_group": null
               }
             ],
             "Tuesday": [
@@ -329,6 +328,16 @@
               {
                 "room": "D-305",
                 "time": "10:20-12:05",
+                "rescheduled": false,
+                "exam": false,
+                "is_elective": false,
+                "elective_group": null
+              }
+            ],
+            "Friday": [
+              {
+                "room": "D-306",
+                "time": "08:30-10:15",
                 "rescheduled": false,
                 "exam": false,
                 "is_elective": false,
@@ -1106,16 +1115,6 @@
                 "is_elective": false,
                 "elective_group": null
               }
-            ],
-            "Friday": [
-              {
-                "room": "Margala Lab-3",
-                "time": "02:25-05:10",
-                "rescheduled": true,
-                "exam": false,
-                "is_elective": false,
-                "elective_group": null
-              }
             ]
           }
         },
@@ -1209,20 +1208,6 @@
             ]
           }
         },
-        "DLD Lab Exam": {
-          "A": {
-            "Friday": [
-              {
-                "room": "Margala Lab-1",
-                "time": "02:25-05:10",
-                "rescheduled": false,
-                "exam": false,
-                "is_elective": false,
-                "elective_group": null
-              }
-            ]
-          }
-        },
         "DLD Lab (July 17, 2026)": {
           "A": {
             "Friday": [
@@ -1247,14 +1232,6 @@
         "Reserved": {
           "Reserved": {
             "Monday": [
-              {
-                "room": "D-312",
-                "time": "10:20-12:05",
-                "rescheduled": false,
-                "exam": false,
-                "is_elective": false,
-                "elective_group": null
-              },
               {
                 "room": "D-315",
                 "time": "08:30-10:15",
