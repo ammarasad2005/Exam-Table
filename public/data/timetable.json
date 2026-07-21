@@ -1128,6 +1128,28 @@
                 "exam": false,
                 "is_elective": false,
                 "elective_group": null
+              },
+              {
+                "room": "D-312",
+                "time": "02:00-03:45",
+                "rescheduled": false,
+                "exam": false,
+                "is_elective": false,
+                "elective_group": null
+              }
+            ]
+          }
+        },
+        "IT": {
+          "A": {
+            "Wednesday": [
+              {
+                "room": "C-110",
+                "time": "08:30-10:15",
+                "rescheduled": false,
+                "exam": false,
+                "is_elective": false,
+                "elective_group": null
               }
             ]
           }
