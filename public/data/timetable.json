@@ -1118,7 +1118,7 @@
             ]
           }
         },
-        "Discrete St (Mid Term Exam)": {
+        "Discrete St (Mid Term Exam) 02:00-04:00": {
           "A": {
             "Wednesday": [
               {
@@ -1260,13 +1260,13 @@
             ]
           }
         },
-        "DLD Lab (July 17, 2026)": {
+        "PF Midterm Exam 02:00-04:00": {
           "A": {
             "Friday": [
               {
-                "room": "DLD Lab",
-                "time": "02:25-05:10",
-                "rescheduled": true,
+                "room": "D-304",
+                "time": "02:00-03:45",
+                "rescheduled": false,
                 "exam": false,
                 "is_elective": false,
                 "elective_group": null
