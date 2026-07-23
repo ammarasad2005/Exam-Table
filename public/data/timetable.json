@@ -127,16 +127,6 @@
                 "is_elective": false,
                 "elective_group": null
               }
-            ],
-            "Friday": [
-              {
-                "room": "D-304",
-                "time": "08:30-10:15",
-                "rescheduled": true,
-                "exam": false,
-                "is_elective": false,
-                "elective_group": null
-              }
             ]
           }
         },
@@ -167,16 +157,6 @@
                 "room": "D-305",
                 "time": "08:30-10:15",
                 "rescheduled": false,
-                "exam": false,
-                "is_elective": false,
-                "elective_group": null
-              }
-            ],
-            "Friday": [
-              {
-                "room": "D-306",
-                "time": "10:20-12:05",
-                "rescheduled": true,
                 "exam": false,
                 "is_elective": false,
                 "elective_group": null
