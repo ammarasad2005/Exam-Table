@@ -1146,28 +1146,6 @@
             ]
           }
         },
-        "Discrete St (Mid Term Exam) 02:00-04:00": {
-          "A": {
-            "Wednesday": [
-              {
-                "room": "D-311",
-                "time": "02:00-03:45",
-                "rescheduled": false,
-                "exam": false,
-                "is_elective": false,
-                "elective_group": null
-              },
-              {
-                "room": "D-312",
-                "time": "02:00-03:45",
-                "rescheduled": false,
-                "exam": false,
-                "is_elective": false,
-                "elective_group": null
-              }
-            ]
-          }
-        },
         "IT": {
           "A": {
             "Wednesday": [
@@ -1288,7 +1266,7 @@
             ]
           }
         },
-        "PF Midterm Exam 02:00-04:00": {
+        "PF Lab Exam Midterm 02:00-04:00": {
           "A": {
             "Friday": [
               {
