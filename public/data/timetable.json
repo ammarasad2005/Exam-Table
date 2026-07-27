@@ -1716,36 +1716,36 @@
       {
         "day": "Monday",
         "sheetName": "Monday",
-        "date": "20 Jul",
-        "isoDate": "2026-07-20",
+        "date": "27 Jul",
+        "isoDate": "2026-07-27",
         "isMakeup": false
       },
       {
         "day": "Tuesday",
         "sheetName": "Tuesday",
-        "date": "21 Jul",
-        "isoDate": "2026-07-21",
+        "date": "28 Jul",
+        "isoDate": "2026-07-28",
         "isMakeup": false
       },
       {
         "day": "Wednesday",
         "sheetName": "Wednesday",
-        "date": "22 Jul",
-        "isoDate": "2026-07-22",
+        "date": "29 Jul",
+        "isoDate": "2026-07-29",
         "isMakeup": false
       },
       {
         "day": "Thursday",
         "sheetName": "Thursday",
-        "date": "23 Jul",
-        "isoDate": "2026-07-23",
+        "date": "30 Jul",
+        "isoDate": "2026-07-30",
         "isMakeup": false
       },
       {
         "day": "Friday",
         "sheetName": "Friday",
-        "date": "24 Jul",
-        "isoDate": "2026-07-24",
+        "date": "31 Jul",
+        "isoDate": "2026-07-31",
         "isMakeup": false
       }
     ]
