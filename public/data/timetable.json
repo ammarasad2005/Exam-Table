@@ -1160,7 +1160,7 @@
             ]
           }
         },
-        "Rawal Lab-1 QEC Training on 22 and 23, 2026": {
+        "Rawal Lab-1 QEC Training on 29, 30, and 31, 2026": {
           "A": {
             "Wednesday": [
               {
@@ -1173,6 +1173,16 @@
               }
             ],
             "Thursday": [
+              {
+                "room": "Rawal Lab 1",
+                "time": "08:30-10:15",
+                "rescheduled": false,
+                "exam": false,
+                "is_elective": false,
+                "elective_group": null
+              }
+            ],
+            "Friday": [
               {
                 "room": "Rawal Lab 1",
                 "time": "08:30-10:15",
