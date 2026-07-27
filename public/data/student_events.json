@@ -1,8 +1,8 @@
 {
-  "filtered_at": "2026-07-20T09:25:32.073567",
+  "filtered_at": "2026-07-27T10:01:41.839950",
   "date_range": "2026-07-01 to 2026-08-31",
-  "total_original": 56,
-  "total_filtered": 18,
+  "total_original": 66,
+  "total_filtered": 20,
   "events": [
     {
       "event_name": "EE Event",
@@ -39,6 +39,18 @@
       "date": "July 14",
       "time": "8:00 am - 6:00 pm",
       "event_location": "Auditorium by Ms. Laraib"
+    },
+    {
+      "event_name": "Closing Ceremony EE",
+      "date": "July 24",
+      "time": "3:00 pm - 6:00 pm",
+      "event_location": "Auditorium A Block by Ms. Deema"
+    },
+    {
+      "event_name": "CS Seminar",
+      "date": "August 5",
+      "time": "9:00 am - 7:00 pm",
+      "event_location": "Auditorium A Block by Ms. Nayab"
     },
     {
       "event_name": "OBs Sessions",
