@@ -270,14 +270,6 @@
                 "exam": false,
                 "is_elective": false,
                 "elective_group": null
-              },
-              {
-                "room": "D-305",
-                "time": "02:00-03:45",
-                "rescheduled": true,
-                "exam": false,
-                "is_elective": false,
-                "elective_group": null
               }
             ],
             "Wednesday": [
@@ -1187,6 +1179,20 @@
                 "room": "Rawal Lab 1",
                 "time": "08:30-10:15",
                 "rescheduled": false,
+                "exam": false,
+                "is_elective": false,
+                "elective_group": null
+              }
+            ]
+          }
+        },
+        "OOP Lab (12:10-02:25)": {
+          "A": {
+            "Wednesday": [
+              {
+                "room": "Margala Lab-1",
+                "time": "11:25-02:10",
+                "rescheduled": true,
                 "exam": false,
                 "is_elective": false,
                 "elective_group": null
