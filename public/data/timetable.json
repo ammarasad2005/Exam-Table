@@ -930,6 +930,30 @@
             ]
           }
         },
+        "OOP Lab": {
+          "A": {
+            "Monday": [
+              {
+                "room": "Margala Lab-3",
+                "time": "02:25-05:10",
+                "rescheduled": true,
+                "exam": false,
+                "is_elective": false,
+                "elective_group": null
+              }
+            ],
+            "Tuesday": [
+              {
+                "room": "Margala Lab-1",
+                "time": "02:25-05:10",
+                "rescheduled": false,
+                "exam": false,
+                "is_elective": false,
+                "elective_group": null
+              }
+            ]
+          }
+        },
         "DLD Lab": {
           "A": {
             "Monday": [
@@ -1088,20 +1112,6 @@
               {
                 "room": "D-306",
                 "time": "10:20-12:05",
-                "rescheduled": false,
-                "exam": false,
-                "is_elective": false,
-                "elective_group": null
-              }
-            ]
-          }
-        },
-        "OOP Lab": {
-          "A": {
-            "Tuesday": [
-              {
-                "room": "Margala Lab-1",
-                "time": "02:25-05:10",
                 "rescheduled": false,
                 "exam": false,
                 "is_elective": false,
