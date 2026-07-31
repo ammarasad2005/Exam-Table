@@ -534,6 +534,36 @@
             ]
           }
         },
+        "Ms Interviews Monday August 03, 2026": {
+          "A": {
+            "Monday": [
+              {
+                "room": "D-414",
+                "time": "08:30-10:15",
+                "rescheduled": false,
+                "exam": false,
+                "is_elective": false,
+                "elective_group": null
+              },
+              {
+                "room": "D-415",
+                "time": "08:30-10:15",
+                "rescheduled": false,
+                "exam": false,
+                "is_elective": false,
+                "elective_group": null
+              },
+              {
+                "room": "D-416",
+                "time": "08:30-10:15",
+                "rescheduled": false,
+                "exam": false,
+                "is_elective": false,
+                "elective_group": null
+              }
+            ]
+          }
+        },
         "Internship by Dr. Rizwan": {
           "A": {
             "Monday": [
@@ -836,36 +866,6 @@
               {
                 "room": "D-504",
                 "time": "08:30-10:15",
-                "rescheduled": false,
-                "exam": false,
-                "is_elective": false,
-                "elective_group": null
-              }
-            ]
-          }
-        },
-        "Resreved for FSM Department 27-07-2026": {
-          "A": {
-            "Monday": [
-              {
-                "room": "Margala Lab-1",
-                "time": "08:30-11:15",
-                "rescheduled": false,
-                "exam": false,
-                "is_elective": false,
-                "elective_group": null
-              },
-              {
-                "room": "Margala Lab-1",
-                "time": "11:25-02:10",
-                "rescheduled": false,
-                "exam": false,
-                "is_elective": false,
-                "elective_group": null
-              },
-              {
-                "room": "Margala Lab-1",
-                "time": "02:25-05:10",
                 "rescheduled": false,
                 "exam": false,
                 "is_elective": false,
