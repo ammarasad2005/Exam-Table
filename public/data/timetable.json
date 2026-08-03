@@ -124,6 +124,14 @@
           "A": {
             "Monday": [
               {
+                "room": "D-304",
+                "time": "12:10-01:55",
+                "rescheduled": true,
+                "exam": false,
+                "is_elective": false,
+                "elective_group": null
+              },
+              {
                 "room": "D-305",
                 "time": "08:30-10:15",
                 "rescheduled": false,
@@ -357,6 +365,14 @@
                 "room": "D-306",
                 "time": "12:10-01:55",
                 "rescheduled": false,
+                "exam": false,
+                "is_elective": false,
+                "elective_group": null
+              },
+              {
+                "room": "D-311",
+                "time": "02:00-03:45",
+                "rescheduled": true,
                 "exam": false,
                 "is_elective": false,
                 "elective_group": null
@@ -1196,7 +1212,7 @@
           "A": {
             "Wednesday": [
               {
-                "room": "Margala Lab-1",
+                "room": "Margala Lab-3",
                 "time": "11:25-02:10",
                 "rescheduled": true,
                 "exam": false,
@@ -1415,6 +1431,22 @@
                 "exam": false,
                 "is_elective": false,
                 "elective_group": null
+              },
+              {
+                "room": "Margala Lab-1",
+                "time": "08:30-11:15",
+                "rescheduled": false,
+                "exam": false,
+                "is_elective": false,
+                "elective_group": null
+              },
+              {
+                "room": "Margala Lab-1",
+                "time": "11:25-02:10",
+                "rescheduled": false,
+                "exam": false,
+                "is_elective": false,
+                "elective_group": null
               }
             ],
             "Tuesday": [
@@ -1460,6 +1492,14 @@
               },
               {
                 "room": "C-401",
+                "time": "08:30-10:15",
+                "rescheduled": false,
+                "exam": false,
+                "is_elective": false,
+                "elective_group": null
+              },
+              {
+                "room": "C-402",
                 "time": "08:30-10:15",
                 "rescheduled": false,
                 "exam": false,
@@ -1517,6 +1557,22 @@
               {
                 "room": "C-110",
                 "time": "08:30-10:15",
+                "rescheduled": false,
+                "exam": false,
+                "is_elective": false,
+                "elective_group": null
+              },
+              {
+                "room": "Margala Lab-1",
+                "time": "08:30-11:15",
+                "rescheduled": false,
+                "exam": false,
+                "is_elective": false,
+                "elective_group": null
+              },
+              {
+                "room": "Margala Lab-1",
+                "time": "11:25-02:10",
                 "rescheduled": false,
                 "exam": false,
                 "is_elective": false,
@@ -1579,6 +1635,22 @@
                 "exam": false,
                 "is_elective": false,
                 "elective_group": null
+              },
+              {
+                "room": "Margala Lab-1",
+                "time": "08:30-11:15",
+                "rescheduled": false,
+                "exam": false,
+                "is_elective": false,
+                "elective_group": null
+              },
+              {
+                "room": "Margala Lab-1",
+                "time": "11:25-02:10",
+                "rescheduled": false,
+                "exam": false,
+                "is_elective": false,
+                "elective_group": null
               }
             ],
             "Thursday": [
@@ -1633,6 +1705,22 @@
               {
                 "room": "IT Lab 4",
                 "time": "08:30-10:15",
+                "rescheduled": false,
+                "exam": false,
+                "is_elective": false,
+                "elective_group": null
+              },
+              {
+                "room": "Margala Lab-1",
+                "time": "08:30-11:15",
+                "rescheduled": false,
+                "exam": false,
+                "is_elective": false,
+                "elective_group": null
+              },
+              {
+                "room": "Margala Lab-1",
+                "time": "11:25-02:10",
                 "rescheduled": false,
                 "exam": false,
                 "is_elective": false,
@@ -1715,6 +1803,22 @@
               {
                 "room": "IT Lab 4",
                 "time": "08:30-10:15",
+                "rescheduled": false,
+                "exam": false,
+                "is_elective": false,
+                "elective_group": null
+              },
+              {
+                "room": "Margala Lab-1",
+                "time": "08:30-11:15",
+                "rescheduled": false,
+                "exam": false,
+                "is_elective": false,
+                "elective_group": null
+              },
+              {
+                "room": "Margala Lab-1",
+                "time": "11:25-02:10",
                 "rescheduled": false,
                 "exam": false,
                 "is_elective": false,
