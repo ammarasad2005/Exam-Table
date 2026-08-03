@@ -1,50 +1,38 @@
 {
-  "filtered_at": "2026-07-27T10:01:41.839950",
-  "date_range": "2026-07-01 to 2026-08-31",
-  "total_original": 66,
-  "total_filtered": 20,
+  "filtered_at": "2026-08-03T09:56:33.859456",
+  "date_range": "2026-08-01 to 2026-09-30",
+  "total_original": 57,
+  "total_filtered": 31,
   "events": [
     {
-      "event_name": "EE Event",
-      "date": "July 2",
-      "time": "7:00 am - 7:00 pm",
-      "event_location": "D Block & A Block Audi by Dr. Saeed"
+      "event_name": "Workshop S&H",
+      "date": "August 4",
+      "time": "9:00 am - 4:00 pm",
+      "event_location": "C-109 by Ms. Kanwal"
+    },
+    {
+      "event_name": "Workshop S&H",
+      "date": "August 7",
+      "time": "8:00 am - 5:00 pm",
+      "event_location": "C-109 by Ms. Kanwal"
     },
     {
       "event_name": "CSO Event",
-      "date": "July 2",
-      "time": "9:00 am - 9:00 pm",
-      "event_location": "C-109 by Ms. Laraib"
-    },
-    {
-      "event_name": "Summer Internship Orientation",
-      "date": "July 6",
-      "time": "10:00 am - 1:00 pm",
-      "event_location": "Auditorium A Block By Zain Khattak CSO"
-    },
-    {
-      "event_name": "FSM Seminar",
-      "date": "July 7",
-      "time": "10:00 am - 2:00 pm",
-      "event_location": "MEDC-117 by Ms. Fasiha"
-    },
-    {
-      "event_name": "CSO Event",
-      "date": "July 9",
-      "time": "2:00 pm - 6:00 pm",
-      "event_location": "C-109 by Mr. Zain"
-    },
-    {
-      "event_name": "CSO Event",
-      "date": "July 14",
+      "date": "August 7",
       "time": "8:00 am - 6:00 pm",
-      "event_location": "Auditorium by Ms. Laraib"
+      "event_location": "Auditorium A Block by Ms. Laraib"
     },
     {
-      "event_name": "Closing Ceremony EE",
-      "date": "July 24",
-      "time": "3:00 pm - 6:00 pm",
-      "event_location": "Auditorium A Block by Ms. Deema"
+      "event_name": "FYP Briefing FSM",
+      "date": "August 7",
+      "time": "9:00 am - 2:00 pm",
+      "event_location": "MEDC 117 & 118 By Ms. Fasiha"
+    },
+    {
+      "event_name": "IAB FSC",
+      "date": "August 5",
+      "time": "9:00 am - 2:00 pm",
+      "event_location": "C-109 by Ms. Neelofar"
     },
     {
       "event_name": "CS Seminar",
@@ -53,16 +41,10 @@
       "event_location": "Auditorium A Block by Ms. Nayab"
     },
     {
-      "event_name": "OBs Sessions",
-      "date": "August 6",
+      "event_name": "Workshop S&H",
+      "date": "August 10",
       "time": "9:00 am - 6:00 pm",
-      "event_location": "Auditorium D Block by Mr. Ikram"
-    },
-    {
-      "event_name": "CSO Event",
-      "date": "August 7",
-      "time": "8:00 am - 6:00 pm",
-      "event_location": "Auditorium D Block by Ms. Laraib"
+      "event_location": "C-109 by Ms. Kanwal"
     },
     {
       "event_name": "Orientation 2026 Computing",
@@ -83,16 +65,40 @@
       "event_location": "Auditorium A & D Block by Dr. Sara Khan"
     },
     {
-      "event_name": "Orientation FSM",
+      "event_name": "FSM Orientation",
+      "date": "August 12",
+      "time": "8:00 am - 6:00 pm",
+      "event_location": "MEDC 118 & CMR by Dr. Sajjad"
+    },
+    {
+      "event_name": "Orientation",
+      "date": "August 12",
+      "time": "12:00 pm - 5:00 pm",
+      "event_location": "CMR by Ms. Fasiha"
+    },
+    {
+      "event_name": "FSM Orientation",
       "date": "August 13",
-      "time": "8:00 am - 7:00 pm",
-      "event_location": "Auditorium D Block by Dr. Sarah Khan"
+      "time": "8:00 am - 6:00 pm",
+      "event_location": "MEDC 118 by Dr. Sajjad"
     },
     {
       "event_name": "Orientation FSE 2026",
       "date": "August 13",
       "time": "8:00 am - 10:00 pm",
       "event_location": "Auditorium A Block by Dr. Tariq"
+    },
+    {
+      "event_name": "Orientation FSM",
+      "date": "August 13",
+      "time": "8:00 am - 7:00 pm",
+      "event_location": "Auditorium D Block by Dr. Sarah Khan"
+    },
+    {
+      "event_name": "Orientation",
+      "date": "August 13",
+      "time": "12:00 pm - 5:00 pm",
+      "event_location": "CMR By Ms. Fasiha"
     },
     {
       "event_name": "Engineering Classes Series - FSE",
@@ -121,6 +127,66 @@
     {
       "event_name": "Engineering Classes Series - FSE",
       "date": "August 31",
+      "time": "2:00 pm - 5:00 pm",
+      "event_location": "Auditorium A Block by Mr. Tariq"
+    },
+    {
+      "event_name": "FSE Engineering Classes Series - II",
+      "date": "September 3",
+      "time": "2:00 pm - 5:00 pm",
+      "event_location": "Auditorium D Block by Mr. Tariq"
+    },
+    {
+      "event_name": "Engineering Classes Series - FSE",
+      "date": "September 7",
+      "time": "2:00 pm - 5:00 pm",
+      "event_location": "Auditorium A Block by Mr. Tariq"
+    },
+    {
+      "event_name": "FSE Engineering Classes Series - II",
+      "date": "September 10",
+      "time": "2:00 pm - 5:00 pm",
+      "event_location": "Auditorium D Block by Mr. Tariq"
+    },
+    {
+      "event_name": "Welcome Party CS",
+      "date": "September 11",
+      "time": "5:00 pm - 11:00 pm",
+      "event_location": "Auditorium by Dr. Hasan Mujtaba"
+    },
+    {
+      "event_name": "Engineering Classes Series - FSE",
+      "date": "September 14",
+      "time": "2:00 pm - 5:00 pm",
+      "event_location": "Auditorium A Block by Mr. Tariq"
+    },
+    {
+      "event_name": "FSE Engineering Classes Series - II",
+      "date": "September 17",
+      "time": "2:00 pm - 5:00 pm",
+      "event_location": "Auditorium D Block by Mr. Tariq"
+    },
+    {
+      "event_name": "Welcome Party CS",
+      "date": "September 18",
+      "time": "5:00 pm - 11:00 pm",
+      "event_location": "Auditorium by Dr. Hasan Mujtaba"
+    },
+    {
+      "event_name": "Engineering Classes Series - FSE",
+      "date": "September 21",
+      "time": "2:00 pm - 5:00 pm",
+      "event_location": "Auditorium A Block by Mr. Tariq"
+    },
+    {
+      "event_name": "FSE Engineering Classes Series - II",
+      "date": "September 24",
+      "time": "2:00 pm - 5:00 pm",
+      "event_location": "Auditorium D Block by Mr. Tariq"
+    },
+    {
+      "event_name": "Engineering Classes Series - FSE",
+      "date": "September 28",
       "time": "2:00 pm - 5:00 pm",
       "event_location": "Auditorium A Block by Mr. Tariq"
     }
