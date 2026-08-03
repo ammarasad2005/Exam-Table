@@ -991,6 +991,16 @@
                 "is_elective": false,
                 "elective_group": null
               }
+            ],
+            "Friday": [
+              {
+                "room": "DLD Lab",
+                "time": "02:25-05:10",
+                "rescheduled": true,
+                "exam": false,
+                "is_elective": false,
+                "elective_group": null
+              }
             ]
           }
         },
@@ -1296,20 +1306,6 @@
               {
                 "room": "D-304",
                 "time": "10:20-12:05",
-                "rescheduled": false,
-                "exam": false,
-                "is_elective": false,
-                "elective_group": null
-              }
-            ]
-          }
-        },
-        "PF Lab Exam Midterm 02:00-05:00": {
-          "A": {
-            "Friday": [
-              {
-                "room": "Margala Lab-3",
-                "time": "02:25-05:10",
                 "rescheduled": false,
                 "exam": false,
                 "is_elective": false,
@@ -1728,22 +1724,6 @@
               }
             ],
             "Friday": [
-              {
-                "room": "C-310",
-                "time": "08:30-10:15",
-                "rescheduled": false,
-                "exam": false,
-                "is_elective": false,
-                "elective_group": null
-              },
-              {
-                "room": "C-310",
-                "time": "02:00-03:45",
-                "rescheduled": false,
-                "exam": false,
-                "is_elective": false,
-                "elective_group": null
-              },
               {
                 "room": "C-401",
                 "time": "08:30-10:15",
