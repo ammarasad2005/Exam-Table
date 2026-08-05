@@ -46,6 +46,7 @@ export function FacultyCard({ member, priority = false, viewMode = 'grid', onCli
     return (
       <button
         onClick={onClick}
+        aria-label={`View ${member.name}${member.status ? ', ' + member.status : ''}`}
         // T19: faculty-card stagger entrance; T10: CSS hover replaces JS swap.
         className={`faculty-card relative w-full h-full text-left bg-[var(--color-bg-raised)] border rounded-xl overflow-hidden flex items-center p-3 gap-4 focus-visible:outline-none focus-visible:ring-2 active:scale-[0.98] group ${hoverShadowClass}`}
         style={cardStyle}
@@ -106,6 +107,7 @@ export function FacultyCard({ member, priority = false, viewMode = 'grid', onCli
   return (
     <button
       onClick={onClick}
+      aria-label={`View ${member.name}${member.status ? ', ' + member.status : ''}`}
       // T19: faculty-card stagger entrance; T10: CSS hover replaces JS swap.
       className={`faculty-card w-full h-full text-left bg-[var(--color-bg-raised)] border rounded-xl overflow-hidden flex flex-col focus-visible:outline-none focus-visible:ring-2 active:scale-[0.98] group ${hoverShadowClass}`}
       style={cardStyle}

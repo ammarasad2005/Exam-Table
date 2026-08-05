@@ -16,6 +16,8 @@ import { TimetableDetail } from '@/components/TimetableDetail';
 import { TimetableExportButton } from '@/components/TimetableExportButton';
 import { SearchBar } from '@/components/SearchBar';
 import { EmptyState } from '@/components/EmptyState';
+import { LastUpdated } from '@/components/LastUpdated';
+import { TIMETABLE_UPDATED } from '@/lib/data-timestamps';
 import { ThemeToggle } from '@/components/ThemeToggle';
 import { Header } from '@/components/Header';
 import { AlertCircle } from 'lucide-react';
@@ -950,6 +952,7 @@ function TimetablePageInner() {
               {isSummer ? 'Change courses' : 'Change filters'}
             </button>
             <TimetableExportButton entries={filtered} variant="sidebar" isSummer={isSummer} />
+            <LastUpdated date={TIMETABLE_UPDATED} className="mt-1" />
           </div>
         </aside>
 

@@ -140,6 +140,27 @@ async function main() {
   }
 
   console.log('\n✅ Exam parser dispatcher complete.\n');
+
+  // ── Write build-info.json (data freshness timestamps) ─────────────────────
+  // Records the mtime of each data file so the UI can show "Updated <date>".
+  // Read at build time by src/lib/data-timestamps.ts (via JSON import).
+  try {
+    const dataDir = path.join(process.cwd(), 'public', 'data');
+    const files = ['regular_schedule.json', 'summer_schedule.json', 'timetable.json'];
+    const info: Record<string, string> = { generated: new Date().toISOString() };
+    for (const f of files) {
+      try {
+        const stats = fs.statSync(path.join(dataDir, f));
+        info[f.replace('.json', '')] = stats.mtime.toLocaleDateString('en-US', {
+          year: 'numeric', month: 'short', day: 'numeric',
+        });
+      } catch { /* file may not exist yet */ }
+    }
+    fs.writeFileSync(path.join(dataDir, 'build-info.json'), JSON.stringify(info, null, 2) + '\n');
+    console.log('✅ Wrote build-info.json (data freshness timestamps)\n');
+  } catch (e) {
+    console.warn('⚠ Could not write build-info.json:', (e as Error).message);
+  }
 }
 
 main();

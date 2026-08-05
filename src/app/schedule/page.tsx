@@ -5,11 +5,13 @@ import { filterExams, filterSummerExams, groupByDay } from '@/lib/filter';
 import { sortByChronological } from '@/lib/dates';
 import { ExamCard } from '@/components/ExamCard';
 import { Header } from '@/components/Header';
+import { SCHEDULE_UPDATED, SUMMER_SCHEDULE_UPDATED } from '@/lib/data-timestamps';
 
 import { ExamDetail } from '@/components/ExamDetail';
 import { SearchBar } from '@/components/SearchBar';
 import { ExportButton } from '@/components/ExportButton';
 import { EmptyState } from '@/components/EmptyState';
+import { LastUpdated } from '@/components/LastUpdated';
 import { ThemeToggle } from '@/components/ThemeToggle';
 import type { ExamEntry } from '@/lib/types';
 
@@ -178,6 +180,7 @@ function SchedulePageInner() {
               {isSummer ? 'Change courses' : 'Change filters'}
             </button>
             <ExportButton entries={filtered} variant="sidebar" config={{ isCustom: false, subtitle }} />
+            <LastUpdated date={isSummer ? SUMMER_SCHEDULE_UPDATED : SCHEDULE_UPDATED} className="mt-1" />
           </div>
         </aside>
 
