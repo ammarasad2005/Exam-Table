@@ -18,6 +18,22 @@ export default {
         raised:   'var(--color-bg-raised)',
         subtle:   'var(--color-bg-subtle)',
         border:   'var(--color-border)',
+        // Redesign: ink-primary action tokens (T1)
+        'primary-action': {
+          DEFAULT: 'var(--color-primary-action)',
+          fg:      'var(--color-primary-action-fg)',
+          hover:   'var(--color-primary-action-hover)',
+        },
+        // Redesign: unified today + tokenized semantic colors (T2/T5)
+        today: {
+          DEFAULT: 'var(--color-today)',
+          bg:      'var(--color-today-bg)',
+          glow:    'var(--color-today-glow)',
+        },
+        'success-strong': 'var(--color-success-strong)',
+        urgent:           'var(--color-urgent)',
+        linkedin:         'var(--color-linkedin)',
+        whatsapp:         'var(--color-whatsapp)',
         primary: {
           DEFAULT: 'var(--color-text-primary)',
           foreground: 'oklch(var(--primary-foreground))',
@@ -57,6 +73,14 @@ export default {
         md: 'var(--radius-md)',
         lg: 'var(--radius-lg)',
         xl: 'var(--radius-xl)',
+      },
+      // Redesign: expose the design-system shadows + spacing as utilities (T22)
+      boxShadow: {
+        card:   'var(--shadow-card)',
+        raised: 'var(--shadow-raised)',
+        float:  'var(--shadow-float)',
+        header: 'var(--shadow-header)',
+        'pane-r': 'var(--shadow-pane-r)',
       },
       height: {
         '13': '52px',
