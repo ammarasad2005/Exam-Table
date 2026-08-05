@@ -2,6 +2,7 @@
 
 import Link from 'next/link';
 import { ThemeToggle } from '@/components/ThemeToggle';
+import { ReducedMotionIndicator } from '@/components/ReducedMotionIndicator';
 import { ReactNode } from 'react';
 
 interface HeaderProps {
@@ -46,8 +47,9 @@ export function Header({ children, rightActions }: HeaderProps) {
       </div>
 
       {/* Right: Actions */}
-      <div className="flex items-center justify-end min-w-[60px] md:min-w-[100px] gap-2 md:gap-4">
+      <div className="flex items-center justify-end min-w-[60px] md:min-w-[100px] gap-2 md:gap-3">
         {rightActions}
+        <ReducedMotionIndicator />
         {/* Command palette trigger (Cmd+K) — hidden on mobile (FAB covers nav) */}
         <button
           type="button"

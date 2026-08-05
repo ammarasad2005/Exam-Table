@@ -49,6 +49,7 @@ const SHORTCUTS: Shortcut[] = [
   { keys: ['g', 'x'], description: 'Go to Custom Exams', group: 'Power User' },
   // Debug (QA tool)
   { keys: ['Ctrl', 'Shift', 'C'], description: 'Toggle contrast checker overlay (QA)', group: 'Power User' },
+  { keys: ['Ctrl', 'Shift', 'F'], description: 'Toggle focus-visible debug overlay (QA)', group: 'Power User' },
 ];
 
 export function ShortcutHelp() {

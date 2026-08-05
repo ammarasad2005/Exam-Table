@@ -16,6 +16,7 @@ import { CommandPalette } from '@/components/CommandPalette';
 import { ShortcutHelp } from '@/components/ShortcutHelp';
 import { SkipLinks } from '@/components/SkipLinks';
 import { ContrastChecker } from '@/components/ContrastChecker';
+import { FocusVisibleDebug } from '@/components/FocusVisibleDebug';
 const dmSans = DM_Sans({
   subsets: ['latin'],
   variable: '--font-body',
@@ -107,7 +108,14 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           <BackToTop />
           <CommandPalette />
           <ShortcutHelp />
-          <ContrastChecker />
+          {/* ContrastChecker + FocusVisibleDebug are dev/QA-only tools — gated
+              behind NODE_ENV so they don't ship to production. */}
+          {process.env.NODE_ENV !== 'production' && (
+            <>
+              <ContrastChecker />
+              <FocusVisibleDebug />
+            </>
+          )}
           <Toaster />
         </ThemeProvider>
         <Analytics />
