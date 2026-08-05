@@ -252,12 +252,30 @@ function DesktopHero() {
         <p className="font-mono text-xs uppercase tracking-widest text-[var(--color-text-tertiary)] mb-4">
           FAST NUCES · Islamabad · Signed Jan 8, 2026
         </p>
-        <h1
-          className="font-display leading-[1.1] text-[var(--color-text-primary)]"
-          style={{ fontSize: 'clamp(2.2rem, 3.5vw, 3.6rem)' }}
-        >
-          Semester Schedule — <span className="italic">{semesterCalendar.semester}.</span>
-        </h1>
+        <div className="flex items-end justify-between gap-4 flex-wrap">
+          <h1
+            className="font-display leading-[1.1] text-[var(--color-text-primary)]"
+            style={{ fontSize: 'clamp(2.2rem, 3.5vw, 3.6rem)' }}
+          >
+            Semester Schedule — <span className="italic">{semesterCalendar.semester}.</span>
+          </h1>
+          {/* Print affordance — triggers window.print(). Marked no-print so it
+              doesn't appear in the printout. The @media print styles in
+              globals.css handle hiding chrome + showing .print-area. */}
+          <button
+            type="button"
+            onClick={() => typeof window !== 'undefined' && window.print()}
+            aria-label="Print semester calendar"
+            className="no-print inline-flex items-center gap-2 h-10 px-3.5 mb-1 rounded-md border border-[var(--color-border-strong)] bg-[var(--color-bg-raised)] font-body text-sm font-medium text-[var(--color-text-primary)] hover:bg-[var(--color-bg-subtle)] active:scale-[0.98] transition-all focus-visible:outline-none focus-visible:ring-2"
+          >
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+              <polyline points="6 9 6 2 18 2 18 9" />
+              <path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2" />
+              <rect x="6" y="14" width="12" height="8" />
+            </svg>
+            Print
+          </button>
+        </div>
       </Reveal>
     </div>
   );

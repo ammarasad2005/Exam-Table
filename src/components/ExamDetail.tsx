@@ -4,6 +4,7 @@ import { generateICS } from '@/lib/export';
 import { getDaysUntil, formatDate } from '@/lib/dates';
 import type { ExamEntry } from '@/lib/types';
 import { useMobileSwipe } from '@/hooks/useMobileSwipe';
+import { ShareButton } from '@/components/ShareButton';
 
 interface Props {
   exam: ExamEntry;
@@ -116,6 +117,7 @@ export function ExamDetail({ exam, dept, onClose }: Props) {
             >
               Add to calendar (.ics)
             </button>
+            <ShareButton className="w-full" label="Copy exam link" />
           </div>
         </div>
       </div>

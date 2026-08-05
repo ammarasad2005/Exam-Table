@@ -45,8 +45,14 @@ export const metadata: Metadata = {
   title: 'FAST Isb Utilities',
   description: 'Find your weekly and exam schedules — FAST NUCES, Islamabad',
   icons: {
-    icon: '/logo/icon.png',
-    shortcut: '/logo/icon.png',
+    icon: [
+      { url: '/logo/icon.png', media: '(prefers-color-scheme: light)' },
+      { url: '/logo/icon-dark.png', media: '(prefers-color-scheme: dark)' },
+    ],
+    shortcut: [
+      { url: '/logo/icon.png', media: '(prefers-color-scheme: light)' },
+      { url: '/logo/icon-dark.png', media: '(prefers-color-scheme: dark)' },
+    ],
     apple: '/logo/icon.png',
   },
   openGraph: {
@@ -64,7 +70,10 @@ export const metadata: Metadata = {
 };
 
 export const viewport = {
-  themeColor: '#FAFAF8',
+  themeColor: [
+    { media: '(prefers-color-scheme: light)', color: '#FAFAF8' },
+    { media: '(prefers-color-scheme: dark)', color: '#111110' },
+  ],
   width: 'device-width',
   initialScale: 1,
   viewportFit: 'cover',

@@ -5,6 +5,7 @@ import { downloadTimetableICS } from '@/lib/export';
 import { formatTimeRange } from '@/lib/timetable-filter';
 import type { TimetableEntry } from '@/lib/types';
 import { useMobileSwipe } from '@/hooks/useMobileSwipe';
+import { ShareButton } from '@/components/ShareButton';
 
 interface Props {
   entry: TimetableEntry;
@@ -136,6 +137,7 @@ export function TimetableDetail({ entry, dept, onClose, isSummer, displayName }:
             >
               Add to calendar (.ics)
             </button>
+            <ShareButton className="w-full" label="Copy class link" />
           </div>
         </div>
       </div>
