@@ -59,7 +59,7 @@ export function TimetableDetail({ entry, dept, onClose, isSummer, displayName }:
         role="dialog"
         aria-modal="true"
         aria-label={`${displayName ?? entry.courseName} timetable details`}
-        className="fixed z-40 bottom-0 left-0 right-0 rounded-t-2xl overflow-y-auto md:bottom-0 md:top-14 md:left-auto md:right-0 md:w-96 md:rounded-none md:rounded-l-2xl md:max-h-[calc(100dvh-56px)] animate-in slide-in-from-bottom-4 md:slide-in-from-right-4 duration-300 ease-out h-[85dvh] md:h-auto"
+        className="fixed z-40 bottom-0 left-0 right-0 rounded-t-2xl overflow-y-auto md:bottom-0 md:top-[3.75rem] md:left-auto md:right-0 md:w-96 md:rounded-none md:rounded-l-2xl md:max-h-[calc(100dvh-3.75rem)] animate-in slide-in-from-bottom-4 md:slide-in-from-right-4 duration-300 ease-out h-[85dvh] md:h-auto"
         style={{
           backgroundColor: 'var(--color-bg-raised)',
           boxShadow: 'var(--shadow-float)',

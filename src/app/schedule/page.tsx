@@ -133,7 +133,7 @@ function SchedulePageInner() {
       <div className="flex flex-1 md:gap-0">
 
         {/* Sidebar (desktop only) */}
-        <aside className="hidden md:flex md:w-56 lg:w-64 flex-col gap-4 p-6 border-r border-[var(--color-border)] sticky top-14 h-[calc(100dvh-56px)] overflow-y-auto">
+        <aside className="hidden md:flex md:w-56 lg:w-64 flex-col gap-4 p-6 border-r border-[var(--color-border)] sticky top-[3.75rem] h-[calc(100dvh-3.75rem)] overflow-y-auto">
           {isSummer ? (
             <>
               <div>
@@ -184,7 +184,7 @@ function SchedulePageInner() {
         {/* List area */}
         <div className="flex-1 flex flex-col">
           {/* Search bar — sticky below header */}
-          <div className="sticky top-14 z-10 bg-[var(--color-bg)] px-4 py-3 border-b border-[var(--color-border)]">
+          <div className="sticky top-[3.75rem] z-10 bg-[var(--color-bg)] px-4 py-3 border-b border-[var(--color-border)]">
             <SearchBar value={query} onChange={setQuery} />
           </div>
           {/* Result count (mobile) */}

@@ -603,7 +603,7 @@ function CustomTimetableInner() {
       <div className="flex flex-1 md:gap-0">
 
         {/* ── Sidebar (desktop) ── */}
-        <aside className="hidden md:flex md:w-[350px] lg:w-[400px] flex-col border-r border-[var(--color-border)] sticky top-14 h-[calc(100dvh-56px)] overflow-y-auto">
+        <aside className="hidden md:flex md:w-[350px] lg:w-[400px] flex-col border-r border-[var(--color-border)] sticky top-[3.75rem] h-[calc(100dvh-3.75rem)] overflow-y-auto">
           <div className="flex-1 px-5 py-5 flex flex-col gap-4">
             <button
               onClick={() => setIsDesktopClassesExpanded(prev => !prev)}
@@ -898,7 +898,7 @@ function CustomTimetableInner() {
 
           {/* Search bar */}
           {saved && (
-            <div className="sticky top-14 z-10 bg-[var(--color-bg)] px-4 py-3 border-b border-[var(--color-border)]">
+            <div className="sticky top-[3.75rem] z-10 bg-[var(--color-bg)] px-4 py-3 border-b border-[var(--color-border)]">
               <div className="flex gap-2 items-center">
                 <div className="flex-1">
                   <SearchBar value={query} onChange={setQuery} />

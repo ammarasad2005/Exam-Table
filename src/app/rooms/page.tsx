@@ -86,7 +86,7 @@ function RoomDetail({
       <div
         ref={drawerRef}
         role="dialog"
-        className="fixed z-40 bottom-0 left-0 right-0 rounded-t-2xl overflow-y-auto md:bottom-0 md:top-14 md:left-auto md:right-0 md:w-96 md:rounded-none md:rounded-l-2xl md:max-h-[calc(100dvh-56px)] animate-in slide-in-from-bottom-4 md:slide-in-from-right-4 duration-300 ease-out bg-[var(--color-bg-raised)] shadow-float border-l border-[var(--color-border)] h-[85dvh] md:h-auto"
+        className="fixed z-40 bottom-0 left-0 right-0 rounded-t-2xl overflow-y-auto md:bottom-0 md:top-[3.75rem] md:left-auto md:right-0 md:w-96 md:rounded-none md:rounded-l-2xl md:max-h-[calc(100dvh-3.75rem)] animate-in slide-in-from-bottom-4 md:slide-in-from-right-4 duration-300 ease-out bg-[var(--color-bg-raised)] shadow-float border-l border-[var(--color-border)] h-[85dvh] md:h-auto"
       >
         <div ref={handleRef} className="md:hidden flex justify-center pt-3 pb-1 cursor-grab active:cursor-grabbing">
           <div className="w-10 h-1 rounded-full bg-[var(--color-border-strong)] pointer-events-none" />
@@ -467,7 +467,7 @@ export default function RoomsPage() {
       <div className="flex flex-1">
 
         {/* Sidebar (desktop) */}
-        <aside className="hidden md:flex md:w-56 lg:w-64 flex-col gap-5 p-6 border-r border-[var(--color-border)] sticky top-14 h-[calc(100dvh-56px)] overflow-y-auto">
+        <aside className="hidden md:flex md:w-56 lg:w-64 flex-col gap-5 p-6 border-r border-[var(--color-border)] sticky top-[3.75rem] h-[calc(100dvh-3.75rem)] overflow-y-auto">
           <div>
             <p className="font-mono text-[10px] uppercase tracking-widest text-[var(--color-text-tertiary)] mb-1">Feature</p>
             <p className="font-mono text-sm font-medium">Room Finder</p>

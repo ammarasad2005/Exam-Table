@@ -845,7 +845,7 @@ function TimetablePageInner() {
       <div className="flex flex-1 md:gap-0">
 
         {/* ── Desktop Sidebar ───────────────────────────────────────────── */}
-        <aside className="hidden md:flex md:w-56 lg:w-64 flex-col gap-4 p-6 border-r border-[var(--color-border)] sticky top-14 h-[calc(100dvh-56px)] overflow-y-auto">
+        <aside className="hidden md:flex md:w-56 lg:w-64 flex-col gap-4 p-6 border-r border-[var(--color-border)] sticky top-[3.75rem] h-[calc(100dvh-3.75rem)] overflow-y-auto">
           {isSummer ? (
             <div>
               <p className="font-mono text-[10px] uppercase tracking-widest text-[var(--color-text-tertiary)] mb-1">Semester</p>
@@ -957,7 +957,7 @@ function TimetablePageInner() {
         <div className="flex-1 flex flex-col min-w-0">
 
           {/* Search + view toggle (mobile) */}
-          <div className="sticky top-14 z-10 bg-[var(--color-bg)] px-4 py-3 border-b border-[var(--color-border)]">
+          <div className="sticky top-[3.75rem] z-10 bg-[var(--color-bg)] px-4 py-3 border-b border-[var(--color-border)]">
             <div className="flex gap-2 items-center">
               <div className="flex-1">
                 <SearchBar value={query} onChange={setQuery} />

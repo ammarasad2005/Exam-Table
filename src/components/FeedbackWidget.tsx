@@ -102,19 +102,24 @@ export function FeedbackWidget() {
 
   return (
     <>
-      {/* 1. SIDE-PINNED VERTICAL TAB TRIGGER */}
-      <div className="fixed right-0 top-1/2 -translate-y-1/2 z-50 pointer-events-none">
+      {/* 1. SIDE-PINNED VERTICAL TAB TRIGGER
+         Redesign T8: removed animate-bounce (no reduced-motion guard + distracting);
+         tokenized bg (was hardcoded bg-white/80); repositioned higher on mobile so
+         it stops overlapping content / stat cards (was centered → now top-24 on
+         mobile, stays centered on desktop). Added aria-label. */}
+      <div className="fixed right-0 top-1/2 -translate-y-1/2 md:top-1/2 top-24 md:translate-y-0 z-50 pointer-events-none">
         <button
           onClick={() => setIsOpen(true)}
-          className="pointer-events-auto flex items-center gap-2 bg-gradient-to-l from-orange-600 to-orange-500 hover:from-orange-500 hover:to-orange-400 text-white font-extrabold text-[10px] uppercase tracking-widest py-4 px-2.5 rounded-l-2xl shadow-2xl border-l border-y border-orange-500/20 active:scale-95 transition-all duration-200"
-          style={{ 
+          aria-label="Give feedback — opens a feedback form"
+          className="pointer-events-auto flex items-center gap-2 bg-gradient-to-l from-orange-600 to-orange-500 hover:from-orange-500 hover:to-orange-400 text-white font-extrabold text-[11px] uppercase tracking-widest py-4 px-2.5 rounded-l-2xl shadow-float border-l border-y border-orange-500/20 active:scale-95 transition-all duration-200"
+          style={{
             boxShadow: '-4px 0 14px rgba(234, 88, 12, 0.3)',
             writingMode: 'vertical-rl',
             textOrientation: 'mixed'
           }}
         >
           <div className="flex items-center gap-1.5" style={{ writingMode: 'vertical-rl' }}>
-            <MessageSquare width={13} height={13} className="mb-2 animate-bounce" style={{ transform: 'rotate(90deg)' }} />
+            <MessageSquare width={13} height={13} className="mb-2" style={{ transform: 'rotate(90deg)' }} />
             <span>Give Feedback</span>
           </div>
         </button>
@@ -141,10 +146,10 @@ export function FeedbackWidget() {
             animate={{ x: 0 }}
             exit={{ x: '100%' }}
             transition={{ type: 'spring', damping: 25, stiffness: 220 }}
-            className="fixed inset-y-0 right-0 w-full sm:max-w-md bg-white/80 dark:bg-neutral-900/80 backdrop-blur-xl border-l border-neutral-200 dark:border-neutral-800 z-[60] shadow-2xl flex flex-col overflow-hidden text-neutral-900 dark:text-neutral-100"
+            className="fixed inset-y-0 right-0 w-full sm:max-w-md bg-[var(--color-bg-raised)]/95 dark:bg-[var(--color-bg-raised)]/95 backdrop-blur-xl border-l border-[var(--color-border)] z-[60] shadow-float flex flex-col overflow-hidden text-[var(--color-text-primary)]"
           >
             {/* Header */}
-            <div className="p-6 border-b border-neutral-200 dark:border-neutral-800 flex items-center justify-between bg-white/40 dark:bg-black/20">
+            <div className="p-6 border-b border-[var(--color-border)] flex items-center justify-between bg-[var(--color-bg-subtle)]/60">
               <div className="flex items-center gap-2">
                 <div className="w-8 h-8 rounded-lg bg-orange-500/10 flex items-center justify-center border border-orange-500/20 text-orange-500">
                   <MessageSquare width={16} height={16} />
