@@ -6,6 +6,7 @@ import { downloadEventsICS } from '@/lib/export';
 import { Navbar } from '@/components/Navbar';
 import { FloatingMenu } from '@/components/FloatingMenu';
 import { EventsCalendar } from '@/components/EventsCalendar';
+import { Reveal } from '@/components/Reveal';
 import {
   MONTH_NAMES,
   getCurrentAndNextMonth,
@@ -248,9 +249,11 @@ export default function EventsPage() {
               <p className="font-mono text-[11px] uppercase tracking-widest text-[var(--color-text-tertiary)] mb-2 events-panel-enter" style={{ animationDelay: '20ms' }}>
                 FAST NUCES · Islamabad
               </p>
-              <h1 className="font-display text-[clamp(2.4rem,3.5vw,3.6rem)] leading-tight text-[var(--color-text-primary)] events-hero-enter" style={{ animationDelay: '70ms' }}>
-                Campus Events
-              </h1>
+              <Reveal>
+                <h1 className="font-display text-[clamp(2.4rem,3.5vw,3.6rem)] leading-tight text-[var(--color-text-primary)]">
+                  Campus Events
+                </h1>
+              </Reveal>
               <p className="mt-3 font-body text-[17px] text-[var(--color-text-secondary)] leading-relaxed max-w-3xl events-panel-enter" style={{ animationDelay: '130ms' }}>
                 Student-relevant events at Campus, updated weekly. Browse this month and next month at full scale.
               </p>
@@ -268,7 +271,7 @@ export default function EventsPage() {
               </div>
             </section>
 
-            <aside className="space-y-4 xl:sticky xl:top-20 self-start">
+            <Reveal as="aside" className="space-y-4 xl:sticky xl:top-20 self-start">
               {ongoingEvents.length > 0 && (
                 <section
                   className="rounded-2xl border p-4 events-panel-enter"
@@ -371,7 +374,7 @@ export default function EventsPage() {
                   ))}
                 </div>
               </section>
-            </aside>
+            </Reveal>
           </div>
         </div>
 

@@ -14,6 +14,7 @@ import type { DeptFileKey } from '@/lib/faculty';
 import { useTheme } from '@/lib/theme';
 import { Header } from '@/components/Header';
 import { supabase } from '@/lib/supabase';
+import { Reveal } from '@/components/Reveal';
 
 
 // eslint-disable-next-line
@@ -886,9 +887,9 @@ export default function SetupPage() {
         onClick={handleSubmit}
         disabled={ctaDisabled}
         style={{ height: '52px' }}
-        className={`w-full rounded-md font-body font-medium text-base transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 ${ctaDisabled
+        className={`btn-ink w-full rounded-md font-body font-medium text-base transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 ${ctaDisabled
           ? 'bg-[var(--color-bg-subtle)] text-[var(--color-text-tertiary)] cursor-not-allowed'
-          : 'bg-[var(--color-text-primary)] text-[var(--color-bg)] active:scale-[0.98] hover:opacity-90'
+          : 'active:scale-[0.98]'
           }`}
       >
         {feature === 'rooms'
@@ -1055,7 +1056,7 @@ export default function SetupPage() {
             <div className="absolute bottom-10 left-10 w-48 h-48 bg-[var(--accent-ai)]/5 rounded-full translate-y-1/2 -translate-x-1/2 blur-2xl pointer-events-none" />
 
             {/* Headline block */}
-            <div className="relative z-10">
+            <Reveal className="relative z-10">
               <p className="font-mono text-xs uppercase tracking-widest text-[var(--color-text-tertiary)] mb-6">
                 FAST Isb Utilities —{' '}
                 {feature === 'exams' ? 'Exam Portal' : feature === 'timetable' ? 'Timetable Portal' : feature === 'faculty' ? 'Faculty Directory' : 'Room Finder'}
@@ -1081,7 +1082,7 @@ export default function SetupPage() {
                 )}
                 <span className="sr-only">{fullText}</span>
               </p>
-            </div>
+            </Reveal>
 
             <DesktopTicker 
                 allTimetableEntries={isSummerMode ? summerCoursesList : allTimetableEntries} 

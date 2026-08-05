@@ -12,6 +12,7 @@ import { FeedbackWidget } from '@/components/FeedbackWidget';
 import { GlobalShortcuts } from '@/components/GlobalShortcuts';
 import { BackToTop } from '@/components/BackToTop';
 import { ReadingProgress } from '@/components/ReadingProgress';
+import { CommandPalette } from '@/components/CommandPalette';
 const dmSans = DM_Sans({
   subsets: ['latin'],
   variable: '--font-body',
@@ -92,6 +93,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           <FeedbackWidget />
           <GlobalShortcuts />
           <BackToTop />
+          <CommandPalette />
           <Toaster />
         </ThemeProvider>
         <Analytics />

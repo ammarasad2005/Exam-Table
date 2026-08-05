@@ -10,6 +10,12 @@ interface HeaderProps {
 }
 
 export function Header({ children, rightActions }: HeaderProps) {
+  // Cmd/Ctrl+K hint affordance: clicking it dispatches the same shortcut the
+  // CommandPalette listens for, so it opens the palette.
+  const openPalette = () => {
+    window.dispatchEvent(new KeyboardEvent('keydown', { key: 'k', metaKey: true, ctrlKey: navigator.platform.includes('Mac') }));
+  };
+
   return (
     <header
       className="sticky top-0 z-50 flex items-center justify-between h-[3.75rem] flex-shrink-0 glass-header-laser px-5 md:px-10"
@@ -40,13 +46,27 @@ export function Header({ children, rightActions }: HeaderProps) {
       </div>
 
       {/* Right: Actions */}
-      <div className="flex items-center justify-end min-w-[60px] md:min-w-[100px] gap-3 md:gap-4">
+      <div className="flex items-center justify-end min-w-[60px] md:min-w-[100px] gap-2 md:gap-4">
         {rightActions}
-        <a 
-          href="https://github.com/ammarasad2005/Exam-Table" 
-          target="_blank" 
-          rel="noopener noreferrer" 
-          className="md:hidden text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)] transition-colors" 
+        {/* Command palette trigger (Cmd+K) — hidden on mobile (FAB covers nav) */}
+        <button
+          type="button"
+          onClick={openPalette}
+          aria-label="Open command palette (Cmd+K)"
+          className="hidden md:flex items-center gap-1.5 h-9 px-2.5 rounded-md border border-[var(--color-border)] bg-[var(--color-bg-raised)] text-[var(--color-text-tertiary)] hover:text-[var(--color-text-secondary)] hover:bg-[var(--color-bg-subtle)] transition-colors"
+          title="Search pages and actions (Cmd+K)"
+        >
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <circle cx="11" cy="11" r="7" />
+            <path d="m21 21-4.3-4.3" />
+          </svg>
+          <kbd className="font-mono text-data-sm">⌘K</kbd>
+        </button>
+        <a
+          href="https://github.com/ammarasad2005/Exam-Table"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="md:hidden text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)] transition-colors"
           aria-label="GitHub"
         >
           <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">

@@ -1,6 +1,7 @@
 'use client';
 import { useState, useEffect } from 'react';
 import { Header } from '@/components/Header';
+import { Reveal } from '@/components/Reveal';
 import semesterCalendarRaw from '../../../public/data/semester_calendar.json';
 
 // ── Data ─────────────────────────────────────────────────────────────────────
@@ -191,12 +192,12 @@ export default function SemesterPlanPage() {
             
             {/* COLUMN 1: Key Dates (Left) */}
             <div className="flex-[1.2] min-w-0 flex flex-col gap-8">
-              <KeyDatesSection />
+              <Reveal><KeyDatesSection /></Reveal>
             </div>
 
             {/* COLUMN 2: Holidays (Middle) */}
             <div className="flex-[0.6] min-w-[200px] hidden lg:flex flex-col">
-              <HolidaysSection vertical />
+              <Reveal><HolidaysSection vertical /></Reveal>
             </div>
 
             {/* COLUMN 3: Calendars (Right) */}
@@ -210,7 +211,7 @@ export default function SemesterPlanPage() {
                   boxShadow: 'var(--shadow-card), var(--border-inset)',
                 }}
               >
-                {mounted && <CalendarsSection compact hideLabel />}
+                {mounted && <Reveal><CalendarsSection compact hideLabel /></Reveal>}
                 
                 {/* Fallback for smaller desktop screens where middle column is hidden */}
                 <div className="lg:hidden">
@@ -247,15 +248,17 @@ function MobileHero() {
 function DesktopHero() {
   return (
     <div className="max-w-4xl">
-      <p className="font-mono text-xs uppercase tracking-widest text-[var(--color-text-tertiary)] mb-4">
-        FAST NUCES · Islamabad · Signed Jan 8, 2026
-      </p>
-      <h1
-        className="font-display leading-[1.1] text-[var(--color-text-primary)]"
-        style={{ fontSize: 'clamp(2.2rem, 3.5vw, 3.6rem)' }}
-      >
-        Semester Schedule — <span className="italic">{semesterCalendar.semester}.</span>
-      </h1>
+      <Reveal>
+        <p className="font-mono text-xs uppercase tracking-widest text-[var(--color-text-tertiary)] mb-4">
+          FAST NUCES · Islamabad · Signed Jan 8, 2026
+        </p>
+        <h1
+          className="font-display leading-[1.1] text-[var(--color-text-primary)]"
+          style={{ fontSize: 'clamp(2.2rem, 3.5vw, 3.6rem)' }}
+        >
+          Semester Schedule — <span className="italic">{semesterCalendar.semester}.</span>
+        </h1>
+      </Reveal>
     </div>
   );
 }
