@@ -77,6 +77,7 @@ import { Header } from '@/components/Header'
 import { useToast } from '@/hooks/use-toast'
 import { useIsMobile } from '@/hooks/use-mobile'
 import { ResolutionDetail } from '@/components/ResolutionDetail'
+import { Reveal } from '@/components/Reveal'
 
 export const dynamic = 'force-dynamic'
 
@@ -4395,8 +4396,8 @@ function StatsDashboard({
 
   return (
     <div className="space-y-4">
-      {/* Desktop: Larger Cards */}
-      <div className="hidden md:grid grid-cols-3 gap-4">
+      {/* Desktop: Larger Cards — T20: wrapped in <Reveal stagger> so the 3 stat cards stagger in on scroll. */}
+      <Reveal stagger className="hidden md:grid grid-cols-3 gap-4">
         {stats.map((stat) => {
           return (
             <button
@@ -4437,10 +4438,10 @@ function StatsDashboard({
             </button>
           )
         })}
-      </div>
+      </Reveal>
 
-      {/* Mobile: Compact Square Row */}
-      <div className="grid md:hidden grid-cols-3 gap-2">
+      {/* Mobile: Compact Square Row — T20: wrapped in <Reveal stagger> so the 3 stat cards stagger in on scroll. */}
+      <Reveal stagger className="grid md:hidden grid-cols-3 gap-2">
         {stats.map((stat) => (
           <button
             key={stat.label}
@@ -4463,7 +4464,7 @@ function StatsDashboard({
             </div>
           </button>
         ))}
-      </div>
+      </Reveal>
     </div>
   )
 }
@@ -5610,6 +5611,10 @@ function LostFoundView({
         {activeItems.length === 0 ? (
           <EmptyState hasFilters={hasFilters} onReport={() => onSubViewChange('report')} />
         ) : (
+          /* T20: wrap items grid in <Reveal stagger> so the grid reveals on scroll.
+             Cards retain their own .lostfound-card mount-time stagger animation;
+             motion.div layout + AnimatePresence preserved (Reveal is an outer wrapper). */
+          <Reveal stagger>
           <AnimatePresence>
             <motion.div
               layout
@@ -5639,6 +5644,7 @@ function LostFoundView({
               ))}
             </motion.div>
           </AnimatePresence>
+          </Reveal>
         )}
 
         {/* Archived Items Section */}
@@ -5749,6 +5755,7 @@ function LostFoundView({
           className="space-y-6"
         >
           {/* Section title & description */}
+          <Reveal>
           <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
             <div className="flex-1">
               <p
@@ -5791,6 +5798,7 @@ function LostFoundView({
               </button>
             </div>
           </div>
+          </Reveal>
 
           {/* Quick Stats Dashboard */}
           {!loading && (
@@ -5997,6 +6005,10 @@ function LostFoundView({
             ) : activeItems.length === 0 && !loading ? (
               <EmptyState hasFilters={hasFilters} onReport={() => onSubViewChange('report')} />
             ) : (
+              /* T20: wrap mobile items grid in <Reveal stagger> so the grid reveals on scroll.
+                 Cards retain their own .lostfound-card mount-time stagger animation;
+                 AnimatePresence preserved (Reveal is an outer wrapper). */
+              <Reveal stagger>
               <AnimatePresence>
                 <div className="grid grid-cols-2 gap-3 md:gap-6">
                   {activeItems.map((item, idx) => (
@@ -6023,6 +6035,7 @@ function LostFoundView({
                   ))}
                 </div>
               </AnimatePresence>
+              </Reveal>
             )}
           </div>
         </motion.div>

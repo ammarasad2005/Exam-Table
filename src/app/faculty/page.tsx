@@ -8,6 +8,7 @@ import { Header } from '@/components/Header';
 
 import { FacultyCard } from '@/components/FacultyCard';
 import { FacultyDetail } from '@/components/FacultyDetail';
+import { Reveal } from '@/components/Reveal';
 import {
   flattenFaculty,
   searchFaculty,
@@ -183,6 +184,11 @@ export default function FacultyPage() {
         {/* ── Main content ────────────────────────────────────────────────── */}
         <div className="flex-1 px-4 md:px-8 py-6 max-w-[1200px] mx-auto w-full">
 
+          {/* T20: wrap search bar + mobile filter strip + results header in <Reveal>
+              so the header region reveals as one unit on scroll. Faculty cards
+              below already have .faculty-card stagger animation (untouched). */}
+          <Reveal>
+
           {/* Search Bar */}
           <div className="relative mb-5">
             <svg
@@ -288,6 +294,8 @@ export default function FacultyPage() {
                </button>
             </div>
           </div>
+
+          </Reveal>
 
           {/* Faculty grid */}
           {filtered.length === 0 ? (
