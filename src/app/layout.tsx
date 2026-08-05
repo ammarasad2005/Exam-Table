@@ -17,6 +17,7 @@ import { ShortcutHelp } from '@/components/ShortcutHelp';
 import { SkipLinks } from '@/components/SkipLinks';
 import { ContrastChecker } from '@/components/ContrastChecker';
 import { FocusVisibleDebug } from '@/components/FocusVisibleDebug';
+import { OnboardingTour } from '@/components/OnboardingTour';
 const dmSans = DM_Sans({
   subsets: ['latin'],
   variable: '--font-body',
@@ -116,6 +117,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
               <FocusVisibleDebug />
             </>
           )}
+          <OnboardingTour />
           <Toaster />
         </ThemeProvider>
         <Analytics />

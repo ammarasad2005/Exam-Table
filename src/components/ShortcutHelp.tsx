@@ -54,7 +54,22 @@ const SHORTCUTS: Shortcut[] = [
 
 export function ShortcutHelp() {
   const [open, setOpen] = useState(false);
+  const [recent, setRecent] = useState<string[]>([]);
   const triggerRef = useRef<HTMLElement | null>(null);
+
+  // Load recently-visited routes (shared with CommandPalette via 'cmdk-recent' key)
+  useEffect(() => {
+    if (!open) return;
+    try {
+      const stored = localStorage.getItem('cmdk-recent');
+      if (stored) {
+        const parsed: unknown = JSON.parse(stored);
+        if (Array.isArray(parsed)) {
+          setRecent(parsed.filter((p): p is string => typeof p === 'string').slice(0, 3));
+        }
+      }
+    } catch { /* ignore */ }
+  }, [open]);
 
   // Dedupe (Cmd+K appears once)
   const seen = new Set<string>();
@@ -155,6 +170,26 @@ export function ShortcutHelp() {
             <X width={16} height={16} strokeWidth={2} />
           </button>
         </div>
+        {/* Recently visited (shared with CommandPalette via cmdk-recent) */}
+        {recent.length > 0 && (
+          <div className="px-5 py-2.5 border-b border-[var(--color-border)] bg-[var(--color-bg-subtle)]/30">
+            <div className="font-mono text-data-sm uppercase tracking-widest text-[var(--color-text-tertiary)] mb-1.5">
+              Recently visited
+            </div>
+            <div className="flex items-center gap-1.5 flex-wrap">
+              {recent.map((path) => (
+                <a
+                  key={path}
+                  href={path}
+                  className="inline-flex items-center gap-1 h-6 px-2 rounded-md border border-[var(--color-border)] bg-[var(--color-bg-raised)] font-mono text-data-sm text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)] hover:border-[var(--color-border-strong)] transition-colors"
+                  onClick={() => { setOpen(false); triggerRef.current?.focus(); }}
+                >
+                  {path === '/' ? 'landing' : path.replace(/^\//, '')}
+                </a>
+              ))}
+            </div>
+          </div>
+        )}
         {/* Shortcuts list */}
         <div className="flex-1 overflow-y-auto custom-scrollbar py-2">
           {groups.map((group) => {
