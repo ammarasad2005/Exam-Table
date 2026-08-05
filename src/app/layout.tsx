@@ -13,6 +13,7 @@ import { GlobalShortcuts } from '@/components/GlobalShortcuts';
 import { BackToTop } from '@/components/BackToTop';
 import { ReadingProgress } from '@/components/ReadingProgress';
 import { CommandPalette } from '@/components/CommandPalette';
+import { ShortcutHelp } from '@/components/ShortcutHelp';
 const dmSans = DM_Sans({
   subsets: ['latin'],
   variable: '--font-body',
@@ -94,6 +95,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           <GlobalShortcuts />
           <BackToTop />
           <CommandPalette />
+          <ShortcutHelp />
           <Toaster />
         </ThemeProvider>
         <Analytics />

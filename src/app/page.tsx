@@ -541,15 +541,24 @@ export default function RootPage() {
 
             {/* Footer strip */}
             <div className="mt-10 pt-6 border-t border-[var(--color-border)]">
-              <p className="font-mono text-[10px] text-[var(--color-text-tertiary)] uppercase tracking-widest text-center flex items-center justify-center gap-1">
+              <p className="font-mono text-data-sm text-[var(--color-text-tertiary)] uppercase tracking-widest text-center flex items-center justify-center gap-1">
                 FAST NUCES · Islamabad Campus · {semesterName}
-                <a 
-                  href="/admin" 
+                <a
+                  href="/admin"
                   className="hover:text-orange-500 transition-colors duration-150 p-1 ml-0.5 opacity-40 hover:opacity-100"
                   title="Admin Portal"
                 >
                   🔑
                 </a>
+              </p>
+              {/* T26: Cmd+K discoverability hint — first-time users learn the command palette */}
+              <p className="mt-3 font-mono text-data-sm text-[var(--color-text-tertiary)] text-center flex items-center justify-center gap-2">
+                <span>Tip:</span>
+                <kbd className="inline-flex items-center min-w-[22px] h-5 px-1.5 rounded border border-[var(--color-border)] bg-[var(--color-bg-subtle)] text-[var(--color-text-secondary)] text-[11px]">⌘</kbd>
+                <kbd className="inline-flex items-center min-w-[22px] h-5 px-1.5 rounded border border-[var(--color-border)] bg-[var(--color-bg-subtle)] text-[var(--color-text-secondary)] text-[11px]">K</kbd>
+                <span>to search ·</span>
+                <kbd className="inline-flex items-center min-w-[22px] h-5 px-1.5 rounded border border-[var(--color-border)] bg-[var(--color-bg-subtle)] text-[var(--color-text-secondary)] text-[11px]">?</kbd>
+                <span>for shortcuts</span>
               </p>
             </div>
           </div>

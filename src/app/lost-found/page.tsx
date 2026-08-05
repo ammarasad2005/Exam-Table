@@ -4233,14 +4233,7 @@ function QuickSearchModal({
                     onSelect(item)
                     onClose()
                   }}
-                  className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-left transition-colors hover:opacity-80 outline-none focus:bg-[var(--color-bg-subtle)]"
-                  style={{ backgroundColor: 'transparent' }}
-                  onMouseEnter={(e) => {
-                    (e.currentTarget as HTMLElement).style.backgroundColor = 'var(--color-bg-subtle)'
-                  }}
-                  onMouseLeave={(e) => {
-                    (e.currentTarget as HTMLElement).style.backgroundColor = 'transparent'
-                  }}
+                  className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-left transition-colors hover:bg-[var(--color-bg-subtle)] outline-none focus:bg-[var(--color-bg-subtle)]"
                 >
                   <div
                     className="w-8 h-8 rounded-lg flex items-center justify-center shrink-0 text-sm"
