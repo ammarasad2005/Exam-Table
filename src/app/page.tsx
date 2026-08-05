@@ -33,6 +33,7 @@ const FEATURES = [
     ),
     accent: 'cs',
     placeholder: false,
+    startHere: true,
   },
   {
     id: 'optimizer',
@@ -141,6 +142,10 @@ const FEATURES = [
     placeholder: false,
   },
 ] as const;
+
+// Feature card definition type — `startHere` is an optional ink-primary
+// affordance applied to the most-used feature card (T24).
+type FeatureCard = (typeof FEATURES)[number] & { startHere?: boolean };
 
 interface UserConfig {
   batch: string;
@@ -277,7 +282,7 @@ export default function RootPage() {
           <Header />
         </div>
 
-        <div className="flex flex-col flex-1 px-5 pb-28 pt-4 max-w-lg mx-auto w-full">
+        <div className="flex flex-col flex-1 px-5 pb-20 pt-4 max-w-lg mx-auto w-full">
 
           {/* Intro typing text */}
           <div className="mb-8">
@@ -371,6 +376,12 @@ export default function RootPage() {
                 backgroundSize: '18px 18px',
               }}
             />
+            {/* T26: subtle warm paper-grain overlay — distinguishes the landing
+                hero from /home (which drops this texture for a cleaner config feel). */}
+            <div
+              aria-hidden="true"
+              className="absolute inset-0 pointer-events-none opacity-[0.04] bg-[url('/textures/paper-grain.png')] bg-cover"
+            />
             {/* Ambient glows */}
             <div className="absolute top-0 right-0 w-72 h-72 bg-[var(--accent-cs)]/5 rounded-full -translate-y-1/2 translate-x-1/2 blur-3xl pointer-events-none" />
             <div className="absolute bottom-10 left-10 w-56 h-56 bg-[var(--accent-ai)]/5 rounded-full translate-y-1/2 -translate-x-1/2 blur-2xl pointer-events-none" />
@@ -446,17 +457,26 @@ export default function RootPage() {
               Features
             </p>
 
-            <div className="grid grid-cols-2 lg:grid-cols-3 gap-4 content-start">
-              {FEATURES.map((f) => (
+            <div className="grid grid-cols-2 lg:grid-cols-3 gap-4 auto-rows-fr">
+              {FEATURES.map((f) => {
+                const isStartHere = (f as FeatureCard).startHere === true;
+                return (
                 <button
                   key={f.id}
                   onClick={() => handleFeatureClick(f.id, f.placeholder)}
                   disabled={f.placeholder}
-                  className="group relative overflow-hidden text-left rounded-2xl border bg-[var(--color-bg-raised)] p-6 flex flex-col gap-3 transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 disabled:opacity-50 disabled:cursor-not-allowed"
-                  style={{
-                    borderColor: 'var(--color-border)',
-                    boxShadow: 'var(--shadow-card), var(--border-inset)',
-                  }}
+                  className={`group relative overflow-hidden text-left rounded-2xl border bg-[var(--color-bg-raised)] p-6 flex flex-col gap-3 transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 disabled:opacity-50 disabled:cursor-not-allowed ${isStartHere ? 'ring-1 ring-[var(--color-primary-action)]/15' : ''}`}
+                  style={
+                    isStartHere
+                      ? {
+                          borderColor: 'var(--color-primary-action)',
+                          boxShadow: 'var(--shadow-raised), var(--border-inset), 0 0 0 1px var(--color-primary-action)',
+                        }
+                      : {
+                          borderColor: 'var(--color-border)',
+                          boxShadow: 'var(--shadow-card), var(--border-inset)',
+                        }
+                  }
                   onMouseOver={e => {
                     if (!f.placeholder) {
                       (e.currentTarget as HTMLElement).style.boxShadow = `var(--shadow-raised), var(--border-inset), 0 0 0 1px var(--accent-${f.accent})`;
@@ -465,29 +485,47 @@ export default function RootPage() {
                     }
                   }}
                   onMouseOut={e => {
-                    (e.currentTarget as HTMLElement).style.boxShadow = 'var(--shadow-card), var(--border-inset)';
-                    (e.currentTarget as HTMLElement).style.borderColor = 'var(--color-border)';
+                    if (isStartHere) {
+                      (e.currentTarget as HTMLElement).style.boxShadow = 'var(--shadow-raised), var(--border-inset), 0 0 0 1px var(--color-primary-action)';
+                      (e.currentTarget as HTMLElement).style.borderColor = 'var(--color-primary-action)';
+                    } else {
+                      (e.currentTarget as HTMLElement).style.boxShadow = 'var(--shadow-card), var(--border-inset)';
+                      (e.currentTarget as HTMLElement).style.borderColor = 'var(--color-border)';
+                    }
                     (e.currentTarget as HTMLElement).style.transform = 'translateY(0)';
                   }}
                 >
                   <span
                     aria-hidden="true"
                     className="absolute left-0 top-0 bottom-0 w-[5px] rounded-l-2xl opacity-80 group-hover:opacity-100 transition-opacity duration-200"
-                    style={{ backgroundColor: `var(--accent-${f.accent})` }}
+                    style={{ backgroundColor: isStartHere ? 'var(--color-primary-action)' : `var(--accent-${f.accent})` }}
                   />
                   <div className="flex items-start justify-between">
                     <div
                       className="w-11 h-11 rounded-xl flex items-center justify-center transition-colors duration-200"
-                      style={{
-                        backgroundColor: `var(--accent-${f.accent}-bg)`,
-                        color: `var(--accent-${f.accent})`,
-                      }}
+                      style={
+                        isStartHere
+                          ? {
+                              backgroundColor: 'var(--color-primary-action)',
+                              color: 'var(--color-primary-action-fg)',
+                            }
+                          : {
+                              backgroundColor: `var(--accent-${f.accent}-bg)`,
+                              color: `var(--accent-${f.accent})`,
+                            }
+                      }
                     >
                       {f.icon}
                     </div>
                     {f.placeholder ? (
-                      <span className="font-mono text-[9px] uppercase tracking-wider px-2 py-0.5 rounded-full bg-[var(--color-bg-subtle)] text-[var(--color-text-tertiary)] border border-[var(--color-border)]">
+                      <span className="font-mono text-data-sm uppercase tracking-wider px-2 py-0.5 rounded-full bg-[var(--color-bg-subtle)] text-[var(--color-text-tertiary)] border border-[var(--color-border)]">
                         Coming Soon
+                      </span>
+                    ) : isStartHere ? (
+                      /* T24: single ink-primary "Start here" affordance */
+                      <span className="flex items-center gap-1 font-mono text-data-sm font-bold uppercase tracking-wider px-2 py-1 rounded-full bg-[var(--color-primary-action)] text-[var(--color-primary-action-fg)] shadow-sm">
+                        Start here
+                        <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><path d="M5 12h14M13 5l7 7-7 7" /></svg>
                       </span>
                     ) : (
                       <svg
@@ -499,14 +537,15 @@ export default function RootPage() {
                       </svg>
                     )}
                   </div>
-                  <div>
+                  <div className="flex flex-col gap-1">
                     <h2 className="mb-[5px] font-body text-[17px] font-medium leading-[1.4] tracking-[0.04em] text-[rgba(0,0,0,0.8)] dark:text-[rgba(255,255,255,0.88)]">
                       {f.title}
                     </h2>
                     <p className="font-body text-sm text-[var(--color-text-secondary)] leading-relaxed">{f.description}</p>
                   </div>
                 </button>
-              ))}
+                );
+              })}
             </div>
 
             {/* Footer strip */}

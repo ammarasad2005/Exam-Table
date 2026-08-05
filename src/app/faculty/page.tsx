@@ -213,7 +213,7 @@ export default function FacultyPage() {
           <div className="md:hidden flex gap-2 overflow-x-auto pb-3 mb-4 scrollbar-none -mx-4 px-4">
             <button
               onClick={() => handleDeptChange('ALL')}
-              className="shrink-0 h-8 px-4 rounded-full font-mono text-[11px] font-bold border transition-all hover:bg-[var(--color-text-primary)] hover:text-[var(--color-bg)] hover:border-[var(--color-text-primary)]"
+              className="shrink-0 h-8 px-4 rounded-full font-mono text-data-sm font-bold border transition-all hover:bg-[var(--color-text-primary)] hover:text-[var(--color-bg)] hover:border-[var(--color-text-primary)] flex items-center gap-1.5"
               style={activeDept === 'ALL' ? {
                 backgroundColor: 'var(--color-text-primary)',
                 color: 'var(--color-bg)',
@@ -224,6 +224,8 @@ export default function FacultyPage() {
               }}
             >
               All
+              {/* T12: per-dept count badge — matches desktop sidebar pattern. */}
+              <span className="opacity-70">{ALL_MEMBERS.length}</span>
             </button>
             {DEPT_ORDER.map(key => {
               const accent   = DEPT_ACCENT[key];
@@ -232,7 +234,7 @@ export default function FacultyPage() {
                 <button
                   key={key}
                   onClick={() => handleDeptChange(key)}
-                  className="shrink-0 h-8 px-4 rounded-full font-mono text-[11px] font-bold border transition-all hover:bg-[var(--hover-bg)] hover:text-[var(--hover-color)] hover:border-[var(--hover-color)]"
+                  className="shrink-0 h-8 px-4 rounded-full font-mono text-data-sm font-bold border transition-all hover:bg-[var(--hover-bg)] hover:text-[var(--hover-color)] hover:border-[var(--hover-color)] flex items-center gap-1.5"
                   style={{
                     '--hover-bg': `var(--accent-${accent}-bg)`,
                     '--hover-color': `var(--accent-${accent})`,
@@ -247,6 +249,8 @@ export default function FacultyPage() {
                   } as any}
                 >
                   {key}
+                  {/* T12: per-dept count badge — matches desktop sidebar pattern. */}
+                  <span className="opacity-70">{totalByDept[key] ?? 0}</span>
                 </button>
               );
             })}

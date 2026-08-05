@@ -1309,7 +1309,7 @@ function TimetablePageInner() {
           )}
 
           {/* Content area */}
-          <div id="print-area" className="flex-1 px-4 pb-[150px] bg-[var(--color-bg)]">
+          <div id="print-area" className="flex-1 px-4 pb-20 md:pb-28 lg:pb-32 bg-[var(--color-bg)]">
             {filtered.length === 0 ? (
               <EmptyState
                 query={query}
@@ -1514,7 +1514,8 @@ function GridView({
 
   return (
     <div className="mt-8 overflow-x-auto select-none rounded-xl border border-[var(--color-border)] shadow-sm bg-[var(--color-bg-raised)]">
-      <div className="w-full min-w-[980px] relative flex flex-col">
+      {/* T31: relaxed min-width 980→860 so the grid reflows on tablet portrait. */}
+      <div className="w-full min-w-[860px] relative flex flex-col">
         
         {/* Day Headers - Sticky */}
         <div
@@ -1528,12 +1529,12 @@ function GridView({
             return (
               <div 
                 key={d.day} 
-                className={`text-center font-mono text-[10px] uppercase tracking-widest flex flex-col items-center justify-center border-r border-[var(--color-border)] last:border-r-0 py-1 ${
+                className={`text-center font-mono text-data-sm uppercase tracking-widest flex flex-col items-center justify-center border-r border-[var(--color-border)] last:border-r-0 py-1 ${
                   d.isToday ? 'bg-[var(--color-text-primary)]/5 font-bold text-[var(--color-text-primary)]' : 'text-[var(--color-text-tertiary)]'
                 }`}
               >
                 <span>{label}</span>
-                {d.dateStr && <span className="text-[8px] opacity-80 mt-0.5">{d.dateStr}</span>}
+                {d.dateStr && <span className="text-data-sm opacity-80 mt-0.5">{d.dateStr}</span>}
               </div>
             );
           })}
@@ -1554,7 +1555,7 @@ function GridView({
               const top = (m - GRID_START) * PX_PER_MIN;
               return (
                 <div key={m} className="absolute left-0 right-0 border-t border-[var(--color-border)] opacity-30 flex items-start" style={{ top: `${top}px` }}>
-                  <span className="sticky left-1 z-30 font-mono text-[8px] md:text-[9px] -mt-2 text-[var(--color-text-tertiary)] bg-[var(--color-bg-raised)] px-1">
+                  <span className="sticky left-1 z-30 font-mono text-data-sm -mt-2 text-[var(--color-text-tertiary)] bg-[var(--color-bg-raised)] px-1">
                     {Math.floor(m / 60)}:00
                   </span>
                 </div>
@@ -1587,7 +1588,7 @@ function GridView({
                       <button
                         key={idx}
                         onClick={() => onSelect(e)}
-                        className="absolute left-0.5 right-0.5 md:left-1 md:right-1 rounded-md text-[9px] md:text-[10px] transition-all hover:ring-1 hover:ring-[var(--color-text-tertiary)] active:scale-[0.98] focus-visible:outline-none overflow-hidden text-left flex items-center justify-center"
+                        className="absolute left-0.5 right-0.5 md:left-1 md:right-1 rounded-md text-data-sm transition-all hover:ring-1 hover:ring-[var(--color-text-tertiary)] active:scale-[0.98] focus-visible:outline-none overflow-hidden text-left flex items-center justify-center"
                         style={{
                           top: `${top}px`,
                           height: `${height}px`,
@@ -1605,9 +1606,9 @@ function GridView({
                         <div className="flex flex-col h-full w-full justify-between gap-1 p-1 md:p-2">
                           <div className="min-w-0">
                             <p className="font-bold leading-tight line-clamp-2 uppercase break-words">{resolveDisplayName ? resolveDisplayName(e.courseName) : e.courseName}</p>
-                            <p className="mt-0.5 opacity-80 font-mono text-[8.5px] whitespace-nowrap overflow-hidden text-ellipsis">{formatTimeRange(e.time)}</p>
+                            <p className="mt-0.5 opacity-80 font-mono text-data-sm whitespace-nowrap overflow-hidden text-ellipsis">{formatTimeRange(e.time)}</p>
                           </div>
-                          <p className="font-medium opacity-80 self-end text-[8.5px] truncate max-w-full">{e.room}</p>
+                          <p className="font-medium opacity-80 self-end text-data-sm truncate max-w-full">{e.room}</p>
                         </div>
                       </button>
                     );

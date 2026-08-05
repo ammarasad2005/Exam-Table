@@ -1,5 +1,6 @@
 'use client';
 import { useEffect, useRef, useState } from 'react';
+import { Ban, Calendar, AlertTriangle, Sparkles } from 'lucide-react';
 import type { TimetableEntry } from '@/lib/types';
 import { formatTimeRange } from '@/lib/timetable-filter';
 
@@ -28,7 +29,7 @@ export function TimetableCard({
 }: Props) {
   const accentColor = `var(--accent-${dept.toLowerCase()})`;
   const accentBg    = `var(--accent-${dept.toLowerCase()}-bg)`;
-  const stripColor = conflicting ? '#f87171' : entry.cancelled ? 'var(--color-text-tertiary)' : accentColor;
+  const stripColor = conflicting ? 'var(--color-urgent)' : entry.cancelled ? 'var(--color-text-tertiary)' : accentColor;
   const [isSectionMenuOpen, setIsSectionMenuOpen] = useState(false);
   const sectionMenuRef = useRef<HTMLDivElement | null>(null);
 
@@ -51,15 +52,12 @@ export function TimetableCard({
 
   return (
     <div
-      className={`timetable-card group relative overflow-hidden w-full text-left border border-[var(--color-border)] rounded-lg p-4 flex flex-col gap-2 active:scale-[0.98] transition-all duration-100 focus-visible:outline-none focus-visible:ring-2 ${entry.cancelled ? 'opacity-65' : ''}`}
+      className={`timetable-card group relative overflow-hidden w-full text-left border border-[var(--color-border)] rounded-lg p-4 flex flex-col gap-2 active:scale-[0.98] transition-all duration-150 hover:-translate-y-[2px] focus-visible:outline-none focus-visible:ring-2 [box-shadow:var(--shadow-card),var(--border-inset)] hover:[box-shadow:var(--shadow-raised),var(--border-inset)] ${entry.cancelled ? 'opacity-65' : ''}`}
       style={{
         background: isRepeat
-          ? 'linear-gradient(135deg, var(--color-bg-raised) 50%, color-mix(in srgb, var(--color-bg-raised) 80%, #f59e0b 20%))'
+          ? 'linear-gradient(135deg, var(--color-bg-raised) 50%, color-mix(in srgb, var(--color-bg-raised) 80%, var(--accent-cy) 20%))'
           : 'var(--color-bg-raised)',
-        boxShadow: 'var(--shadow-card), var(--border-inset)',
       }}
-      onMouseOver={e => (e.currentTarget.style.boxShadow = 'var(--shadow-raised), var(--border-inset)')}
-      onMouseOut={e => (e.currentTarget.style.boxShadow = 'var(--shadow-card), var(--border-inset)')}
     >
       <span
         aria-hidden="true"
@@ -73,14 +71,14 @@ export function TimetableCard({
         <div className="flex gap-1.5 overflow-hidden shrink-0">
           {entry.department.includes('/') && (
             <span
-              className="font-mono text-[10px] uppercase font-bold px-2 py-0.5 rounded shrink-0 border border-[var(--color-border-strong)]"
+              className="font-mono text-data-sm uppercase font-bold px-2 py-0.5 rounded shrink-0 border border-[var(--color-border-strong)]"
               style={{ backgroundColor: 'var(--color-bg-subtle)', color: 'var(--color-text-primary)' }}
             >
               {entry.department}
             </span>
           )}
           <span
-            className="font-mono text-[10px] font-bold px-2 py-0.5 rounded shrink-0"
+            className="font-mono text-data-sm font-bold px-2 py-0.5 rounded shrink-0"
             style={{ backgroundColor: accentBg, color: accentColor }}
           >
             {entry.section}
@@ -89,33 +87,51 @@ export function TimetableCard({
 
         <div className="flex flex-wrap gap-1">
           {entry.cancelled && (
-            <span className="font-mono text-[10px] font-medium px-1.5 py-0.5 rounded bg-gray-100 text-gray-600 dark:bg-gray-800 dark:text-gray-400 shrink-0">
-              🚫 Canceled
+            <span className="font-mono text-data-sm font-medium px-1.5 py-0.5 rounded inline-flex items-center gap-1 shrink-0 bg-[var(--color-bg-subtle)] text-[var(--color-text-tertiary)]">
+              <Ban className="w-3 h-3" aria-hidden="true" /> Canceled
             </span>
           )}
           {isRepeat && (
-            <span className="font-mono text-[10px] font-medium px-1.5 py-0.5 rounded shrink-0" style={{ backgroundColor: 'color-mix(in srgb, transparent 80%, #f59e0b 20%)', color: '#b45309' }}>
+            <span
+              className="font-mono text-data-sm font-medium px-1.5 py-0.5 rounded shrink-0"
+              style={{
+                backgroundColor: 'color-mix(in srgb, transparent 80%, var(--accent-cy) 20%)',
+                color: 'var(--accent-cy)',
+              }}
+            >
               Repeat
             </span>
           )}
           {conflicting && (
-            <span className="font-mono text-[10px] font-medium px-1.5 py-0.5 rounded bg-red-100 text-red-600 dark:bg-red-900/40 dark:text-red-400 shrink-0">
-              ⚠ Conflict
+            <span
+              className="font-mono text-data-sm font-medium px-1.5 py-0.5 rounded inline-flex items-center gap-1 shrink-0"
+              style={{
+                backgroundColor: 'color-mix(in srgb, var(--color-urgent) 14%, transparent)',
+                color: 'var(--color-urgent)',
+              }}
+            >
+              <AlertTriangle className="w-3 h-3" aria-hidden="true" /> Conflict
             </span>
           )}
           {entry.exam && (
-            <span className="font-mono text-[10px] font-medium px-1.5 py-0.5 rounded bg-red-100 text-red-600 dark:bg-red-900/40 dark:text-red-400 shrink-0">
-              📅 Exam
+            <span
+              className="font-mono text-data-sm font-medium px-1.5 py-0.5 rounded inline-flex items-center gap-1 shrink-0"
+              style={{
+                backgroundColor: 'color-mix(in srgb, var(--color-urgent) 14%, transparent)',
+                color: 'var(--color-urgent)',
+              }}
+            >
+              <Calendar className="w-3 h-3" aria-hidden="true" /> Exam
             </span>
           )}
           {entry.rescheduled && (
-            <span className="font-mono text-[10px] font-medium px-1.5 py-0.5 rounded bg-amber-100 text-amber-700 dark:bg-amber-900/40 dark:text-amber-400 shrink-0">
-              ✨ Rescheduled
+            <span className="font-mono text-data-sm font-medium px-1.5 py-0.5 rounded inline-flex items-center gap-1 shrink-0 bg-amber-100 text-amber-700 dark:bg-amber-900/40 dark:text-amber-400">
+              <Sparkles className="w-3 h-3" aria-hidden="true" /> Rescheduled
             </span>
           )}
           {!conflicting && !entry.rescheduled && !entry.exam && !entry.cancelled && (
             <span
-              className="font-mono text-[10px] font-medium px-1.5 py-0.5 rounded shrink-0"
+              className="font-mono text-data-sm font-medium px-1.5 py-0.5 rounded shrink-0"
               style={
                 isLab
                   ? { backgroundColor: 'var(--accent-ds-bg)', color: 'var(--accent-ds)' }
@@ -139,7 +155,7 @@ export function TimetableCard({
       </p>
 
       {/* Room */}
-      <p className="font-mono text-[11px] text-[var(--color-text-tertiary)]">
+      <p className="font-mono text-data-sm text-[var(--color-text-tertiary)]">
         {entry.room === 'TBA' ? (
           <span className="italic">Room TBA</span>
         ) : (
@@ -156,7 +172,7 @@ export function TimetableCard({
               <button
                 type="button"
                 onClick={() => setIsSectionMenuOpen(v => !v)}
-                className="h-8 px-3 rounded border border-[var(--color-border-strong)] font-mono text-[10px] text-[var(--color-text-secondary)] hover:bg-[var(--color-bg-subtle)]"
+                className="h-8 px-3 rounded border border-[var(--color-border-strong)] font-mono text-data-sm text-[var(--color-text-secondary)] hover:bg-[var(--color-bg-subtle)]"
               >
                 Change Section
               </button>
@@ -174,7 +190,7 @@ export function TimetableCard({
                         onChangeSection(sectionOption);
                         setIsSectionMenuOpen(false);
                       }}
-                      className="w-full text-left px-2 py-1.5 rounded font-mono text-[10px] hover:bg-[var(--color-bg-subtle)] flex items-center justify-between gap-2"
+                      className="w-full text-left px-2 py-1.5 rounded font-mono text-data-sm hover:bg-[var(--color-bg-subtle)] flex items-center justify-between gap-2"
                     >
                       <span>{sectionOption || 'Unspecified'}</span>
                       {isCurrent && <span className="text-[var(--color-text-tertiary)]">Current</span>}
@@ -189,7 +205,7 @@ export function TimetableCard({
             <button
               type="button"
               onClick={onRemove}
-              className="h-8 px-3 rounded border border-[var(--color-border-strong)] font-mono text-[10px] text-red-600 hover:bg-red-50 dark:hover:bg-red-950/20"
+              className="h-8 px-3 rounded border border-[var(--color-border-strong)] font-mono text-data-sm text-[var(--color-urgent)] hover:bg-[color-mix(in_srgb,var(--color-urgent)_10%,transparent)]"
             >
               Remove ×
             </button>

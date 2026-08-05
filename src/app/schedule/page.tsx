@@ -192,7 +192,7 @@ function SchedulePageInner() {
             {filtered.length} exam{filtered.length !== 1 ? 's' : ''} found
           </p>
           {/* Grouped list */}
-          <div id="print-area" className="flex-1 px-4 pb-24 md:pb-8 bg-[var(--color-bg)]">
+          <div id="print-area" className="flex-1 px-4 pb-20 md:pb-28 lg:pb-32 bg-[var(--color-bg)]">
             {filtered.length === 0 ? (
               <EmptyState query={query} batch={batch} dept={dept} />
             ) : (

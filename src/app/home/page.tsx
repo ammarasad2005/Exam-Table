@@ -1046,15 +1046,9 @@ export default function SetupPage() {
             className="w-1/2 lg:w-[55%] flex flex-col justify-between px-10 lg:px-16 xl:px-24 py-14 border-r border-[var(--color-border)] relative overflow-hidden"
             style={{ backgroundColor: 'var(--color-bg)' }}
           >
-            {/* Dot-grid texture */}
-            <div
-              aria-hidden="true"
-              className="absolute inset-0 pointer-events-none opacity-[0.35]"
-              style={{
-                backgroundImage: 'radial-gradient(circle, var(--color-text-secondary) 1.4px, transparent 1.4px)',
-                backgroundSize: '18px 18px',
-              }}
-            />
+            {/* T26: dot-grid texture intentionally DROPPED here vs landing page.
+                /home is the configuration surface — a cleaner, less editorial
+                backdrop distinguishes it from the marketing-style landing hero. */}
 
             {/* Background elements */}
             <div className="absolute top-0 right-0 w-64 h-64 bg-[var(--accent-cs)]/5 rounded-full -translate-y-1/2 translate-x-1/2 blur-3xl pointer-events-none" />

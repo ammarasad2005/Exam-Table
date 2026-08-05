@@ -155,8 +155,9 @@ const BORDER_COLORS: Record<string, string> = {
 };
 
 const DAY_STYLES: Record<DayKind, { bg: string; color: string; fw?: string }> = {
-  today:         { bg: 'var(--accent-cs)',      color: '#fff',                          fw: '600' },
-  'classes-start':{ bg: 'var(--accent-ds)',     color: '#fff',                          fw: '600' },
+  // T29: tokenize hardcoded #fff text → var(--color-bg) on today/classes-start cells.
+  today:         { bg: 'var(--accent-cs)',      color: 'var(--color-bg)',                fw: '600' },
+  'classes-start':{ bg: 'var(--accent-ds)',     color: 'var(--color-bg)',                fw: '600' },
   exam:          { bg: 'var(--accent-cs-bg)',    color: 'var(--accent-cs)',              fw: '500' },
   deadline:      { bg: 'var(--accent-ee-bg)',    color: 'var(--accent-ee)',              fw: '500' },
   holiday:       { bg: 'var(--accent-cy-bg)',    color: 'var(--accent-cy)',              fw: '500' },
@@ -230,7 +231,7 @@ export default function SemesterPlanPage() {
 function MobileHero() {
   return (
     <div>
-      <p className="font-mono text-[10px] uppercase tracking-widest text-[var(--color-text-tertiary)] mb-2">
+      <p className="font-mono text-data-sm uppercase tracking-widest text-[var(--color-text-tertiary)] mb-2">
         FAST NUCES · Islamabad
       </p>
       <h1 className="font-display text-3xl leading-tight text-[var(--color-text-primary)]">
@@ -312,7 +313,7 @@ function KeyDatesSection() {
 
       <div className="relative mt-4 pl-10">
         <div
-          className={`absolute left-[16px] top-6 bottom-4 w-[2px] bg-[#E5E7EB] timeline-line ${mounted ? 'animate' : ''}`}
+          className={`absolute left-[16px] top-6 bottom-4 w-[2px] bg-[var(--color-timeline-line)] timeline-line ${mounted ? 'animate' : ''}`}
         />
 
         <div className="flex flex-col gap-6">
@@ -345,7 +346,7 @@ function KeyDatesSection() {
                 >
                   <div className="flex items-center gap-3 flex-1 min-w-0">
                     <span
-                      className="font-mono text-[10px] font-semibold px-2.5 py-1 rounded-full shrink-0"
+                      className="font-mono text-data-sm font-semibold px-2.5 py-1 rounded-full shrink-0"
                       style={{
                         backgroundColor: badgeStyle.bg,
                         color: badgeStyle.text,
@@ -484,14 +485,14 @@ function CalendarsSection({ compact = false, hideLabel = false }: { compact?: bo
               </p>
               <div className="grid grid-cols-7 gap-[2px] text-center">
                 {DOW_SHORT.map((d) => (
-                  <div key={d} className="font-mono text-[9px] text-[var(--color-text-tertiary)] pb-1">{d}</div>
+                  <div key={d} className="font-mono text-data-sm text-[var(--color-text-tertiary)] pb-1">{d}</div>
                 ))}
                 {cells.map((cell, ci) => {
                   const s = DAY_STYLES[cell.kind];
                   return (
                     <div
                       key={ci}
-                      className="aspect-square flex items-center justify-center rounded-[4px] font-mono text-[10px]"
+                      className="aspect-square flex items-center justify-center rounded-[4px] font-mono text-data-sm"
                       style={{
                         background: s.bg,
                         color: s.color,
@@ -532,7 +533,7 @@ function HolidaysSection({ compact = false, vertical = false }: { compact?: bool
                 />
                 <span className="font-body text-sm font-semibold text-[var(--color-text-primary)]">{h.name}</span>
                 {h.lunar && (
-                <span className="font-mono text-[9px] text-[var(--color-text-tertiary)] italic">(lunar)</span>
+                <span className="font-mono text-data-sm text-[var(--color-text-tertiary)] italic">(lunar)</span>
                 )}
             </div>
             <span className="font-mono text-[11px] text-[var(--color-text-secondary)] pl-3.5">{h.date}</span>

@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useEffect, useMemo } from 'react';
-import { ShieldAlert, ExternalLink } from 'lucide-react';
+import { ShieldAlert, ExternalLink, AlertTriangle, Brain, Lock, Sun } from 'lucide-react';
 import { useMobileSwipe } from '@/hooks/useMobileSwipe';
 import { findMatchingCatalogEntry } from '@/lib/timetable-filter';
 import type { SummerCourseCatalogEntry, TimetableEntry } from '@/lib/types';
@@ -1040,26 +1040,26 @@ export function TimetableOptimizer() {
                         {/* Midday Break Badges */}
                         {option.missedMiddayBreaks === 0 ? (
                           <span className="bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 border border-emerald-500/20 px-2.5 py-1.5 rounded-lg flex items-center gap-1.5">
-                            🕌 Midday Break Secured
+                            <Sun size={12} aria-hidden="true" /> Midday Break Secured
                           </span>
                         ) : (
-                          <span className="bg-amber-500/10 text-amber-700 dark:text-amber-400 border border-amber-500/20 px-2.5 py-1.5 rounded-lg">
-                            ⚠️ Missed Midday Break ({option.missedMiddayBreaks}x)
+                          <span className="bg-amber-500/10 text-amber-700 dark:text-amber-400 border border-amber-500/20 px-2.5 py-1.5 rounded-lg flex items-center gap-1.5">
+                            <AlertTriangle size={12} aria-hidden="true" /> Missed Midday Break ({option.missedMiddayBreaks}x)
                           </span>
                         )}
 
                         {/* Attention Span / Fatigue Badges */}
                         {option.hasBackToBackPMClasses ? (
-                          <span className="bg-rose-500/10 text-rose-700 dark:text-rose-400 border border-rose-500/20 px-2.5 py-1.5 rounded-lg">
-                            ⚠️ Afternoon Drain (Back-to-Back PM Classes)
+                          <span className="bg-rose-500/10 text-rose-700 dark:text-rose-400 border border-rose-500/20 px-2.5 py-1.5 rounded-lg flex items-center gap-1.5">
+                            <AlertTriangle size={12} aria-hidden="true" /> Afternoon Drain (Back-to-Back PM Classes)
                           </span>
                         ) : option.maxConsecutiveAMClasses > 2 ? (
-                          <span className="bg-amber-500/10 text-amber-700 dark:text-amber-400 border border-amber-500/20 px-2.5 py-1.5 rounded-lg">
-                            ⚠️ Morning Fatigue (3+ Back-to-Back AM Classes)
+                          <span className="bg-amber-500/10 text-amber-700 dark:text-amber-400 border border-amber-500/20 px-2.5 py-1.5 rounded-lg flex items-center gap-1.5">
+                            <AlertTriangle size={12} aria-hidden="true" /> Morning Fatigue (3+ Back-to-Back AM Classes)
                           </span>
                         ) : (
                           <span className="bg-[var(--accent-cs-bg)] text-[var(--accent-cs)] border border-[var(--accent-cs)]/20 px-2.5 py-1.5 rounded-lg flex items-center gap-1.5">
-                            🧠 Focus Maintained (Well spaced)
+                            <Brain size={12} aria-hidden="true" /> Focus Maintained (Well spaced)
                           </span>
                         )}
                       </div>
@@ -1088,7 +1088,7 @@ export function TimetableOptimizer() {
                           </span>
                         </div>
                         <div className="flex items-center gap-2 flex-shrink-0">
-                          {item.isLocked && <span className="text-xs font-bold text-[var(--accent-ee)]">🔒</span>}
+                          {item.isLocked && <span className="text-xs font-bold text-[var(--accent-ee)] flex items-center" aria-label="Locked"><Lock size={12} aria-hidden="true" /></span>}
                           <span className={`font-mono text-xs px-2 py-1 rounded border ${item.isLocked ? 'bg-[var(--accent-ee-bg)] border-[var(--accent-ee)]/30 text-[var(--accent-ee)]' : 'bg-[var(--color-bg-subtle)] border-[var(--color-border)] text-[var(--color-text-secondary)]'}`}>
                             Sec {item.section}
                           </span>

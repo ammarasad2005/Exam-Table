@@ -1,5 +1,6 @@
 'use client';
 import { useEffect } from 'react';
+import { Ban, Beaker, BookOpen } from 'lucide-react';
 import { downloadTimetableICS } from '@/lib/export';
 import { formatTimeRange } from '@/lib/timetable-filter';
 import type { TimetableEntry } from '@/lib/types';
@@ -105,15 +106,25 @@ export function TimetableDetail({ entry, dept, onClose, isSummer, displayName }:
 
           {/* Type callout */}
           {entry.cancelled ? (
-            <div className="mt-4 px-4 py-3 rounded-md text-sm font-medium bg-red-100 dark:bg-red-950/40 text-red-600 dark:text-red-400">
-              🚫 Canceled class. The room is free and the class is not occurring.
+            <div
+              className="mt-4 px-4 py-3 rounded-md text-sm font-medium inline-flex items-center gap-2"
+              style={{
+                backgroundColor: 'color-mix(in srgb, var(--color-urgent) 14%, transparent)',
+                color: 'var(--color-urgent)',
+              }}
+            >
+              <Ban className="w-4 h-4 shrink-0" aria-hidden="true" />
+              <span>Canceled class. The room is free and the class is not occurring.</span>
             </div>
           ) : (
             <div
-              className="mt-4 px-4 py-3 rounded-md text-sm font-medium"
+              className="mt-4 px-4 py-3 rounded-md text-sm font-medium inline-flex items-center gap-2"
               style={{ backgroundColor: isLab ? 'var(--accent-ds-bg)' : accentBg, color: isLab ? 'var(--accent-ds)' : accentColor }}
             >
-              {isLab ? '🔬 Lab session — bring your laptop.' : '📖 Lecture — check course portal for updates.'}
+              {isLab
+                ? <Beaker className="w-4 h-4 shrink-0" aria-hidden="true" />
+                : <BookOpen className="w-4 h-4 shrink-0" aria-hidden="true" />}
+              <span>{isLab ? 'Lab session — bring your laptop.' : 'Lecture — check course portal for updates.'}</span>
             </div>
           )}
 

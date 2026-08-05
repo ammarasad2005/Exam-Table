@@ -1,3 +1,5 @@
+import { CircleSlash } from 'lucide-react';
+
 interface Props {
   query: string;
   batch: string;
@@ -13,7 +15,10 @@ export function EmptyState({ query, batch, dept, message }: Props) {
 
   return (
     <div className="flex flex-col items-center justify-center text-center py-24 px-6">
-      <div className="font-mono text-4xl text-[var(--color-text-tertiary)] mb-4">∅</div>
+      <CircleSlash
+        className="w-10 h-10 text-[var(--color-text-tertiary)] mb-4"
+        aria-hidden="true"
+      />
       <p className="font-body text-sm text-[var(--color-text-secondary)] max-w-xs">
         {message ?? defaultMsg}
       </p>

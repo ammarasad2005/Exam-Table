@@ -504,31 +504,13 @@ export function DesktopTicker({
     year: 'numeric'
   });
 
+  // T25: When there is no user config / bundles / summer selections, the giant
+  // clock face would otherwise "ghost bleed" behind the hero headline with no
+  // useful data beneath it. Cleaner to render nothing — the hero typing
+  // animation already explains what to do, and the panel keeps its vertical
+  // rhythm via flex-col justify-between.
   if (relevantEntries.length === 0) {
-    return (
-      <div className="hidden md:block mb-10 animate-in fade-in slide-in-from-top-4 duration-700">
-        <div className="flex flex-col gap-0.5 items-start">
-          <div className="flex items-baseline gap-3">
-            <h2 className="font-clock text-5xl tracking-tighter text-[var(--color-text-primary)] opacity-80 select-none">
-              {timeStr.split(':').slice(0, 2).join(':')}
-              <span className="opacity-20 inline-block w-[0.4em] text-center">
-                <span className="animate-pulse">:</span>
-              </span>
-              {timeStr.split(':').slice(2).join('')}
-            </h2>
-            <span className="font-display text-2xl font-bold text-[var(--color-text-secondary)] select-none uppercase">{period}</span>
-          </div>
-          <p className="font-mono text-[10px] uppercase tracking-[0.2em] text-[var(--color-text-tertiary)] font-bold">{dateStr}</p>
-        </div>
-        <div className="mt-6 border-t border-[var(--color-border)] pt-4 opacity-50">
-          <p className="text-[11px] text-[var(--color-text-tertiary)] max-w-sm leading-relaxed font-mono">
-            {isSummer 
-              ? 'No summer courses selected. Live class tracking will appear here once selected.'
-              : 'No preferences detected. Live class tracking will appear here once saved.'}
-          </p>
-        </div>
-      </div>
-    );
+    return null;
   }
 
   const isConflict = status && status.classes.length > 1;

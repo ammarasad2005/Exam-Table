@@ -46,7 +46,10 @@ function RoomPill({
 }) {
   const styles: Record<string, React.CSSProperties> = {
     green: { backgroundColor: 'var(--color-success-bg)', color: 'var(--color-success)' },
-    yellow: { backgroundColor: '#FFFBEB', color: '#92400E' },
+    // T2: tokenized hardcoded amber #FFFBEB/#92400E → success-strong tint.
+    // Yellow variant represents PARTIAL VACANCY (a vacancy/available indicator),
+    // so it maps to the success token family rather than the urgent token.
+    yellow: { backgroundColor: 'rgba(5, 150, 105, 0.10)', color: 'var(--color-success-strong)' },
     neutral: { backgroundColor: 'var(--color-bg-subtle)', color: 'var(--color-text-secondary)' },
   };
   return (
@@ -256,13 +259,16 @@ function SpecificResults({
             <div
               className="rounded-xl border p-5"
               style={{
-                borderColor: 'rgba(146, 64, 14, 0.20)',
-                backgroundColor: '#FFFBEB',
+                borderColor: 'rgba(5, 150, 105, 0.20)',
+                backgroundColor: 'rgba(5, 150, 105, 0.06)',
               }}
             >
               <div className="flex items-center gap-2 mb-4">
-                <span className="w-2.5 h-2.5 rounded-full shrink-0 bg-amber-500" />
-                <p className="font-mono text-xs font-bold text-amber-800">
+                <span
+                  className="w-2.5 h-2.5 rounded-full shrink-0"
+                  style={{ backgroundColor: 'var(--color-success-strong)' }}
+                />
+                <p className="font-mono text-xs font-bold" style={{ color: 'var(--color-success-strong)' }}>
                   Partially Vacant ({partiallyVacant.length})
                 </p>
               </div>
@@ -270,7 +276,7 @@ function SpecificResults({
               <div className="flex flex-col gap-6">
                 {Object.entries(groupRoomsByBlock(partiallyVacant)).map(([block, rooms]) => (
                   <div key={block}>
-                    <p className="font-mono text-[10px] uppercase tracking-widest text-[var(--color-text-tertiary)] mb-2 px-1 border-l-2 border-amber-300 ml-0.5">
+                    <p className="font-mono text-data-sm uppercase tracking-widest text-[var(--color-text-tertiary)] mb-2 px-1 border-l-2 ml-0.5" style={{ borderColor: 'rgba(5, 150, 105, 0.30)' }}>
                       {block}
                     </p>
                     <div className="flex flex-wrap gap-1.5">
@@ -490,7 +496,7 @@ export default function RoomsPage() {
         </aside>
 
         {/* Main content */}
-        <div className="flex-1 px-4 md:px-8 py-6 max-w-4xl mx-auto w-full">
+        <div className="flex-1 px-4 md:px-8 py-6 pb-20 md:pb-28 lg:pb-32 max-w-4xl mx-auto w-full">
 
           {/* ── Hero blurb ─────────────────────────────────────────────── */}
           <div className="mb-8">
@@ -621,9 +627,6 @@ export default function RoomsPage() {
           )}
 
           {viewMode === 'calendar' && <CalendarGrid onSelect={setSelectedCell} />}
-
-          {/* Bottom padding for scroll-past */}
-          <div className="h-[150px]" />
         </div>
       {selectedCell && (
         <RoomDetail cell={selectedCell} onClose={() => setSelectedCell(null)} />

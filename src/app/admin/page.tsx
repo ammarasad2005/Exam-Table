@@ -810,12 +810,14 @@ export default function AdminPage() {
               exit={{ opacity: 0, y: -30 }}
               className="flex justify-center items-center py-12"
             >
-              <div 
-                className="w-full max-w-md rounded-2xl p-8 border backdrop-blur-md relative overflow-hidden shadow-2xl"
+              <div
+                className="w-full max-w-md rounded-2xl p-8 border backdrop-blur-xl relative overflow-hidden shadow-2xl"
                 style={{
-                  backgroundColor: 'rgba(255, 255, 255, 0.03)',
+                  // T21: raise opacity for WCAG-AA legibility in light mode.
+                  // Was rgba(255,255,255,0.03) which was nearly invisible against the page bg.
+                  backgroundColor: 'var(--color-bg-raised)',
                   borderColor: 'var(--color-border)',
-                  boxShadow: 'var(--shadow-card)'
+                  boxShadow: 'var(--shadow-float)'
                 }}
               >
                 {/* Glowing subtle gradient circle */}

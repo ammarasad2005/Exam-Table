@@ -5,10 +5,10 @@ export function CountdownBadge({ days }: Props) {
   const urgent = days <= 2;
   return (
     <span
-      className="font-mono text-[10px] font-medium px-1.5 py-0.5 rounded"
+      className="font-mono text-data-sm font-medium px-1.5 py-0.5 rounded"
       style={{
-        backgroundColor: urgent ? '#FEF2F2' : 'var(--color-bg-subtle)',
-        color: urgent ? '#DC2626' : 'var(--color-text-tertiary)',
+        backgroundColor: urgent ? 'color-mix(in srgb, var(--color-urgent) 14%, transparent)' : 'var(--color-bg-subtle)',
+        color: urgent ? 'var(--color-urgent)' : 'var(--color-text-tertiary)',
       }}
     >
       {days === 0 ? 'TODAY' : days === 1 ? '1d' : `${days}d`}

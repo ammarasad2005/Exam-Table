@@ -64,6 +64,14 @@ import {
   List,
   History,
   CheckCircle,
+  // T13: lucide-react icons replacing emoji-as-icon in category placeholders.
+  Laptop,
+  Watch,
+  Shirt,
+  Key,
+  Briefcase,
+  BookOpen,
+  type LucideIcon,
 } from 'lucide-react'
 import { Header } from '@/components/Header'
 import { useToast } from '@/hooks/use-toast'
@@ -219,15 +227,16 @@ const categoryExamples: Record<string, string> = {
   Other: 'Water bottle, Lunch box, Umbrella',
 }
 
-const categoryPlaceholders: Record<string, { gradient: string; emoji: string }> = {
-  Electronics: { gradient: 'linear-gradient(135deg, #1E40AF, #3B82F6)', emoji: '\uD83D\uDCBB' },
-  Documents: { gradient: 'linear-gradient(135deg, #92400E, #F59E0B)', emoji: '\uD83D\uDCC4' },
-  Accessories: { gradient: 'linear-gradient(135deg, #5B21B6, #8B5CF6)', emoji: '\u231B' },
-  Clothing: { gradient: 'linear-gradient(135deg, #9D174D, #EC4899)', emoji: '\uD83D\uDC54' },
-  Keys: { gradient: 'linear-gradient(135deg, #92400E, #FBBF24)', emoji: '\uD83D\uDD11' },
-  Bags: { gradient: 'linear-gradient(135deg, #065F46, #34D399)', emoji: '\uD83C\uDF92' },
-  Books: { gradient: 'linear-gradient(135deg, #115E59, #2DD4BF)', emoji: '\uD83D\uDCDA' },
-  Other: { gradient: 'linear-gradient(135deg, #374151, #9CA3AF)', emoji: '\uD83D\uDCE6' },
+// T13: replaced emoji strings with lucide-react icon components (was 💻/📄/⏳/👔/🔑/🎒/📚/📦).
+const categoryPlaceholders: Record<string, { gradient: string; Icon: LucideIcon }> = {
+  Electronics: { gradient: 'linear-gradient(135deg, #1E40AF, #3B82F6)', Icon: Laptop },
+  Documents: { gradient: 'linear-gradient(135deg, #92400E, #F59E0B)', Icon: FileText },
+  Accessories: { gradient: 'linear-gradient(135deg, #5B21B6, #8B5CF6)', Icon: Watch },
+  Clothing: { gradient: 'linear-gradient(135deg, #9D174D, #EC4899)', Icon: Shirt },
+  Keys: { gradient: 'linear-gradient(135deg, #92400E, #FBBF24)', Icon: Key },
+  Bags: { gradient: 'linear-gradient(135deg, #065F46, #34D399)', Icon: Briefcase },
+  Books: { gradient: 'linear-gradient(135deg, #115E59, #2DD4BF)', Icon: BookOpen },
+  Other: { gradient: 'linear-gradient(135deg, #374151, #9CA3AF)', Icon: Package },
 }
 
 const categoryAccentColors: Record<string, string> = {
@@ -236,7 +245,7 @@ const categoryAccentColors: Record<string, string> = {
   Accessories: '#7C3AED',
   Clothing: '#EC4899',
   Keys: '#F59E0B',
-  Bags: '#059669',
+  Bags: 'var(--color-success-strong)',
   Books: '#0D9488',
   Other: '#6B7280',
 }
@@ -273,7 +282,7 @@ const zoneColors: Record<string, { bg: string; text: string; border: string }> =
   'Academic Block': { bg: 'rgba(13, 148, 136, 0.1)', text: '#0D9488', border: 'rgba(13, 148, 136, 0.3)' },
   'Library': { bg: 'rgba(124, 58, 237, 0.1)', text: '#7C3AED', border: 'rgba(124, 58, 237, 0.3)' },
   'Cafeteria': { bg: 'rgba(217, 119, 6, 0.1)', text: '#D97706', border: 'rgba(217, 119, 6, 0.3)' },
-  'Sports Area': { bg: 'rgba(5, 150, 105, 0.1)', text: '#059669', border: 'rgba(5, 150, 105, 0.3)' },
+  'Sports Area': { bg: 'rgba(5, 150, 105, 0.1)', text: 'var(--color-success-strong)', border: 'rgba(5, 150, 105, 0.3)' },
   'Parking': { bg: 'rgba(37, 99, 235, 0.1)', text: '#2563EB', border: 'rgba(37, 99, 235, 0.3)' },
 }
 
@@ -812,7 +821,7 @@ function Footer({ onQuickLink }: { onQuickLink?: (action: string) => void }) {
         <div className="flex items-center justify-center gap-4 mb-4">
           <button
             onClick={() => onQuickLink('report')}
-            className="text-[10px] font-semibold uppercase tracking-[0.06em] hover:underline transition-colors"
+            className="text-data-sm font-semibold uppercase tracking-[0.06em] hover:underline transition-colors"
             style={{ color: 'var(--accent-lf)' }}
           >
             Report Item
@@ -820,7 +829,7 @@ function Footer({ onQuickLink }: { onQuickLink?: (action: string) => void }) {
           <span style={{ color: 'var(--color-border)' }}>·</span>
           <button
             onClick={() => onQuickLink('browse-found')}
-            className="text-[10px] font-semibold uppercase tracking-[0.06em] hover:underline transition-colors"
+            className="text-data-sm font-semibold uppercase tracking-[0.06em] hover:underline transition-colors"
             style={{ color: 'var(--accent-af)' }}
           >
             Browse Found
@@ -828,7 +837,7 @@ function Footer({ onQuickLink }: { onQuickLink?: (action: string) => void }) {
           <span style={{ color: 'var(--color-border)' }}>·</span>
           <button
             onClick={() => onQuickLink('browse-lost')}
-            className="text-[10px] font-semibold uppercase tracking-[0.06em] hover:underline transition-colors"
+            className="text-data-sm font-semibold uppercase tracking-[0.06em] hover:underline transition-colors"
             style={{ color: 'var(--accent-ee)' }}
           >
             Browse Lost
@@ -1009,7 +1018,7 @@ function FeatureCard({
           style={{ whiteSpace: 'nowrap' }}
         >
           <div
-            className="rounded-md px-2.5 py-1.5 text-[10px] font-body leading-snug shadow-lg"
+            className="rounded-md px-2.5 py-1.5 text-data-sm font-body leading-snug shadow-lg"
             style={{
               backgroundColor: 'var(--color-bg-raised)',
               border: `1px solid ${accentVar}`,
@@ -1031,7 +1040,7 @@ function FeatureCard({
       {/* Active item count badge for Lost & Found */}
       {feature.id === 'lost-found' && activeItemCount !== undefined && activeItemCount > 0 && (
         <div
-          className="absolute -top-2 -right-2 z-10 min-w-[20px] h-5 rounded-full flex items-center justify-center px-1.5 text-[10px] font-bold text-white shadow-md"
+          className="absolute -top-2 -right-2 z-10 min-w-[20px] h-5 rounded-full flex items-center justify-center px-1.5 text-data-sm font-bold text-white shadow-md"
           style={{ backgroundColor: 'var(--accent-lf)' }}
         >
           {activeItemCount}
@@ -1131,7 +1140,7 @@ function OnboardingBanner({ onDismiss }: { onDismiss: () => void }) {
       <div className="flex justify-end">
         <button
           onClick={onDismiss}
-          className="shrink-0 rounded-md px-4 py-1.5 text-[10px] font-bold uppercase tracking-[0.06em] transition-all hover:scale-[1.05] active:scale-[0.98]"
+          className="shrink-0 rounded-md px-4 py-1.5 text-data-sm font-bold uppercase tracking-[0.06em] transition-all hover:scale-[1.05] active:scale-[0.98]"
           style={{
             backgroundColor: 'var(--accent-lf)',
             color: 'white',
@@ -1194,7 +1203,8 @@ function ItemCard({
       layout
       initial={{ opacity: 0, y: 10 }}
       animate={{ opacity: item.isResolved ? 0.7 : 1, y: 0 }}
-      className="group relative flex flex-col bg-[var(--color-bg-raised)] border border-[var(--color-border)] rounded-2xl overflow-hidden transition-all duration-300 hover:shadow-xl hover:border-[var(--color-text-tertiary)]"
+      // T19: lostfound-card stagger entrance class added.
+      className="lostfound-card group relative flex flex-col bg-[var(--color-bg-raised)] border border-[var(--color-border)] rounded-2xl overflow-hidden transition-all duration-300 hover:shadow-xl hover:border-[var(--color-text-tertiary)]"
     >
       {/* Top Image Section */}
       <div className="relative aspect-[4/3] overflow-hidden bg-[var(--color-bg-subtle)]">
@@ -1202,23 +1212,27 @@ function ItemCard({
           <img src={item.imageUrl} alt={item.title} className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" />
         ) : (
           <div
-            className="w-full h-full flex items-center justify-center text-4xl"
+            className="w-full h-full flex items-center justify-center"
             style={{ background: categoryPlaceholders[item.category]?.gradient || categoryPlaceholders.Other.gradient }}
           >
-            {categoryPlaceholders[item.category]?.emoji || categoryPlaceholders.Other.emoji}
+            {/* T13: lucide-react icon replaces emoji-as-icon. */}
+            {(() => {
+              const Icon = categoryPlaceholders[item.category]?.Icon || categoryPlaceholders.Other.Icon;
+              return <Icon width={48} height={48} className="text-white/90" />;
+            })()}
           </div>
         )}
 
         {/* Overlay Badges */}
         <div className="absolute top-3 left-3 flex flex-wrap gap-2 pr-10">
-          <span className={`px-2 py-1 rounded-lg text-[9px] font-black uppercase tracking-widest text-white shadow-lg ${isLost ? 'bg-[var(--accent-ee)]' : 'bg-[var(--accent-af)]'}`}>
+          <span className={`px-2 py-1 rounded-lg text-data-sm font-black uppercase tracking-widest text-white shadow-lg ${isLost ? 'bg-[var(--accent-ee)]' : 'bg-[var(--accent-af)]'}`}>
             {item.type}
           </span>
-          <span className="bg-black/40 backdrop-blur-md text-white px-2 py-1 rounded-lg text-[9px] font-black uppercase tracking-widest border border-white/10 shadow-lg">
+          <span className="bg-black/40 backdrop-blur-md text-white px-2 py-1 rounded-lg text-data-sm font-black uppercase tracking-widest border border-white/10 shadow-lg">
             {item.category}
           </span>
           {isUrgent && !item.isResolved && (
-            <span className="bg-red-500 text-white px-2 py-1 rounded-lg text-[9px] font-black uppercase tracking-widest animate-pulse shadow-lg">
+            <span className="bg-red-500 text-white px-2 py-1 rounded-lg text-data-sm font-black uppercase tracking-widest animate-pulse shadow-lg">
               Urgent
             </span>
           )}
@@ -1239,10 +1253,10 @@ function ItemCard({
       <div className="p-4 flex-1 flex flex-col gap-3">
         <div>
           <div className="flex items-start justify-between gap-2 mb-1">
-            <h3 className="font-body text-lg font-bold text-[var(--color-text-primary)] truncate leading-tight">
+            <h3 className="font-body text-lg font-bold text-[var(--color-text-primary)] line-clamp-2 leading-tight">
               {item.title}
             </h3>
-            <span className="font-mono text-[9px] text-[var(--color-text-tertiary)] shrink-0 mt-1">
+            <span className="font-mono text-data-sm text-[var(--color-text-tertiary)] shrink-0 mt-1">
               {timeAgo(item.createdAt)}
             </span>
           </div>
@@ -1256,7 +1270,7 @@ function ItemCard({
                   {/* Found At row */}
                   <span className="flex items-center gap-1.5 text-[11px] font-medium text-[var(--color-text-secondary)]">
                     <MapPin width={12} height={12} className="text-[var(--color-text-tertiary)] shrink-0" />
-                    <span className={!canSeeLocation && !isLost ? 'text-[10px] opacity-60 italic' : ''}>
+                    <span className={!canSeeLocation && !isLost ? 'text-data-sm opacity-60 italic' : ''}>
                       {locationDisplay}
                     </span>
                     {canSeeLocation && rawLoc && (
@@ -1272,14 +1286,14 @@ function ItemCard({
 
                   {/* Submitted At row — found items only */}
                   {!isLost && canSeeLocation && (item.parsedSubmittedAt || rawHand) && (
-                    <span className="flex items-center gap-1.5 text-[11px] font-medium" style={{ color: '#16a34a' }}>
-                      <ShieldCheck width={12} height={12} className="shrink-0" style={{ color: '#16a34a' }} />
+                    <span className="flex items-center gap-1.5 text-[11px] font-medium" style={{ color: 'var(--color-success-strong)' }}>
+                      <ShieldCheck width={12} height={12} className="shrink-0" style={{ color: 'var(--color-success-strong)' }} />
                       <span>{item.parsedSubmittedAt || rawHand}</span>
                       {rawHand && (
                         <button
                           onClick={(e) => { e.stopPropagation(); setShowSubmittedLocPopup(true) }}
-                          className="ml-0.5 p-0.5 rounded-full hover:bg-[#16a34a]/20 transition-all active:scale-95"
-                          style={{ color: '#16a34a' }}
+                          className="ml-0.5 p-0.5 rounded-full hover:bg-success-strong/20 transition-all active:scale-95"
+                          style={{ color: 'var(--color-success-strong)' }}
                           title="View reporter's original handoff message"
                         >
                           <Info width={11} height={11} />
@@ -1298,11 +1312,11 @@ function ItemCard({
                      <div className="w-5 h-5 rounded-full bg-[var(--color-bg-subtle)] flex items-center justify-center border border-[var(--color-border)]">
                         <User width={10} height={10} className="text-[var(--color-text-tertiary)]" />
                      </div>
-                     <span className="text-[10px] font-bold text-[var(--color-text-primary)]">
+                     <span className="text-data-sm font-bold text-[var(--color-text-primary)]">
                         {reporterName || 'Anonymous Reporter'}
                      </span>
                   </div>
-                  {reward && <p className="text-[10px] font-bold text-[var(--accent-lf)]">💰 Reward: {reward}</p>}
+                  {reward && <p className="text-data-sm font-bold text-[var(--accent-lf)]">💰 Reward: {reward}</p>}
                 </div>
              </div>
           )}
@@ -1312,14 +1326,14 @@ function ItemCard({
         <div className="mt-auto pt-4 flex items-center gap-2 border-t border-[var(--color-border)]">
           <button
             onClick={(e) => { e.stopPropagation(); setDescExpanded(!descExpanded) }}
-            className={`flex-1 flex items-center justify-center gap-1.5 py-2 rounded-xl text-[10px] font-bold uppercase tracking-wider transition-all ${descExpanded ? 'bg-[var(--color-text-primary)] text-[var(--color-bg-raised)]' : 'bg-[var(--color-bg-subtle)] text-[var(--color-text-secondary)] hover:bg-[var(--color-border)]'}`}
+            className={`flex-1 flex items-center justify-center gap-1.5 py-2 rounded-xl text-data-sm font-bold uppercase tracking-wider transition-all ${descExpanded ? 'bg-[var(--color-text-primary)] text-[var(--color-bg-raised)]' : 'bg-[var(--color-bg-subtle)] text-[var(--color-text-secondary)] hover:bg-[var(--color-border)]'}`}
           >
             {descExpanded ? <ChevronUp width={12} height={12} /> : <Zap width={12} height={12} />}
             {descExpanded ? 'Collapse' : 'Expand'}
           </button>
           <button
             onClick={(e) => { e.stopPropagation(); onClick() }}
-            className="flex-1 flex items-center justify-center gap-1.5 py-2 rounded-xl bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 text-[10px] font-bold uppercase tracking-wider border border-emerald-500/20 hover:bg-emerald-500/20 transition-all"
+            className="flex-1 flex items-center justify-center gap-1.5 py-2 rounded-xl bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 text-data-sm font-bold uppercase tracking-wider border border-emerald-500/20 hover:bg-emerald-500/20 transition-all"
           >
             <ExternalLink width={12} height={12} />
             Visit
@@ -1373,13 +1387,13 @@ function ItemCard({
               initial={{ scale: 0.95, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
               exit={{ scale: 0.95, opacity: 0 }}
-              className="w-full max-w-sm rounded-2xl p-5 shadow-2xl border border-[#16a34a]/30 space-y-3 text-left"
+              className="w-full max-w-sm rounded-2xl p-5 shadow-2xl border border-success-strong/30 space-y-3 text-left"
               style={{ backgroundColor: 'var(--color-bg-raised)' }}
               onClick={(e) => e.stopPropagation()}
             >
-              <div className="flex items-center justify-between border-b border-[#16a34a]/20 pb-2.5">
+              <div className="flex items-center justify-between border-b border-success-strong/20 pb-2.5">
                 <h4 className="font-body text-sm font-bold text-[var(--color-text-primary)] flex items-center gap-2">
-                  <ShieldCheck width={15} height={15} style={{ color: '#16a34a' }} />
+                  <ShieldCheck width={15} height={15} style={{ color: 'var(--color-success-strong)' }} />
                   Where Reporter Handed It Over
                 </h4>
                 <button
@@ -1627,8 +1641,8 @@ function VerifyHoldDialog({ open, onOpenChange, claimId, onClaimerEmailEstablish
             claim && (
               <>
                 <AlertDialogHeader className="text-center flex flex-col items-center">
-                  <div className="w-12 h-12 rounded-full bg-[#16a34a]/10 flex items-center justify-center mb-2">
-                    <Handshake width={24} height={24} style={{ color: '#16a34a' }} />
+                  <div className="w-12 h-12 rounded-full bg-success-strong/10 flex items-center justify-center mb-2">
+                    <Handshake width={24} height={24} style={{ color: 'var(--color-success-strong)' }} />
                   </div>
                   <AlertDialogTitle className="text-xl font-black tracking-tight" style={{ color: 'var(--color-text-primary)' }}>
                     Have you obtained your item?
@@ -1646,13 +1660,13 @@ function VerifyHoldDialog({ open, onOpenChange, claimId, onClaimerEmailEstablish
                   </div>
                   <div className="flex justify-between">
                     <span style={{ color: 'var(--color-text-tertiary)' }}>Matching Status:</span>
-                    <span className="px-2 py-0.5 rounded-full text-[9px] font-bold bg-[#ea580c]/10 text-[#ea580c]">
+                    <span className="px-2 py-0.5 rounded-full text-data-sm font-bold bg-[#ea580c]/10 text-[#ea580c]">
                       Claim Pending
                     </span>
                   </div>
                   <div className="flex justify-between">
                     <span style={{ color: 'var(--color-text-tertiary)' }}>Registered Email:</span>
-                    <span className="font-mono text-[#16a34a]">{claim.claimerEmail}</span>
+                    <span className="font-mono text-success-strong">{claim.claimerEmail}</span>
                   </div>
                 </div>
 
@@ -1664,7 +1678,7 @@ function VerifyHoldDialog({ open, onOpenChange, claimId, onClaimerEmailEstablish
                   {!verificationImage ? (
                     <label className="flex flex-col items-center justify-center h-28 rounded-xl border-2 border-dashed transition-colors cursor-pointer hover:bg-black/5" style={{ borderColor: 'var(--color-border)' }}>
                       <Camera width={20} height={20} style={{ color: 'var(--color-text-tertiary)' }} />
-                      <span className="text-[10px] font-bold mt-1.5" style={{ color: 'var(--color-text-tertiary)' }}>Take/Upload photo of item in hand</span>
+                      <span className="text-data-sm font-bold mt-1.5" style={{ color: 'var(--color-text-tertiary)' }}>Take/Upload photo of item in hand</span>
                       <input type="file" accept="image/*" capture="environment" className="hidden" onChange={(e) => setVerificationImage(e.target.files?.[0] || null)} />
                     </label>
                   ) : (
@@ -1677,7 +1691,7 @@ function VerifyHoldDialog({ open, onOpenChange, claimId, onClaimerEmailEstablish
                   )}
                 </div>
 
-                <div className="p-3 bg-[#16a34a]/5 rounded-lg border border-[#16a34a]/20 text-[10px] text-[#16a34a] text-center leading-relaxed">
+                <div className="p-3 bg-success-strong/5 rounded-lg border border-success-strong/20 text-data-sm text-success-strong text-center leading-relaxed">
                   💡 By confirming, you verify that you have successfully retrieved this item. This will resolve the report for you and the finder, closing all matching queues.
                 </div>
 
@@ -1692,7 +1706,7 @@ function VerifyHoldDialog({ open, onOpenChange, claimId, onClaimerEmailEstablish
                   <button
                     onClick={handleVerifyCollection}
                     disabled={!verificationImage || verifying}
-                    className="flex-1 rounded-xl py-3 text-xs font-black uppercase tracking-wider transition-all text-white bg-[#16a34a] hover:opacity-90 disabled:opacity-50 flex items-center justify-center gap-1.5"
+                    className="flex-1 rounded-xl py-3 text-xs font-black uppercase tracking-wider transition-all text-white bg-success-strong hover:opacity-90 disabled:opacity-50 flex items-center justify-center gap-1.5"
                   >
                     {verifying ? (
                       <Loader2 className="animate-spin" width={14} height={14} />
@@ -2000,7 +2014,7 @@ function ReportForm({
                   )}
                 </div>
                 <span
-                  className="text-[9px] font-mono uppercase tracking-[0.06em] hidden sm:inline"
+                  className="text-data-sm font-mono uppercase tracking-[0.06em] hidden sm:inline"
                   style={{ color: isActive || isCompleted ? 'var(--accent-lf)' : 'var(--color-text-tertiary)' }}
                 >
                   {step.label}
@@ -2030,26 +2044,26 @@ function ReportForm({
         className="rounded-lg p-2.5 mb-4 flex items-center gap-3 flex-wrap"
         style={{ backgroundColor: 'var(--color-bg-subtle)', border: '1px solid var(--color-border)' }}
       >
-        <span className="font-mono text-[9px] uppercase tracking-[0.1em]" style={{ color: 'var(--color-text-tertiary)' }}>
+        <span className="font-mono text-data-sm uppercase tracking-[0.1em]" style={{ color: 'var(--color-text-tertiary)' }}>
           Step {wizardStep}:
         </span>
         {type && (
-          <span className={`category-badge ${type === 'lost' ? 'type-badge-lost' : 'type-badge-found'}`} style={{ fontSize: '9px', padding: '1px 6px' }}>
+          <span className={`category-badge ${type === 'lost' ? 'type-badge-lost' : 'type-badge-found'}`} style={{ fontSize: '11px', padding: '1px 6px' }}>
             {type}
           </span>
         )}
         {category && (
-          <span className="category-badge" style={{ fontSize: '9px', padding: '1px 6px', backgroundColor: 'var(--accent-lf-bg)', color: 'var(--accent-lf)' }}>
+          <span className="category-badge" style={{ fontSize: '11px', padding: '1px 6px', backgroundColor: 'var(--accent-lf-bg)', color: 'var(--accent-lf)' }}>
             {categoryIcons[category]} {category}
           </span>
         )}
         {title.trim() && (
-          <span className="text-[10px] truncate max-w-[120px]" style={{ color: 'var(--color-text-secondary)' }}>
+          <span className="text-data-sm truncate max-w-[120px]" style={{ color: 'var(--color-text-secondary)' }}>
             &ldquo;{title.trim()}&rdquo;
           </span>
         )}
         {location.trim() && (
-          <span className="flex items-center gap-1 text-[9px]" style={{ color: 'var(--color-text-tertiary)' }}>
+          <span className="flex items-center gap-1 text-data-sm" style={{ color: 'var(--color-text-tertiary)' }}>
             <MapPin width={8} height={8} />
             {location.trim()}
           </span>
@@ -2058,7 +2072,7 @@ function ReportForm({
 
       {/* Type Toggle */}
       <div>
-        <label className="font-mono text-[10px] uppercase tracking-[0.1em] mb-2 block" style={{ color: 'var(--color-text-tertiary)' }}>
+        <label className="font-mono text-data-sm uppercase tracking-[0.1em] mb-2 block" style={{ color: 'var(--color-text-tertiary)' }}>
           Report Type
         </label>
         <div className="grid grid-cols-2 gap-2">
@@ -2093,7 +2107,7 @@ function ReportForm({
 
       {/* Category */}
       <div>
-        <label className="font-mono text-[10px] uppercase tracking-[0.1em] mb-2 block" style={{ color: 'var(--color-text-tertiary)' }}>
+        <label className="font-mono text-data-sm uppercase tracking-[0.1em] mb-2 block" style={{ color: 'var(--color-text-tertiary)' }}>
           Category
         </label>
         <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
@@ -2111,11 +2125,11 @@ function ReportForm({
             >
               <div className="flex items-center gap-2">
                 <span className="text-sm">{categoryIcons[cat]}</span>
-                <span className="text-[10px] font-black uppercase tracking-wider" style={{ color: category === cat ? 'var(--accent-lf)' : 'var(--color-text-primary)' }}>
+                <span className="text-data-sm font-black uppercase tracking-wider" style={{ color: category === cat ? 'var(--accent-lf)' : 'var(--color-text-primary)' }}>
                   {cat}
                 </span>
               </div>
-              <p className="text-[8px] leading-tight opacity-60 line-clamp-2" style={{ color: 'var(--color-text-secondary)' }}>
+              <p className="text-data-sm leading-tight opacity-60 line-clamp-2" style={{ color: 'var(--color-text-secondary)' }}>
                 {categoryExamples[cat]}
               </p>
             </button>
@@ -2125,7 +2139,7 @@ function ReportForm({
 
       {/* Title */}
       <div>
-        <label className="font-mono text-[10px] uppercase tracking-[0.1em] mb-2 block" style={{ color: 'var(--color-text-tertiary)' }}>
+        <label className="font-mono text-data-sm uppercase tracking-[0.1em] mb-2 block" style={{ color: 'var(--color-text-tertiary)' }}>
           Title
         </label>
         <input
@@ -2148,10 +2162,10 @@ function ReportForm({
               <p className="text-xs font-semibold" style={{ color: '#D97706' }}>
                 Similar item already exists
               </p>
-              <p className="text-[10px]" style={{ color: 'var(--color-text-secondary)' }}>
+              <p className="text-data-sm" style={{ color: 'var(--color-text-secondary)' }}>
                 &ldquo;{duplicateWarning.title}&rdquo; — Posted {duplicateWarning.timeAgo}
               </p>
-              <p className="text-[10px] mt-0.5" style={{ color: 'var(--color-text-tertiary)' }}>
+              <p className="text-data-sm mt-0.5" style={{ color: 'var(--color-text-tertiary)' }}>
                 You can still submit, but please check if this is the same item.
               </p>
             </div>
@@ -2161,7 +2175,7 @@ function ReportForm({
 
       {/* Description */}
       <div>
-        <label className="font-mono text-[10px] uppercase tracking-[0.1em] mb-2 block" style={{ color: 'var(--color-text-tertiary)' }}>
+        <label className="font-mono text-data-sm uppercase tracking-[0.1em] mb-2 block" style={{ color: 'var(--color-text-tertiary)' }}>
           Description
         </label>
         <textarea
@@ -2179,7 +2193,7 @@ function ReportForm({
       <div className="space-y-4">
         {type === 'lost' ? (
           <div>
-            <label className="font-mono text-[10px] uppercase tracking-[0.1em] mb-2 block" style={{ color: 'var(--color-text-tertiary)' }}>
+            <label className="font-mono text-data-sm uppercase tracking-[0.1em] mb-2 block" style={{ color: 'var(--color-text-tertiary)' }}>
               Where did you lose it? <span style={{ color: 'var(--color-text-tertiary)' }}>(Optional)</span>
             </label>
             <div className="space-y-1">
@@ -2192,11 +2206,11 @@ function ReportForm({
                 style={inputStyle}
               />
               <div className="flex items-center justify-between">
-                <p className="text-[10px] opacity-70" style={{ color: 'var(--color-text-tertiary)' }}>
+                <p className="text-data-sm opacity-70" style={{ color: 'var(--color-text-tertiary)' }}>
                   Write in natural language. If you don&apos;t know, leave it blank.
                 </p>
                 {processingLocation && (
-                  <div className="flex items-center gap-1 text-[9px] font-bold text-[var(--accent-lf)] animate-pulse">
+                  <div className="flex items-center gap-1 text-data-sm font-bold text-[var(--accent-lf)] animate-pulse">
                     <Loader2 width={10} height={10} className="animate-spin" />
                     AI Processing...
                   </div>
@@ -2207,7 +2221,7 @@ function ReportForm({
         ) : (
           <>
             <div>
-              <label className="font-mono text-[10px] uppercase tracking-[0.1em] mb-2 block" style={{ color: 'var(--color-text-tertiary)' }}>
+              <label className="font-mono text-data-sm uppercase tracking-[0.1em] mb-2 block" style={{ color: 'var(--color-text-tertiary)' }}>
                 Where did you find it?
               </label>
               <textarea
@@ -2221,7 +2235,7 @@ function ReportForm({
               {errors.location && <p className="text-xs mt-1" style={{ color: 'var(--accent-ee)' }}>{errors.location}</p>}
             </div>
             <div>
-              <label className="font-mono text-[10px] uppercase tracking-[0.1em] mb-2 block" style={{ color: 'var(--color-text-tertiary)' }}>
+              <label className="font-mono text-data-sm uppercase tracking-[0.1em] mb-2 block" style={{ color: 'var(--color-text-tertiary)' }}>
                 Where did you submit/hand it over?
               </label>
               <div className="space-y-1">
@@ -2234,11 +2248,11 @@ function ReportForm({
                   style={inputStyle}
                 />
                 <div className="flex items-center justify-between">
-                  <p className="text-[10px] opacity-70" style={{ color: 'var(--color-text-tertiary)' }}>
+                  <p className="text-data-sm opacity-70" style={{ color: 'var(--color-text-tertiary)' }}>
                     Write in natural language. AI will extract structured location.
                   </p>
                   {processingLocation && (
-                    <div className="flex items-center gap-1 text-[9px] font-bold text-[var(--accent-lf)] animate-pulse">
+                    <div className="flex items-center gap-1 text-data-sm font-bold text-[var(--accent-lf)] animate-pulse">
                       <Loader2 width={10} height={10} className="animate-spin" />
                       AI Processing...
                     </div>
@@ -2253,7 +2267,7 @@ function ReportForm({
 
       {/* Date */}
       <div>
-        <label className="font-mono text-[10px] uppercase tracking-[0.1em] mb-2 block" style={{ color: 'var(--color-text-tertiary)' }}>
+        <label className="font-mono text-data-sm uppercase tracking-[0.1em] mb-2 block" style={{ color: 'var(--color-text-tertiary)' }}>
           Date {type === 'lost' ? 'Lost' : 'Found'}
         </label>
         <input
@@ -2269,7 +2283,7 @@ function ReportForm({
       {/* Name (Lost only) */}
       {type === 'lost' && (
         <div>
-          <label className="font-mono text-[10px] uppercase tracking-[0.1em] mb-2 block" style={{ color: 'var(--color-text-tertiary)' }}>
+          <label className="font-mono text-data-sm uppercase tracking-[0.1em] mb-2 block" style={{ color: 'var(--color-text-tertiary)' }}>
             Your Name <span style={{ color: 'var(--color-text-tertiary)' }}>(Optional)</span>
           </label>
           <input
@@ -2285,7 +2299,7 @@ function ReportForm({
 
       {/* Contact Info */}
       <div>
-        <label className="font-mono text-[10px] uppercase tracking-[0.1em] mb-2 block" style={{ color: 'var(--color-text-tertiary)' }}>
+        <label className="font-mono text-data-sm uppercase tracking-[0.1em] mb-2 block" style={{ color: 'var(--color-text-tertiary)' }}>
           Contact Info <span style={{ color: 'var(--color-text-tertiary)' }}>{type === 'lost' ? '(Mandatory: Email)' : '(Recommended)'}</span>
         </label>
         <input
@@ -2301,11 +2315,11 @@ function ReportForm({
 
       {/* Image Upload (with Camera) */}
       <div>
-        <label className="font-mono text-[10px] uppercase tracking-[0.1em] mb-2 block" style={{ color: 'var(--color-text-tertiary)' }}>
+        <label className="font-mono text-data-sm uppercase tracking-[0.1em] mb-2 block" style={{ color: 'var(--color-text-tertiary)' }}>
           Image / Snapshot <span style={{ color: 'var(--color-text-tertiary)' }}>{type === 'found' ? '(Mandatory)' : '(Optional)'}</span>
         </label>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-          <label className="flex items-center justify-center gap-2 rounded-xl py-2.5 px-4 text-[10px] font-bold uppercase tracking-wider cursor-pointer transition-all border border-[var(--color-border)] bg-[var(--color-bg-subtle)] hover:bg-black/5" style={{ color: 'var(--color-text-secondary)' }}>
+          <label className="flex items-center justify-center gap-2 rounded-xl py-2.5 px-4 text-data-sm font-bold uppercase tracking-wider cursor-pointer transition-all border border-[var(--color-border)] bg-[var(--color-bg-subtle)] hover:bg-black/5" style={{ color: 'var(--color-text-secondary)' }}>
             <Camera width={14} height={14} />
             Take a Photo
             <input
@@ -2316,7 +2330,7 @@ function ReportForm({
               className="hidden"
             />
           </label>
-          <label className="flex items-center justify-center gap-2 rounded-xl py-2.5 px-4 text-[10px] font-bold uppercase tracking-wider cursor-pointer transition-all border border-[var(--color-border)] bg-[var(--color-bg-subtle)] hover:bg-black/5" style={{ color: 'var(--color-text-secondary)' }}>
+          <label className="flex items-center justify-center gap-2 rounded-xl py-2.5 px-4 text-data-sm font-bold uppercase tracking-wider cursor-pointer transition-all border border-[var(--color-border)] bg-[var(--color-bg-subtle)] hover:bg-black/5" style={{ color: 'var(--color-text-secondary)' }}>
             <Search width={14} height={14} />
             Browse Gallery
             <input
@@ -2328,7 +2342,7 @@ function ReportForm({
           </label>
         </div>
         {imageFile && (
-          <p className="text-[9px] mt-2 font-bold text-[var(--accent-lf)] flex items-center gap-1">
+          <p className="text-data-sm mt-2 font-bold text-[var(--accent-lf)] flex items-center gap-1">
             <CheckCircle2 width={10} height={10} />
             Selected: {imageFile.name.slice(0, 20)}...
           </p>
@@ -2353,7 +2367,7 @@ function ReportForm({
           <span className="text-xs font-semibold" style={{ color: isUrgent ? 'var(--accent-ee)' : 'var(--color-text-primary)' }}>
             Mark as Urgent
           </span>
-          <p className="text-[10px]" style={{ color: 'var(--color-text-tertiary)' }}>
+          <p className="text-data-sm" style={{ color: 'var(--color-text-tertiary)' }}>
             Urgent items appear at the top of the list with a special badge
           </p>
         </div>
@@ -2381,7 +2395,7 @@ function ReportForm({
         <div>
           <div className="flex items-center gap-1.5 mb-2">
             <Sparkles width={12} height={12} style={{ color: 'var(--accent-lf)' }} />
-            <span className="font-mono text-[10px] uppercase tracking-[0.1em]" style={{ color: 'var(--accent-lf)' }}>
+            <span className="font-mono text-data-sm uppercase tracking-[0.1em]" style={{ color: 'var(--accent-lf)' }}>
               Might be a match?
             </span>
           </div>
@@ -2410,11 +2424,11 @@ function ReportForm({
                     <p className="text-xs font-semibold truncate" style={{ color: 'var(--color-text-primary)' }}>
                       {mItem.title}
                     </p>
-                    <p className="text-[10px]" style={{ color: 'var(--color-text-tertiary)' }}>
+                    <p className="text-data-sm" style={{ color: 'var(--color-text-tertiary)' }}>
                       {canClientSeeLocation(mItem as any) ? mItem.location : 'Location hidden'} &middot; {timeAgo(mItem.createdAt)}
                     </p>
                   </div>
-                  <span className={`category-badge ${mItem.type === 'lost' ? 'type-badge-lost' : 'type-badge-found'}`} style={{ fontSize: '8px', padding: '1px 4px' }}>
+                  <span className={`category-badge ${mItem.type === 'lost' ? 'type-badge-lost' : 'type-badge-found'}`} style={{ fontSize: '11px', padding: '1px 4px' }}>
                     {mItem.type}
                   </span>
                 </div>
@@ -2840,7 +2854,7 @@ function ItemDetail({
             )}
             {/* Item ID reference */}
             <span
-              className="text-[9px] font-mono tracking-wider"
+              className="text-data-sm font-mono tracking-wider"
               style={{ color: 'var(--color-text-tertiary)' }}
             >
               #{itemIdShort}
@@ -2856,14 +2870,14 @@ function ItemDetail({
           <div className="flex items-center gap-3 mt-1">
             <div className="flex items-center gap-1">
               <Clock width={10} height={10} style={{ color: 'var(--color-text-tertiary)' }} />
-              <span className="text-[10px] font-mono" style={{ color: 'var(--color-text-tertiary)' }}>
+              <span className="text-data-sm font-mono" style={{ color: 'var(--color-text-tertiary)' }}>
                 {timeAgo(item.createdAt)}
               </span>
             </div>
             {reporterName && (
               <div className="flex items-center gap-1">
                 <User width={10} height={10} style={{ color: 'var(--color-text-tertiary)' }} />
-                <span className="text-[10px] font-mono" style={{ color: 'var(--color-text-tertiary)' }}>
+                <span className="text-data-sm font-mono" style={{ color: 'var(--color-text-tertiary)' }}>
                   By {reporterName}
                 </span>
               </div>
@@ -2900,7 +2914,7 @@ function ItemDetail({
             style={{ backgroundColor: 'var(--color-border)' }}
           />
         </div>
-        <span className="text-[10px] font-mono shrink-0" style={{ color: 'var(--color-text-tertiary)' }}>
+        <span className="text-data-sm font-mono shrink-0" style={{ color: 'var(--color-text-tertiary)' }}>
           Reported {timeAgo(item.createdAt)}
         </span>
       </div>
@@ -2929,8 +2943,12 @@ function ItemDetail({
             border: '1px solid var(--color-border)',
           }}
         >
-          <span className="text-6xl opacity-60">
-            {categoryPlaceholders[item.category]?.emoji || categoryPlaceholders.Other.emoji}
+          <span className="opacity-60">
+            {/* T13: lucide-react icon replaces emoji-as-icon. */}
+            {(() => {
+              const Icon = categoryPlaceholders[item.category]?.Icon || categoryPlaceholders.Other.Icon;
+              return <Icon width={72} height={72} className="text-white" />;
+            })()}
           </span>
         </div>
       )}
@@ -2975,7 +2993,7 @@ function ItemDetail({
         }}
       >
         <div>
-          <label className="font-mono text-[10px] uppercase tracking-[0.1em] block mb-1" style={{ color: 'var(--color-text-tertiary)' }}>
+          <label className="font-mono text-data-sm uppercase tracking-[0.1em] block mb-1" style={{ color: 'var(--color-text-tertiary)' }}>
             Description
           </label>
           <p className="text-sm leading-relaxed" style={{ color: 'var(--color-text-primary)' }}>
@@ -2988,7 +3006,7 @@ function ItemDetail({
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             {/* Found At / Lost At */}
             <div className="space-y-1.5">
-              <label className="font-mono text-[10px] uppercase tracking-[0.1em] block" style={{ color: 'var(--accent-lf)' }}>
+              <label className="font-mono text-data-sm uppercase tracking-[0.1em] block" style={{ color: 'var(--accent-lf)' }}>
                 {isLost ? 'Lost At' : 'Found At'}
               </label>
               <div className="flex items-start gap-2">
@@ -3019,16 +3037,16 @@ function ItemDetail({
             {/* Submitted At (Only for Found items) */}
             {!isLost && (
               <div className="space-y-1.5">
-                <label className="font-mono text-[10px] uppercase tracking-[0.1em] block" style={{ color: '#16a34a' }}>
+                <label className="font-mono text-data-sm uppercase tracking-[0.1em] block" style={{ color: 'var(--color-success-strong)' }}>
                   Submitted At
                 </label>
                 <div className="flex items-start gap-2">
-                  <div className="w-8 h-8 rounded-lg bg-[#16a34a]/10 flex items-center justify-center shrink-0 border border-[#16a34a]/20">
-                    <ShieldCheck width={14} height={14} style={{ color: '#16a34a' }} />
+                  <div className="w-8 h-8 rounded-lg bg-success-strong/10 flex items-center justify-center shrink-0 border border-success-strong/20">
+                    <ShieldCheck width={14} height={14} style={{ color: 'var(--color-success-strong)' }} />
                   </div>
                   <div>
                     <div className="flex items-center gap-1.5 flex-wrap">
-                      <p className="text-sm font-bold" style={{ color: '#16a34a' }}>
+                      <p className="text-sm font-bold" style={{ color: 'var(--color-success-strong)' }}>
                         {canSeeLocation
                           ? (item.parsedSubmittedAt || rawHand || 'Not specified')
                           : (<span className="blur-[4px] select-none opacity-50">Custodian hidden</span>)}
@@ -3036,7 +3054,7 @@ function ItemDetail({
                       {canSeeLocation && rawHand && (
                         <button
                           onClick={() => setShowSubmittedLocPopup(true)}
-                          className="p-0.5 rounded-full hover:bg-[#16a34a]/20 text-[#16a34a]/60 hover:text-[#16a34a] transition-all transform active:scale-95"
+                          className="p-0.5 rounded-full hover:bg-success-strong/20 text-success-strong/60 hover:text-success-strong transition-all transform active:scale-95"
                           title="View reporter's original handoff message"
                         >
                           <Info width={12} height={12} />
@@ -3059,7 +3077,7 @@ function ItemDetail({
             {viewCount > 0 && (
               <div className="flex items-center gap-1">
                 <Eye width={10} height={10} style={{ color: 'var(--color-text-tertiary)' }} />
-                <span className="text-[10px] font-mono" style={{ color: 'var(--color-text-tertiary)' }}>
+                <span className="text-data-sm font-mono" style={{ color: 'var(--color-text-tertiary)' }}>
                   {viewCount} view{viewCount !== 1 ? 's' : ''}
                 </span>
               </div>
@@ -3085,7 +3103,7 @@ function ItemDetail({
                     {claiming ? <Loader2 className="animate-spin" width={14} height={14} /> : <Handshake width={14} height={14} />}
                     Claim This Item
                     {claims.length > 0 && (
-                      <span className="ml-1 bg-white/20 px-1.5 py-0.5 rounded-md text-[9px]">
+                      <span className="ml-1 bg-white/20 px-1.5 py-0.5 rounded-md text-data-sm">
                         {claims.length}
                       </span>
                     )}
@@ -3095,7 +3113,7 @@ function ItemDetail({
                     <button
                       onClick={() => setShowVerifyFlow(true)}
                       className="flex-1 rounded-xl py-3.5 text-xs font-black uppercase tracking-[0.12em] transition-all duration-200 flex items-center justify-center gap-2 hover:scale-[1.02] active:scale-[0.98] shadow-md hover:shadow-xl btn-shimmer"
-                      style={{ backgroundColor: '#16a34a', color: 'white' }}
+                      style={{ backgroundColor: 'var(--color-success-strong)', color: 'white' }}
                     >
                       <CheckCircle2 width={14} height={14} />
                       Verify & Mark as Resolved
@@ -3124,7 +3142,7 @@ function ItemDetail({
           <div className="flex gap-2">
             <button
               onClick={handleShare}
-              className="flex-1 rounded-lg py-3 text-[10px] font-bold uppercase tracking-[0.1em] transition-all border border-[var(--color-border)] bg-[var(--color-bg-subtle)]"
+              className="flex-1 rounded-lg py-3 text-data-sm font-bold uppercase tracking-[0.1em] transition-all border border-[var(--color-border)] bg-[var(--color-bg-subtle)]"
               style={{ color: 'var(--color-text-secondary)' }}
             >
               Share
@@ -3132,7 +3150,7 @@ function ItemDetail({
             {onToggleBookmark && (
               <button
                 onClick={() => onToggleBookmark(item.id)}
-                className="flex-1 rounded-lg py-3 text-[10px] font-bold uppercase tracking-[0.1em] transition-all border"
+                className="flex-1 rounded-lg py-3 text-data-sm font-bold uppercase tracking-[0.1em] transition-all border"
                 style={{
                   borderColor: isBookmarked ? 'var(--accent-lf)' : 'var(--color-border)',
                   backgroundColor: isBookmarked ? 'var(--accent-lf-bg)' : 'var(--color-bg-subtle)',
@@ -3159,10 +3177,10 @@ function ItemDetail({
                 animate={{ opacity: 1, height: 'auto' }}
                 exit={{ opacity: 0, height: 0 }}
                 className="rounded-2xl p-5 space-y-4 border-2 border-dashed"
-                style={{ borderColor: '#16a34a', backgroundColor: 'rgba(22,163,74,0.02)' }}
+                style={{ borderColor: 'var(--color-success-strong)', backgroundColor: 'rgba(22,163,74,0.02)' }}
               >
                 <div className="flex items-center justify-between">
-                  <h4 className="text-xs font-black uppercase tracking-wider" style={{ color: '#16a34a' }}>
+                  <h4 className="text-xs font-black uppercase tracking-wider" style={{ color: 'var(--color-success-strong)' }}>
                     Final Verification
                   </h4>
                   <button onClick={() => setShowVerifyFlow(false)}>
@@ -3176,7 +3194,7 @@ function ItemDetail({
                 {!verificationImage ? (
                   <label className="flex flex-col items-center justify-center h-32 rounded-xl border-2 border-dashed transition-colors cursor-pointer hover:bg-black/5" style={{ borderColor: 'var(--color-border)' }}>
                     <Camera width={24} height={24} style={{ color: 'var(--color-text-tertiary)' }} />
-                    <span className="text-[10px] font-bold mt-2" style={{ color: 'var(--color-text-tertiary)' }}>Click to take/upload photo</span>
+                    <span className="text-data-sm font-bold mt-2" style={{ color: 'var(--color-text-tertiary)' }}>Click to take/upload photo</span>
                     <input type="file" accept="image/*" capture="environment" className="hidden" onChange={(e) => setVerificationImage(e.target.files?.[0] || null)} />
                   </label>
                 ) : (
@@ -3192,7 +3210,7 @@ function ItemDetail({
                   onClick={handleVerifyAndResolve}
                   disabled={!verificationImage || verifying}
                   className="w-full rounded-xl py-3 text-xs font-black uppercase tracking-widest transition-all shadow-md disabled:opacity-50"
-                  style={{ backgroundColor: '#16a34a', color: 'white' }}
+                  style={{ backgroundColor: 'var(--color-success-strong)', color: 'white' }}
                 >
                   {verifying ? (
                     <div className="flex items-center justify-center gap-2">
@@ -3227,9 +3245,9 @@ function ItemDetail({
               onClick={handleWhatsAppShare}
               className="rounded-lg py-3 px-4 text-xs font-bold uppercase tracking-[0.08em] transition-all duration-150 flex items-center justify-center gap-2 hover:scale-[1.02] active:scale-[0.98]"
               style={{
-                border: '1.5px solid #25D366',
+                border: '1.5px solid var(--color-whatsapp)',
                 backgroundColor: 'rgba(37, 211, 102, 0.1)',
-                color: '#25D366',
+                color: 'var(--color-whatsapp)',
               }}
               title="Share on WhatsApp"
             >
@@ -3329,7 +3347,7 @@ function ItemDetail({
         <div className="no-print">
           <div className="flex items-center gap-1.5 mb-3">
             <Sparkles width={12} height={12} style={{ color: 'var(--accent-lf)' }} />
-            <span className="font-mono text-[10px] uppercase tracking-[0.1em]" style={{ color: 'var(--accent-lf)' }}>
+            <span className="font-mono text-data-sm uppercase tracking-[0.1em]" style={{ color: 'var(--accent-lf)' }}>
               Similar Items
             </span>
           </div>
@@ -3349,7 +3367,7 @@ function ItemDetail({
                   >
                     <div className="flex items-center gap-2 mb-1.5">
                       <span className="text-lg">{categoryIcons[sItem.category] || '\uD83D\uDCE6'}</span>
-                      <span className={`category-badge ${sIsLost ? 'type-badge-lost' : 'type-badge-found'}`} style={{ fontSize: '8px', padding: '1px 4px' }}>
+                      <span className={`category-badge ${sIsLost ? 'type-badge-lost' : 'type-badge-found'}`} style={{ fontSize: '11px', padding: '1px 4px' }}>
                         {sItem.type}
                       </span>
                     </div>
@@ -3358,11 +3376,11 @@ function ItemDetail({
                     </p>
                     <div className="flex items-center gap-1 mt-1">
                       <MapPin width={8} height={8} style={{ color: 'var(--color-text-tertiary)' }} />
-                      <span className="text-[9px] truncate" style={{ color: 'var(--color-text-tertiary)' }}>
+                      <span className="text-data-sm truncate" style={{ color: 'var(--color-text-tertiary)' }}>
                         {canClientSeeLocation(sItem) ? sItem.location : 'Location hidden'}
                       </span>
                     </div>
-                    <span className="text-[9px] mt-1 block" style={{ color: 'var(--color-text-tertiary)' }}>
+                    <span className="text-data-sm mt-1 block" style={{ color: 'var(--color-text-tertiary)' }}>
                       {timeAgo(sItem.createdAt)}
                     </span>
                   </button>
@@ -3383,7 +3401,7 @@ function ItemDetail({
                 </p>
                 <button
                   onClick={() => onBack()}
-                  className="text-[10px] font-semibold hover:underline"
+                  className="text-data-sm font-semibold hover:underline"
                   style={{ color: 'var(--accent-lf)' }}
                 >
                   Be the first to report a similar item →
@@ -3398,8 +3416,8 @@ function ItemDetail({
       {claims.length > 0 && (
         <div className="no-print pt-4 border-t border-[var(--color-border)]">
           <div className="flex items-center gap-1.5 mb-3">
-            <Handshake width={12} height={12} style={{ color: '#16a34a' }} />
-            <span className="font-mono text-[10px] uppercase tracking-[0.1em]" style={{ color: '#16a34a' }}>
+            <Handshake width={12} height={12} style={{ color: 'var(--color-success-strong)' }} />
+            <span className="font-mono text-data-sm uppercase tracking-[0.1em]" style={{ color: 'var(--color-success-strong)' }}>
               Pending Collection Queue ({claims.length})
             </span>
           </div>
@@ -3409,19 +3427,19 @@ function ItemDetail({
                 key={claim.id}
                 className="rounded-lg px-3 py-2 flex items-center gap-2 bg-[var(--color-bg-subtle)] border border-[var(--color-border)]"
               >
-                <div className="w-5 h-5 rounded-full bg-[#16a34a]/10 flex items-center justify-center text-[10px] font-bold text-[#16a34a]">
+                <div className="w-5 h-5 rounded-full bg-success-strong/10 flex items-center justify-center text-data-sm font-bold text-success-strong">
                   {idx + 1}
                 </div>
-                <span className="text-[10px] font-medium" style={{ color: 'var(--color-text-secondary)' }}>
+                <span className="text-data-sm font-medium" style={{ color: 'var(--color-text-secondary)' }}>
                   Claimant {claim.claimer_id.slice(-4).toUpperCase()}
                 </span>
-                <span className="text-[9px]" style={{ color: 'var(--color-text-tertiary)' }}>
+                <span className="text-data-sm" style={{ color: 'var(--color-text-tertiary)' }}>
                   &middot; {timeAgo(claim.created_at)}
                 </span>
               </div>
             ))}
           </div>
-          <p className="text-[9px] mt-3 opacity-70" style={{ color: 'var(--color-text-tertiary)' }}>
+          <p className="text-data-sm mt-3 opacity-70" style={{ color: 'var(--color-text-tertiary)' }}>
             Multiple students are attempting to collect this item. If you have received it, use the &quot;Verify & Resolve&quot; button above.
           </p>
         </div>
@@ -3431,7 +3449,7 @@ function ItemDetail({
       <div className="no-print pt-4 border-t border-[var(--color-border)]">
         <div className="flex items-center gap-1.5 mb-2">
           <MessageCircle width={12} height={12} style={{ color: 'var(--accent-cs)' }} />
-          <span className="font-mono text-[10px] uppercase tracking-[0.1em]" style={{ color: 'var(--accent-cs)' }}>
+          <span className="font-mono text-data-sm uppercase tracking-[0.1em]" style={{ color: 'var(--accent-cs)' }}>
             Comments ({comments.length})
           </span>
         </div>
@@ -3457,11 +3475,11 @@ function ItemDetail({
             aria-label="Send comment"
           >
             <Send width={14} height={14} />
-            <span className="hidden sm:inline text-[10px] font-bold uppercase tracking-wider">Send</span>
+            <span className="hidden sm:inline text-data-sm font-bold uppercase tracking-wider">Send</span>
           </button>
         </div>
         {commentText.length > 170 && (
-          <p className="text-[9px] mb-2" style={{ color: 'var(--color-text-tertiary)' }}>
+          <p className="text-data-sm mb-2" style={{ color: 'var(--color-text-tertiary)' }}>
             {200 - commentText.length} characters remaining
           </p>
         )}
@@ -3480,7 +3498,7 @@ function ItemDetail({
                   </div>
                   <div className="flex-1 min-w-0">
                     <p className="text-xs" style={{ color: 'var(--color-text-primary)' }}>{comment.text}</p>
-                    <span className="text-[9px]" style={{ color: 'var(--color-text-tertiary)' }}>
+                    <span className="text-data-sm" style={{ color: 'var(--color-text-tertiary)' }}>
                       {timeAgo(new Date(comment.timestamp).toISOString())}
                     </span>
                   </div>
@@ -3490,7 +3508,7 @@ function ItemDetail({
             {comments.length > 3 && !showAllComments && (
               <button
                 onClick={() => setShowAllComments(true)}
-                className="text-[10px] font-semibold hover:underline"
+                className="text-data-sm font-semibold hover:underline"
                 style={{ color: 'var(--accent-cs)' }}
               >
                 Show all {comments.length} comments
@@ -3537,7 +3555,7 @@ function ItemDetail({
                 AI is semantically matching your lost reports...
               </p>
             ) : (
-              <p className="text-[10px] mt-2" style={{ color: 'var(--color-text-tertiary)' }}>
+              <p className="text-data-sm mt-2" style={{ color: 'var(--color-text-tertiary)' }}>
                 Institutional email is required. You must have reported this item as lost first.
               </p>
             )}
@@ -3607,13 +3625,13 @@ function ItemDetail({
               initial={{ scale: 0.95, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
               exit={{ scale: 0.95, opacity: 0 }}
-              className="w-full max-w-sm rounded-2xl p-5 shadow-2xl border border-[#16a34a]/30 space-y-3 text-left"
+              className="w-full max-w-sm rounded-2xl p-5 shadow-2xl border border-success-strong/30 space-y-3 text-left"
               style={{ backgroundColor: 'var(--color-bg-raised)' }}
               onClick={(e) => e.stopPropagation()}
             >
-              <div className="flex items-center justify-between border-b border-[#16a34a]/20 pb-2.5">
+              <div className="flex items-center justify-between border-b border-success-strong/20 pb-2.5">
                 <h4 className="font-body text-sm font-bold text-[var(--color-text-primary)] flex items-center gap-2">
-                  <ShieldCheck width={15} height={15} style={{ color: '#16a34a' }} />
+                  <ShieldCheck width={15} height={15} style={{ color: 'var(--color-success-strong)' }} />
                   Where Reporter Handed It Over
                 </h4>
                 <button
@@ -3727,7 +3745,7 @@ function FilterSidebar({
 
       {/* Sort By */}
       <div className="space-y-2.5">
-        <label className="font-mono text-[9px] uppercase tracking-[0.12em] flex items-center gap-2 text-[var(--color-text-tertiary)]">
+        <label className="font-mono text-data-sm uppercase tracking-[0.12em] flex items-center gap-2 text-[var(--color-text-tertiary)]">
           <ArrowUpDown width={10} height={10} />
           Sort By
         </label>
@@ -3754,7 +3772,7 @@ function FilterSidebar({
           onClick={() => toggleSection('type')}
           className="flex items-center justify-between w-full group"
         >
-          <label className="font-mono text-[9px] uppercase tracking-[0.12em] flex items-center gap-2 text-[var(--color-text-tertiary)] cursor-pointer group-hover:text-[var(--color-text-primary)] transition-colors">
+          <label className="font-mono text-data-sm uppercase tracking-[0.12em] flex items-center gap-2 text-[var(--color-text-tertiary)] cursor-pointer group-hover:text-[var(--color-text-primary)] transition-colors">
             <Filter width={10} height={10} />
             Type
           </label>
@@ -3780,7 +3798,7 @@ function FilterSidebar({
                     <button
                       key={t}
                       onClick={() => setTypeFilter(t)}
-                      className="rounded-lg px-3 py-2 text-[10px] uppercase tracking-[0.06em] transition-all duration-150 text-left hover:translate-x-1"
+                      className="rounded-lg px-3 py-2 text-data-sm uppercase tracking-[0.06em] transition-all duration-150 text-left hover:translate-x-1"
                       style={btnStyle(active)}
                     >
                       {t === 'all' ? 'All Items' : t === 'lost' ? 'Lost' : 'Found'}
@@ -3799,7 +3817,7 @@ function FilterSidebar({
           onClick={() => toggleSection('dateRange')}
           className="flex items-center justify-between w-full group"
         >
-          <label className="font-mono text-[9px] uppercase tracking-[0.12em] flex items-center gap-2 text-[var(--color-text-tertiary)] cursor-pointer group-hover:text-[var(--color-text-primary)] transition-colors">
+          <label className="font-mono text-data-sm uppercase tracking-[0.12em] flex items-center gap-2 text-[var(--color-text-tertiary)] cursor-pointer group-hover:text-[var(--color-text-primary)] transition-colors">
             <Calendar width={10} height={10} />
             Date Range
           </label>
@@ -3825,7 +3843,7 @@ function FilterSidebar({
                     <button
                       key={opt.value}
                       onClick={() => setDateRange(opt.value)}
-                      className="rounded-lg px-3 py-2 text-[10px] uppercase tracking-[0.06em] transition-all duration-150 text-left hover:translate-x-1"
+                      className="rounded-lg px-3 py-2 text-data-sm uppercase tracking-[0.06em] transition-all duration-150 text-left hover:translate-x-1"
                       style={btnStyle(active)}
                     >
                       {opt.label}
@@ -3844,7 +3862,7 @@ function FilterSidebar({
           onClick={() => toggleSection('myItems')}
           className="flex items-center justify-between w-full group"
         >
-          <label className="font-mono text-[9px] uppercase tracking-[0.12em] flex items-center gap-2 text-[var(--color-text-tertiary)] cursor-pointer group-hover:text-[var(--color-text-primary)] transition-colors">
+          <label className="font-mono text-data-sm uppercase tracking-[0.12em] flex items-center gap-2 text-[var(--color-text-tertiary)] cursor-pointer group-hover:text-[var(--color-text-primary)] transition-colors">
             <User width={10} height={10} />
             Personal
           </label>
@@ -3867,7 +3885,7 @@ function FilterSidebar({
                 <button
                   key="my-reports"
                   onClick={() => setShowMyReports(!showMyReports)}
-                  className="rounded-lg px-3 py-2 text-[10px] uppercase tracking-[0.06em] transition-all duration-150 text-left hover:translate-x-1 flex items-center gap-1.5"
+                  className="rounded-lg px-3 py-2 text-data-sm uppercase tracking-[0.06em] transition-all duration-150 text-left hover:translate-x-1 flex items-center gap-1.5"
                   style={btnStyle(showMyReports)}
                 >
                   <BookmarkCheck width={12} height={12} />
@@ -3883,7 +3901,7 @@ function FilterSidebar({
                       setShowMyClaims(!showMyClaims)
                     }
                   }}
-                  className="rounded-lg px-3 py-2 text-[10px] uppercase tracking-[0.06em] transition-all duration-150 text-left hover:translate-x-1 flex items-center gap-1.5"
+                  className="rounded-lg px-3 py-2 text-data-sm uppercase tracking-[0.06em] transition-all duration-150 text-left hover:translate-x-1 flex items-center gap-1.5"
                   style={btnStyle(showMyClaims)}
                 >
                   <Handshake width={12} height={12} />
@@ -3892,7 +3910,7 @@ function FilterSidebar({
                 <button
                   key="my-bookmarks"
                   onClick={() => setShowBookmarked(!showBookmarked)}
-                  className="rounded-lg px-3 py-2 text-[10px] uppercase tracking-[0.06em] transition-all duration-150 text-left hover:translate-x-1 flex items-center gap-1.5"
+                  className="rounded-lg px-3 py-2 text-data-sm uppercase tracking-[0.06em] transition-all duration-150 text-left hover:translate-x-1 flex items-center gap-1.5"
                   style={btnStyle(showBookmarked)}
                 >
                   <Bookmark width={12} height={12} />
@@ -3910,7 +3928,7 @@ function FilterSidebar({
           onClick={() => toggleSection('category')}
           className="flex items-center justify-between w-full group"
         >
-          <label className="font-mono text-[9px] uppercase tracking-[0.12em] flex items-center gap-2 text-[var(--color-text-tertiary)] cursor-pointer group-hover:text-[var(--color-text-primary)] transition-colors">
+          <label className="font-mono text-data-sm uppercase tracking-[0.12em] flex items-center gap-2 text-[var(--color-text-tertiary)] cursor-pointer group-hover:text-[var(--color-text-primary)] transition-colors">
             <Tag width={10} height={10} />
             Category
           </label>
@@ -3936,7 +3954,7 @@ function FilterSidebar({
                     <button
                       key={cat}
                       onClick={() => setCategoryFilter(cat)}
-                      className="rounded-lg px-3 py-2 text-[10px] uppercase tracking-[0.06em] transition-all duration-150 text-left hover:translate-x-1 flex items-center gap-2"
+                      className="rounded-lg px-3 py-2 text-data-sm uppercase tracking-[0.06em] transition-all duration-150 text-left hover:translate-x-1 flex items-center gap-2"
                       style={btnStyle(active)}
                     >
                       <span>{categoryIcons[cat] || '📦'}</span>
@@ -3954,7 +3972,7 @@ function FilterSidebar({
         {hasFilters && (
           <button
             onClick={onClearFilters}
-            className="w-full rounded-xl py-2.5 text-[10px] font-bold uppercase tracking-[0.1em] transition-all duration-200 flex items-center justify-center gap-2 hover:bg-[var(--accent-ee-bg)] hover:text-[var(--accent-ee)] border border-transparent hover:border-[var(--accent-ee)]"
+            className="w-full rounded-xl py-2.5 text-data-sm font-bold uppercase tracking-[0.1em] transition-all duration-200 flex items-center justify-center gap-2 hover:bg-[var(--accent-ee-bg)] hover:text-[var(--accent-ee)] border border-transparent hover:border-[var(--accent-ee)]"
             style={{ color: 'var(--color-text-tertiary)' }}
           >
             <X width={12} height={12} />
@@ -3964,7 +3982,7 @@ function FilterSidebar({
         
         <button
           onClick={onShareSummary}
-          className="w-full rounded-xl py-2.5 text-[10px] font-bold uppercase tracking-[0.1em] transition-all duration-200 flex items-center justify-center gap-2 bg-[var(--color-bg-subtle)] border border-[var(--color-border)] hover:border-[var(--color-text-tertiary)] active:scale-[0.98]"
+          className="w-full rounded-xl py-2.5 text-data-sm font-bold uppercase tracking-[0.1em] transition-all duration-200 flex items-center justify-center gap-2 bg-[var(--color-bg-subtle)] border border-[var(--color-border)] hover:border-[var(--color-text-tertiary)] active:scale-[0.98]"
           style={{ color: 'var(--color-text-primary)' }}
         >
           <Share2 width={12} height={12} />
@@ -4006,7 +4024,7 @@ function EmptyState({
         </div>
         <button
           onClick={() => { window.location.reload() }}
-          className="text-[10px] font-bold uppercase tracking-widest hover:underline"
+          className="text-data-sm font-bold uppercase tracking-widest hover:underline"
           style={{ color: 'var(--accent-lf)' }}
         >
           Reset all filters
@@ -4070,7 +4088,7 @@ function EmptyState({
               </div>
               <div className="space-y-0.5">
                 <p className="text-[11px] font-black uppercase tracking-wide" style={{ color: 'var(--color-text-primary)' }}>{benefit.label}</p>
-                <p className="text-[10px] text-[var(--color-text-tertiary)] font-medium">{benefit.desc}</p>
+                <p className="text-data-sm text-[var(--color-text-tertiary)] font-medium">{benefit.desc}</p>
               </div>
             </div>
           ))}
@@ -4096,14 +4114,14 @@ function EmptyState({
 
       {/* Commonly Lost Items Section - Separate Card */}
       <div className="rounded-[1.5rem] p-6 bg-[var(--color-bg-raised)] border border-[var(--color-border)] shadow-sm">
-        <p className="font-mono text-[10px] uppercase tracking-[0.12em] font-black mb-4 text-[var(--color-text-tertiary)]">
+        <p className="font-mono text-data-sm uppercase tracking-[0.12em] font-black mb-4 text-[var(--color-text-tertiary)]">
           Commonly Lost Items
         </p>
         <div className="flex flex-wrap gap-2">
           {commonItems.map((chip) => (
             <span
               key={chip}
-              className="px-4 py-2 rounded-xl text-[10px] font-bold border border-[var(--color-border)] bg-[var(--color-bg-subtle)] text-[var(--color-text-secondary)] hover:bg-[var(--color-bg-raised)] hover:border-[var(--color-text-tertiary)] transition-all cursor-default"
+              className="px-4 py-2 rounded-xl text-data-sm font-bold border border-[var(--color-border)] bg-[var(--color-bg-subtle)] text-[var(--color-text-secondary)] hover:bg-[var(--color-bg-raised)] hover:border-[var(--color-text-tertiary)] transition-all cursor-default"
             >
               {chip}
             </span>
@@ -4186,7 +4204,7 @@ function QuickSearchModal({
             style={{ color: 'var(--color-text-primary)' }}
           />
           <kbd
-            className="hidden sm:inline-flex items-center gap-0.5 rounded px-1.5 py-0.5 text-[9px] font-mono"
+            className="hidden sm:inline-flex items-center gap-0.5 rounded px-1.5 py-0.5 text-data-sm font-mono"
             style={{
               backgroundColor: 'var(--color-bg-subtle)',
               border: '1px solid var(--color-border)',
@@ -4235,14 +4253,14 @@ function QuickSearchModal({
                     <p className="text-sm font-medium truncate" style={{ color: 'var(--color-text-primary)' }}>
                       {item.title}
                     </p>
-                    <p className="text-[10px] flex items-center gap-2" style={{ color: 'var(--color-text-tertiary)' }}>
-                      <span className={`category-badge ${isLost ? 'type-badge-lost' : 'type-badge-found'}`} style={{ fontSize: '8px', padding: '1px 4px' }}>
+                    <p className="text-data-sm flex items-center gap-2" style={{ color: 'var(--color-text-tertiary)' }}>
+                      <span className={`category-badge ${isLost ? 'type-badge-lost' : 'type-badge-found'}`} style={{ fontSize: '11px', padding: '1px 4px' }}>
                         {item.type}
                       </span>
                       {canClientSeeLocation(item) ? item.location : 'Location hidden'}
                     </p>
                   </div>
-                  <span className="text-[10px] shrink-0" style={{ color: 'var(--color-text-tertiary)' }}>
+                  <span className="text-data-sm shrink-0" style={{ color: 'var(--color-text-tertiary)' }}>
                     {timeAgo(item.createdAt)}
                   </span>
                 </button>
@@ -4252,15 +4270,15 @@ function QuickSearchModal({
         </div>
         {/* Footer */}
         <div className="flex items-center justify-between px-4 py-2" style={{ borderTop: '1px solid var(--color-border)' }}>
-          <span className="text-[9px] font-mono" style={{ color: 'var(--color-text-tertiary)' }}>
+          <span className="text-data-sm font-mono" style={{ color: 'var(--color-text-tertiary)' }}>
             {filtered.length} result{filtered.length !== 1 ? 's' : ''}
           </span>
           <div className="flex items-center gap-2">
-            <span className="text-[9px] font-mono flex items-center gap-1" style={{ color: 'var(--color-text-tertiary)' }}>
-              <kbd className="rounded px-1 py-0.5" style={{ backgroundColor: 'var(--color-bg-subtle)', border: '1px solid var(--color-border)', fontSize: '8px' }}>
+            <span className="text-data-sm font-mono flex items-center gap-1" style={{ color: 'var(--color-text-tertiary)' }}>
+              <kbd className="rounded px-1 py-0.5" style={{ backgroundColor: 'var(--color-bg-subtle)', border: '1px solid var(--color-border)', fontSize: '11px' }}>
                 <Command width={8} height={8} className="inline" />
               </kbd>
-              <kbd className="rounded px-1 py-0.5" style={{ backgroundColor: 'var(--color-bg-subtle)', border: '1px solid var(--color-border)', fontSize: '8px' }}>
+              <kbd className="rounded px-1 py-0.5" style={{ backgroundColor: 'var(--color-bg-subtle)', border: '1px solid var(--color-border)', fontSize: '11px' }}>
                 K
               </kbd>
               to toggle
@@ -4301,18 +4319,18 @@ function ResolvedHistory({ items, onSelect }: { items: LostFoundItem[], onSelect
             <div className="w-8 h-8 rounded-lg bg-emerald-500/10 flex items-center justify-center border border-emerald-500/20">
               <CheckCircle width={16} height={16} className="text-emerald-500" />
             </div>
-            <span className="text-[10px] font-mono text-emerald-600 dark:text-emerald-400 uppercase tracking-wider font-bold">
+            <span className="text-data-sm font-mono text-emerald-600 dark:text-emerald-400 uppercase tracking-wider font-bold">
               {formatDate(item.updatedAt)}
             </span>
           </div>
           <h3 className="text-sm font-bold truncate mb-1" style={{ color: 'var(--color-text-primary)' }}>{item.title}</h3>
-          <p className="text-[10px] font-mono uppercase tracking-widest mb-3 opacity-70" style={{ color: 'var(--color-text-tertiary)' }}>
+          <p className="text-data-sm font-mono uppercase tracking-widest mb-3 opacity-70" style={{ color: 'var(--color-text-tertiary)' }}>
             {item.category} &bull; {item.type}
           </p>
           <div className="flex items-center gap-2 mt-4 pt-4 border-t border-emerald-100 dark:border-emerald-900/40">
             <div className="flex-1">
-              <p className="text-[9px] font-bold uppercase tracking-tighter text-emerald-600 dark:text-emerald-400">Success Story</p>
-              <p className="text-[10px] font-medium" style={{ color: 'var(--color-text-primary)' }}>Successfully Recovered</p>
+              <p className="text-data-sm font-bold uppercase tracking-tighter text-emerald-600 dark:text-emerald-400">Success Story</p>
+              <p className="text-data-sm font-medium" style={{ color: 'var(--color-text-primary)' }}>Successfully Recovered</p>
             </div>
             <div className="w-6 h-6 rounded-full bg-white dark:bg-black/20 flex items-center justify-center border border-emerald-100 dark:border-emerald-800/30 shadow-sm transition-transform group-hover:scale-110">
               <ChevronRight width={12} height={12} className="text-emerald-500" />
@@ -4395,7 +4413,7 @@ function StatsDashboard({
                 <span className="text-4xl font-black tracking-tighter" style={{ color: stat.accent }}>
                   <AnimatedCounter target={stat.value} />
                 </span>
-                <span className="text-[10px] font-black text-[var(--color-text-secondary)] uppercase tracking-[0.15em] mt-1 text-center">
+                <span className="text-data-sm font-black text-[var(--color-text-secondary)] uppercase tracking-[0.15em] mt-1 text-center">
                   {stat.label}
                 </span>
               </div>
@@ -4406,13 +4424,13 @@ function StatsDashboard({
                     className="flex items-center gap-1 px-2 py-0.5 rounded-full bg-white/50 dark:bg-black/20 border border-[var(--color-border)]"
                   >
                     <span 
-                      className="text-[10px] font-bold flex items-center gap-0.5"
+                      className="text-data-sm font-bold flex items-center gap-0.5"
                       style={{ color: stat.trend > 0 && stat.label.includes('Lost') ? 'var(--accent-ee)' : 'var(--accent-af)' }}
                     >
                       {stat.trend > 0 ? <ArrowUp width={10} height={10} /> : <ArrowDown width={10} height={10} />}
                       {Math.abs(stat.trend)}
                     </span>
-                    <span className="text-[9px] font-bold text-[var(--color-text-tertiary)] uppercase tracking-wider">Change</span>
+                    <span className="text-data-sm font-bold text-[var(--color-text-tertiary)] uppercase tracking-wider">Change</span>
                   </div>
                 )}
               </div>
@@ -4437,7 +4455,7 @@ function StatsDashboard({
             <span className="text-xl font-black tracking-tighter" style={{ color: stat.accent }}>
               <AnimatedCounter target={stat.value} />
             </span>
-            <span className="text-[7px] font-black text-[var(--color-text-secondary)] uppercase tracking-[0.1em] mt-0.5 text-center">
+            <span className="text-data-sm font-black text-[var(--color-text-secondary)] uppercase tracking-[0.1em] mt-0.5 text-center">
               {stat.mobileLabel}
             </span>
             <div className="absolute bottom-1.5 opacity-40">
@@ -5118,7 +5136,7 @@ function LostFoundView({
           {hasFilters && (
             <button
               onClick={handleClearFilters}
-              className="w-full rounded-md px-3 py-1.5 text-[10px] font-bold uppercase tracking-[0.06em] transition-all duration-150 flex items-center justify-center gap-1.5"
+              className="w-full rounded-md px-3 py-1.5 text-data-sm font-bold uppercase tracking-[0.06em] transition-all duration-150 flex items-center justify-center gap-1.5"
               style={{
                 border: '1.5px solid var(--accent-ee)',
                 backgroundColor: 'var(--accent-ee-bg)',
@@ -5132,7 +5150,7 @@ function LostFoundView({
 
           {/* Sort */}
           <div>
-            <label className="font-mono text-[10px] uppercase tracking-[0.1em] mb-1.5 block" style={{ color: 'var(--color-text-tertiary)' }}>
+            <label className="font-mono text-data-sm uppercase tracking-[0.1em] mb-1.5 block" style={{ color: 'var(--color-text-tertiary)' }}>
               Sort By
             </label>
             <div className="relative">
@@ -5158,7 +5176,7 @@ function LostFoundView({
 
           {/* Date Range (mobile) */}
           <div>
-            <label className="font-mono text-[10px] uppercase tracking-[0.1em] mb-1.5 block" style={{ color: 'var(--color-text-tertiary)' }}>
+            <label className="font-mono text-data-sm uppercase tracking-[0.1em] mb-1.5 block" style={{ color: 'var(--color-text-tertiary)' }}>
               Date Range
             </label>
             <div className="flex flex-wrap gap-1.5">
@@ -5166,7 +5184,7 @@ function LostFoundView({
                 <button
                   key={opt.value}
                   onClick={() => setDateRange(opt.value)}
-                  className="rounded-md px-2.5 py-1.5 text-[10px] font-semibold uppercase tracking-[0.06em] transition-all duration-150 active:scale-[0.98]"
+                  className="rounded-md px-2.5 py-1.5 text-data-sm font-semibold uppercase tracking-[0.06em] transition-all duration-150 active:scale-[0.98]"
                   style={{
                     border: `1.5px solid ${dateRange === opt.value ? 'var(--accent-lf)' : 'var(--color-border)'}`,
                     backgroundColor: dateRange === opt.value ? 'var(--accent-lf-bg)' : 'var(--color-bg-subtle)',
@@ -5180,7 +5198,7 @@ function LostFoundView({
           </div>
 
           <div>
-            <label className="font-mono text-[10px] uppercase tracking-[0.1em] mb-1.5 block" style={{ color: 'var(--color-text-tertiary)' }}>
+            <label className="font-mono text-data-sm uppercase tracking-[0.1em] mb-1.5 block" style={{ color: 'var(--color-text-tertiary)' }}>
               Type
             </label>
             <div className="flex gap-1.5">
@@ -5188,7 +5206,7 @@ function LostFoundView({
                 <button
                   key={t}
                   onClick={() => setTypeFilter(t)}
-                  className="rounded-md px-3 py-1.5 text-[10px] font-bold uppercase tracking-[0.06em] transition-all duration-150 active:scale-[0.98]"
+                  className="rounded-md px-3 py-1.5 text-data-sm font-bold uppercase tracking-[0.06em] transition-all duration-150 active:scale-[0.98]"
                   style={{
                     border: `1.5px solid ${
                       typeFilter === t
@@ -5223,7 +5241,7 @@ function LostFoundView({
             </div>
           </div>
           <div>
-            <label className="font-mono text-[10px] uppercase tracking-[0.1em] mb-1.5 block" style={{ color: 'var(--color-text-tertiary)' }}>
+            <label className="font-mono text-data-sm uppercase tracking-[0.1em] mb-1.5 block" style={{ color: 'var(--color-text-tertiary)' }}>
               Category
             </label>
             <div className="flex flex-wrap gap-1.5">
@@ -5231,7 +5249,7 @@ function LostFoundView({
                 <button
                   key={cat}
                   onClick={() => setCategoryFilter(cat)}
-                  className="rounded-md px-2.5 py-1.5 text-[10px] font-semibold uppercase tracking-[0.06em] transition-transform duration-150 hover:translate-x-0.5 active:scale-[0.98]"
+                  className="rounded-md px-2.5 py-1.5 text-data-sm font-semibold uppercase tracking-[0.06em] transition-transform duration-150 hover:translate-x-0.5 active:scale-[0.98]"
                   style={{
                     border: `1.5px solid ${
                       categoryFilter === cat ? 'var(--accent-lf)' : 'var(--color-border)'
@@ -5253,7 +5271,7 @@ function LostFoundView({
           <div className="flex gap-1.5">
             <button
               onClick={() => setShowMyReports(!showMyReports)}
-              className="flex-1 rounded-md px-3 py-2 text-[10px] font-bold uppercase tracking-[0.06em] transition-all duration-150 flex items-center justify-center gap-1.5 active:scale-[0.98]"
+              className="flex-1 rounded-md px-3 py-2 text-data-sm font-bold uppercase tracking-[0.06em] transition-all duration-150 flex items-center justify-center gap-1.5 active:scale-[0.98]"
               style={{
                 border: `1.5px solid ${showMyReports ? 'var(--accent-cs)' : 'var(--color-border)'}`,
                 backgroundColor: showMyReports ? 'var(--accent-cs-bg)' : 'var(--color-bg-subtle)',
@@ -5265,7 +5283,7 @@ function LostFoundView({
             </button>
             <button
               onClick={() => setShowBookmarked(!showBookmarked)}
-              className="flex-1 rounded-md px-3 py-2 text-[10px] font-bold uppercase tracking-[0.06em] transition-all duration-150 flex items-center justify-center gap-1.5 active:scale-[0.98]"
+              className="flex-1 rounded-md px-3 py-2 text-data-sm font-bold uppercase tracking-[0.06em] transition-all duration-150 flex items-center justify-center gap-1.5 active:scale-[0.98]"
               style={{
                 border: `1.5px solid ${showBookmarked ? 'var(--accent-lf)' : 'var(--color-border)'}`,
                 backgroundColor: showBookmarked ? 'var(--accent-lf-bg)' : 'var(--color-bg-subtle)',
@@ -5324,7 +5342,7 @@ function LostFoundView({
                     <span className="text-[11px] truncate" style={{ color: idx === 0 ? 'var(--color-text-primary)' : 'var(--color-text-tertiary)' }}>
                       {act.text}
                     </span>
-                    <span className="text-[9px] shrink-0" style={{ color: 'var(--color-text-tertiary)' }}>
+                    <span className="text-data-sm shrink-0" style={{ color: 'var(--color-text-tertiary)' }}>
                       {timeAgo(new Date(act.timestamp).toISOString())}
                     </span>
                   </motion.div>
@@ -5343,7 +5361,7 @@ function LostFoundView({
             </span>
             <button
               onClick={() => setLocationZoneFilter(null)}
-              className="ml-auto rounded-md px-2 py-0.5 text-[9px] font-bold uppercase tracking-wider transition-all hover:scale-[1.05]"
+              className="ml-auto rounded-md px-2 py-0.5 text-data-sm font-bold uppercase tracking-wider transition-all hover:scale-[1.05]"
               style={{ backgroundColor: 'var(--color-bg-raised)', color: 'var(--color-text-secondary)', border: '1px solid var(--color-border)' }}
             >
               Clear
@@ -5384,7 +5402,7 @@ function LostFoundView({
               <p className="text-xs font-semibold success-banner-text">
                 {resolvedCount} item{resolvedCount !== 1 ? 's' : ''} reunited!
               </p>
-              <p className="text-[10px]" style={{ color: 'var(--color-text-tertiary)' }}>
+              <p className="text-data-sm" style={{ color: 'var(--color-text-tertiary)' }}>
                 Keep reporting — it works!
               </p>
             </div>
@@ -5395,7 +5413,7 @@ function LostFoundView({
         {!loading && recentlyAddedItems.length > 0 && !showMyReports && !showBookmarked && (
           <div className="hidden md:block">
             <p
-              className="font-mono text-[9px] uppercase tracking-[0.1em] mb-2 flex items-center gap-1.5"
+              className="font-mono text-data-sm uppercase tracking-[0.1em] mb-2 flex items-center gap-1.5"
               style={{ color: 'var(--color-text-tertiary)' }}
             >
               <Sparkles width={10} height={10} />
@@ -5418,15 +5436,19 @@ function LostFoundView({
                       <div className="flex items-center gap-2 mb-1.5">
                         {/* Mini placeholder image */}
                         <div
-                          className="w-6 h-6 rounded flex items-center justify-center text-xs shrink-0"
+                          className="w-6 h-6 rounded flex items-center justify-center shrink-0"
                           style={{ background: categoryPlaceholders[item.category]?.gradient || categoryPlaceholders.Other.gradient }}
                         >
-                          {categoryPlaceholders[item.category]?.emoji || categoryPlaceholders.Other.emoji}
+                          {/* T13: lucide-react icon replaces emoji-as-icon. */}
+                          {(() => {
+                            const Icon = categoryPlaceholders[item.category]?.Icon || categoryPlaceholders.Other.Icon;
+                            return <Icon width={12} height={12} className="text-white" />;
+                          })()}
                         </div>
-                        <span className={`category-badge ${isLost ? 'type-badge-lost' : 'type-badge-found'}`} style={{ fontSize: '8px', padding: '1px 4px' }}>
+                        <span className={`category-badge ${isLost ? 'type-badge-lost' : 'type-badge-found'}`} style={{ fontSize: '11px', padding: '1px 4px' }}>
                           {item.type}
                         </span>
-                        <span className="text-[8px] font-mono ml-auto shrink-0" style={{ color: 'var(--color-text-tertiary)' }}>
+                        <span className="text-data-sm font-mono ml-auto shrink-0" style={{ color: 'var(--color-text-tertiary)' }}>
                           {timeAgo(item.createdAt)}
                         </span>
                       </div>
@@ -5435,7 +5457,7 @@ function LostFoundView({
                       </p>
                       <div className="flex items-center gap-1 mt-1">
                         <MapPin width={8} height={8} style={{ color: 'var(--color-text-tertiary)' }} />
-                        <span className="text-[9px] truncate" style={{ color: 'var(--color-text-tertiary)' }}>
+                        <span className="text-data-sm truncate" style={{ color: 'var(--color-text-tertiary)' }}>
                           {canClientSeeLocation(item) ? item.location : 'Location hidden'}
                         </span>
                       </div>
@@ -5485,7 +5507,7 @@ function LostFoundView({
           <div className="rounded-xl p-4 space-y-3" style={{ backgroundColor: 'var(--color-bg-raised)', border: '1px solid var(--color-border)' }}>
             <div className="flex items-center gap-2">
               <Sparkles width={12} height={12} style={{ color: 'var(--accent-lf)' }} />
-              <span className="font-mono text-[10px] uppercase tracking-[0.1em]" style={{ color: 'var(--accent-lf)' }}>
+              <span className="font-mono text-data-sm uppercase tracking-[0.1em]" style={{ color: 'var(--accent-lf)' }}>
                 No exact matches found. AI suggests:
               </span>
             </div>
@@ -5504,11 +5526,11 @@ function LostFoundView({
                       <p className="text-xs font-semibold truncate" style={{ color: 'var(--color-text-primary)' }}>
                         {sug.title}
                       </p>
-                      <p className="text-[10px]" style={{ color: 'var(--color-text-tertiary)' }}>
+                      <p className="text-data-sm" style={{ color: 'var(--color-text-tertiary)' }}>
                         {canClientSeeLocation(sugItem) ? sug.location : 'Location hidden'} &middot; {timeAgo(sug.createdAt)}
                       </p>
                     </div>
-                    <span className={`category-badge ${sug.type === 'lost' ? 'type-badge-lost' : 'type-badge-found'}`} style={{ fontSize: '8px', padding: '1px 4px' }}>
+                    <span className={`category-badge ${sug.type === 'lost' ? 'type-badge-lost' : 'type-badge-found'}`} style={{ fontSize: '11px', padding: '1px 4px' }}>
                       {sug.type}
                     </span>
                   </div>
@@ -5517,12 +5539,12 @@ function LostFoundView({
             })}
             {smartSearchResults.alternatives && smartSearchResults.alternatives.length > 0 && (
               <div className="flex flex-wrap gap-1.5">
-                <span className="text-[9px] font-mono" style={{ color: 'var(--color-text-tertiary)' }}>Try searching:</span>
+                <span className="text-data-sm font-mono" style={{ color: 'var(--color-text-tertiary)' }}>Try searching:</span>
                 {smartSearchResults.alternatives.map((alt, i) => (
                   <button
                     key={i}
                     onClick={() => setSearchQuery(alt)}
-                    className="rounded-md px-2 py-0.5 text-[9px] font-semibold transition-all hover:scale-[1.05]"
+                    className="rounded-md px-2 py-0.5 text-data-sm font-semibold transition-all hover:scale-[1.05]"
                     style={{
                       backgroundColor: 'var(--accent-lf-bg)',
                       color: 'var(--accent-lf)',
@@ -5535,7 +5557,7 @@ function LostFoundView({
               </div>
             )}
             {smartSearchResults.aiSuggestion && (
-              <p className="text-[10px] italic" style={{ color: 'var(--color-text-tertiary)' }}>
+              <p className="text-data-sm italic" style={{ color: 'var(--color-text-tertiary)' }}>
                 💡 {smartSearchResults.aiSuggestion}
               </p>
             )}
@@ -5546,7 +5568,7 @@ function LostFoundView({
         {!isMobile && recentlyViewedItems.length > 0 && !showMyReports && !showBookmarked && (
           <div className="mb-4">
             <p
-              className="font-mono text-[9px] uppercase tracking-[0.1em] mb-2 flex items-center gap-1.5"
+              className="font-mono text-data-sm uppercase tracking-[0.1em] mb-2 flex items-center gap-1.5"
               style={{ color: 'var(--color-text-tertiary)' }}
             >
               <Clock width={10} height={10} />
@@ -5567,14 +5589,14 @@ function LostFoundView({
                   >
                     <div className="flex items-center gap-2 mb-1">
                       <span className="text-sm">{categoryIcons[item.category] || '\uD83D\uDCE6'}</span>
-                      <span className={`category-badge ${isLost ? 'type-badge-lost' : 'type-badge-found'}`} style={{ fontSize: '8px', padding: '1px 4px' }}>
+                      <span className={`category-badge ${isLost ? 'type-badge-lost' : 'type-badge-found'}`} style={{ fontSize: '11px', padding: '1px 4px' }}>
                         {item.type}
                       </span>
                     </div>
                     <p className="text-[11px] font-semibold truncate" style={{ color: 'var(--color-text-primary)' }}>
                       {item.title}
                     </p>
-                    <p className="text-[9px] truncate" style={{ color: 'var(--color-text-tertiary)' }}>
+                    <p className="text-data-sm truncate" style={{ color: 'var(--color-text-tertiary)' }}>
                       {canClientSeeLocation(item) ? item.location : 'Location hidden'}
                     </p>
                   </button>
@@ -5634,7 +5656,7 @@ function LostFoundView({
               />
               <Archive width={14} height={14} style={{ color: 'var(--color-text-tertiary)' }} />
               <span
-                className="font-mono text-[10px] uppercase tracking-[0.1em]"
+                className="font-mono text-data-sm uppercase tracking-[0.1em]"
                 style={{ color: 'var(--color-text-tertiary)' }}
               >
                 Archived Items ({archivedItems.length}) — older than 60 days
@@ -5682,7 +5704,7 @@ function LostFoundView({
                 style={{ color: 'var(--color-text-tertiary)' }}
               />
               <span
-                className="font-mono text-[10px] uppercase tracking-[0.1em]"
+                className="font-mono text-data-sm uppercase tracking-[0.1em]"
                 style={{ color: 'var(--color-text-tertiary)' }}
               >
                 Recently Resolved ({resolvedItems.length})
@@ -5730,13 +5752,14 @@ function LostFoundView({
           <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
             <div className="flex-1">
               <p
-                className="font-mono text-[10px] uppercase tracking-[0.1em] mb-2"
+                className="font-mono text-data-sm uppercase tracking-[0.1em] mb-2"
                 style={{ color: 'var(--accent-lf)' }}
               >
                 Lost & Found
               </p>
               <h2
-                className="font-body text-2xl md:text-3xl font-bold leading-tight mb-2 tracking-tight"
+                // T14: adopt Instrument Serif for hero h2 (was font-body text-2xl md:text-3xl font-bold).
+                className="font-display text-[clamp(2rem,3vw,2.75rem)] leading-tight mb-2 tracking-tight"
                 style={{ color: 'var(--color-text-primary)' }}
               >
                 Reunite students with their belongings
@@ -5749,8 +5772,8 @@ function LostFoundView({
             <div className="flex items-center gap-2">
               <button
                 onClick={() => onSubViewChange('history')}
-                className="shrink-0 rounded-xl py-3 px-4 text-[10px] font-bold uppercase tracking-[0.1em] transition-all duration-150 flex items-center justify-center gap-2 bg-emerald-50/50 dark:bg-emerald-950/20 border border-emerald-200/50 dark:border-emerald-800/30 hover:bg-emerald-100/50 dark:hover:bg-emerald-900/30 shadow-sm"
-                style={{ color: '#10b981' }}
+                className="shrink-0 rounded-xl py-3 px-4 text-data-sm font-bold uppercase tracking-[0.1em] transition-all duration-150 flex items-center justify-center gap-2 bg-emerald-50/50 dark:bg-emerald-950/20 border border-emerald-200/50 dark:border-emerald-800/30 hover:bg-emerald-100/50 dark:hover:bg-emerald-900/30 shadow-sm"
+                style={{ color: 'var(--color-success-strong)' }}
               >
                 <History width={14} height={14} />
                 History
@@ -5827,7 +5850,7 @@ function LostFoundView({
               Filters
               {hasFilters && filterCount > 0 && (
                 <span
-                  className="absolute -top-1 -right-1 w-4 h-4 rounded-full flex items-center justify-center text-white text-[8px] font-bold"
+                  className="absolute -top-1 -right-1 w-4 h-4 rounded-full flex items-center justify-center text-white text-data-sm font-bold"
                   style={{ backgroundColor: 'var(--accent-lf)' }}
                 >
                   {filterCount}
@@ -5839,14 +5862,15 @@ function LostFoundView({
           {/* Mobile Filter Panel */}
           <MobileFilterPanel />
 
-          {/* Report button - desktop shimmer, mobile sticky pill */}
+          {/* Report button - desktop secondary "Quick report" link, mobile sticky pill (kept). T15. */}
           <button
             onClick={() => onSubViewChange('report')}
-            className="hidden md:inline-flex btn-shimmer rounded-xl py-3 px-6 text-xs font-bold uppercase tracking-[0.1em] transition-all duration-150 items-center justify-center gap-2 hover:scale-[1.02] active:scale-[0.98]"
+            // T15: restyled desktop inline btn-shimmer (3rd primary) → secondary ghost style.
+            className="hidden md:inline-flex rounded-xl py-3 px-6 text-xs font-bold uppercase tracking-[0.1em] transition-all duration-150 items-center justify-center gap-2 hover:scale-[1.02] active:scale-[0.98] hover:bg-[var(--color-bg-subtle)]"
             style={{
-              border: '1.5px solid var(--accent-lf)',
-              backgroundColor: 'var(--accent-lf)',
-              color: 'white',
+              border: '1.5px solid var(--color-border-strong)',
+              backgroundColor: 'var(--color-bg-raised)',
+              color: 'var(--color-text-primary)',
             }}
           >
             <Plus width={14} height={14} />
@@ -5913,7 +5937,7 @@ function LostFoundView({
                   <span className="text-sm font-bold text-[var(--color-text-primary)]">
                     {activeItems.length} Active Items
                   </span>
-                  <span className="text-[10px] text-[var(--color-text-tertiary)] uppercase font-black tracking-widest opacity-60">Verified Records</span>
+                  <span className="text-data-sm text-[var(--color-text-tertiary)] uppercase font-black tracking-widest opacity-60">Verified Records</span>
                 </div>
               </div>
               {renderItemsList(false)}
@@ -5926,7 +5950,7 @@ function LostFoundView({
             {recentlyViewedItems.length > 0 && !showMyReports && !showBookmarked && !loading && (
               <div className="mb-8">
                 <p
-                  className="font-mono text-[9px] uppercase tracking-[0.2em] mb-3 flex items-center gap-1.5 font-bold"
+                  className="font-mono text-data-sm uppercase tracking-[0.2em] mb-3 flex items-center gap-1.5 font-bold"
                   style={{ color: 'var(--color-text-tertiary)' }}
                 >
                   <Clock width={10} height={10} />
@@ -5943,14 +5967,14 @@ function LostFoundView({
                       >
                         <div className="flex items-center gap-2 mb-2">
                           <span className="text-xs">{categoryIcons[item.category] || '📦'}</span>
-                          <span className={`px-1.5 py-0.5 rounded text-[7px] font-black uppercase ${isLost ? 'bg-[var(--accent-ee)]/10 text-[var(--accent-ee)]' : 'bg-[var(--accent-af)]/10 text-[var(--accent-af)]'}`}>
+                          <span className={`px-1.5 py-0.5 rounded text-data-sm font-black uppercase ${isLost ? 'bg-[var(--accent-ee)]/10 text-[var(--accent-ee)]' : 'bg-[var(--accent-af)]/10 text-[var(--accent-af)]'}`}>
                             {item.type}
                           </span>
                         </div>
-                        <p className="text-[10px] font-bold truncate leading-tight" style={{ color: 'var(--color-text-primary)' }}>
+                        <p className="text-data-sm font-bold truncate leading-tight" style={{ color: 'var(--color-text-primary)' }}>
                           {item.title}
                         </p>
-                        <p className="text-[8px] truncate mt-0.5" style={{ color: 'var(--color-text-tertiary)' }}>
+                        <p className="text-data-sm truncate mt-0.5" style={{ color: 'var(--color-text-tertiary)' }}>
                           {canClientSeeLocation(item) ? item.location : 'Location hidden'}
                         </p>
                       </button>
@@ -6076,7 +6100,7 @@ function LostFoundView({
         >
           <div className="mb-4">
             <p
-              className="font-mono text-[10px] uppercase tracking-[0.1em] mb-2"
+              className="font-mono text-data-sm uppercase tracking-[0.1em] mb-2"
               style={{ color: 'var(--accent-lf)' }}
             >
               Report Item
@@ -6122,7 +6146,7 @@ function LostFoundView({
                 style={{ color: 'var(--accent-lf)' }}
               >
                 <Share2 width={18} height={18} />
-                <span className="text-[9px] font-semibold uppercase">Share</span>
+                <span className="text-data-sm font-semibold uppercase">Share</span>
               </button>
               <button
                 onClick={() => handleQuickAction('bookmark', selectedQuickActionItem)}
@@ -6130,7 +6154,7 @@ function LostFoundView({
                 style={{ color: bookmarkedIds.includes(selectedQuickActionItem.id) ? 'var(--accent-lf)' : 'var(--color-text-tertiary)' }}
               >
                 {bookmarkedIds.includes(selectedQuickActionItem.id) ? <BookmarkCheck width={18} height={18} /> : <Bookmark width={18} height={18} />}
-                <span className="text-[9px] font-semibold uppercase">{bookmarkedIds.includes(selectedQuickActionItem.id) ? 'Saved' : 'Save'}</span>
+                <span className="text-data-sm font-semibold uppercase">{bookmarkedIds.includes(selectedQuickActionItem.id) ? 'Saved' : 'Save'}</span>
               </button>
               <button
                 onClick={() => {
@@ -6140,10 +6164,10 @@ function LostFoundView({
                   window.open(`https://wa.me/?text=${text}`, '_blank')
                 }}
                 className="flex flex-col items-center gap-1 p-2 rounded-lg transition-all active:scale-[0.95]"
-                style={{ color: '#25D366' }}
+                style={{ color: 'var(--color-whatsapp)' }}
               >
                 <MessageCircle width={18} height={18} />
-                <span className="text-[9px] font-semibold uppercase">WhatsApp</span>
+                <span className="text-data-sm font-semibold uppercase">WhatsApp</span>
               </button>
               <button
                 onClick={() => setSelectedQuickActionItem(null)}
@@ -6151,7 +6175,7 @@ function LostFoundView({
                 style={{ color: 'var(--color-text-tertiary)' }}
               >
                 <X width={18} height={18} />
-                <span className="text-[9px] font-semibold uppercase">Close</span>
+                <span className="text-data-sm font-semibold uppercase">Close</span>
               </button>
             </div>
           </motion.div>
@@ -6269,7 +6293,7 @@ function NotificationBell() {
         <Bell width={16} height={16} />
         {unreadCount > 0 && (
           <span
-            className="absolute -top-1 -right-1 min-w-[16px] h-4 rounded-full flex items-center justify-center px-1 text-[8px] font-bold text-white urgent-badge"
+            className="absolute -top-1 -right-1 min-w-[16px] h-4 rounded-full flex items-center justify-center px-1 text-data-sm font-bold text-white urgent-badge"
             style={{ backgroundColor: 'var(--accent-ee)' }}
           >
             {unreadCount > 9 ? '9+' : unreadCount}
@@ -6321,7 +6345,7 @@ function NotificationBell() {
                         setNotifications([])
                         setUnreadCount(0)
                       }}
-                      className="text-[10px] font-bold hover:underline uppercase tracking-tighter"
+                      className="text-data-sm font-bold hover:underline uppercase tracking-tighter"
                       style={{ color: 'var(--accent-lf)' }}
                     >
                       Clear
@@ -6364,7 +6388,7 @@ function NotificationBell() {
                         <p className="text-[12px] font-medium leading-normal mb-1" style={{ color: notif.read ? 'var(--color-text-tertiary)' : 'var(--color-text-primary)' }}>
                           {notif.text}
                         </p>
-                        <span className="text-[9px] font-mono opacity-60" style={{ color: 'var(--color-text-tertiary)' }}>
+                        <span className="text-data-sm font-mono opacity-60" style={{ color: 'var(--color-text-tertiary)' }}>
                           {timeAgo(new Date(notif.timestamp).toISOString())}
                         </span>
                       </div>
@@ -6377,7 +6401,7 @@ function NotificationBell() {
               </div>
               {isMobile && (
                 <div className="p-4 bg-[var(--color-bg-subtle)]/30 border-t border-[var(--color-border)]">
-                  <p className="text-[9px] text-center uppercase tracking-widest font-bold opacity-30" style={{ color: 'var(--color-text-tertiary)' }}>
+                  <p className="text-data-sm text-center uppercase tracking-widest font-bold opacity-30" style={{ color: 'var(--color-text-tertiary)' }}>
                     End of updates
                   </p>
                 </div>
@@ -6504,7 +6528,7 @@ export default function LostFoundPage() {
             </span>
             {newItemCount > 0 && subView === 'list' && (
               <span
-                className="ml-1 min-w-[14px] h-3.5 rounded-full flex items-center justify-center px-1 text-[7px] font-bold text-white shrink-0"
+                className="ml-1 min-w-[14px] h-3.5 rounded-full flex items-center justify-center px-1 text-data-sm font-bold text-white shrink-0"
                 style={{ backgroundColor: 'var(--accent-ee)' }}
               >
                 {newItemCount}

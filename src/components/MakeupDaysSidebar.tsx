@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect } from 'react';
+import { Calendar } from 'lucide-react';
 import { useMobileSwipe } from '@/hooks/useMobileSwipe';
 
 interface MakeupDaysSidebarProps {
@@ -59,7 +60,10 @@ export function MakeupDaysSidebar({ onClose, makeupDays, monthName }: MakeupDays
         {/* Header */}
         <div className="flex items-start justify-between px-5 pt-4 pb-3 border-b border-[var(--color-border)]">
           <div>
-            <h2 className="font-display text-xl leading-tight font-bold">📅 {monthName} Makeup Days</h2>
+            <h2 className="font-display text-xl leading-tight font-bold inline-flex items-center gap-2">
+              <Calendar className="w-5 h-5" aria-hidden="true" />
+              {monthName} Makeup Days
+            </h2>
             <p className="text-xs text-[var(--color-text-secondary)] mt-1">
               Makeup classes scheduled in this calendar month
             </p>

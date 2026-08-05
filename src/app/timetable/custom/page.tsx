@@ -929,7 +929,7 @@ function CustomTimetableInner() {
           )}
 
           {/* Results */}
-          <div id="print-area" className="flex-1 px-4 pb-[150px] bg-[var(--color-bg)]">
+          <div id="print-area" className="flex-1 px-4 pb-20 md:pb-28 lg:pb-32 bg-[var(--color-bg)]">
             {!saved ? (
               <div className="flex flex-col items-center justify-center text-center py-24 px-6">
                 <div className="text-4xl mb-4 select-none">📋</div>
@@ -1123,7 +1123,8 @@ function GridViewCustom({
 
   return (
     <div className="mt-8 overflow-x-auto select-none rounded-xl border border-[var(--color-border)] shadow-sm bg-[var(--color-bg-raised)]">
-      <div className="w-full min-w-[980px] relative flex flex-col">
+      {/* T31: relaxed min-width 980→860 so the grid reflows on tablet portrait. */}
+      <div className="w-full min-w-[860px] relative flex flex-col">
         <div
           className="grid sticky top-0 z-20 bg-[var(--color-bg-raised)]/95 backdrop-blur-sm border-b border-[var(--color-border)]"
           style={{ gridTemplateColumns }}
@@ -1135,12 +1136,12 @@ function GridViewCustom({
             return (
               <div 
                 key={d.day} 
-                className={`text-center font-mono text-[10px] uppercase tracking-widest flex flex-col items-center justify-center border-r border-[var(--color-border)] last:border-r-0 py-1 ${
+                className={`text-center font-mono text-data-sm uppercase tracking-widest flex flex-col items-center justify-center border-r border-[var(--color-border)] last:border-r-0 py-1 ${
                   d.isToday ? 'bg-[var(--color-text-primary)]/5 font-bold text-[var(--color-text-primary)]' : 'text-[var(--color-text-tertiary)]'
                 }`}
               >
                 <span>{label}</span>
-                {d.dateStr && <span className="text-[8px] opacity-80 mt-0.5">{d.dateStr}</span>}
+                {d.dateStr && <span className="text-data-sm opacity-80 mt-0.5">{d.dateStr}</span>}
               </div>
             );
           })}
@@ -1158,7 +1159,7 @@ function GridViewCustom({
               const top = (m - GRID_START) * PX_PER_MIN;
               return (
                 <div key={m} className="absolute left-0 right-0 border-t border-[var(--color-border)] opacity-30 flex items-start" style={{ top: `${top}px` }}>
-                  <span className="sticky left-1 z-30 font-mono text-[8px] md:text-[9px] -mt-2 text-[var(--color-text-tertiary)] bg-[var(--color-bg-raised)] px-1">
+                  <span className="sticky left-1 z-30 font-mono text-data-sm -mt-2 text-[var(--color-text-tertiary)] bg-[var(--color-bg-raised)] px-1">
                     {Math.floor(m / 60)}:00
                   </span>
                 </div>
@@ -1191,7 +1192,7 @@ function GridViewCustom({
                       <button
                         key={idx}
                         onClick={() => onSelect(e)}
-                        className="absolute left-0.5 right-0.5 md:left-1 md:right-1 rounded-md text-[9px] md:text-[10px] transition-all hover:ring-1 hover:ring-[var(--color-text-tertiary)] active:scale-[0.98] focus-visible:outline-none overflow-hidden text-left flex items-center justify-center"
+                        className="absolute left-0.5 right-0.5 md:left-1 md:right-1 rounded-md text-data-sm transition-all hover:ring-1 hover:ring-[var(--color-text-tertiary)] active:scale-[0.98] focus-visible:outline-none overflow-hidden text-left flex items-center justify-center"
                         style={{
                           top: `${top}px`,
                           height: `${height}px`,
@@ -1209,9 +1210,9 @@ function GridViewCustom({
                         <div className="flex flex-col h-full w-full justify-between gap-1 p-1 md:p-2">
                           <div className="min-w-0">
                             <p className="font-bold leading-tight line-clamp-2 uppercase break-words">{e.courseName}</p>
-                            <p className="mt-0.5 opacity-80 font-mono text-[8.5px] whitespace-nowrap overflow-hidden text-ellipsis">{formatTimeRange(e.time)}</p>
+                            <p className="mt-0.5 opacity-80 font-mono text-data-sm whitespace-nowrap overflow-hidden text-ellipsis">{formatTimeRange(e.time)}</p>
                           </div>
-                          <p className="font-medium opacity-80 self-end text-[8.5px] truncate max-w-full">{e.room}</p>
+                          <p className="font-medium opacity-80 self-end text-data-sm truncate max-w-full">{e.room}</p>
                         </div>
                       </button>
                     );
@@ -1285,13 +1286,13 @@ function RowEditor({ row, index, matchCount, showMatchHint, onUpdate, onRemove, 
     <div className="rounded-lg border border-[var(--color-border)] bg-[var(--color-bg-raised)] p-3 flex flex-col gap-3">
       {/* Row header */}
       <div className="flex items-center justify-between">
-        <span className="font-mono text-[10px] uppercase tracking-widest text-[var(--color-text-tertiary)]">
+        <span className="font-mono text-data-sm uppercase tracking-widest text-[var(--color-text-tertiary)]">
           Class Selection {index + 1}
         </span>
         <div className="flex items-center gap-2">
           {showMatchHint && (
             <span
-              className="font-mono text-[10px] font-medium px-1.5 py-0.5 rounded"
+              className="font-mono text-data-sm font-medium px-1.5 py-0.5 rounded"
               style={matchCount > 0
                 ? { backgroundColor: 'var(--color-success-bg)', color: 'var(--color-success)' }
                 : { backgroundColor: 'var(--color-bg-subtle)', color: 'var(--color-text-tertiary)' }
@@ -1319,7 +1320,7 @@ function RowEditor({ row, index, matchCount, showMatchHint, onUpdate, onRemove, 
         <div className={`grid ${isSummer ? 'grid-cols-1' : 'grid-cols-3'} gap-2`}>
           {/* Batch */}
           <div className="flex flex-col gap-1">
-            <label className="font-mono text-[9px] uppercase tracking-widest text-[var(--color-text-tertiary)]">
+            <label className="font-mono text-data-sm uppercase tracking-widest text-[var(--color-text-tertiary)]">
               Batch
             </label>
             <select
@@ -1344,7 +1345,7 @@ function RowEditor({ row, index, matchCount, showMatchHint, onUpdate, onRemove, 
           {/* Department */}
           {!isSummer && (
             <div className="flex flex-col gap-1">
-              <label className="font-mono text-[9px] uppercase tracking-widest text-[var(--color-text-tertiary)]">
+              <label className="font-mono text-data-sm uppercase tracking-widest text-[var(--color-text-tertiary)]">
                 Dept
               </label>
               <select
@@ -1364,7 +1365,7 @@ function RowEditor({ row, index, matchCount, showMatchHint, onUpdate, onRemove, 
           {/* Category */}
           {!isSummer && (
             <div className="flex flex-col gap-1">
-              <label className="font-mono text-[9px] uppercase tracking-widest text-[var(--color-text-tertiary)]">
+              <label className="font-mono text-data-sm uppercase tracking-widest text-[var(--color-text-tertiary)]">
                 Category
               </label>
               <select
@@ -1383,7 +1384,7 @@ function RowEditor({ row, index, matchCount, showMatchHint, onUpdate, onRemove, 
 
         {/* Course Selection (Full width below) */}
         <div className="flex flex-col gap-1">
-          <label className="font-mono text-[9px] uppercase tracking-widest text-[var(--color-text-tertiary)]">
+          <label className="font-mono text-data-sm uppercase tracking-widest text-[var(--color-text-tertiary)]">
             Course & Section
           </label>
           <select
@@ -1407,7 +1408,7 @@ function RowEditor({ row, index, matchCount, showMatchHint, onUpdate, onRemove, 
 
       {/* Inline error hints */}
       {(row.errorBatch || row.errorStream || row.errorCategory || row.errorSelection) && (
-        <p className="font-mono text-[10px] text-red-500">
+        <p className="font-mono text-data-sm text-red-500">
           {[
             row.errorStream && 'Select Dept',
             row.errorSelection && 'Select Course & Section',
@@ -1501,7 +1502,7 @@ function BundleCard({
         <div className="grid grid-cols-2 gap-2 mt-1 animate-in slide-in-from-top-1 duration-200">
           <button
             onClick={(e) => { e.stopPropagation(); onLoad(); }}
-            className={`h-7 rounded border font-mono text-[9px] uppercase tracking-wider font-bold transition-all ${
+            className={`h-8 rounded border font-mono text-data-sm uppercase tracking-wider font-bold transition-all ${
               isActive ? 'bg-[var(--accent-cs)] text-white border-transparent' : 'bg-[var(--color-bg-subtle)] text-[var(--color-text-secondary)] border-[var(--color-border-strong)]'
             }`}
           >
@@ -1509,7 +1510,7 @@ function BundleCard({
           </button>
           <button
             onClick={(e) => { e.stopPropagation(); onGenerate(); }}
-            className="h-7 rounded bg-[var(--color-text-primary)] text-[var(--color-bg)] font-mono text-[9px] uppercase tracking-wider font-bold active:scale-95 transition-all"
+            className="h-8 rounded bg-[var(--color-text-primary)] text-[var(--color-bg)] font-mono text-data-sm uppercase tracking-wider font-bold active:scale-95 transition-all"
           >
             Generate
           </button>
