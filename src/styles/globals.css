@@ -13,10 +13,10 @@
   --color-border:        rgba(0, 0, 0, 0.08);
   --color-border-strong: rgba(0, 0, 0, 0.14);
 
-  /* Text */
+  /* Text (redesign: tertiary darkened from #A0A09A → #7E7E78 for WCAG AA contrast — T2/§3.7) */
   --color-text-primary:   #1A1A18;
   --color-text-secondary: #6B6B66;
-  --color-text-tertiary:  #A0A09A;
+  --color-text-tertiary:  #7E7E78;   /* was #A0A09A (2.52:1 fail) → 3.5:1 AA-large pass */
 
   /* Department accent colors
      (redesign: bba/ba/ft deduped — see DESIGN_BRIEF §3.1 T3) */
@@ -27,7 +27,7 @@
   --accent-se: #BE185D;
   --accent-bba:#2563EB;   /* was #1D4ED8 (== cs) → distinct blue */
   --accent-af: #047857;
-  --accent-ba: #CA8A04;   /* was #D97706 (cy family) → distinct gold */
+  --accent-ba: #A16207;   /* was #D97706 (cy family); redesign darkened from #CA8A04 → #A16207 for WCAG AA */
   --accent-ft: #C026D3;   /* was #9333EA (ai family) → distinct fuchsia */
   --accent-ee: #E11D48;
   --accent-ce: #0284C7;
@@ -41,7 +41,7 @@
   --accent-rgb-se: 190, 24, 93;
   --accent-rgb-bba: 37, 99, 235;
   --accent-rgb-af: 4, 120, 87;
-  --accent-rgb-ba: 202, 138, 4;
+  --accent-rgb-ba: 161, 98, 7;
   --accent-rgb-ft: 192, 38, 211;
   --accent-rgb-ee: 225, 29, 72;
   --accent-rgb-ce: 2, 132, 199;
@@ -55,7 +55,7 @@
   --accent-se-bg: #FDF2F8;
   --accent-bba-bg:#EFF6FF;
   --accent-af-bg: #ECFDF5;
-  --accent-ba-bg: #FEFCE8;   /* gold tint for #CA8A04 */
+  --accent-ba-bg: #FEFCE8;   /* gold tint for #A16207 */
   --accent-ft-bg: #FDF4FF;   /* fuchsia tint for #C026D3 */
   --accent-ee-bg: #FFF1F2;
   --accent-ce-bg: #F0F9FF;
@@ -148,7 +148,7 @@
   --accent-se-bg: #2d0f1f;
   --accent-bba-bg:#1e2d57;
   --accent-af-bg: #0f3d2a;
-  --accent-ba-bg: #2d2a0a;   /* gold tint dark for #CA8A04 */
+  --accent-ba-bg: #2d2408;   /* gold tint dark for #A16207 */
   --accent-ft-bg: #2d0f2d;   /* fuchsia tint dark for #C026D3 */
   --accent-ee-bg: #3d0f1f;
   --accent-ce-bg: #0f2d4a;
@@ -212,7 +212,7 @@
     --accent-se-bg: #2d0f1f;
     --accent-bba-bg:#1e2d57;
     --accent-af-bg: #0f3d2a;
-    --accent-ba-bg: #2d2a0a;
+    --accent-ba-bg: #2d2408;
     --accent-ft-bg: #2d0f2d;
     --accent-ee-bg: #3d0f1f;
     --accent-ce-bg: #0f2d4a;
