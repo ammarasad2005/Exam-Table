@@ -4,6 +4,7 @@ import { useRouter } from 'next/navigation';
 import { supabase } from '@/lib/supabase';
 import { Header } from '@/components/Header';
 import { ThemeToggle } from '@/components/ThemeToggle';
+import { ShareButton } from '@/components/ShareButton';
 import {
   buildRoomCalendar,
   getAvailableRooms,
@@ -174,6 +175,11 @@ function RoomDetail({
              <p className="text-[10px] text-[var(--color-text-secondary)] leading-relaxed italic">
                &quot;Partially Vacant&quot; indicates that the room is occupied for part of this slot but has at least 30 minutes of free time within it.
              </p>
+          </div>
+
+          {/* Share this room vacancy view */}
+          <div className="mt-2">
+            <ShareButton className="w-full" label="Copy room link" />
           </div>
         </div>
       </div>

@@ -180,7 +180,7 @@ function SchedulePageInner() {
               {isSummer ? 'Change courses' : 'Change filters'}
             </button>
             <ExportButton entries={filtered} variant="sidebar" config={{ isCustom: false, subtitle }} />
-            <LastUpdated date={isSummer ? SUMMER_SCHEDULE_UPDATED : SCHEDULE_UPDATED} className="mt-1" />
+            <LastUpdated date={isSummer ? SUMMER_SCHEDULE_UPDATED : SCHEDULE_UPDATED} className="mt-1" source={isSummer ? "Summer exam parser" : "Official exam Excel"} />
           </div>
         </aside>
 

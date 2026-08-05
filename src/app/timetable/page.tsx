@@ -952,7 +952,7 @@ function TimetablePageInner() {
               {isSummer ? 'Change courses' : 'Change filters'}
             </button>
             <TimetableExportButton entries={filtered} variant="sidebar" isSummer={isSummer} />
-            <LastUpdated date={TIMETABLE_UPDATED} className="mt-1" />
+            <LastUpdated date={TIMETABLE_UPDATED} className="mt-1" source="Course catalog (all_courses_schedule.py)" />
           </div>
         </aside>
 

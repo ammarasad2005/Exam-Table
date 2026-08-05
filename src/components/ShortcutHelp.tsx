@@ -22,12 +22,11 @@ import { Keyboard, X } from 'lucide-react';
 type Shortcut = {
   keys: string[];
   description: string;
-  group: 'Navigation' | 'Actions';
+  group: 'Navigation' | 'Actions' | 'Power User';
 };
 
 const SHORTCUTS: Shortcut[] = [
   // Navigation
-  { keys: ['⌘', 'K'], description: 'Open command palette (quick search)', group: 'Navigation' },
   { keys: ['⌘', 'K'], description: 'Open command palette (quick search)', group: 'Navigation' },
   { keys: ['Ctrl', 'Shift', 'A'], description: 'Go to admin portal', group: 'Navigation' },
   { keys: ['Ctrl', 'Shift', 'Z'], description: 'Go back', group: 'Navigation' },
@@ -36,6 +35,18 @@ const SHORTCUTS: Shortcut[] = [
   { keys: ['?'], description: 'Show this help overlay', group: 'Actions' },
   { keys: ['↑', '↓'], description: 'Navigate command palette results', group: 'Actions' },
   { keys: ['↵'], description: 'Select command palette result', group: 'Actions' },
+  // Power User (vim-style)
+  { keys: ['g', 'h'], description: 'Go to Home', group: 'Power User' },
+  { keys: ['g', 't'], description: 'Go to Timetable', group: 'Power User' },
+  { keys: ['g', 's'], description: 'Go to Exam Schedule', group: 'Power User' },
+  { keys: ['g', 'r'], description: 'Go to Free Rooms', group: 'Power User' },
+  { keys: ['g', 'f'], description: 'Go to Faculty Directory', group: 'Power User' },
+  { keys: ['g', 'e'], description: 'Go to Campus Events', group: 'Power User' },
+  { keys: ['g', 'm'], description: 'Go to Semester Calendar', group: 'Power User' },
+  { keys: ['g', 'l'], description: 'Go to Lost & Found', group: 'Power User' },
+  { keys: ['g', 'o'], description: 'Go to Timetable Optimizer', group: 'Power User' },
+  { keys: ['g', 'c'], description: 'Go to Custom Courses', group: 'Power User' },
+  { keys: ['g', 'x'], description: 'Go to Custom Exams', group: 'Power User' },
 ];
 
 export function ShortcutHelp() {
@@ -97,7 +108,7 @@ export function ShortcutHelp() {
     typeof window !== 'undefined' &&
     window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
-  const groups = ['Navigation', 'Actions'] as const;
+  const groups = ['Navigation', 'Actions', 'Power User'] as const;
 
   return (
     <div
