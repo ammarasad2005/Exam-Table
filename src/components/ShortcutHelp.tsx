@@ -47,6 +47,8 @@ const SHORTCUTS: Shortcut[] = [
   { keys: ['g', 'o'], description: 'Go to Timetable Optimizer', group: 'Power User' },
   { keys: ['g', 'c'], description: 'Go to Custom Courses', group: 'Power User' },
   { keys: ['g', 'x'], description: 'Go to Custom Exams', group: 'Power User' },
+  // Debug (QA tool)
+  { keys: ['Ctrl', 'Shift', 'C'], description: 'Toggle contrast checker overlay (QA)', group: 'Power User' },
 ];
 
 export function ShortcutHelp() {

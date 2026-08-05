@@ -14,6 +14,8 @@ import { BackToTop } from '@/components/BackToTop';
 import { ReadingProgress } from '@/components/ReadingProgress';
 import { CommandPalette } from '@/components/CommandPalette';
 import { ShortcutHelp } from '@/components/ShortcutHelp';
+import { SkipLinks } from '@/components/SkipLinks';
+import { ContrastChecker } from '@/components/ContrastChecker';
 const dmSans = DM_Sans({
   subsets: ['latin'],
   variable: '--font-body',
@@ -95,8 +97,8 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <ThemeProvider>
           {/* Reading progress indicator (laser-rail gradient, top of viewport) */}
           <ReadingProgress />
-          {/* Accessibility: skip-to-content link (CSS in globals.css .skip-to-content) */}
-          <a href="#main-content" className="skip-to-content">Skip to content</a>
+          {/* Accessibility: skip links (visible on keyboard focus) */}
+          <SkipLinks />
           {children}
           <Navbar />
           <FloatingMenu />
@@ -105,6 +107,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           <BackToTop />
           <CommandPalette />
           <ShortcutHelp />
+          <ContrastChecker />
           <Toaster />
         </ThemeProvider>
         <Analytics />
