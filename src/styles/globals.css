@@ -480,6 +480,59 @@ textarea:focus-visible,
 .lostfound-card:nth-child(9)  { animation-delay: 240ms; }
 .lostfound-card:nth-child(10) { animation-delay: 270ms; }
 
+/* ───────────────── Redesign CTA sheen (refinement — primary action polish) ───────────────── */
+/* A subtle top-light gradient + hover lift for ink-primary buttons. Purely additive. */
+.btn-ink {
+  background-color: var(--color-primary-action);
+  color: var(--color-primary-action-fg);
+  position: relative;
+  overflow: hidden;
+  transition: background-color 200ms ease, transform 200ms ease, box-shadow 200ms ease;
+}
+.btn-ink::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(180deg, rgba(255,255,255,0.10) 0%, rgba(255,255,255,0) 45%);
+  pointer-events: none;
+}
+.btn-ink:hover {
+  background-color: var(--color-primary-action-hover);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 14px -2px rgba(0,0,0,0.25);
+}
+.btn-ink:active {
+  transform: translateY(0);
+}
+[data-theme="dark"] .btn-ink::before {
+  background: linear-gradient(180deg, rgba(255,255,255,0.14) 0%, rgba(255,255,255,0) 45%);
+}
+[data-theme="dark"] .btn-ink:hover {
+  box-shadow: 0 4px 14px -2px rgba(0,0,0,0.5);
+}
+
+/* ───────────────── Redesign reading-progress bar (new feature) ───────────────── */
+/* A thin ink-primary progress bar fixed to the top of the viewport showing
+   scroll progress through the page. Hidden under prefers-reduced-motion (static). */
+.reading-progress {
+  position: fixed;
+  top: 0;
+  left: 0;
+  height: 2px;
+  z-index: 60;
+  background: linear-gradient(90deg, var(--laser-rail-edge), var(--laser-rail-mid));
+  transition: width 100ms linear;
+  pointer-events: none;
+}
+
+/* ───────────────── Redesign feature-card CSS hover (replaces inline JS) ───────────────── */
+/* Landing page feature cards set --card-accent inline; CSS handles the hover
+   transition (cleaner + more performant than the old onMouseOver/onMouseOut). */
+.feature-card-css:hover:not(:disabled) {
+  border-color: var(--card-accent) !important;
+  box-shadow: var(--shadow-raised), var(--border-inset), 0 0 0 1px var(--card-accent) !important;
+}
+
 /* ───────────────── Theme toggle switch (Uiverse.io by Madflows) ───────────────── */
 .toggle-switch {
   position: relative;

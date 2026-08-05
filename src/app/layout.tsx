@@ -10,6 +10,8 @@ import { SpeedInsights } from '@vercel/speed-insights/next';
 import { Toaster } from '@/components/ui/toaster';
 import { FeedbackWidget } from '@/components/FeedbackWidget';
 import { GlobalShortcuts } from '@/components/GlobalShortcuts';
+import { BackToTop } from '@/components/BackToTop';
+import { ReadingProgress } from '@/components/ReadingProgress';
 const dmSans = DM_Sans({
   subsets: ['latin'],
   variable: '--font-body',
@@ -49,6 +51,13 @@ export const metadata: Metadata = {
     title: 'FAST Isb Utilities',
     description: 'Find your weekly and exam schedules instantly',
     type: 'website',
+    images: [{ url: '/og/og-preview.png', width: 1152, height: 864, alt: 'FAST Isb Utilities' }],
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: 'FAST Isb Utilities',
+    description: 'Find your weekly and exam schedules instantly',
+    images: ['/og/og-preview.png'],
   },
 };
 
@@ -73,11 +82,16 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
 
       <body className="bg-[var(--color-bg)] text-[var(--color-text-primary)] font-body antialiased">
         <ThemeProvider>
+          {/* Reading progress indicator (laser-rail gradient, top of viewport) */}
+          <ReadingProgress />
+          {/* Accessibility: skip-to-content link (CSS in globals.css .skip-to-content) */}
+          <a href="#main-content" className="skip-to-content">Skip to content</a>
           {children}
           <Navbar />
           <FloatingMenu />
           <FeedbackWidget />
           <GlobalShortcuts />
+          <BackToTop />
           <Toaster />
         </ThemeProvider>
         <Analytics />

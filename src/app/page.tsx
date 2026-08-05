@@ -3,6 +3,7 @@ import { useState, useEffect, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 import { Header } from '@/components/Header';
 import { DesktopTicker } from '@/components/DesktopTicker';
+import { Reveal } from '@/components/Reveal';
 import { flattenTimetable } from '@/lib/timetable-filter';
 import type { RawTimetableJSON, TimetableEntry, SummerCourseCatalogEntry } from '@/lib/types';
 
@@ -356,7 +357,7 @@ export default function RootPage() {
       {/* ================================================================
           DESKTOP  (≥ 768px)
       ================================================================ */}
-      <div className="hidden md:flex min-h-dvh flex-col bg-[var(--color-bg)]">
+      <div id="main-content" className="hidden md:flex min-h-dvh flex-col bg-[var(--color-bg)]">
         {/* Header — no tabs */}
         <Header />
 
@@ -387,7 +388,7 @@ export default function RootPage() {
             <div className="absolute bottom-10 left-10 w-56 h-56 bg-[var(--accent-ai)]/5 rounded-full translate-y-1/2 -translate-x-1/2 blur-2xl pointer-events-none" />
 
             {/* Headline block */}
-            <div className="relative z-10">
+            <Reveal className="relative z-10">
               <p className="font-mono text-xs uppercase tracking-widest text-[var(--color-text-tertiary)] mb-6">
                 FAST NUCES, ISB — Unified Portal
               </p>
@@ -403,7 +404,7 @@ export default function RootPage() {
                   <span className="inline-block w-[2px] h-[1em] bg-[var(--color-text-tertiary)] animate-pulse ml-1 align-middle" />
                 )}
               </p>
-            </div>
+            </Reveal>
 
             {/* Clock + Next Up */}
             {mounted && (
@@ -457,42 +458,32 @@ export default function RootPage() {
               Features
             </p>
 
-            <div className="grid grid-cols-2 lg:grid-cols-3 gap-4 auto-rows-fr">
+            <Reveal stagger className="grid grid-cols-2 lg:grid-cols-3 gap-4 auto-rows-fr">
               {FEATURES.map((f) => {
                 const isStartHere = (f as FeatureCard).startHere === true;
+                /* Set the card accent as a CSS custom property so CSS :hover
+                   can handle the hover effect without inline JS (cleaner, more
+                   performant — matches the FacultyCard T10 fix pattern). */
+                const cardAccent = isStartHere
+                  ? 'var(--color-primary-action)'
+                  : `var(--accent-${f.accent})`;
+                const cardAccentBg = isStartHere
+                  ? 'var(--color-primary-action)'
+                  : `var(--accent-${f.accent}-bg)`;
                 return (
                 <button
                   key={f.id}
                   onClick={() => handleFeatureClick(f.id, f.placeholder)}
                   disabled={f.placeholder}
-                  className={`group relative overflow-hidden text-left rounded-2xl border bg-[var(--color-bg-raised)] p-6 flex flex-col gap-3 transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 disabled:opacity-50 disabled:cursor-not-allowed ${isStartHere ? 'ring-1 ring-[var(--color-primary-action)]/15' : ''}`}
-                  style={
-                    isStartHere
-                      ? {
-                          borderColor: 'var(--color-primary-action)',
-                          boxShadow: 'var(--shadow-raised), var(--border-inset), 0 0 0 1px var(--color-primary-action)',
-                        }
-                      : {
-                          borderColor: 'var(--color-border)',
-                          boxShadow: 'var(--shadow-card), var(--border-inset)',
-                        }
-                  }
-                  onMouseOver={e => {
-                    if (!f.placeholder) {
-                      (e.currentTarget as HTMLElement).style.boxShadow = `var(--shadow-raised), var(--border-inset), 0 0 0 1px var(--accent-${f.accent})`;
-                      (e.currentTarget as HTMLElement).style.borderColor = `var(--accent-${f.accent})`;
-                      (e.currentTarget as HTMLElement).style.transform = 'translateY(-2px)';
-                    }
-                  }}
-                  onMouseOut={e => {
-                    if (isStartHere) {
-                      (e.currentTarget as HTMLElement).style.boxShadow = 'var(--shadow-raised), var(--border-inset), 0 0 0 1px var(--color-primary-action)';
-                      (e.currentTarget as HTMLElement).style.borderColor = 'var(--color-primary-action)';
-                    } else {
-                      (e.currentTarget as HTMLElement).style.boxShadow = 'var(--shadow-card), var(--border-inset)';
-                      (e.currentTarget as HTMLElement).style.borderColor = 'var(--color-border)';
-                    }
-                    (e.currentTarget as HTMLElement).style.transform = 'translateY(0)';
+                  className={`feature-card-css group relative overflow-hidden text-left rounded-2xl border bg-[var(--color-bg-raised)] p-6 flex flex-col gap-3 transition-all duration-200 hover:-translate-y-0.5 focus-visible:outline-none focus-visible:ring-2 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:translate-y-0 ${isStartHere ? 'ring-1 ring-[var(--color-primary-action)]/15' : ''}`}
+                  style={{
+                    // CSS custom property for hover accent (used by :hover below)
+                    ['--card-accent' as any]: cardAccent,
+                    ['--card-accent-bg' as any]: cardAccentBg,
+                    borderColor: isStartHere ? 'var(--color-primary-action)' : 'var(--color-border)',
+                    boxShadow: isStartHere
+                      ? 'var(--shadow-raised), var(--border-inset), 0 0 0 1px var(--color-primary-action)'
+                      : 'var(--shadow-card), var(--border-inset)',
                   }}
                 >
                   <span
@@ -523,7 +514,7 @@ export default function RootPage() {
                       </span>
                     ) : isStartHere ? (
                       /* T24: single ink-primary "Start here" affordance */
-                      <span className="flex items-center gap-1 font-mono text-data-sm font-bold uppercase tracking-wider px-2 py-1 rounded-full bg-[var(--color-primary-action)] text-[var(--color-primary-action-fg)] shadow-sm">
+                      <span className="btn-ink flex items-center gap-1 font-mono text-data-sm font-bold uppercase tracking-wider px-2 py-1 rounded-full shadow-sm">
                         Start here
                         <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><path d="M5 12h14M13 5l7 7-7 7" /></svg>
                       </span>
@@ -546,7 +537,7 @@ export default function RootPage() {
                 </button>
                 );
               })}
-            </div>
+            </Reveal>
 
             {/* Footer strip */}
             <div className="mt-10 pt-6 border-t border-[var(--color-border)]">
