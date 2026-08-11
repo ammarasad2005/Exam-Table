@@ -13,38 +13,41 @@
   --color-border:        rgba(0, 0, 0, 0.08);
   --color-border-strong: rgba(0, 0, 0, 0.14);
 
-  /* Text */
+  /* Text (redesign: tertiary darkened from #A0A09A → #7E7E78 for WCAG AA contrast — T2/§3.7) */
   --color-text-primary:   #1A1A18;
   --color-text-secondary: #6B6B66;
-  --color-text-tertiary:  #A0A09A;
+  --color-text-tertiary:  #7E7E78;   /* was #A0A09A (2.52:1 fail) → 3.5:1 AA-large pass */
 
-  /* Department accent colors */
+  /* Department accent colors
+     (redesign: bba/ba/ft deduped — see DESIGN_BRIEF §3.1 T3) */
   --accent-cs: #1D4ED8;
   --accent-ai: #7C3AED;
   --accent-ds: #0F766E;
   --accent-cy: #B45309;
   --accent-se: #BE185D;
-  --accent-bba:#1D4ED8;
+  --accent-bba:#2563EB;   /* was #1D4ED8 (== cs) → distinct blue */
   --accent-af: #047857;
-  --accent-ba: #D97706;
-  --accent-ft: #9333EA;
+  --accent-ba: #A16207;   /* was #D97706 (cy family); redesign darkened from #CA8A04 → #A16207 for WCAG AA */
+  --accent-ft: #C026D3;   /* was #9333EA (ai family) → distinct fuchsia */
   --accent-ee: #E11D48;
   --accent-ce: #0284C7;
 
-  /* RGB channels for opacity control */
+  /* RGB channels for opacity control
+     (redesign: bba/ba/ft channels updated to match deduped accents) */
   --accent-rgb-cs: 29, 78, 216;
   --accent-rgb-ai: 124, 58, 237;
   --accent-rgb-ds: 15, 118, 110;
   --accent-rgb-cy: 180, 83, 9;
   --accent-rgb-se: 190, 24, 93;
-  --accent-rgb-bba: 29, 78, 216;
+  --accent-rgb-bba: 37, 99, 235;
   --accent-rgb-af: 4, 120, 87;
-  --accent-rgb-ba: 217, 119, 6;
-  --accent-rgb-ft: 147, 51, 234;
+  --accent-rgb-ba: 161, 98, 7;
+  --accent-rgb-ft: 192, 38, 211;
   --accent-rgb-ee: 225, 29, 72;
   --accent-rgb-ce: 2, 132, 199;
 
-  /* Derived accent surfaces */
+  /* Derived accent surfaces
+     (redesign: bba/ba/ft bg recomputed to match deduped accents) */
   --accent-cs-bg: #EFF6FF;
   --accent-ai-bg: #F5F3FF;
   --accent-ds-bg: #F0FDFA;
@@ -52,14 +55,34 @@
   --accent-se-bg: #FDF2F8;
   --accent-bba-bg:#EFF6FF;
   --accent-af-bg: #ECFDF5;
-  --accent-ba-bg: #FFFBEB;
-  --accent-ft-bg: #FAF5FF;
+  --accent-ba-bg: #FEFCE8;   /* gold tint for #A16207 */
+  --accent-ft-bg: #FDF4FF;   /* fuchsia tint for #C026D3 */
   --accent-ee-bg: #FFF1F2;
   --accent-ce-bg: #F0F9FF;
 
   /* Semantic */
   --color-success: #059669;
   --color-success-bg: #ecfdf5;
+
+  /* ── Redesign tokens (DESIGN_BRIEF §3.1) ── */
+  /* Primary action — ink. Replaces scattered orange CTAs (orange returns to
+     laser-rail brand flourish only). Department accents stay data-only. */
+  --color-primary-action:        var(--color-text-primary);   /* #1A1A18 */
+  --color-primary-action-fg:     var(--color-bg);             /* #FAFAF8 */
+  --color-primary-action-hover:  #33332F;                     /* ~6% lighten */
+
+  /* Unified "today" highlight (was 3 inconsistent colors in events/semester) */
+  --color-today:       #1D4ED8;                 /* == accent-cs, unified */
+  --color-today-bg:    rgba(29, 78, 216, 0.08);
+  --color-today-glow:  rgba(29, 78, 216, 0.45);
+
+  /* Tokenized leaks (were hardcoded, broke in dark mode) */
+  --color-success-strong: #059669;              /* was #16a34a / #10b981 */
+  --color-urgent:        #E11D48;              /* == accent-ee */
+  --color-linkedin:      #0A66C2;
+  --color-whatsapp:      #25D366;
+  --color-timeline-line: rgba(0, 0, 0, 0.10);  /* semester was #E5E7EB */
+  --color-overflow-day:  rgba(0, 0, 0, 0.45);  /* events mobile was 0.45 */
 
   /* Spacing scale */
   --space-1: 4px; --space-2: 8px; --space-3: 12px; --space-4: 16px;
@@ -69,13 +92,13 @@
   --radius-sm: 6px; --radius-md: 10px; --radius-lg: 16px;
   --radius-xl: 24px; --radius-full: 9999px;
 
-  /* Shadows (light — warm dark) */
+  /* Shadows (light — warm dark). Redesign: raised/float ~30% more throw (T22). */
   --shadow-card:    0 1px 2px rgba(0,0,0,0.06), 0 1px 4px rgba(0,0,0,0.04);
-  --shadow-raised:  0 2px 6px rgba(0,0,0,0.07), 0 1px 2px rgba(0,0,0,0.05);
-  --shadow-float:   0 8px 24px rgba(0,0,0,0.10), 0 2px 6px rgba(0,0,0,0.06);
+  --shadow-raised:  0 4px 12px rgba(0,0,0,0.08), 0 1px 3px rgba(0,0,0,0.05);
+  --shadow-float:   0 12px 32px rgba(0,0,0,0.12), 0 2px 8px rgba(0,0,0,0.06);
   --shadow-header:  0 2px 14px rgba(0,0,0,0.07), 0 1px 3px rgba(0,0,0,0.04);
   --shadow-pane-r:  4px 0 18px rgba(0,0,0,0.06), 1px 0 4px rgba(0,0,0,0.04);
-  --border-inset:   inset 0 1px 0 rgba(255,255,255,0.65);
+  --border-inset:   inset 0 1px 0 rgba(255,255,255,0.55);
 
   /* Laser boundary palette (light) - Purple-Orange Theme */
   --laser-rail-end-glow: rgba(147, 51, 234, 0.88);
@@ -125,17 +148,31 @@
   --accent-se-bg: #2d0f1f;
   --accent-bba-bg:#1e2d57;
   --accent-af-bg: #0f3d2a;
-  --accent-ba-bg: #3d1f0a;
-  --accent-ft-bg: #2d0f3d;
+  --accent-ba-bg: #2d2408;   /* gold tint dark for #A16207 */
+  --accent-ft-bg: #2d0f2d;   /* fuchsia tint dark for #C026D3 */
   --accent-ee-bg: #3d0f1f;
   --accent-ce-bg: #0f2d4a;
   --color-success: #4ade80;
   --color-success-bg: #064e3b;
 
-  /* Shadows (dark — cool dark, barely visible) */
-  --shadow-card:    0 1px 2px rgba(0,0,0,0.30), 0 1px 4px rgba(0,0,0,0.20);
-  --shadow-raised:  0 2px 8px rgba(0,0,0,0.35), 0 1px 2px rgba(0,0,0,0.25);
-  --shadow-float:   0 8px 32px rgba(0,0,0,0.50), 0 2px 8px rgba(0,0,0,0.30);
+  /* ── Redesign tokens (dark) — DESIGN_BRIEF §3.1 ── */
+  --color-primary-action:        var(--color-text-primary);   /* #F0EFEB */
+  --color-primary-action-fg:     var(--color-bg);             /* #111110 */
+  --color-primary-action-hover:  #FBFAF7;                     /* ~3% darken */
+  --color-today:       #60A5FA;                 /* unified, dark-adapted */
+  --color-today-bg:    rgba(96, 165, 250, 0.16);
+  --color-today-glow:  rgba(96, 165, 250, 0.55);
+  --color-success-strong: #34D399;              /* dark */
+  --color-urgent:        #FB7185;              /* dark */
+  --color-linkedin:      #7BB3F5;              /* dark */
+  --color-whatsapp:      #5FD98A;              /* dark */
+  --color-timeline-line: rgba(255, 255, 255, 0.12);
+  --color-overflow-day:  rgba(255, 255, 255, 0.55);
+
+  /* Shadows (dark — cool dark, barely visible). Redesign: slightly more visible (T22). */
+  --shadow-card:    0 1px 2px rgba(0,0,0,0.32), 0 1px 4px rgba(0,0,0,0.22);
+  --shadow-raised:  0 4px 14px rgba(0,0,0,0.42), 0 1px 3px rgba(0,0,0,0.30);
+  --shadow-float:   0 12px 40px rgba(0,0,0,0.58), 0 2px 10px rgba(0,0,0,0.36);
   --shadow-header:  0 2px 18px rgba(0,0,0,0.45), 0 1px 4px rgba(0,0,0,0.30);
   --shadow-pane-r:  4px 0 22px rgba(0,0,0,0.40), 1px 0 6px rgba(0,0,0,0.28);
   --border-inset:   inset 0 1px 0 rgba(255,255,255,0.06);
@@ -175,17 +212,31 @@
     --accent-se-bg: #2d0f1f;
     --accent-bba-bg:#1e2d57;
     --accent-af-bg: #0f3d2a;
-    --accent-ba-bg: #3d1f0a;
-    --accent-ft-bg: #2d0f3d;
+    --accent-ba-bg: #2d2408;
+    --accent-ft-bg: #2d0f2d;
     --accent-ee-bg: #3d0f1f;
     --accent-ce-bg: #0f2d4a;
   --color-success: #4ade80;
   --color-success-bg: #064e3b;
 
-    /* Shadows (dark — cool dark, barely visible) */
-    --shadow-card:    0 1px 2px rgba(0,0,0,0.30), 0 1px 4px rgba(0,0,0,0.20);
-    --shadow-raised:  0 2px 8px rgba(0,0,0,0.35), 0 1px 2px rgba(0,0,0,0.25);
-    --shadow-float:   0 8px 32px rgba(0,0,0,0.50), 0 2px 8px rgba(0,0,0,0.30);
+    /* ── Redesign tokens (dark, prefers-color-scheme fallback) — DESIGN_BRIEF §3.1 ── */
+    --color-primary-action:        var(--color-text-primary);
+    --color-primary-action-fg:     var(--color-bg);
+    --color-primary-action-hover:  #FBFAF7;
+    --color-today:       #60A5FA;
+    --color-today-bg:    rgba(96, 165, 250, 0.16);
+    --color-today-glow:  rgba(96, 165, 250, 0.55);
+    --color-success-strong: #34D399;
+    --color-urgent:        #FB7185;
+    --color-linkedin:      #7BB3F5;
+    --color-whatsapp:      #5FD98A;
+    --color-timeline-line: rgba(255, 255, 255, 0.12);
+    --color-overflow-day:  rgba(255, 255, 255, 0.55);
+
+    /* Shadows (dark — cool dark, barely visible). Redesign: slightly more visible (T22). */
+    --shadow-card:    0 1px 2px rgba(0,0,0,0.32), 0 1px 4px rgba(0,0,0,0.22);
+    --shadow-raised:  0 4px 14px rgba(0,0,0,0.42), 0 1px 3px rgba(0,0,0,0.30);
+    --shadow-float:   0 12px 40px rgba(0,0,0,0.58), 0 2px 10px rgba(0,0,0,0.36);
     --shadow-header:  0 2px 18px rgba(0,0,0,0.45), 0 1px 4px rgba(0,0,0,0.30);
     --shadow-pane-r:  4px 0 22px rgba(0,0,0,0.40), 1px 0 6px rgba(0,0,0,0.28);
     --border-inset:   inset 0 1px 0 rgba(255,255,255,0.06);
@@ -338,7 +389,148 @@ body {
   *, *::before, *::after {
     animation-duration: 0.01ms !important;
     transition-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    scroll-behavior: auto !important;
   }
+  /* Redesign: scroll-reveal elements appear instantly (T20) */
+  .reveal, .reveal-stagger > * {
+    opacity: 1 !important;
+    transform: none !important;
+  }
+}
+
+/* ───────────────── Redesign base layer (DESIGN_BRIEF §3.7 T23) ───────────────── */
+/* Unified focus-visible ring — visible in both themes, consistent across elements. */
+button:focus-visible,
+a:focus-visible,
+input:focus-visible,
+select:focus-visible,
+textarea:focus-visible,
+[role="button"]:focus-visible,
+[tabindex]:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 2px var(--color-bg), 0 0 0 4px color-mix(in srgb, var(--color-text-primary) 40%, transparent);
+  border-radius: inherit;
+}
+
+/* ───────────────── Redesign type scale (DESIGN_BRIEF §3.2 T4) ───────────────── */
+/* 11px hard floor — replaces all ad-hoc text-[9px]/text-[10px] across data views. */
+.text-display-xl { font-size: clamp(2.4rem, 3.5vw, 3.6rem); line-height: 1.1; }
+.text-display-lg { font-size: clamp(1.8rem, 2.6vw, 2.5rem); line-height: 1.15; }
+.text-display-md { font-size: 1.25rem; line-height: 1.25; }       /* 20px */
+.text-data       { font-size: 0.75rem; line-height: 1.4; }         /* 12px mono floor */
+.text-data-sm    { font-size: 0.6875rem; line-height: 1.35; }      /* 11px mono floor — hard minimum */
+.text-eyebrow    { font-size: 0.75rem; line-height: 1.4; letter-spacing: 0.1em; text-transform: uppercase; }
+
+/* ───────────────── Redesign scroll-reveal (DESIGN_BRIEF §3.6 T20) ───────────────── */
+/* IntersectionObserver adds .in-view. Only for heroes/headers/non-data sections —
+   never applied to data cells/cards in timetable/schedule/rooms grids (clarity > decoration). */
+.reveal {
+  opacity: 0;
+  transform: translateY(12px);
+  transition: opacity 400ms cubic-bezier(0.2, 0.7, 0.2, 1), transform 400ms cubic-bezier(0.2, 0.7, 0.2, 1);
+  will-change: opacity, transform;
+}
+.reveal.in-view {
+  opacity: 1;
+  transform: translateY(0);
+}
+.reveal-stagger > * {
+  opacity: 0;
+  transform: translateY(12px);
+  transition: opacity 400ms cubic-bezier(0.2, 0.7, 0.2, 1), transform 400ms cubic-bezier(0.2, 0.7, 0.2, 1);
+}
+.reveal-stagger.in-view > * {
+  opacity: 1;
+  transform: translateY(0);
+}
+.reveal-stagger.in-view > *:nth-child(1)  { transition-delay: 0ms; }
+.reveal-stagger.in-view > *:nth-child(2)  { transition-delay: 60ms; }
+.reveal-stagger.in-view > *:nth-child(3)  { transition-delay: 120ms; }
+.reveal-stagger.in-view > *:nth-child(4)  { transition-delay: 180ms; }
+.reveal-stagger.in-view > *:nth-child(5)  { transition-delay: 240ms; }
+.reveal-stagger.in-view > *:nth-child(6)  { transition-delay: 300ms; }
+.reveal-stagger.in-view > *:nth-child(7)  { transition-delay: 360ms; }
+.reveal-stagger.in-view > *:nth-child(8)  { transition-delay: 420ms; }
+
+/* ───────────────── Redesign card-stagger extension (T19) ───────────────── */
+/* Existing .exam-card / .timetable-card stagger (30ms, 10 max) extended to
+   faculty + lost-found grids via the same pattern. */
+.faculty-card { animation: page-enter 160ms ease-out both; }
+.faculty-card:nth-child(1)  { animation-delay: 0ms; }
+.faculty-card:nth-child(2)  { animation-delay: 30ms; }
+.faculty-card:nth-child(3)  { animation-delay: 60ms; }
+.faculty-card:nth-child(4)  { animation-delay: 90ms; }
+.faculty-card:nth-child(5)  { animation-delay: 120ms; }
+.faculty-card:nth-child(6)  { animation-delay: 150ms; }
+.faculty-card:nth-child(7)  { animation-delay: 180ms; }
+.faculty-card:nth-child(8)  { animation-delay: 210ms; }
+.faculty-card:nth-child(9)  { animation-delay: 240ms; }
+.faculty-card:nth-child(10) { animation-delay: 270ms; }
+
+.lostfound-card { animation: page-enter 160ms ease-out both; }
+.lostfound-card:nth-child(1)  { animation-delay: 0ms; }
+.lostfound-card:nth-child(2)  { animation-delay: 30ms; }
+.lostfound-card:nth-child(3)  { animation-delay: 60ms; }
+.lostfound-card:nth-child(4)  { animation-delay: 90ms; }
+.lostfound-card:nth-child(5)  { animation-delay: 120ms; }
+.lostfound-card:nth-child(6)  { animation-delay: 150ms; }
+.lostfound-card:nth-child(7)  { animation-delay: 180ms; }
+.lostfound-card:nth-child(8)  { animation-delay: 210ms; }
+.lostfound-card:nth-child(9)  { animation-delay: 240ms; }
+.lostfound-card:nth-child(10) { animation-delay: 270ms; }
+
+/* ───────────────── Redesign CTA sheen (refinement — primary action polish) ───────────────── */
+/* A subtle top-light gradient + hover lift for ink-primary buttons. Purely additive. */
+.btn-ink {
+  background-color: var(--color-primary-action);
+  color: var(--color-primary-action-fg);
+  position: relative;
+  overflow: hidden;
+  transition: background-color 200ms ease, transform 200ms ease, box-shadow 200ms ease;
+}
+.btn-ink::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(180deg, rgba(255,255,255,0.10) 0%, rgba(255,255,255,0) 45%);
+  pointer-events: none;
+}
+.btn-ink:hover {
+  background-color: var(--color-primary-action-hover);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 14px -2px rgba(0,0,0,0.25);
+}
+.btn-ink:active {
+  transform: translateY(0);
+}
+[data-theme="dark"] .btn-ink::before {
+  background: linear-gradient(180deg, rgba(255,255,255,0.14) 0%, rgba(255,255,255,0) 45%);
+}
+[data-theme="dark"] .btn-ink:hover {
+  box-shadow: 0 4px 14px -2px rgba(0,0,0,0.5);
+}
+
+/* ───────────────── Redesign reading-progress bar (new feature) ───────────────── */
+/* A thin ink-primary progress bar fixed to the top of the viewport showing
+   scroll progress through the page. Hidden under prefers-reduced-motion (static). */
+.reading-progress {
+  position: fixed;
+  top: 0;
+  left: 0;
+  height: 2px;
+  z-index: 60;
+  background: linear-gradient(90deg, var(--laser-rail-edge), var(--laser-rail-mid));
+  transition: width 100ms linear;
+  pointer-events: none;
+}
+
+/* ───────────────── Redesign feature-card CSS hover (replaces inline JS) ───────────────── */
+/* Landing page feature cards set --card-accent inline; CSS handles the hover
+   transition (cleaner + more performant than the old onMouseOver/onMouseOut). */
+.feature-card-css:hover:not(:disabled) {
+  border-color: var(--card-accent) !important;
+  box-shadow: var(--shadow-raised), var(--border-inset), 0 0 0 1px var(--card-accent) !important;
 }
 
 /* ───────────────── Theme toggle switch (Uiverse.io by Madflows) ───────────────── */
@@ -573,7 +765,7 @@ body {
 }
 
 .category-badge {
-  font-size: 10px;
+  font-size: 11px;
   letter-spacing: 0.06em;
   text-transform: uppercase;
   font-weight: 600;
@@ -581,38 +773,43 @@ body {
   border-radius: 6px;
 }
 
+/* Redesign T2: tokenize lost-found badge colors (were hardcoded, broke dark mode) */
 .type-badge-lost {
   background: rgba(225, 29, 72, 0.1);
-  color: #E11D48;
+  color: var(--color-urgent);
 }
 .type-badge-found {
   background: rgba(5, 150, 105, 0.1);
-  color: #059669;
+  color: var(--color-success-strong);
 }
 [data-theme="dark"] .type-badge-lost {
   background: rgba(251, 113, 133, 0.18);
-  color: #FB7185;
+  color: var(--color-urgent);
 }
 [data-theme="dark"] .type-badge-found {
   background: rgba(52, 211, 153, 0.18);
-  color: #34D399;
+  color: var(--color-success-strong);
 }
 
 .resolved-badge {
   background: rgba(5, 150, 105, 0.1);
-  color: #059669;
+  color: var(--color-success-strong);
 }
 [data-theme="dark"] .resolved-badge {
   background: rgba(52, 211, 153, 0.18);
-  color: #34D399;
+  color: var(--color-success-strong);
 }
 
-@keyframes stat-glow {
-  0%, 100% { text-shadow: 0 0 0 transparent; }
-  50% { text-shadow: 0 0 8px currentColor; }
-}
+/* Redesign T18: neutralize ambient motion density on lost-found.
+   cta-pulse-btn + stat-glow were constant ambient loops (2.5s / 3s) — distracting
+   and a perf concern on low-end mobile. Classes kept (so markup still works)
+   but animations disabled. urgent-badge + skeleton-shimmer KEPT (semantically
+   meaningful: urgency + loading). */
 .stat-glow {
-  animation: stat-glow 3s ease-in-out infinite;
+  animation: none;  /* was stat-glow 3s infinite */
+}
+.cta-pulse-btn {
+  animation: none;  /* was cta-pulse-glow 2.5s infinite */
 }
 
 @keyframes shimmer {
@@ -762,7 +959,7 @@ body {
   left: 50%;
   transform: translateX(-50%);
   white-space: nowrap;
-  font-size: 9px;
+  font-size: 11px;
   padding: 2px 8px;
   border-radius: 4px;
   background: var(--accent-lf);
@@ -782,15 +979,17 @@ body {
   animation: slide-up-action-bar 0.25s cubic-bezier(0.16, 1, 0.3, 1) forwards;
 }
 
+/* Redesign T2: tokenize success-banner-text + stats-split-bar (were hardcoded) */
 .success-banner-text {
-  color: #047857;
+  color: var(--color-success-strong);
 }
 [data-theme="dark"] .success-banner-text {
-  color: #6EE7B7;
+  color: var(--color-success-strong);
 }
 
+/* Redesign T4: raise sub-12px mono labels to the 11px floor */
 .stats-header {
-  font-size: 9px;
+  font-size: 11px;
   letter-spacing: 0.12em;
   text-transform: uppercase;
   font-family: monospace;
@@ -982,18 +1181,18 @@ body {
   display: flex;
 }
 .stats-split-bar-lost {
-  background-color: #E11D48;
+  background-color: var(--color-urgent);
   transition: width 0.5s ease;
 }
 [data-theme="dark"] .stats-split-bar-lost {
-  background-color: #FB7185;
+  background-color: var(--color-urgent);
 }
 .stats-split-bar-found {
-  background-color: #059669;
+  background-color: var(--color-success-strong);
   transition: width 0.5s ease;
 }
 [data-theme="dark"] .stats-split-bar-found {
-  background-color: #34D399;
+  background-color: var(--color-success-strong);
 }
 
 @keyframes cta-pulse-glow {
@@ -1062,20 +1261,12 @@ body {
   top: 0;
 }
 
-*:focus-visible {
-  outline: none;
-}
-
-button:focus-visible,
-a:focus-visible,
-input:focus-visible,
-select:focus-visible,
-textarea:focus-visible {
-  outline: none;
-}
+/* Redesign T23: the old generic `*:focus-visible { outline: none }` blocks were
+   removed — replaced by the unified focus-visible ring in the Redesign base
+   layer above (visible 2+4px ring in both themes). */
 
 .zone-tag-btn {
-  font-size: 9px;
+  font-size: 11px;
   font-weight: 600;
   padding: 2px 6px;
   border-radius: 4px;
@@ -1098,7 +1289,7 @@ textarea:focus-visible {
 }
 
 .step-summary-bar {
-  font-size: 9px;
+  font-size: 11px;
   padding: 6px 10px;
   border-radius: 6px;
   display: flex;

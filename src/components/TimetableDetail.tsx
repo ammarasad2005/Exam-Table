@@ -1,9 +1,11 @@
 'use client';
 import { useEffect } from 'react';
+import { Ban, Beaker, BookOpen } from 'lucide-react';
 import { downloadTimetableICS } from '@/lib/export';
 import { formatTimeRange } from '@/lib/timetable-filter';
 import type { TimetableEntry } from '@/lib/types';
 import { useMobileSwipe } from '@/hooks/useMobileSwipe';
+import { ShareButton } from '@/components/ShareButton';
 
 interface Props {
   entry: TimetableEntry;
@@ -59,7 +61,7 @@ export function TimetableDetail({ entry, dept, onClose, isSummer, displayName }:
         role="dialog"
         aria-modal="true"
         aria-label={`${displayName ?? entry.courseName} timetable details`}
-        className="fixed z-40 bottom-0 left-0 right-0 rounded-t-2xl overflow-y-auto md:bottom-0 md:top-14 md:left-auto md:right-0 md:w-96 md:rounded-none md:rounded-l-2xl md:max-h-[calc(100dvh-56px)] animate-in slide-in-from-bottom-4 md:slide-in-from-right-4 duration-300 ease-out h-[85dvh] md:h-auto"
+        className="fixed z-40 bottom-0 left-0 right-0 rounded-t-2xl overflow-y-auto md:bottom-0 md:top-[3.75rem] md:left-auto md:right-0 md:w-96 md:rounded-none md:rounded-l-2xl md:max-h-[calc(100dvh-3.75rem)] animate-in slide-in-from-bottom-4 md:slide-in-from-right-4 duration-300 ease-out h-[85dvh] md:h-auto"
         style={{
           backgroundColor: 'var(--color-bg-raised)',
           boxShadow: 'var(--shadow-float)',
@@ -105,15 +107,25 @@ export function TimetableDetail({ entry, dept, onClose, isSummer, displayName }:
 
           {/* Type callout */}
           {entry.cancelled ? (
-            <div className="mt-4 px-4 py-3 rounded-md text-sm font-medium bg-red-100 dark:bg-red-950/40 text-red-600 dark:text-red-400">
-              🚫 Canceled class. The room is free and the class is not occurring.
+            <div
+              className="mt-4 px-4 py-3 rounded-md text-sm font-medium inline-flex items-center gap-2"
+              style={{
+                backgroundColor: 'color-mix(in srgb, var(--color-urgent) 14%, transparent)',
+                color: 'var(--color-urgent)',
+              }}
+            >
+              <Ban className="w-4 h-4 shrink-0" aria-hidden="true" />
+              <span>Canceled class. The room is free and the class is not occurring.</span>
             </div>
           ) : (
             <div
-              className="mt-4 px-4 py-3 rounded-md text-sm font-medium"
+              className="mt-4 px-4 py-3 rounded-md text-sm font-medium inline-flex items-center gap-2"
               style={{ backgroundColor: isLab ? 'var(--accent-ds-bg)' : accentBg, color: isLab ? 'var(--accent-ds)' : accentColor }}
             >
-              {isLab ? '🔬 Lab session — bring your laptop.' : '📖 Lecture — check course portal for updates.'}
+              {isLab
+                ? <Beaker className="w-4 h-4 shrink-0" aria-hidden="true" />
+                : <BookOpen className="w-4 h-4 shrink-0" aria-hidden="true" />}
+              <span>{isLab ? 'Lab session — bring your laptop.' : 'Lecture — check course portal for updates.'}</span>
             </div>
           )}
 
@@ -125,6 +137,7 @@ export function TimetableDetail({ entry, dept, onClose, isSummer, displayName }:
             >
               Add to calendar (.ics)
             </button>
+            <ShareButton className="w-full" label="Copy class link" />
           </div>
         </div>
       </div>

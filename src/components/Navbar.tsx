@@ -1,6 +1,7 @@
 'use client';
 
-import { usePathname, useRouter } from 'next/navigation';
+import Link from 'next/link';
+import { usePathname } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Home, Sliders, Users, Library, MapPin, Search } from 'lucide-react';
 import { useTheme } from '@/lib/theme';
@@ -22,7 +23,6 @@ const TABS: Tab[] = [
 
 export function Navbar() {
   const pathname = usePathname();
-  const router = useRouter();
   const { theme } = useTheme();
   
   const isDark = theme === 'dark';
@@ -59,11 +59,10 @@ export function Navbar() {
             const Icon = tab.icon;
             const isActive = tab.id === activeTabId;
             return (
-              <button
+              <Link
                 key={tab.id}
-                onClick={() => {
-                  router.push(tab.path);
-                }}
+                href={tab.path}
+                aria-current={isActive ? 'page' : undefined}
                 className="relative flex flex-col items-center justify-end gap-1.5 px-6 pt-5 pb-1.5 outline-none group min-w-[100px]"
               >
                 {/* Stage light fixture (cone) + beam */}
@@ -148,11 +147,11 @@ export function Navbar() {
                   className={`relative z-10 tracking-[0.1em] transition-colors ${
                     isActive ? activeText : inactiveText
                   }`}
-                  style={{ fontSize: "10px", fontWeight: isActive ? 600 : 500 }}
+                  style={{ fontSize: "11px", fontWeight: isActive ? 600 : 500 }}
                 >
                   {tab.label}
                 </span>
-              </button>
+              </Link>
             );
           })}
         </div>

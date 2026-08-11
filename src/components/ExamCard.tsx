@@ -17,10 +17,8 @@ export function ExamCard({ exam, dept, onClick }: Props) {
   return (
     <button
       onClick={onClick}
-      className="exam-card group relative overflow-hidden w-full text-left bg-[var(--color-bg-raised)] border border-[var(--color-border)] rounded-lg p-4 flex flex-col gap-2 active:scale-[0.98] transition-all duration-100 focus-visible:outline-none focus-visible:ring-2"
-      style={{ '--ring-color': accentColor, boxShadow: 'var(--shadow-card), var(--border-inset)' } as React.CSSProperties}
-    onMouseOver={e => (e.currentTarget.style.boxShadow = 'var(--shadow-raised), var(--border-inset)')}
-    onMouseOut={e => (e.currentTarget.style.boxShadow = 'var(--shadow-card), var(--border-inset)')}
+      className="exam-card group relative overflow-hidden w-full text-left bg-[var(--color-bg-raised)] border border-[var(--color-border)] rounded-lg p-4 flex flex-col gap-2 active:scale-[0.98] transition-all duration-150 hover:-translate-y-[2px] focus-visible:outline-none focus-visible:ring-2 [box-shadow:var(--shadow-card),var(--border-inset)] hover:[box-shadow:var(--shadow-raised),var(--border-inset)]"
+      style={{ '--ring-color': accentColor } as React.CSSProperties}
     >
       <span
         aria-hidden="true"
@@ -40,7 +38,7 @@ export function ExamCard({ exam, dept, onClick }: Props) {
           <CountdownBadge days={daysUntil} />
         )}
         {daysUntil !== null && daysUntil < 0 && (
-          <span className="font-mono text-[10px] font-medium px-1.5 py-0.5 rounded bg-[var(--color-bg-subtle)] text-[var(--color-text-tertiary)]">
+          <span className="font-mono text-data-sm font-medium px-1.5 py-0.5 rounded bg-[var(--color-bg-subtle)] text-[var(--color-text-tertiary)]">
             Passed
           </span>
         )}
@@ -65,7 +63,7 @@ export function ExamCard({ exam, dept, onClick }: Props) {
 
       {/* Sections (summer only — only shown if present and non-empty) */}
       {exam.sections && (
-        <p className="font-mono text-[10px] text-[var(--color-text-tertiary)]">
+        <p className="font-mono text-data-sm text-[var(--color-text-tertiary)]">
           Sections: {exam.sections}
         </p>
       )}

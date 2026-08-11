@@ -4,6 +4,7 @@ import { useRouter } from 'next/navigation';
 import { supabase } from '@/lib/supabase';
 import { Header } from '@/components/Header';
 import { ThemeToggle } from '@/components/ThemeToggle';
+import { ShareButton } from '@/components/ShareButton';
 import {
   buildRoomCalendar,
   getAvailableRooms,
@@ -46,7 +47,10 @@ function RoomPill({
 }) {
   const styles: Record<string, React.CSSProperties> = {
     green: { backgroundColor: 'var(--color-success-bg)', color: 'var(--color-success)' },
-    yellow: { backgroundColor: '#FFFBEB', color: '#92400E' },
+    // T2: tokenized hardcoded amber #FFFBEB/#92400E → success-strong tint.
+    // Yellow variant represents PARTIAL VACANCY (a vacancy/available indicator),
+    // so it maps to the success token family rather than the urgent token.
+    yellow: { backgroundColor: 'rgba(5, 150, 105, 0.10)', color: 'var(--color-success-strong)' },
     neutral: { backgroundColor: 'var(--color-bg-subtle)', color: 'var(--color-text-secondary)' },
   };
   return (
@@ -86,7 +90,7 @@ function RoomDetail({
       <div
         ref={drawerRef}
         role="dialog"
-        className="fixed z-40 bottom-0 left-0 right-0 rounded-t-2xl overflow-y-auto md:bottom-0 md:top-14 md:left-auto md:right-0 md:w-96 md:rounded-none md:rounded-l-2xl md:max-h-[calc(100dvh-56px)] animate-in slide-in-from-bottom-4 md:slide-in-from-right-4 duration-300 ease-out bg-[var(--color-bg-raised)] shadow-float border-l border-[var(--color-border)] h-[85dvh] md:h-auto"
+        className="fixed z-40 bottom-0 left-0 right-0 rounded-t-2xl overflow-y-auto md:bottom-0 md:top-[3.75rem] md:left-auto md:right-0 md:w-96 md:rounded-none md:rounded-l-2xl md:max-h-[calc(100dvh-3.75rem)] animate-in slide-in-from-bottom-4 md:slide-in-from-right-4 duration-300 ease-out bg-[var(--color-bg-raised)] shadow-float border-l border-[var(--color-border)] h-[85dvh] md:h-auto"
       >
         <div ref={handleRef} className="md:hidden flex justify-center pt-3 pb-1 cursor-grab active:cursor-grabbing">
           <div className="w-10 h-1 rounded-full bg-[var(--color-border-strong)] pointer-events-none" />
@@ -172,6 +176,11 @@ function RoomDetail({
                &quot;Partially Vacant&quot; indicates that the room is occupied for part of this slot but has at least 30 minutes of free time within it.
              </p>
           </div>
+
+          {/* Share this room vacancy view */}
+          <div className="mt-2">
+            <ShareButton className="w-full" label="Copy room link" />
+          </div>
         </div>
       </div>
     </>
@@ -256,13 +265,16 @@ function SpecificResults({
             <div
               className="rounded-xl border p-5"
               style={{
-                borderColor: 'rgba(146, 64, 14, 0.20)',
-                backgroundColor: '#FFFBEB',
+                borderColor: 'rgba(5, 150, 105, 0.20)',
+                backgroundColor: 'rgba(5, 150, 105, 0.06)',
               }}
             >
               <div className="flex items-center gap-2 mb-4">
-                <span className="w-2.5 h-2.5 rounded-full shrink-0 bg-amber-500" />
-                <p className="font-mono text-xs font-bold text-amber-800">
+                <span
+                  className="w-2.5 h-2.5 rounded-full shrink-0"
+                  style={{ backgroundColor: 'var(--color-success-strong)' }}
+                />
+                <p className="font-mono text-xs font-bold" style={{ color: 'var(--color-success-strong)' }}>
                   Partially Vacant ({partiallyVacant.length})
                 </p>
               </div>
@@ -270,7 +282,7 @@ function SpecificResults({
               <div className="flex flex-col gap-6">
                 {Object.entries(groupRoomsByBlock(partiallyVacant)).map(([block, rooms]) => (
                   <div key={block}>
-                    <p className="font-mono text-[10px] uppercase tracking-widest text-[var(--color-text-tertiary)] mb-2 px-1 border-l-2 border-amber-300 ml-0.5">
+                    <p className="font-mono text-data-sm uppercase tracking-widest text-[var(--color-text-tertiary)] mb-2 px-1 border-l-2 ml-0.5" style={{ borderColor: 'rgba(5, 150, 105, 0.30)' }}>
                       {block}
                     </p>
                     <div className="flex flex-wrap gap-1.5">
@@ -467,7 +479,7 @@ export default function RoomsPage() {
       <div className="flex flex-1">
 
         {/* Sidebar (desktop) */}
-        <aside className="hidden md:flex md:w-56 lg:w-64 flex-col gap-5 p-6 border-r border-[var(--color-border)] sticky top-14 h-[calc(100dvh-56px)] overflow-y-auto">
+        <aside className="hidden md:flex md:w-56 lg:w-64 flex-col gap-5 p-6 border-r border-[var(--color-border)] sticky top-[3.75rem] h-[calc(100dvh-3.75rem)] overflow-y-auto">
           <div>
             <p className="font-mono text-[10px] uppercase tracking-widest text-[var(--color-text-tertiary)] mb-1">Feature</p>
             <p className="font-mono text-sm font-medium">Room Finder</p>
@@ -490,7 +502,7 @@ export default function RoomsPage() {
         </aside>
 
         {/* Main content */}
-        <div className="flex-1 px-4 md:px-8 py-6 max-w-4xl mx-auto w-full">
+        <div className="flex-1 px-4 md:px-8 py-6 pb-20 md:pb-28 lg:pb-32 max-w-4xl mx-auto w-full">
 
           {/* ── Hero blurb ─────────────────────────────────────────────── */}
           <div className="mb-8">
@@ -621,9 +633,6 @@ export default function RoomsPage() {
           )}
 
           {viewMode === 'calendar' && <CalendarGrid onSelect={setSelectedCell} />}
-
-          {/* Bottom padding for scroll-past */}
-          <div className="h-[150px]" />
         </div>
       {selectedCell && (
         <RoomDetail cell={selectedCell} onClose={() => setSelectedCell(null)} />

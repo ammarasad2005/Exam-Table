@@ -4,6 +4,7 @@ import { generateICS } from '@/lib/export';
 import { getDaysUntil, formatDate } from '@/lib/dates';
 import type { ExamEntry } from '@/lib/types';
 import { useMobileSwipe } from '@/hooks/useMobileSwipe';
+import { ShareButton } from '@/components/ShareButton';
 
 interface Props {
   exam: ExamEntry;
@@ -47,7 +48,7 @@ export function ExamDetail({ exam, dept, onClose }: Props) {
         role="dialog"
         aria-modal="true"
         aria-label={`${exam.courseName} exam details`}
-        className="fixed z-40 bottom-0 left-0 right-0 rounded-t-2xl overflow-y-auto md:bottom-0 md:top-14 md:left-auto md:right-0 md:w-96 md:rounded-none md:rounded-l-2xl md:max-h-[calc(100dvh-56px)] animate-in slide-in-from-bottom-4 md:slide-in-from-right-4 duration-300 ease-out h-[85dvh] md:h-auto"
+        className="fixed z-40 bottom-0 left-0 right-0 rounded-t-2xl overflow-y-auto md:bottom-0 md:top-[3.75rem] md:left-auto md:right-0 md:w-96 md:rounded-none md:rounded-l-2xl md:max-h-[calc(100dvh-3.75rem)] animate-in slide-in-from-bottom-4 md:slide-in-from-right-4 duration-300 ease-out h-[85dvh] md:h-auto"
         style={{
           backgroundColor: 'var(--color-bg-raised)',
           boxShadow: 'var(--shadow-float)',
@@ -116,6 +117,7 @@ export function ExamDetail({ exam, dept, onClose }: Props) {
             >
               Add to calendar (.ics)
             </button>
+            <ShareButton className="w-full" label="Copy exam link" />
           </div>
         </div>
       </div>

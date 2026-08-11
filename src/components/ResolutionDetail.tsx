@@ -69,7 +69,7 @@ export function ResolutionDetail({
           Back to History
         </button>
         
-        <div className="inline-flex items-center gap-2 bg-emerald-500/10 dark:bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 px-4 py-1.5 rounded-full border border-emerald-500/20 text-xs font-semibold shadow-sm w-fit">
+        <div className="inline-flex items-center gap-2 bg-[color-mix(in_srgb,var(--color-success-strong)_12%,transparent)] text-[var(--color-success-strong)] px-4 py-1.5 rounded-full border border-[color-mix(in_srgb,var(--color-success-strong)_25%,transparent)] text-xs font-semibold shadow-sm w-fit">
           <Sparkles width={14} height={14} className="animate-pulse" />
           Successfully Reunited & Resolved
         </div>
@@ -79,13 +79,17 @@ export function ResolutionDetail({
       <motion.div 
         initial={{ opacity: 0, y: 10 }}
         animate={{ opacity: 1, y: 0 }}
-        className="relative rounded-3xl p-6 sm:p-8 bg-gradient-to-r from-emerald-500/10 via-teal-500/5 to-emerald-500/10 border border-emerald-500/20 shadow-lg overflow-hidden text-center space-y-4"
+        className="relative rounded-3xl p-6 sm:p-8 border border-[color-mix(in_srgb,var(--color-success-strong)_25%,transparent)] shadow-lg overflow-hidden text-center space-y-4"
+        style={{
+          backgroundImage:
+            'linear-gradient(to right, color-mix(in srgb, var(--color-success-strong) 10%, transparent), color-mix(in srgb, var(--color-success-strong) 5%, transparent), color-mix(in srgb, var(--color-success-strong) 10%, transparent))',
+        }}
       >
-        <div className="absolute -right-10 -top-10 w-40 h-40 bg-emerald-500/10 rounded-full blur-3xl pointer-events-none" />
-        <div className="absolute -left-10 -bottom-10 w-40 h-40 bg-teal-500/10 rounded-full blur-3xl pointer-events-none" />
+        <div className="absolute -right-10 -top-10 w-40 h-40 bg-[color-mix(in_srgb,var(--color-success-strong)_10%,transparent)] rounded-full blur-3xl pointer-events-none" />
+        <div className="absolute -left-10 -bottom-10 w-40 h-40 bg-[color-mix(in_srgb,var(--color-success-strong)_10%,transparent)] rounded-full blur-3xl pointer-events-none" />
         
-        <div className="w-16 h-16 rounded-full bg-emerald-500/20 flex items-center justify-center mx-auto border border-emerald-500/30 shadow-md">
-          <CheckCircle width={32} height={32} className="text-emerald-500" />
+        <div className="w-16 h-16 rounded-full bg-[color-mix(in_srgb,var(--color-success-strong)_20%,transparent)] flex items-center justify-center mx-auto border border-[color-mix(in_srgb,var(--color-success-strong)_35%,transparent)] shadow-md">
+          <CheckCircle width={32} height={32} className="text-[var(--color-success-strong)]" />
         </div>
         
         <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight" style={{ color: 'var(--color-text-primary)' }}>
@@ -109,9 +113,9 @@ export function ResolutionDetail({
         
         {/* Connection Line & Badge in center (Hidden on mobile) */}
         <div className="hidden md:flex absolute inset-y-0 left-1/2 -translate-x-1/2 flex-col items-center justify-center z-10 pointer-events-none">
-          <div className="w-[2px] h-full bg-gradient-to-b from-transparent via-emerald-300 dark:via-emerald-800 to-transparent" />
-          <div className="absolute w-12 h-12 rounded-full bg-white dark:bg-neutral-900 border-2 border-emerald-400 flex items-center justify-center shadow-lg">
-            <ShieldCheck width={22} height={22} className="text-emerald-500" />
+          <div className="w-[2px] h-full bg-gradient-to-b from-transparent via-[color-mix(in_srgb,var(--color-success-strong)_40%,transparent)] to-transparent" />
+          <div className="absolute w-12 h-12 rounded-full bg-white dark:bg-neutral-900 border-2 border-[var(--color-success-strong)] flex items-center justify-center shadow-lg">
+            <ShieldCheck width={22} height={22} className="text-[var(--color-success-strong)]" />
           </div>
         </div>
 
@@ -123,7 +127,7 @@ export function ResolutionDetail({
           className="flex flex-col rounded-3xl p-6 bg-white/40 dark:bg-black/10 backdrop-blur-md border border-[var(--color-border)] shadow-md space-y-4 hover:shadow-lg transition-shadow duration-200"
         >
           <div className="flex items-center justify-between pb-3 border-b border-[var(--color-border)]">
-            <span className="text-[10px] font-mono tracking-widest text-emerald-600 dark:text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded uppercase font-bold">
+            <span className="text-data-sm font-mono tracking-widest text-[var(--color-success-strong)] bg-[color-mix(in_srgb,var(--color-success-strong)_12%,transparent)] px-2 py-0.5 rounded uppercase font-bold">
               Found Report
             </span>
             <span className="text-xs" style={{ color: 'var(--color-text-tertiary)' }}>
@@ -181,7 +185,7 @@ export function ResolutionDetail({
           className="flex flex-col rounded-3xl p-6 bg-white/40 dark:bg-black/10 backdrop-blur-md border border-[var(--color-border)] shadow-md space-y-4 hover:shadow-lg transition-shadow duration-200"
         >
           <div className="flex items-center justify-between pb-3 border-b border-[var(--color-border)]">
-            <span className="text-[10px] font-mono tracking-widest text-emerald-600 dark:text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded uppercase font-bold">
+            <span className="text-data-sm font-mono tracking-widest text-[var(--color-success-strong)] bg-[color-mix(in_srgb,var(--color-success-strong)_12%,transparent)] px-2 py-0.5 rounded uppercase font-bold">
               Lost Report
             </span>
             <span className="text-xs" style={{ color: 'var(--color-text-tertiary)' }}>
@@ -241,7 +245,7 @@ export function ResolutionDetail({
           className="rounded-3xl p-6 bg-white/40 dark:bg-black/10 backdrop-blur-md border border-[var(--color-border)] shadow-md space-y-4"
         >
           <div className="flex items-center gap-2 pb-3 border-b border-[var(--color-border)]">
-            <ShieldCheck width={18} height={18} className="text-emerald-500" />
+            <ShieldCheck width={18} height={18} className="text-[var(--color-success-strong)]" />
             <h3 className="text-base font-bold" style={{ color: 'var(--color-text-primary)' }}>Proof of Possession & Verification</h3>
           </div>
           
@@ -255,7 +259,7 @@ export function ResolutionDetail({
             </div>
             
             <div className="md:col-span-2 space-y-3">
-              <div className="inline-flex items-center gap-1 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 px-3 py-1 rounded-full text-[11px] font-mono font-bold">
+              <div className="inline-flex items-center gap-1 bg-[color-mix(in_srgb,var(--color-success-strong)_12%,transparent)] text-[var(--color-success-strong)] px-3 py-1 rounded-full text-data-sm font-mono font-bold">
                 VERIFIED BY AI
               </div>
               <p className="text-sm leading-relaxed" style={{ color: 'var(--color-text-secondary)' }}>
@@ -281,12 +285,12 @@ export function ResolutionDetail({
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
-              <p className="text-[10px] font-mono text-[var(--color-text-tertiary)] uppercase tracking-wider">Claimant Email</p>
+              <p className="text-data-sm font-mono text-[var(--color-text-tertiary)] uppercase tracking-wider">Claimant Email</p>
               <p className="font-semibold text-sm" style={{ color: 'var(--color-text-primary)' }}>{claim.claimerEmail}</p>
             </div>
             <div>
-              <p className="text-[10px] font-mono text-[var(--color-text-tertiary)] uppercase tracking-wider">Claim Status</p>
-              <span className="inline-flex items-center gap-1 text-emerald-600 dark:text-emerald-400 font-semibold">
+              <p className="text-data-sm font-mono text-[var(--color-text-tertiary)] uppercase tracking-wider">Claim Status</p>
+              <span className="inline-flex items-center gap-1 text-[var(--color-success-strong)] font-semibold">
                 <CheckCircle width={12} height={12} /> Verified & Reunited
               </span>
             </div>

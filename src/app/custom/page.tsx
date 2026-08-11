@@ -277,7 +277,7 @@ function CustomPageInner() {
 
         {/* ── Sidebar (desktop) ── */}
                 {/* ── Sidebar (desktop) ── */}
-        <aside className="hidden md:flex md:w-[350px] lg:w-[400px] flex-col border-r border-[var(--color-border)] sticky top-14 h-[calc(100dvh-56px)] overflow-y-auto">
+        <aside className="hidden md:flex md:w-[350px] lg:w-[400px] flex-col border-r border-[var(--color-border)] sticky top-[3.75rem] h-[calc(100dvh-3.75rem)] overflow-y-auto">
           <div className="flex-1 px-5 py-5 flex flex-col gap-4">
             <button
               onClick={() => setIsDesktopClassesExpanded(prev => !prev)}
@@ -565,13 +565,13 @@ function CustomPageInner() {
 
           {/* Search bar */}
           {saved && (
-            <div className="sticky top-14 z-10 bg-[var(--color-bg)] px-4 py-3 border-b border-[var(--color-border)]">
+            <div className="sticky top-[3.75rem] z-10 bg-[var(--color-bg)] px-4 py-3 border-b border-[var(--color-border)]">
               <SearchBar value={query} onChange={setQuery} />
             </div>
           )}
 
           {/* Results */}
-          <div id="print-area" className="flex-1 px-4 pb-24 md:pb-8 bg-[var(--color-bg)]">
+          <div id="print-area" className="flex-1 px-4 pb-20 md:pb-28 lg:pb-32 bg-[var(--color-bg)]">
             {!saved ? (
               <div className="flex flex-col items-center justify-center text-center py-24 px-6">
                 <div className="text-4xl mb-4 select-none">📋</div>
@@ -684,13 +684,13 @@ function RowEditor({ row, index, matchCount, showMatchHint, onUpdate, onRemove, 
     <div className="rounded-lg border border-[var(--color-border)] bg-[var(--color-bg-raised)] p-3 flex flex-col gap-2">
       {/* Row header */}
       <div className="flex items-center justify-between">
-        <span className="font-mono text-[10px] uppercase tracking-widest text-[var(--color-text-tertiary)]">
+        <span className="font-mono text-data-sm uppercase tracking-widest text-[var(--color-text-tertiary)]">
           Course {index + 1}
         </span>
         <div className="flex items-center gap-2">
           {showMatchHint && (
             <span
-              className="font-mono text-[10px] font-medium px-1.5 py-0.5 rounded"
+              className="font-mono text-data-sm font-medium px-1.5 py-0.5 rounded"
               style={matchCount > 0
                 ? { backgroundColor: 'var(--color-success-bg)', color: 'var(--color-success)' }
                 : { backgroundColor: 'var(--color-bg-subtle)', color: 'var(--color-text-tertiary)' }
@@ -717,7 +717,7 @@ function RowEditor({ row, index, matchCount, showMatchHint, onUpdate, onRemove, 
       <div className="grid grid-cols-3 gap-2">
         {/* Batch */}
         <div className="flex flex-col gap-1">
-          <label className="font-mono text-[9px] uppercase tracking-widest text-[var(--color-text-tertiary)]">
+          <label className="font-mono text-data-sm uppercase tracking-widest text-[var(--color-text-tertiary)]">
             Batch
           </label>
           <select
@@ -734,7 +734,7 @@ function RowEditor({ row, index, matchCount, showMatchHint, onUpdate, onRemove, 
 
         {/* Stream */}
         <div className="flex flex-col gap-1">
-          <label className="font-mono text-[9px] uppercase tracking-widest text-[var(--color-text-tertiary)]">
+          <label className="font-mono text-data-sm uppercase tracking-widest text-[var(--color-text-tertiary)]">
             Stream
           </label>
           <select
@@ -752,7 +752,7 @@ function RowEditor({ row, index, matchCount, showMatchHint, onUpdate, onRemove, 
 
         {/* Course */}
         <div className="flex flex-col gap-1">
-          <label className="font-mono text-[9px] uppercase tracking-widest text-[var(--color-text-tertiary)]">
+          <label className="font-mono text-data-sm uppercase tracking-widest text-[var(--color-text-tertiary)]">
             Course
           </label>
           <div className="relative">
@@ -779,7 +779,7 @@ function RowEditor({ row, index, matchCount, showMatchHint, onUpdate, onRemove, 
 
       {/* Inline error hints */}
       {(row.errorBatch || row.errorStream || row.errorCode) && (
-        <p className="font-mono text-[10px] text-red-500">
+        <p className="font-mono text-data-sm text-red-500">
           {[
             row.errorStream && 'Select a stream',
             row.errorCode && 'Select a course',
@@ -872,7 +872,7 @@ function BundleCard({
         <div className="grid grid-cols-2 gap-2 mt-1 animate-in slide-in-from-top-1 duration-200">
           <button
             onClick={(e) => { e.stopPropagation(); onLoad(); }}
-            className={`h-7 rounded border font-mono text-[9px] uppercase tracking-wider font-bold transition-all ${
+            className={`h-8 rounded border font-mono text-data-sm uppercase tracking-wider font-bold transition-all ${
               isActive ? 'bg-[var(--accent-cs)] text-white border-transparent' : 'bg-[var(--color-bg-subtle)] text-[var(--color-text-secondary)] border-[var(--color-border-strong)]'
             }`}
           >
@@ -880,7 +880,7 @@ function BundleCard({
           </button>
           <button
             onClick={(e) => { e.stopPropagation(); onGenerate(); }}
-            className="h-7 rounded bg-[var(--color-text-primary)] text-[var(--color-bg)] font-mono text-[9px] uppercase tracking-wider font-bold active:scale-95 transition-all"
+            className="h-8 rounded bg-[var(--color-text-primary)] text-[var(--color-bg)] font-mono text-data-sm uppercase tracking-wider font-bold active:scale-95 transition-all"
           >
             Find Exams
           </button>

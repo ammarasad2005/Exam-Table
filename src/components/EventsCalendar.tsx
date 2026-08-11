@@ -69,7 +69,8 @@ function EventDayDetail({
     day: 'numeric',
     year: 'numeric',
   });
-  const dotPalette = ['#378ADD', '#1D9E75', '#534AB7'] as const;
+  // T2: tokenize dotPalette (was #378ADD/#1D9E75/#534AB7) → accent tokens.
+  const dotPalette = ['var(--accent-cs)', 'var(--accent-ds)', 'var(--accent-ai)'] as const;
 
   return createPortal(
     <>
@@ -85,7 +86,7 @@ function EventDayDetail({
         role="dialog"
         aria-modal="true"
         aria-label={`${title} events`}
-        className="fixed z-[70] bottom-0 left-0 right-0 rounded-t-2xl overflow-y-auto md:bottom-0 md:top-14 md:left-auto md:right-0 md:w-[430px] md:rounded-none md:rounded-l-2xl md:max-h-[calc(100dvh-56px)] animate-in slide-in-from-bottom-4 md:slide-in-from-right-4 duration-300 ease-out h-[85dvh] md:h-auto"
+        className="fixed z-[70] bottom-0 left-0 right-0 rounded-t-2xl overflow-y-auto md:bottom-0 md:top-[3.75rem] md:left-auto md:right-0 md:w-[430px] md:rounded-none md:rounded-l-2xl md:max-h-[calc(100dvh-3.75rem)] animate-in slide-in-from-bottom-4 md:slide-in-from-right-4 duration-300 ease-out h-[85dvh] md:h-auto"
         style={{
           backgroundColor: 'var(--color-bg-raised)',
           boxShadow: 'var(--shadow-float)',
@@ -257,12 +258,15 @@ export function EventsCalendar({ initialMonth, initialYear, compact = false }: E
     })
     : [];
   const monthEventCount = Object.values(eventsByDay).reduce((sum, events) => sum + events.length, 0);
+  // T6: chip colors are positional (no event.type/category field on the data).
+  // Legend is rendered in the calendar header to make this explicit.
   const chipPalette = [
     'bg-blue-100 dark:bg-blue-900/40 text-blue-700 dark:text-blue-300',
     'bg-teal-100 dark:bg-teal-900/40 text-teal-700 dark:text-teal-300',
     'bg-indigo-100 dark:bg-indigo-900/40 text-indigo-700 dark:text-indigo-300',
   ] as const;
-  const dotPalette = ['#378ADD', '#1D9E75', '#534AB7'] as const;
+  // T2: tokenize dotPalette (was #378ADD/#1D9E75/#534AB7) → accent-cs/ds/ai.
+  const dotPalette = ['var(--accent-cs)', 'var(--accent-ds)', 'var(--accent-ai)'] as const;
 
   function goPrev() {
     if (!canGoPrev) return;
@@ -295,11 +299,10 @@ export function EventsCalendar({ initialMonth, initialYear, compact = false }: E
     const content = (
       <>
         <span
-          className={`absolute font-mono leading-none ${compact ? 'text-[10px] top-1.5 left-1.5' : 'text-sm top-2 left-2.5'} ${isToday && !isOverflowDay ? 'text-[#16c60c] dark:text-[#7CFC00]' : ''}`}
+          className={`absolute font-mono leading-none text-data-sm ${compact ? 'top-1.5 left-1.5' : 'text-sm top-2 left-2.5'} ${isToday && !isOverflowDay ? 'text-[var(--color-today)]' : ''}`}
           style={{
-            color: isOverflowDay ? 'var(--color-text-tertiary)' : (isToday ? undefined : 'var(--color-text-secondary)'),
+            color: isOverflowDay ? 'var(--color-overflow-day)' : (isToday ? undefined : 'var(--color-text-secondary)'),
             fontWeight: isToday ? '700' : '500',
-            opacity: isOverflowDay ? 0.5 : 1,
           }}
         >
           {cell.day}
@@ -317,7 +320,7 @@ export function EventsCalendar({ initialMonth, initialYear, compact = false }: E
           {dayEvents.slice(0, previewLimit).map((event, eventIndex) => (
             <span
               key={`${event.id ?? event.event_name}-${event.time}-${eventIndex}`}
-              className={`inline-block font-mono leading-tight rounded truncate ${compact ? 'text-[9px] px-1 py-0.5' : 'text-[11px] px-1.5 py-0.5'} ${chipPalette[Math.min(eventIndex, chipPalette.length - 1)]}`}
+              className={`inline-block font-mono leading-tight rounded truncate ${compact ? 'text-data-sm px-1 py-0.5' : 'text-data-sm px-1.5 py-0.5'} ${chipPalette[Math.min(eventIndex, chipPalette.length - 1)]}`}
               style={{
                 opacity: isOverflowDay ? 0.75 : 1,
               }}
@@ -328,7 +331,7 @@ export function EventsCalendar({ initialMonth, initialYear, compact = false }: E
 
           {dayEvents.length > previewLimit && (
             <span
-              className={`font-mono text-[var(--color-text-tertiary)] ${compact ? 'text-[9px]' : 'text-[10px]'}`}
+              className={`font-mono text-[var(--color-text-tertiary)] ${compact ? 'text-data-sm' : 'text-data-sm'}`}
               style={{ opacity: isOverflowDay ? 0.7 : 1 }}
             >
               +{dayEvents.length - previewLimit} more
@@ -339,12 +342,12 @@ export function EventsCalendar({ initialMonth, initialYear, compact = false }: E
     );
 
     const commonStyle = {
-      borderColor: isToday ? '#ff7a00' : 'var(--color-border)',
+      // T5: unified today highlight — border, glow, and date text all derive from --color-today.
+      borderColor: isToday ? 'var(--color-today)' : 'var(--color-border)',
       backgroundColor: hasEvents ? 'var(--color-bg-raised)' : 'var(--color-bg-subtle)',
       boxShadow: isToday
-        ? '0 0 0 1px rgba(255, 122, 0, 0.9), 0 0 14px rgba(255, 122, 0, 0.55), inset 0 0 0 1px rgba(255, 170, 90, 0.25)'
+        ? '0 0 0 1px var(--color-today), 0 0 14px var(--color-today-glow), inset 0 0 0 1px var(--color-today-bg)'
         : (hasEvents ? 'var(--shadow-card)' : 'none'),
-      opacity: isOverflowDay ? 0.82 : 1,
     } as const;
 
     if (!hasEvents) {
@@ -383,12 +386,14 @@ export function EventsCalendar({ initialMonth, initialYear, compact = false }: E
     const cellClasses = [
       'min-h-[54px] border-b border-r px-1 py-1 text-center transition-colors',
       hasEvents ? 'cursor-pointer active:bg-[var(--color-bg-subtle)]' : 'cursor-default',
-      isToday ? 'bg-[color:rgba(55,138,221,0.07)]' : 'bg-[var(--color-bg-raised)]',
+      // T5: unified today background — was rgba(55,138,221,0.07).
+      isToday ? 'bg-today-bg' : 'bg-[var(--color-bg-raised)]',
     ].join(' ');
 
     const numberClasses = [
-      'inline-flex h-5 w-5 items-center justify-center rounded-full font-mono text-[11px] leading-none',
-      isToday ? 'bg-[#378ADD] text-white' : '',
+      'inline-flex h-5 w-5 items-center justify-center rounded-full font-mono text-data-sm leading-none',
+      // T5: unified today badge — was bg-[#378ADD] text-white.
+      isToday ? 'bg-today text-[var(--color-primary-action-fg)]' : '',
     ].join(' ');
 
     const content = (
@@ -396,8 +401,8 @@ export function EventsCalendar({ initialMonth, initialYear, compact = false }: E
         <div
           className="flex justify-center"
           style={{
-            color: isOverflowDay ? 'var(--color-text-tertiary)' : 'var(--color-text-primary)',
-            opacity: isOverflowDay ? 0.45 : 1,
+            // T30: unified overflow-day color (was opacity 0.45 + tertiary text).
+            color: isOverflowDay ? 'var(--color-overflow-day)' : 'var(--color-text-primary)',
             fontWeight: 500,
           }}
         >
@@ -486,12 +491,12 @@ export function EventsCalendar({ initialMonth, initialYear, compact = false }: E
                 downloadEventsICS(allMonthEvents, `campus-events-${MONTH_NAMES[month]}-${year}.ics`);
               }}
               title="Export all events for this month"
-              className={`flex items-center gap-1.5 font-mono text-[var(--color-text-tertiary)] hover:text-[var(--color-text-primary)] transition-colors ${compact ? 'text-[9px]' : 'text-xs'}`}
+              className={`flex items-center gap-1.5 font-mono text-[var(--color-text-tertiary)] hover:text-[var(--color-text-primary)] transition-colors ${compact ? 'text-data-sm' : 'text-xs'}`}
             >
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
               <span>Export</span>
             </button>
-            <span className={`font-mono text-[var(--color-text-tertiary)] whitespace-nowrap ${compact ? 'text-[10px]' : 'text-xs'}`}>
+            <span className={`font-mono text-[var(--color-text-tertiary)] whitespace-nowrap ${compact ? 'text-data-sm' : 'text-xs'}`}>
               {monthEventCount} event{monthEventCount === 1 ? '' : 's'}
             </span>
           </div>
@@ -511,11 +516,28 @@ export function EventsCalendar({ initialMonth, initialYear, compact = false }: E
         {DAY_NAMES.map((dayName) => (
           <div
             key={dayName}
-            className={`font-mono uppercase tracking-widest text-[var(--color-text-tertiary)] text-center py-1 ${compact ? 'text-[10px]' : 'text-[10px] md:text-xs'}`}
+            className={`font-mono uppercase tracking-widest text-[var(--color-text-tertiary)] text-center py-1 ${compact ? 'text-data-sm' : 'text-data-sm md:text-xs'}`}
           >
             {dayName}
           </div>
         ))}
+      </div>
+
+      {/* T6: chip-color legend — chips are positional (no event.type field on the data). */}
+      <div className={`flex items-center gap-3 ${compact ? 'mb-2' : 'mb-3 md:mb-4'} font-mono text-data-sm text-[var(--color-text-tertiary)]`}>
+        <span className="flex items-center gap-1.5">
+          <span className="w-1.5 h-1.5 rounded-full" style={{ backgroundColor: 'var(--accent-cs)' }} aria-hidden="true" />
+          1st event
+        </span>
+        <span className="flex items-center gap-1.5">
+          <span className="w-1.5 h-1.5 rounded-full" style={{ backgroundColor: 'var(--accent-ds)' }} aria-hidden="true" />
+          2nd event
+        </span>
+        <span className="flex items-center gap-1.5">
+          <span className="w-1.5 h-1.5 rounded-full" style={{ backgroundColor: 'var(--accent-ai)' }} aria-hidden="true" />
+          3rd+
+        </span>
+        <span className="hidden sm:inline opacity-70">· colors are positional, not categorical</span>
       </div>
 
       <div className="grid grid-cols-7 border-l border-t border-[var(--color-border)] md:hidden">

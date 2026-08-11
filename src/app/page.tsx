@@ -3,6 +3,7 @@ import { useState, useEffect, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 import { Header } from '@/components/Header';
 import { DesktopTicker } from '@/components/DesktopTicker';
+import { Reveal } from '@/components/Reveal';
 import { flattenTimetable } from '@/lib/timetable-filter';
 import type { RawTimetableJSON, TimetableEntry, SummerCourseCatalogEntry } from '@/lib/types';
 
@@ -33,6 +34,7 @@ const FEATURES = [
     ),
     accent: 'cs',
     placeholder: false,
+    startHere: true,
   },
   {
     id: 'optimizer',
@@ -141,6 +143,10 @@ const FEATURES = [
     placeholder: false,
   },
 ] as const;
+
+// Feature card definition type — `startHere` is an optional ink-primary
+// affordance applied to the most-used feature card (T24).
+type FeatureCard = (typeof FEATURES)[number] & { startHere?: boolean };
 
 interface UserConfig {
   batch: string;
@@ -277,7 +283,7 @@ export default function RootPage() {
           <Header />
         </div>
 
-        <div className="flex flex-col flex-1 px-5 pb-28 pt-4 max-w-lg mx-auto w-full">
+        <div className="flex flex-col flex-1 px-5 pb-20 pt-4 max-w-lg mx-auto w-full">
 
           {/* Intro typing text */}
           <div className="mb-8">
@@ -351,7 +357,7 @@ export default function RootPage() {
       {/* ================================================================
           DESKTOP  (≥ 768px)
       ================================================================ */}
-      <div className="hidden md:flex min-h-dvh flex-col bg-[var(--color-bg)]">
+      <div id="main-content" className="hidden md:flex min-h-dvh flex-col bg-[var(--color-bg)]">
         {/* Header — no tabs */}
         <Header />
 
@@ -371,12 +377,18 @@ export default function RootPage() {
                 backgroundSize: '18px 18px',
               }}
             />
+            {/* T26: subtle warm paper-grain overlay — distinguishes the landing
+                hero from /home (which drops this texture for a cleaner config feel). */}
+            <div
+              aria-hidden="true"
+              className="absolute inset-0 pointer-events-none opacity-[0.04] bg-[url('/textures/paper-grain.png')] bg-cover"
+            />
             {/* Ambient glows */}
             <div className="absolute top-0 right-0 w-72 h-72 bg-[var(--accent-cs)]/5 rounded-full -translate-y-1/2 translate-x-1/2 blur-3xl pointer-events-none" />
             <div className="absolute bottom-10 left-10 w-56 h-56 bg-[var(--accent-ai)]/5 rounded-full translate-y-1/2 -translate-x-1/2 blur-2xl pointer-events-none" />
 
             {/* Headline block */}
-            <div className="relative z-10">
+            <Reveal className="relative z-10">
               <p className="font-mono text-xs uppercase tracking-widest text-[var(--color-text-tertiary)] mb-6">
                 FAST NUCES, ISB — Unified Portal
               </p>
@@ -392,7 +404,7 @@ export default function RootPage() {
                   <span className="inline-block w-[2px] h-[1em] bg-[var(--color-text-tertiary)] animate-pulse ml-1 align-middle" />
                 )}
               </p>
-            </div>
+            </Reveal>
 
             {/* Clock + Next Up */}
             {mounted && (
@@ -446,48 +458,65 @@ export default function RootPage() {
               Features
             </p>
 
-            <div className="grid grid-cols-2 lg:grid-cols-3 gap-4 content-start">
-              {FEATURES.map((f) => (
+            <Reveal stagger className="grid grid-cols-2 lg:grid-cols-3 gap-4 auto-rows-fr">
+              {FEATURES.map((f) => {
+                const isStartHere = (f as FeatureCard).startHere === true;
+                /* Set the card accent as a CSS custom property so CSS :hover
+                   can handle the hover effect without inline JS (cleaner, more
+                   performant — matches the FacultyCard T10 fix pattern). */
+                const cardAccent = isStartHere
+                  ? 'var(--color-primary-action)'
+                  : `var(--accent-${f.accent})`;
+                const cardAccentBg = isStartHere
+                  ? 'var(--color-primary-action)'
+                  : `var(--accent-${f.accent}-bg)`;
+                return (
                 <button
                   key={f.id}
                   onClick={() => handleFeatureClick(f.id, f.placeholder)}
                   disabled={f.placeholder}
-                  className="group relative overflow-hidden text-left rounded-2xl border bg-[var(--color-bg-raised)] p-6 flex flex-col gap-3 transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                  className={`feature-card-css group relative overflow-hidden text-left rounded-2xl border bg-[var(--color-bg-raised)] p-6 flex flex-col gap-3 transition-all duration-200 hover:-translate-y-0.5 focus-visible:outline-none focus-visible:ring-2 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:translate-y-0 ${isStartHere ? 'ring-1 ring-[var(--color-primary-action)]/15' : ''}`}
                   style={{
-                    borderColor: 'var(--color-border)',
-                    boxShadow: 'var(--shadow-card), var(--border-inset)',
-                  }}
-                  onMouseOver={e => {
-                    if (!f.placeholder) {
-                      (e.currentTarget as HTMLElement).style.boxShadow = `var(--shadow-raised), var(--border-inset), 0 0 0 1px var(--accent-${f.accent})`;
-                      (e.currentTarget as HTMLElement).style.borderColor = `var(--accent-${f.accent})`;
-                      (e.currentTarget as HTMLElement).style.transform = 'translateY(-2px)';
-                    }
-                  }}
-                  onMouseOut={e => {
-                    (e.currentTarget as HTMLElement).style.boxShadow = 'var(--shadow-card), var(--border-inset)';
-                    (e.currentTarget as HTMLElement).style.borderColor = 'var(--color-border)';
-                    (e.currentTarget as HTMLElement).style.transform = 'translateY(0)';
+                    // CSS custom property for hover accent (used by :hover below)
+                    ['--card-accent' as any]: cardAccent,
+                    ['--card-accent-bg' as any]: cardAccentBg,
+                    borderColor: isStartHere ? 'var(--color-primary-action)' : 'var(--color-border)',
+                    boxShadow: isStartHere
+                      ? 'var(--shadow-raised), var(--border-inset), 0 0 0 1px var(--color-primary-action)'
+                      : 'var(--shadow-card), var(--border-inset)',
                   }}
                 >
                   <span
                     aria-hidden="true"
                     className="absolute left-0 top-0 bottom-0 w-[5px] rounded-l-2xl opacity-80 group-hover:opacity-100 transition-opacity duration-200"
-                    style={{ backgroundColor: `var(--accent-${f.accent})` }}
+                    style={{ backgroundColor: isStartHere ? 'var(--color-primary-action)' : `var(--accent-${f.accent})` }}
                   />
                   <div className="flex items-start justify-between">
                     <div
                       className="w-11 h-11 rounded-xl flex items-center justify-center transition-colors duration-200"
-                      style={{
-                        backgroundColor: `var(--accent-${f.accent}-bg)`,
-                        color: `var(--accent-${f.accent})`,
-                      }}
+                      style={
+                        isStartHere
+                          ? {
+                              backgroundColor: 'var(--color-primary-action)',
+                              color: 'var(--color-primary-action-fg)',
+                            }
+                          : {
+                              backgroundColor: `var(--accent-${f.accent}-bg)`,
+                              color: `var(--accent-${f.accent})`,
+                            }
+                      }
                     >
                       {f.icon}
                     </div>
                     {f.placeholder ? (
-                      <span className="font-mono text-[9px] uppercase tracking-wider px-2 py-0.5 rounded-full bg-[var(--color-bg-subtle)] text-[var(--color-text-tertiary)] border border-[var(--color-border)]">
+                      <span className="font-mono text-data-sm uppercase tracking-wider px-2 py-0.5 rounded-full bg-[var(--color-bg-subtle)] text-[var(--color-text-tertiary)] border border-[var(--color-border)]">
                         Coming Soon
+                      </span>
+                    ) : isStartHere ? (
+                      /* T24: single ink-primary "Start here" affordance */
+                      <span className="btn-ink flex items-center gap-1 font-mono text-data-sm font-bold uppercase tracking-wider px-2 py-1 rounded-full shadow-sm">
+                        Start here
+                        <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><path d="M5 12h14M13 5l7 7-7 7" /></svg>
                       </span>
                     ) : (
                       <svg
@@ -499,27 +528,37 @@ export default function RootPage() {
                       </svg>
                     )}
                   </div>
-                  <div>
+                  <div className="flex flex-col gap-1">
                     <h2 className="mb-[5px] font-body text-[17px] font-medium leading-[1.4] tracking-[0.04em] text-[rgba(0,0,0,0.8)] dark:text-[rgba(255,255,255,0.88)]">
                       {f.title}
                     </h2>
                     <p className="font-body text-sm text-[var(--color-text-secondary)] leading-relaxed">{f.description}</p>
                   </div>
                 </button>
-              ))}
-            </div>
+                );
+              })}
+            </Reveal>
 
             {/* Footer strip */}
             <div className="mt-10 pt-6 border-t border-[var(--color-border)]">
-              <p className="font-mono text-[10px] text-[var(--color-text-tertiary)] uppercase tracking-widest text-center flex items-center justify-center gap-1">
+              <p className="font-mono text-data-sm text-[var(--color-text-tertiary)] uppercase tracking-widest text-center flex items-center justify-center gap-1">
                 FAST NUCES · Islamabad Campus · {semesterName}
-                <a 
-                  href="/admin" 
+                <a
+                  href="/admin"
                   className="hover:text-orange-500 transition-colors duration-150 p-1 ml-0.5 opacity-40 hover:opacity-100"
                   title="Admin Portal"
                 >
                   🔑
                 </a>
+              </p>
+              {/* T26: Cmd+K discoverability hint — first-time users learn the command palette */}
+              <p className="mt-3 font-mono text-data-sm text-[var(--color-text-tertiary)] text-center flex items-center justify-center gap-2">
+                <span>Tip:</span>
+                <kbd className="inline-flex items-center min-w-[22px] h-5 px-1.5 rounded border border-[var(--color-border)] bg-[var(--color-bg-subtle)] text-[var(--color-text-secondary)] text-[11px]">⌘</kbd>
+                <kbd className="inline-flex items-center min-w-[22px] h-5 px-1.5 rounded border border-[var(--color-border)] bg-[var(--color-bg-subtle)] text-[var(--color-text-secondary)] text-[11px]">K</kbd>
+                <span>to search ·</span>
+                <kbd className="inline-flex items-center min-w-[22px] h-5 px-1.5 rounded border border-[var(--color-border)] bg-[var(--color-bg-subtle)] text-[var(--color-text-secondary)] text-[11px]">?</kbd>
+                <span>for shortcuts</span>
               </p>
             </div>
           </div>

@@ -1,6 +1,7 @@
 'use client';
 import { useState } from 'react';
 import { MapPin } from 'lucide-react';
+import type { CSSProperties } from 'react';
 import type { FacultyMember, DeptFileKey } from '@/lib/faculty';
 import { DEPT_LABELS, DEPT_ACCENT, getFacultyRank } from '@/lib/faculty';
 
@@ -28,21 +29,27 @@ export function FacultyCard({ member, priority = false, viewMode = 'grid', onCli
 
   const isLeadership = getFacultyRank(member.status) <= 2;
 
-  const baseStyle = {
-    boxShadow: isLeadership ? `0 0 0 1px ${accentColor}, var(--shadow-card), var(--border-inset)` : 'var(--shadow-card), var(--border-inset)',
-    borderColor: isLeadership ? accentColor : 'var(--color-border)'
-  };
-  const hoverBoxShadow = isLeadership ? `0 0 0 1px ${accentColor}, var(--shadow-raised), var(--border-inset)` : 'var(--shadow-raised), var(--border-inset)';
-  const outBoxShadow = isLeadership ? `0 0 0 1px ${accentColor}, var(--shadow-card), var(--border-inset)` : 'var(--shadow-card), var(--border-inset)';
+  // T10: replaced inline onMouseOver/onMouseOut JS shadow-swapping with CSS
+  // transitions. The leadership accent ring is wired through a CSS var so the
+  // static Tailwind arbitrary-value class names can compose it with the
+  // card/raised shadow tokens.
+  const ringShadow = isLeadership ? `0 0 0 1px ${accentColor}` : '0 0 0 0 transparent';
+  const cardStyle = {
+    '--ring-shadow': ringShadow,
+    borderColor: isLeadership ? accentColor : 'var(--color-border)',
+  } as CSSProperties;
+  // T10: shared className fragment for shadow + lift hover.
+  const hoverShadowClass =
+    'shadow-[var(--ring-shadow),var(--shadow-card),var(--border-inset)] hover:shadow-[var(--ring-shadow),var(--shadow-raised),var(--border-inset)] hover:-translate-y-[2px] transition-all duration-200';
 
   if (viewMode === 'list') {
     return (
       <button
         onClick={onClick}
-        className={`relative w-full h-full text-left bg-[var(--color-bg-raised)] border rounded-xl overflow-hidden flex items-center p-3 gap-4 transition-all duration-150 focus-visible:outline-none focus-visible:ring-2 active:scale-[0.98] group`}
-        style={baseStyle}
-        onMouseOver={e => (e.currentTarget.style.boxShadow = hoverBoxShadow)}
-        onMouseOut={e => (e.currentTarget.style.boxShadow = outBoxShadow)}
+        aria-label={`View ${member.name}${member.status ? ', ' + member.status : ''}`}
+        // T19: faculty-card stagger entrance; T10: CSS hover replaces JS swap.
+        className={`faculty-card relative w-full h-full text-left bg-[var(--color-bg-raised)] border rounded-xl overflow-hidden flex items-center p-3 gap-4 focus-visible:outline-none focus-visible:ring-2 active:scale-[0.98] group ${hoverShadowClass}`}
+        style={cardStyle}
       >
         <div className="relative w-14 h-14 rounded-full bg-[var(--color-bg-subtle)] overflow-hidden shrink-0 ring-2 ring-[var(--color-bg)]">
           {!imgError ? (
@@ -55,7 +62,8 @@ export function FacultyCard({ member, priority = false, viewMode = 'grid', onCli
               onError={() => setImgError(true)}
             />
           ) : (
-            <div className="w-full h-full flex items-center justify-center font-display text-xl font-bold" style={{ backgroundColor: accentBg, color: accentColor }}>
+            // T11: softened photo-initials fallback — was text-xl font-bold on accent-bg.
+            <div className="w-full h-full flex items-center justify-center font-display text-lg font-semibold" style={{ backgroundColor: `color-mix(in srgb, ${accentColor} 12%, var(--color-bg-subtle))`, color: accentColor }}>
               {initials}
             </div>
           )}
@@ -66,24 +74,25 @@ export function FacultyCard({ member, priority = false, viewMode = 'grid', onCli
             <h3 className="font-display text-[15px] leading-tight text-[var(--color-text-primary)] truncate flex items-center gap-1.5">
               <span className="truncate">{member.name}</span>
               {isLeadership && (
-                <span className="shrink-0 font-mono text-[8px] uppercase tracking-wider font-bold px-1.5 py-0.5 rounded-full" style={{ backgroundColor: accentBg, color: accentColor }}>
+                <span className="shrink-0 font-mono text-data-sm uppercase tracking-wider font-bold px-1.5 py-0.5 rounded-full" style={{ backgroundColor: accentBg, color: accentColor }}>
                   HOD
                 </span>
               )}
             </h3>
-            <span className="shrink-0 font-mono text-[9px] font-bold px-1.5 py-0.5 rounded-md" style={{ backgroundColor: accentBg, color: accentColor }}>{member.deptKey}</span>
+            <span className="shrink-0 font-mono text-data-sm font-bold px-1.5 py-0.5 rounded-md" style={{ backgroundColor: accentBg, color: accentColor }}>{member.deptKey}</span>
           </div>
           <p className="font-body text-[11px] text-[var(--color-text-secondary)] leading-snug truncate mt-0.5">{member.status}</p>
           <div className="mt-1.5 flex items-center gap-1.5 min-w-0">
             <MapPin size={10} className="text-[var(--color-text-tertiary)] shrink-0" />
-            <span className="font-mono text-[10px] text-[var(--color-text-tertiary)] truncate">{member.office_room || 'N/A'}</span>
+            <span className="font-mono text-data-sm text-[var(--color-text-tertiary)] truncate">{member.office_room || 'N/A'}</span>
           </div>
         </div>
 
         {/* LinkedIn badge — bottom-right, only if available */}
         {member.linkedin_profile && (
           <div className="absolute bottom-3 right-3">
-            <span className="w-5 h-5 flex items-center justify-center rounded-md bg-[#0A66C2] text-white shadow-sm">
+            {/* T2: tokenize LinkedIn color → var(--color-linkedin). */}
+            <span className="w-5 h-5 flex items-center justify-center rounded-md bg-[var(--color-linkedin)] text-white shadow-sm">
               <svg width="10" height="10" viewBox="0 0 24 24" fill="currentColor">
                 <path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433c-1.144 0-2.063-.926-2.063-2.065 0-1.138.92-2.063 2.063-2.063 1.14 0 2.064.925 2.064 2.063 0 1.139-.925 2.065-2.064 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z" />
               </svg>
@@ -98,10 +107,10 @@ export function FacultyCard({ member, priority = false, viewMode = 'grid', onCli
   return (
     <button
       onClick={onClick}
-      className={`w-full h-full text-left bg-[var(--color-bg-raised)] border rounded-xl overflow-hidden flex flex-col transition-all duration-150 focus-visible:outline-none focus-visible:ring-2 active:scale-[0.98] group`}
-      style={baseStyle}
-      onMouseOver={e => (e.currentTarget.style.boxShadow = hoverBoxShadow)}
-      onMouseOut={e => (e.currentTarget.style.boxShadow = outBoxShadow)}
+      aria-label={`View ${member.name}${member.status ? ', ' + member.status : ''}`}
+      // T19: faculty-card stagger entrance; T10: CSS hover replaces JS swap.
+      className={`faculty-card w-full h-full text-left bg-[var(--color-bg-raised)] border rounded-xl overflow-hidden flex flex-col focus-visible:outline-none focus-visible:ring-2 active:scale-[0.98] group ${hoverShadowClass}`}
+      style={cardStyle}
     >
       {/* Photo area */}
       <div className="relative w-full aspect-[4/3] bg-[var(--color-bg-subtle)] overflow-hidden">
@@ -116,9 +125,10 @@ export function FacultyCard({ member, priority = false, viewMode = 'grid', onCli
             onError={() => setImgError(true)}
           />
         ) : (
+          // T11: softened photo-initials fallback — was text-4xl font-bold on accent-bg.
           <div
-            className="w-full h-full flex items-center justify-center font-display text-4xl font-bold"
-            style={{ backgroundColor: accentBg, color: accentColor }}
+            className="w-full h-full flex items-center justify-center font-display text-2xl font-semibold"
+            style={{ backgroundColor: `color-mix(in srgb, ${accentColor} 12%, var(--color-bg-subtle))`, color: accentColor }}
           >
             {initials}
           </div>
@@ -127,7 +137,7 @@ export function FacultyCard({ member, priority = false, viewMode = 'grid', onCli
         {/* Dept badge — floated top-right */}
         <div className="absolute top-3 right-3">
           <span
-            className="font-mono text-[10px] font-bold px-2 py-0.5 rounded-md backdrop-blur-sm"
+            className="font-mono text-data-sm font-bold px-2 py-0.5 rounded-md backdrop-blur-sm"
             style={{ backgroundColor: accentBg, color: accentColor }}
           >
             {member.deptKey}
@@ -141,7 +151,7 @@ export function FacultyCard({ member, priority = false, viewMode = 'grid', onCli
         <h3 className="font-display text-lg leading-tight text-[var(--color-text-primary)] line-clamp-2 flex items-start gap-1.5">
           <span className="line-clamp-2">{member.name}</span>
           {isLeadership && (
-            <span className="shrink-0 font-mono text-[9px] uppercase tracking-wider font-bold px-1.5 py-0.5 rounded-full mt-0.5" style={{ backgroundColor: accentBg, color: accentColor }}>
+            <span className="shrink-0 font-mono text-data-sm uppercase tracking-wider font-bold px-1.5 py-0.5 rounded-full mt-0.5" style={{ backgroundColor: accentBg, color: accentColor }}>
               HOD
             </span>
           )}
@@ -157,11 +167,12 @@ export function FacultyCard({ member, priority = false, viewMode = 'grid', onCli
           {/* Office */}
           <div className="flex items-center gap-1.5 min-w-0">
             <MapPin size={12} className="text-[var(--color-text-tertiary)] shrink-0" />
-            <span className="font-mono text-[10px] text-[var(--color-text-tertiary)] truncate">{member.office_room || 'N/A'}</span>
+            <span className="font-mono text-data-sm text-[var(--color-text-tertiary)] truncate">{member.office_room || 'N/A'}</span>
           </div>
           {/* LinkedIn badge — bottom-right, only if available */}
           {member.linkedin_profile && (
-            <span className="w-5 h-5 flex items-center justify-center rounded-md bg-[#0A66C2] text-white shadow-sm shrink-0">
+            // T2: tokenize LinkedIn color → var(--color-linkedin).
+            <span className="w-5 h-5 flex items-center justify-center rounded-md bg-[var(--color-linkedin)] text-white shadow-sm shrink-0">
               <svg width="10" height="10" viewBox="0 0 24 24" fill="currentColor">
                 <path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433c-1.144 0-2.063-.926-2.063-2.065 0-1.138.92-2.063 2.063-2.063 1.14 0 2.064.925 2.064 2.063 0 1.139-.925 2.065-2.064 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z" />
               </svg>

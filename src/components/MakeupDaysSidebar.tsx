@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect } from 'react';
+import { Calendar } from 'lucide-react';
 import { useMobileSwipe } from '@/hooks/useMobileSwipe';
 
 interface MakeupDaysSidebarProps {
@@ -45,7 +46,7 @@ export function MakeupDaysSidebar({ onClose, makeupDays, monthName }: MakeupDays
         role="dialog"
         aria-modal="true"
         aria-label={`${monthName} Makeup Days`}
-        className="fixed z-45 bottom-0 left-0 right-0 rounded-t-2xl overflow-y-auto md:bottom-0 md:top-14 md:left-auto md:right-0 md:w-96 md:rounded-none md:rounded-l-2xl md:max-h-[calc(100dvh-56px)] animate-in slide-in-from-bottom-4 md:slide-in-from-right-4 duration-300 ease-out h-[60dvh] md:h-auto"
+        className="fixed z-45 bottom-0 left-0 right-0 rounded-t-2xl overflow-y-auto md:bottom-0 md:top-[3.75rem] md:left-auto md:right-0 md:w-96 md:rounded-none md:rounded-l-2xl md:max-h-[calc(100dvh-3.75rem)] animate-in slide-in-from-bottom-4 md:slide-in-from-right-4 duration-300 ease-out h-[60dvh] md:h-auto"
         style={{
           backgroundColor: 'var(--color-bg-raised)',
           boxShadow: 'var(--shadow-float)',
@@ -59,7 +60,10 @@ export function MakeupDaysSidebar({ onClose, makeupDays, monthName }: MakeupDays
         {/* Header */}
         <div className="flex items-start justify-between px-5 pt-4 pb-3 border-b border-[var(--color-border)]">
           <div>
-            <h2 className="font-display text-xl leading-tight font-bold">📅 {monthName} Makeup Days</h2>
+            <h2 className="font-display text-xl leading-tight font-bold inline-flex items-center gap-2">
+              <Calendar className="w-5 h-5" aria-hidden="true" />
+              {monthName} Makeup Days
+            </h2>
             <p className="text-xs text-[var(--color-text-secondary)] mt-1">
               Makeup classes scheduled in this calendar month
             </p>

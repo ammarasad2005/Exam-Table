@@ -8,6 +8,7 @@ import { Header } from '@/components/Header';
 
 import { FacultyCard } from '@/components/FacultyCard';
 import { FacultyDetail } from '@/components/FacultyDetail';
+import { Reveal } from '@/components/Reveal';
 import {
   flattenFaculty,
   searchFaculty,
@@ -127,7 +128,7 @@ export default function FacultyPage() {
       <div className="flex flex-1">
 
         {/* ── Desktop Sidebar ─────────────────────────────────────────────── */}
-        <aside className="hidden md:flex md:w-56 lg:w-64 flex-col gap-5 p-6 border-r border-[var(--color-border)] sticky top-14 h-[calc(100dvh-56px)] overflow-y-auto">
+        <aside className="hidden md:flex md:w-56 lg:w-64 flex-col gap-5 p-6 border-r border-[var(--color-border)] sticky top-[3.75rem] h-[calc(100dvh-3.75rem)] overflow-y-auto">
           <div>
             <p className="font-mono text-[10px] uppercase tracking-widest text-[var(--color-text-tertiary)] mb-3">
               Departments
@@ -183,6 +184,11 @@ export default function FacultyPage() {
         {/* ── Main content ────────────────────────────────────────────────── */}
         <div className="flex-1 px-4 md:px-8 py-6 max-w-[1200px] mx-auto w-full">
 
+          {/* T20: wrap search bar + mobile filter strip + results header in <Reveal>
+              so the header region reveals as one unit on scroll. Faculty cards
+              below already have .faculty-card stagger animation (untouched). */}
+          <Reveal>
+
           {/* Search Bar */}
           <div className="relative mb-5">
             <svg
@@ -213,7 +219,7 @@ export default function FacultyPage() {
           <div className="md:hidden flex gap-2 overflow-x-auto pb-3 mb-4 scrollbar-none -mx-4 px-4">
             <button
               onClick={() => handleDeptChange('ALL')}
-              className="shrink-0 h-8 px-4 rounded-full font-mono text-[11px] font-bold border transition-all hover:bg-[var(--color-text-primary)] hover:text-[var(--color-bg)] hover:border-[var(--color-text-primary)]"
+              className="shrink-0 h-8 px-4 rounded-full font-mono text-data-sm font-bold border transition-all hover:bg-[var(--color-text-primary)] hover:text-[var(--color-bg)] hover:border-[var(--color-text-primary)] flex items-center gap-1.5"
               style={activeDept === 'ALL' ? {
                 backgroundColor: 'var(--color-text-primary)',
                 color: 'var(--color-bg)',
@@ -224,6 +230,8 @@ export default function FacultyPage() {
               }}
             >
               All
+              {/* T12: per-dept count badge — matches desktop sidebar pattern. */}
+              <span className="opacity-70">{ALL_MEMBERS.length}</span>
             </button>
             {DEPT_ORDER.map(key => {
               const accent   = DEPT_ACCENT[key];
@@ -232,7 +240,7 @@ export default function FacultyPage() {
                 <button
                   key={key}
                   onClick={() => handleDeptChange(key)}
-                  className="shrink-0 h-8 px-4 rounded-full font-mono text-[11px] font-bold border transition-all hover:bg-[var(--hover-bg)] hover:text-[var(--hover-color)] hover:border-[var(--hover-color)]"
+                  className="shrink-0 h-8 px-4 rounded-full font-mono text-data-sm font-bold border transition-all hover:bg-[var(--hover-bg)] hover:text-[var(--hover-color)] hover:border-[var(--hover-color)] flex items-center gap-1.5"
                   style={{
                     '--hover-bg': `var(--accent-${accent}-bg)`,
                     '--hover-color': `var(--accent-${accent})`,
@@ -247,6 +255,8 @@ export default function FacultyPage() {
                   } as any}
                 >
                   {key}
+                  {/* T12: per-dept count badge — matches desktop sidebar pattern. */}
+                  <span className="opacity-70">{totalByDept[key] ?? 0}</span>
                 </button>
               );
             })}
@@ -284,6 +294,8 @@ export default function FacultyPage() {
                </button>
             </div>
           </div>
+
+          </Reveal>
 
           {/* Faculty grid */}
           {filtered.length === 0 ? (

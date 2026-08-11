@@ -2,6 +2,7 @@
 
 import Link from 'next/link';
 import { ThemeToggle } from '@/components/ThemeToggle';
+import { ReducedMotionIndicator } from '@/components/ReducedMotionIndicator';
 import { ReactNode } from 'react';
 
 interface HeaderProps {
@@ -10,6 +11,12 @@ interface HeaderProps {
 }
 
 export function Header({ children, rightActions }: HeaderProps) {
+  // Cmd/Ctrl+K hint affordance: clicking it dispatches the same shortcut the
+  // CommandPalette listens for, so it opens the palette.
+  const openPalette = () => {
+    window.dispatchEvent(new KeyboardEvent('keydown', { key: 'k', metaKey: true, ctrlKey: navigator.platform.includes('Mac') }));
+  };
+
   return (
     <header
       className="sticky top-0 z-50 flex items-center justify-between h-[3.75rem] flex-shrink-0 glass-header-laser px-5 md:px-10"
@@ -17,9 +24,9 @@ export function Header({ children, rightActions }: HeaderProps) {
     >
       {/* Left: Logo */}
       <div className="flex items-center min-w-[60px] md:min-w-[100px]">
-        <Link href="/" className="flex items-center cursor-pointer group">
-          <div 
-            className="h-6 w-[72px] transition-colors duration-300 group-hover:scale-105 active:scale-95 bg-[var(--color-text-primary)] group-hover:bg-[var(--laser-rail-mid)]"
+        <Link href="/" className="flex items-center cursor-pointer group" aria-label="FAST Isb Utilities home">
+          <div
+            className="h-6 w-[72px] transition-transform duration-300 group-hover:scale-105 active:scale-95 bg-[var(--color-text-primary)] group-hover:bg-[var(--color-text-primary)]"
             style={{
               maskImage: 'url(/logo/logo.png)',
               WebkitMaskImage: 'url(/logo/logo.png)',
@@ -40,24 +47,39 @@ export function Header({ children, rightActions }: HeaderProps) {
       </div>
 
       {/* Right: Actions */}
-      <div className="flex items-center justify-end min-w-[60px] md:min-w-[100px] gap-3 md:gap-4">
+      <div className="flex items-center justify-end min-w-[60px] md:min-w-[100px] gap-2 md:gap-3">
         {rightActions}
-        <a 
-          href="https://github.com/ammarasad2005/Exam-Table" 
-          target="_blank" 
-          rel="noopener noreferrer" 
-          className="md:hidden text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)] transition-colors" 
+        <ReducedMotionIndicator />
+        {/* Command palette trigger (Cmd+K) — hidden on mobile (FAB covers nav) */}
+        <button
+          type="button"
+          onClick={openPalette}
+          aria-label="Open command palette (Cmd+K)"
+          className="hidden md:flex items-center gap-1.5 h-9 px-2.5 rounded-md border border-[var(--color-border)] bg-[var(--color-bg-raised)] text-[var(--color-text-tertiary)] hover:text-[var(--color-text-secondary)] hover:bg-[var(--color-bg-subtle)] transition-colors"
+          title="Search pages and actions (Cmd+K)"
+        >
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <circle cx="11" cy="11" r="7" />
+            <path d="m21 21-4.3-4.3" />
+          </svg>
+          <kbd className="font-mono text-data-sm">⌘K</kbd>
+        </button>
+        <a
+          href="https://github.com/ammarasad2005/Exam-Table"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="md:hidden text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)] transition-colors"
           aria-label="GitHub"
         >
           <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
             <path fillRule="evenodd" clipRule="evenodd" d="M12 2C6.477 2 2 6.477 2 12c0 4.42 2.87 8.17 6.84 9.5.5.08.66-.23.66-.5v-1.69c-2.77.6-3.36-1.34-3.36-1.34-.46-1.16-1.11-1.47-1.11-1.47-.91-.62.07-.6.07-.6 1 .07 1.53 1.03 1.53 1.03.87 1.52 2.34 1.07 2.91.83.09-.65.35-1.09.63-1.34-2.22-.25-4.55-1.11-4.55-4.92 0-1.11.38-2 1.03-2.71-.1-.25-.45-1.29.1-2.64 0 0 .84-.27 2.75 1.02.79-.22 1.65-.33 2.5-.33.85 0 1.71.11 2.5.33 1.91-1.29 2.75-1.02 2.75-1.02.55 1.35.2 2.39.1 2.64.65.71 1.03 1.6 1.03 2.71 0 3.82-2.34 4.66-4.57 4.91.36.31.69.92.69 1.85V21c0 .27.16.59.67.5C19.14 20.16 22 16.42 22 12A10 10 0 0012 2z" />
           </svg>
         </a>
-        <a 
-          href="https://linkedin.com/in/muhammad-ammar-asad" 
-          target="_blank" 
-          rel="noopener noreferrer" 
-          className="md:hidden text-[var(--color-text-secondary)] hover:text-[#0a66c2] transition-colors dark:hover:text-[#3b82f6]" 
+        <a
+          href="https://linkedin.com/in/muhammad-ammar-asad"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="md:hidden text-[var(--color-text-secondary)] hover:text-[var(--color-linkedin)] transition-colors"
           aria-label="LinkedIn"
         >
           <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">

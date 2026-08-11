@@ -55,7 +55,7 @@ export function FacultyDetail({ member, onClose }: Props) {
         role="dialog"
         aria-modal="true"
         aria-label={`${member.name} profile`}
-        className="fixed z-40 bottom-0 left-0 right-0 rounded-t-2xl overflow-y-auto md:bottom-0 md:top-14 md:left-auto md:right-0 md:w-[400px] md:rounded-none md:rounded-l-2xl md:max-h-[calc(100dvh-56px)] animate-in slide-in-from-bottom-4 md:slide-in-from-right-4 duration-300 ease-out h-[90dvh] md:h-auto"
+        className="fixed z-40 bottom-0 left-0 right-0 rounded-t-2xl overflow-y-auto md:bottom-0 md:top-[3.75rem] md:left-auto md:right-0 md:w-[400px] md:rounded-none md:rounded-l-2xl md:max-h-[calc(100dvh-3.75rem)] animate-in slide-in-from-bottom-4 md:slide-in-from-right-4 duration-300 ease-out h-[90dvh] md:h-auto"
         style={{ backgroundColor: 'var(--color-bg-raised)', boxShadow: 'var(--shadow-float)' }}
       >
         {/* Mobile drag handle */}
@@ -126,7 +126,7 @@ export function FacultyDetail({ member, onClose }: Props) {
           <div className="flex items-center gap-3 px-4 py-3 rounded-xl bg-[var(--color-bg-subtle)]">
             <MapPin size={16} className="text-[var(--color-text-tertiary)] shrink-0" />
             <div className="min-w-0">
-              <p className="font-mono text-[10px] uppercase tracking-widest text-[var(--color-text-tertiary)]">Office</p>
+              <p className="font-mono text-data-sm uppercase tracking-widest text-[var(--color-text-tertiary)]">Office</p>
               <p className="font-mono text-sm font-medium text-[var(--color-text-primary)]">{member.office_room || 'N/A'}</p>
             </div>
           </div>
@@ -140,7 +140,7 @@ export function FacultyDetail({ member, onClose }: Props) {
               <rect width="20" height="16" x="2" y="4" rx="2"/><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/>
             </svg>
             <div className="min-w-0">
-              <p className="font-mono text-[10px] uppercase tracking-widest text-[var(--color-text-tertiary)]">Email</p>
+              <p className="font-mono text-data-sm uppercase tracking-widest text-[var(--color-text-tertiary)]">Email</p>
               <p className="font-mono text-sm font-medium text-[var(--color-text-primary)] truncate group-hover:underline">{member.email}</p>
             </div>
           </a>
@@ -153,11 +153,11 @@ export function FacultyDetail({ member, onClose }: Props) {
               rel="noopener noreferrer"
               className="flex items-center gap-3 px-4 py-3 rounded-xl bg-[var(--color-bg-subtle)] hover:bg-[var(--color-bg)] transition-colors group"
             >
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" className="text-[#0A66C2] shrink-0">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" className="text-[var(--color-linkedin)] shrink-0">
                 <path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433c-1.144 0-2.063-.926-2.063-2.065 0-1.138.92-2.063 2.063-2.063 1.14 0 2.064.925 2.064 2.063 0 1.139-.925 2.065-2.064 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/>
               </svg>
               <div className="min-w-0">
-                <p className="font-mono text-[10px] uppercase tracking-widest text-[var(--color-text-tertiary)]">LinkedIn</p>
+                <p className="font-mono text-data-sm uppercase tracking-widest text-[var(--color-text-tertiary)]">LinkedIn</p>
                 <p className="font-mono text-sm font-medium text-[var(--color-text-primary)] truncate group-hover:underline">View Profile</p>
               </div>
               <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="ml-auto text-[var(--color-text-tertiary)]">

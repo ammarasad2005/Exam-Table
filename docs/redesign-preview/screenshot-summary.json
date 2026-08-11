@@ -1,0 +1,275 @@
+[
+  {
+    "slug": "landing",
+    "route": "/",
+    "viewport": "desktop",
+    "status": "ok",
+    "title": "FAST Isb Utilities"
+  },
+  {
+    "slug": "landing",
+    "route": "/",
+    "viewport": "tablet",
+    "status": "ok",
+    "title": "FAST Isb Utilities"
+  },
+  {
+    "slug": "landing",
+    "route": "/",
+    "viewport": "mobile",
+    "status": "ok",
+    "title": "FAST Isb Utilities"
+  },
+  {
+    "slug": "home",
+    "route": "/home",
+    "viewport": "desktop",
+    "status": "ok",
+    "title": "FAST Isb Utilities"
+  },
+  {
+    "slug": "home",
+    "route": "/home",
+    "viewport": "tablet",
+    "status": "ok",
+    "title": "FAST Isb Utilities"
+  },
+  {
+    "slug": "home",
+    "route": "/home",
+    "viewport": "mobile",
+    "status": "ok",
+    "title": "FAST Isb Utilities"
+  },
+  {
+    "slug": "timetable",
+    "route": "/timetable",
+    "viewport": "desktop",
+    "status": "ok",
+    "title": "FAST Isb Utilities"
+  },
+  {
+    "slug": "timetable",
+    "route": "/timetable",
+    "viewport": "tablet",
+    "status": "ok",
+    "title": "FAST Isb Utilities"
+  },
+  {
+    "slug": "timetable",
+    "route": "/timetable",
+    "viewport": "mobile",
+    "status": "ok",
+    "title": "FAST Isb Utilities"
+  },
+  {
+    "slug": "timetable_custom",
+    "route": "/timetable/custom",
+    "viewport": "desktop",
+    "status": "ok",
+    "title": "FAST Isb Utilities"
+  },
+  {
+    "slug": "timetable_custom",
+    "route": "/timetable/custom",
+    "viewport": "tablet",
+    "status": "ok",
+    "title": "FAST Isb Utilities"
+  },
+  {
+    "slug": "timetable_custom",
+    "route": "/timetable/custom",
+    "viewport": "mobile",
+    "status": "ok",
+    "title": "FAST Isb Utilities"
+  },
+  {
+    "slug": "timetable_optimizer",
+    "route": "/timetable/optimizer",
+    "viewport": "desktop",
+    "status": "ok",
+    "title": "FAST Isb Utilities"
+  },
+  {
+    "slug": "timetable_optimizer",
+    "route": "/timetable/optimizer",
+    "viewport": "tablet",
+    "status": "ok",
+    "title": "FAST Isb Utilities"
+  },
+  {
+    "slug": "timetable_optimizer",
+    "route": "/timetable/optimizer",
+    "viewport": "mobile",
+    "status": "ok",
+    "title": "FAST Isb Utilities"
+  },
+  {
+    "slug": "schedule",
+    "route": "/schedule",
+    "viewport": "desktop",
+    "status": "ok",
+    "title": "FAST Isb Utilities"
+  },
+  {
+    "slug": "schedule",
+    "route": "/schedule",
+    "viewport": "tablet",
+    "status": "ok",
+    "title": "FAST Isb Utilities"
+  },
+  {
+    "slug": "schedule",
+    "route": "/schedule",
+    "viewport": "mobile",
+    "status": "ok",
+    "title": "FAST Isb Utilities"
+  },
+  {
+    "slug": "custom",
+    "route": "/custom",
+    "viewport": "desktop",
+    "status": "ok",
+    "title": "FAST Isb Utilities"
+  },
+  {
+    "slug": "custom",
+    "route": "/custom",
+    "viewport": "tablet",
+    "status": "ok",
+    "title": "FAST Isb Utilities"
+  },
+  {
+    "slug": "custom",
+    "route": "/custom",
+    "viewport": "mobile",
+    "status": "ok",
+    "title": "FAST Isb Utilities"
+  },
+  {
+    "slug": "rooms",
+    "route": "/rooms",
+    "viewport": "desktop",
+    "status": "ok",
+    "title": "FAST Isb Utilities"
+  },
+  {
+    "slug": "rooms",
+    "route": "/rooms",
+    "viewport": "tablet",
+    "status": "ok",
+    "title": "FAST Isb Utilities"
+  },
+  {
+    "slug": "rooms",
+    "route": "/rooms",
+    "viewport": "mobile",
+    "status": "ok",
+    "title": "FAST Isb Utilities"
+  },
+  {
+    "slug": "semester",
+    "route": "/semester",
+    "viewport": "desktop",
+    "status": "ok",
+    "title": "FAST Isb Utilities"
+  },
+  {
+    "slug": "semester",
+    "route": "/semester",
+    "viewport": "tablet",
+    "status": "ok",
+    "title": "FAST Isb Utilities"
+  },
+  {
+    "slug": "semester",
+    "route": "/semester",
+    "viewport": "mobile",
+    "status": "ok",
+    "title": "FAST Isb Utilities"
+  },
+  {
+    "slug": "events",
+    "route": "/events",
+    "viewport": "desktop",
+    "status": "ok",
+    "title": "FAST Isb Utilities"
+  },
+  {
+    "slug": "events",
+    "route": "/events",
+    "viewport": "tablet",
+    "status": "ok",
+    "title": "FAST Isb Utilities"
+  },
+  {
+    "slug": "events",
+    "route": "/events",
+    "viewport": "mobile",
+    "status": "ok",
+    "title": "FAST Isb Utilities"
+  },
+  {
+    "slug": "faculty",
+    "route": "/faculty",
+    "viewport": "desktop",
+    "status": "ok",
+    "title": "FAST Isb Utilities"
+  },
+  {
+    "slug": "faculty",
+    "route": "/faculty",
+    "viewport": "tablet",
+    "status": "ok",
+    "title": "FAST Isb Utilities"
+  },
+  {
+    "slug": "faculty",
+    "route": "/faculty",
+    "viewport": "mobile",
+    "status": "ok",
+    "title": "FAST Isb Utilities"
+  },
+  {
+    "slug": "lost_found",
+    "route": "/lost-found",
+    "viewport": "desktop",
+    "status": "ok",
+    "title": "FAST Isb Utilities"
+  },
+  {
+    "slug": "lost_found",
+    "route": "/lost-found",
+    "viewport": "tablet",
+    "status": "ok",
+    "title": "FAST Isb Utilities"
+  },
+  {
+    "slug": "lost_found",
+    "route": "/lost-found",
+    "viewport": "mobile",
+    "status": "ok",
+    "title": "FAST Isb Utilities"
+  },
+  {
+    "slug": "admin",
+    "route": "/admin",
+    "viewport": "desktop",
+    "status": "ok",
+    "title": "FAST Isb Utilities"
+  },
+  {
+    "slug": "admin",
+    "route": "/admin",
+    "viewport": "tablet",
+    "status": "ok",
+    "title": "FAST Isb Utilities"
+  },
+  {
+    "slug": "admin",
+    "route": "/admin",
+    "viewport": "mobile",
+    "status": "ok",
+    "title": "FAST Isb Utilities"
+  }
+]

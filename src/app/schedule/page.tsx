@@ -5,11 +5,13 @@ import { filterExams, filterSummerExams, groupByDay } from '@/lib/filter';
 import { sortByChronological } from '@/lib/dates';
 import { ExamCard } from '@/components/ExamCard';
 import { Header } from '@/components/Header';
+import { SCHEDULE_UPDATED, SUMMER_SCHEDULE_UPDATED } from '@/lib/data-timestamps';
 
 import { ExamDetail } from '@/components/ExamDetail';
 import { SearchBar } from '@/components/SearchBar';
 import { ExportButton } from '@/components/ExportButton';
 import { EmptyState } from '@/components/EmptyState';
+import { LastUpdated } from '@/components/LastUpdated';
 import { ThemeToggle } from '@/components/ThemeToggle';
 import type { ExamEntry } from '@/lib/types';
 
@@ -133,7 +135,7 @@ function SchedulePageInner() {
       <div className="flex flex-1 md:gap-0">
 
         {/* Sidebar (desktop only) */}
-        <aside className="hidden md:flex md:w-56 lg:w-64 flex-col gap-4 p-6 border-r border-[var(--color-border)] sticky top-14 h-[calc(100dvh-56px)] overflow-y-auto">
+        <aside className="hidden md:flex md:w-56 lg:w-64 flex-col gap-4 p-6 border-r border-[var(--color-border)] sticky top-[3.75rem] h-[calc(100dvh-3.75rem)] overflow-y-auto">
           {isSummer ? (
             <>
               <div>
@@ -178,13 +180,14 @@ function SchedulePageInner() {
               {isSummer ? 'Change courses' : 'Change filters'}
             </button>
             <ExportButton entries={filtered} variant="sidebar" config={{ isCustom: false, subtitle }} />
+            <LastUpdated date={isSummer ? SUMMER_SCHEDULE_UPDATED : SCHEDULE_UPDATED} className="mt-1" source={isSummer ? "Summer exam parser" : "Official exam Excel"} />
           </div>
         </aside>
 
         {/* List area */}
         <div className="flex-1 flex flex-col">
           {/* Search bar — sticky below header */}
-          <div className="sticky top-14 z-10 bg-[var(--color-bg)] px-4 py-3 border-b border-[var(--color-border)]">
+          <div className="sticky top-[3.75rem] z-10 bg-[var(--color-bg)] px-4 py-3 border-b border-[var(--color-border)]">
             <SearchBar value={query} onChange={setQuery} />
           </div>
           {/* Result count (mobile) */}
@@ -192,7 +195,7 @@ function SchedulePageInner() {
             {filtered.length} exam{filtered.length !== 1 ? 's' : ''} found
           </p>
           {/* Grouped list */}
-          <div id="print-area" className="flex-1 px-4 pb-24 md:pb-8 bg-[var(--color-bg)]">
+          <div id="print-area" className="flex-1 px-4 pb-20 md:pb-28 lg:pb-32 bg-[var(--color-bg)]">
             {filtered.length === 0 ? (
               <EmptyState query={query} batch={batch} dept={dept} />
             ) : (

@@ -1,6 +1,7 @@
 'use client';
 import { useState, useEffect } from 'react';
 import { Header } from '@/components/Header';
+import { Reveal } from '@/components/Reveal';
 import semesterCalendarRaw from '../../../public/data/semester_calendar.json';
 
 // ── Data ─────────────────────────────────────────────────────────────────────
@@ -155,8 +156,9 @@ const BORDER_COLORS: Record<string, string> = {
 };
 
 const DAY_STYLES: Record<DayKind, { bg: string; color: string; fw?: string }> = {
-  today:         { bg: 'var(--accent-cs)',      color: '#fff',                          fw: '600' },
-  'classes-start':{ bg: 'var(--accent-ds)',     color: '#fff',                          fw: '600' },
+  // T29: tokenize hardcoded #fff text → var(--color-bg) on today/classes-start cells.
+  today:         { bg: 'var(--accent-cs)',      color: 'var(--color-bg)',                fw: '600' },
+  'classes-start':{ bg: 'var(--accent-ds)',     color: 'var(--color-bg)',                fw: '600' },
   exam:          { bg: 'var(--accent-cs-bg)',    color: 'var(--accent-cs)',              fw: '500' },
   deadline:      { bg: 'var(--accent-ee-bg)',    color: 'var(--accent-ee)',              fw: '500' },
   holiday:       { bg: 'var(--accent-cy-bg)',    color: 'var(--accent-cy)',              fw: '500' },
@@ -190,12 +192,12 @@ export default function SemesterPlanPage() {
             
             {/* COLUMN 1: Key Dates (Left) */}
             <div className="flex-[1.2] min-w-0 flex flex-col gap-8">
-              <KeyDatesSection />
+              <Reveal><KeyDatesSection /></Reveal>
             </div>
 
             {/* COLUMN 2: Holidays (Middle) */}
             <div className="flex-[0.6] min-w-[200px] hidden lg:flex flex-col">
-              <HolidaysSection vertical />
+              <Reveal><HolidaysSection vertical /></Reveal>
             </div>
 
             {/* COLUMN 3: Calendars (Right) */}
@@ -209,7 +211,7 @@ export default function SemesterPlanPage() {
                   boxShadow: 'var(--shadow-card), var(--border-inset)',
                 }}
               >
-                {mounted && <CalendarsSection compact hideLabel />}
+                {mounted && <Reveal><CalendarsSection compact hideLabel /></Reveal>}
                 
                 {/* Fallback for smaller desktop screens where middle column is hidden */}
                 <div className="lg:hidden">
@@ -230,7 +232,7 @@ export default function SemesterPlanPage() {
 function MobileHero() {
   return (
     <div>
-      <p className="font-mono text-[10px] uppercase tracking-widest text-[var(--color-text-tertiary)] mb-2">
+      <p className="font-mono text-data-sm uppercase tracking-widest text-[var(--color-text-tertiary)] mb-2">
         FAST NUCES · Islamabad
       </p>
       <h1 className="font-display text-3xl leading-tight text-[var(--color-text-primary)]">
@@ -246,15 +248,35 @@ function MobileHero() {
 function DesktopHero() {
   return (
     <div className="max-w-4xl">
-      <p className="font-mono text-xs uppercase tracking-widest text-[var(--color-text-tertiary)] mb-4">
-        FAST NUCES · Islamabad · Signed Jan 8, 2026
-      </p>
-      <h1
-        className="font-display leading-[1.1] text-[var(--color-text-primary)]"
-        style={{ fontSize: 'clamp(2.2rem, 3.5vw, 3.6rem)' }}
-      >
-        Semester Schedule — <span className="italic">{semesterCalendar.semester}.</span>
-      </h1>
+      <Reveal>
+        <p className="font-mono text-xs uppercase tracking-widest text-[var(--color-text-tertiary)] mb-4">
+          FAST NUCES · Islamabad · Signed Jan 8, 2026
+        </p>
+        <div className="flex items-end justify-between gap-4 flex-wrap">
+          <h1
+            className="font-display leading-[1.1] text-[var(--color-text-primary)]"
+            style={{ fontSize: 'clamp(2.2rem, 3.5vw, 3.6rem)' }}
+          >
+            Semester Schedule — <span className="italic">{semesterCalendar.semester}.</span>
+          </h1>
+          {/* Print affordance — triggers window.print(). Marked no-print so it
+              doesn't appear in the printout. The @media print styles in
+              globals.css handle hiding chrome + showing .print-area. */}
+          <button
+            type="button"
+            onClick={() => typeof window !== 'undefined' && window.print()}
+            aria-label="Print semester calendar"
+            className="no-print inline-flex items-center gap-2 h-10 px-3.5 mb-1 rounded-md border border-[var(--color-border-strong)] bg-[var(--color-bg-raised)] font-body text-sm font-medium text-[var(--color-text-primary)] hover:bg-[var(--color-bg-subtle)] active:scale-[0.98] transition-all focus-visible:outline-none focus-visible:ring-2"
+          >
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+              <polyline points="6 9 6 2 18 2 18 9" />
+              <path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2" />
+              <rect x="6" y="14" width="12" height="8" />
+            </svg>
+            Print
+          </button>
+        </div>
+      </Reveal>
     </div>
   );
 }
@@ -312,7 +334,7 @@ function KeyDatesSection() {
 
       <div className="relative mt-4 pl-10">
         <div
-          className={`absolute left-[16px] top-6 bottom-4 w-[2px] bg-[#E5E7EB] timeline-line ${mounted ? 'animate' : ''}`}
+          className={`absolute left-[16px] top-6 bottom-4 w-[2px] bg-[var(--color-timeline-line)] timeline-line ${mounted ? 'animate' : ''}`}
         />
 
         <div className="flex flex-col gap-6">
@@ -345,7 +367,7 @@ function KeyDatesSection() {
                 >
                   <div className="flex items-center gap-3 flex-1 min-w-0">
                     <span
-                      className="font-mono text-[10px] font-semibold px-2.5 py-1 rounded-full shrink-0"
+                      className="font-mono text-data-sm font-semibold px-2.5 py-1 rounded-full shrink-0"
                       style={{
                         backgroundColor: badgeStyle.bg,
                         color: badgeStyle.text,
@@ -484,14 +506,14 @@ function CalendarsSection({ compact = false, hideLabel = false }: { compact?: bo
               </p>
               <div className="grid grid-cols-7 gap-[2px] text-center">
                 {DOW_SHORT.map((d) => (
-                  <div key={d} className="font-mono text-[9px] text-[var(--color-text-tertiary)] pb-1">{d}</div>
+                  <div key={d} className="font-mono text-data-sm text-[var(--color-text-tertiary)] pb-1">{d}</div>
                 ))}
                 {cells.map((cell, ci) => {
                   const s = DAY_STYLES[cell.kind];
                   return (
                     <div
                       key={ci}
-                      className="aspect-square flex items-center justify-center rounded-[4px] font-mono text-[10px]"
+                      className="aspect-square flex items-center justify-center rounded-[4px] font-mono text-data-sm"
                       style={{
                         background: s.bg,
                         color: s.color,
@@ -532,7 +554,7 @@ function HolidaysSection({ compact = false, vertical = false }: { compact?: bool
                 />
                 <span className="font-body text-sm font-semibold text-[var(--color-text-primary)]">{h.name}</span>
                 {h.lunar && (
-                <span className="font-mono text-[9px] text-[var(--color-text-tertiary)] italic">(lunar)</span>
+                <span className="font-mono text-data-sm text-[var(--color-text-tertiary)] italic">(lunar)</span>
                 )}
             </div>
             <span className="font-mono text-[11px] text-[var(--color-text-secondary)] pl-3.5">{h.date}</span>
