@@ -1012,11 +1012,12 @@ export default function SetupPage() {
       ================================================================ */}
       <div className="hidden md:flex min-h-dvh flex-col">
 
-        {/* Full-width header */}
-        {/* Full-width header */}
-        <Header>
-          {/* Feature toggle — prominent centre nav */}
-          <div role="group" aria-label="Select feature" className="flex items-center gap-1 bg-[var(--color-bg-subtle)] rounded-lg p-1">
+        {/* Full-width header (timeline in center, no children = no Row 2) */}
+        <Header />
+
+        {/* Feature toggle strip — relocated from header to body (desktop only) */}
+        <div className="hidden md:flex items-center justify-center gap-1 bg-[var(--color-bg-subtle)]/50 border-b border-[var(--color-border)] py-2 px-4">
+          <div role="group" aria-label="Select feature" className="flex items-center gap-1 bg-[var(--color-bg-raised)] rounded-lg p-1 border border-[var(--color-border)]">
             {(['timetable', 'exams', 'rooms', 'faculty'] as Feature[]).map(f => (
               <button
                 key={f}
@@ -1035,7 +1036,7 @@ export default function SetupPage() {
               </button>
             ))}
           </div>
-        </Header>
+        </div>
 
         {/* Two-column body */}
         <div className="flex flex-1 overflow-hidden">
