@@ -9,7 +9,6 @@ import {
   getSemesterWeekNumber,
   getSemesterProgress,
   getSemesterMilestones,
-  getUpcomingMilestones,
   formatMonthsWeeksDays,
   daysUntil,
 } from '@/lib/dates';
@@ -18,12 +17,39 @@ interface SemesterTimelineProps {
   semesterName?: string;
 }
 
-type Phase = 'pre' | 'active' | 'final-stretch' | 'finals' | 'post';
+type Phase = 'before' | 'live' | 'final' | 'complete';
+
+// ── Color interpolation: green → amber → red ──
+// Concept palette: #18A36B (start) → #DCA12D (middle) → #D94A59 (end)
+// Pre-semester void: #7D8797
+function interpolateColor(pct: number): string {
+  if (pct <= 0) return '#7d8797'; // void
+  if (pct >= 100) return '#d94a59'; // end red
+
+  // Three-stop interpolation: 0% = green, 50% = amber, 100% = red
+  const stops = [
+    { p: 0,   r: 0x18, g: 0xa3, b: 0x6b }, // #18A36B green
+    { p: 50,  r: 0xdc, g: 0xa1, b: 0x2d }, // #DCA12D amber
+    { p: 100, r: 0xd9, g: 0x4a, b: 0x59 }, // #D94A59 red
+  ];
+
+  for (let i = 0; i < stops.length - 1; i++) {
+    const a = stops[i], b = stops[i + 1];
+    if (pct >= a.p && pct <= b.p) {
+      const t = (pct - a.p) / (b.p - a.p);
+      const r = Math.round(a.r + (b.r - a.r) * t);
+      const g = Math.round(a.g + (b.g - a.g) * t);
+      const bl = Math.round(a.b + (b.b - a.b) * t);
+      return `#${r.toString(16).padStart(2, '0')}${g.toString(16).padStart(2, '0')}${bl.toString(16).padStart(2, '0')}`;
+    }
+  }
+  return '#18a36b';
+}
 
 export function SemesterTimeline({ semesterName }: SemesterTimelineProps) {
   const [now, setNow] = useState(new Date());
   const [expanded, setExpanded] = useState(false);
-  const dropdownRef = useRef<HTMLDivElement>(null);
+  const widgetRef = useRef<HTMLDivElement>(null);
 
   // Update every minute
   useEffect(() => {
@@ -31,261 +57,329 @@ export function SemesterTimeline({ semesterName }: SemesterTimelineProps) {
     return () => clearInterval(timer);
   }, []);
 
-  // Close on click outside
+  // Close on outside click + Escape
   useEffect(() => {
     if (!expanded) return;
-    const handler = (e: MouseEvent) => {
-      if (dropdownRef.current && !dropdownRef.current.contains(e.target as Node)) {
+    const handleClick = (e: MouseEvent) => {
+      if (widgetRef.current && !widgetRef.current.contains(e.target as Node)) {
         setExpanded(false);
       }
     };
-    window.addEventListener('mousedown', handler);
-    return () => window.removeEventListener('mousedown', handler);
+    const handleKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') setExpanded(false);
+    };
+    window.addEventListener('mousedown', handleClick);
+    window.addEventListener('keydown', handleKey);
+    return () => {
+      window.removeEventListener('mousedown', handleClick);
+      window.removeEventListener('keydown', handleKey);
+    };
   }, [expanded]);
 
   const data = useMemo(() => {
     const startISO = getSemesterStartDate();
     const endISO = getSemesterEndDate();
-    const finalsStartISO = getFinalExamsStartDate();
-    const finalsEndISO = getFinalExamsEndDate();
-
     if (!startISO || !endISO) return null;
 
-    const progress = getSemesterProgress(now);
+    const progress = getSemesterProgress(now) ?? 0;
     const weekNum = getSemesterWeekNumber(now);
     const milestones = getSemesterMilestones();
-    const upcoming = getUpcomingMilestones(5, now);
+    const daysToStart = daysUntil(startISO, now);
+    const daysToEnd = daysUntil(endISO, now);
     const duration = formatMonthsWeeksDays(startISO, endISO, now);
 
     const today = new Date(now);
     today.setHours(0, 0, 0, 0);
     const start = new Date(startISO + 'T00:00:00');
     const end = new Date(endISO + 'T00:00:00');
-    const finalsEnd = finalsEndISO ? new Date(finalsEndISO + 'T00:00:00') : null;
 
     let phase: Phase;
-    if (today < start) phase = 'pre';
-    else if (finalsEnd && today > finalsEnd) phase = 'post';
-    else if (finalsStartISO && today >= new Date(finalsStartISO + 'T00:00:00')) phase = 'finals';
-    else if (progress !== null && progress >= 80) phase = 'final-stretch';
-    else phase = 'active';
+    if (today < start) phase = 'before';
+    else if (today > end) phase = 'complete';
+    else if (progress >= 80) phase = 'final';
+    else phase = 'live';
 
-    const daysToStart = daysUntil(startISO, now);
-    const daysToEnd = daysUntil(endISO, now);
+    const clampedPct = Math.max(0, Math.min(100, progress));
+    const barColor = interpolateColor(clampedPct);
+
+    // ── Build summary texts based on phase ──
+    let statusText: string;
+    let primaryText: string;
+    let metaText: string;
+    let detailValue: string;
+    let detailCaption: string;
+
+    if (phase === 'before') {
+      statusText = 'PRE-SEMESTER';
+      primaryText = `${daysToStart}d to start`;
+      metaText = `Begins ${start.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' })}`;
+      detailValue = formatDurationText(duration);
+      detailCaption = 'until the semester begins';
+    } else if (phase === 'complete') {
+      statusText = 'COMPLETE';
+      primaryText = 'Semester complete';
+      metaText = `100%`;
+      detailValue = formatDurationText(duration);
+      detailCaption = 'total semester duration';
+    } else if (phase === 'final') {
+      statusText = 'FINAL STRETCH';
+      const totalWeeks = Math.round((end.getTime() - start.getTime()) / (7 * 24 * 60 * 60 * 1000));
+      primaryText = `${daysToEnd}d left`;
+      metaText = `Week ${weekNum} of ${totalWeeks} · ${Math.round(clampedPct)}%`;
+      // For remaining: compute months-weeks-days from today to end
+      const remMonths = Math.floor(daysToEnd / 30.44);
+      const remDaysAfter = daysToEnd - Math.floor(remMonths * 30.44);
+      const remWeeks = Math.floor(remDaysAfter / 7);
+      const remDays = remDaysAfter - remWeeks * 7;
+      detailValue = `${remMonths > 0 ? `${remMonths} month${remMonths !== 1 ? 's' : ''} · ` : ''}${remWeeks > 0 ? `${remWeeks} week${remWeeks !== 1 ? 's' : ''} · ` : ''}${remDays} day${remDays !== 1 ? 's' : ''}`;
+      detailCaption = 'remaining until the semester ends';
+    } else {
+      statusText = 'IN SESSION';
+      const totalWeeks = Math.round((end.getTime() - start.getTime()) / (7 * 24 * 60 * 60 * 1000));
+      primaryText = `Week ${weekNum}`;
+      metaText = `${weekNum} of ${totalWeeks} · ${Math.round(clampedPct)}%`;
+      detailValue = formatDurationText(duration);
+      detailCaption = 'elapsed since the semester began';
+    }
 
     return {
-      startISO,
-      endISO,
-      finalsStartISO,
-      finalsEndISO,
-      progress,
-      weekNum,
-      milestones,
-      upcoming,
-      duration,
-      phase,
-      daysToStart,
-      daysToEnd,
-      semesterLabel: semesterName,
+      startISO, endISO, phase, clampedPct, barColor,
+      milestones, weekNum, statusText, primaryText, metaText,
+      detailValue, detailCaption, semesterLabel: semesterName,
     };
   }, [now, semesterName]);
 
   if (!data) return null;
 
-  const { progress, weekNum, milestones, upcoming, duration, phase, daysToStart, daysToEnd, startISO, endISO } = data;
+  const { phase, clampedPct, barColor, milestones, statusText, primaryText, metaText, detailValue, detailCaption, startISO, endISO } = data;
 
-  // ── Auto label (collapsed state) ──
-  let label: string;
-  if (phase === 'pre') {
-    label = `Starts in ${daysToStart} day${daysToStart !== 1 ? 's' : ''}`;
-  } else if (phase === 'post') {
-    label = 'Semester complete';
-  } else if (phase === 'finals') {
-    const finalsWeek = weekNum ? Math.ceil((weekNum + (daysToEnd < 0 ? -daysToEnd : 0)) / 1) : null;
-    label = `Finals Week`;
-  } else if (phase === 'final-stretch') {
-    const weeksLeft = Math.max(0, Math.ceil(daysToEnd / 7));
-    label = `Week ${weekNum} · ${weeksLeft} week${weeksLeft !== 1 ? 's' : ''} left`;
-  } else {
-    label = `Week ${weekNum}`;
-  }
-
-  // ── Progress fill percentage (clamped 0-100 for display) ──
-  const fillPct = Math.max(0, Math.min(100, progress ?? 0));
+  const startDateObj = new Date(startISO + 'T00:00:00');
+  const endDateObj = new Date(endISO + 'T00:00:00');
+  const todayStr = new Date(now).toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
 
   return (
-    <div className="relative hidden md:block" ref={dropdownRef}>
-      <button
-        onClick={() => setExpanded(!expanded)}
-        className="flex flex-col items-center gap-1 px-3 py-1 rounded-md hover:bg-[var(--color-bg-subtle)]/50 transition-colors focus-visible:outline-none focus-visible:ring-2"
-        aria-label="Semester timeline"
-        aria-expanded={expanded}
+    <div className="relative hidden md:block" ref={widgetRef} style={{ width: 'min(500px, calc(100% - 40px))' }}>
+      {/* Floating capsule */}
+      <div
+        className="relative rounded-2xl border shadow-lg"
+        style={{
+          padding: '10px 14px 11px',
+          backgroundColor: 'var(--color-bg-raised)',
+          borderColor: 'var(--color-border-strong)',
+          boxShadow: '0 10px 26px rgba(35, 47, 67, 0.13)',
+        }}
       >
-        {/* Bar */}
-        <div className="relative w-[280px] h-[6px] rounded-full overflow-hidden bg-[var(--color-bg-subtle)]">
-          {/* Full gradient (green → red) always rendered, revealed by clip */}
-          <div
-            className="absolute inset-0 rounded-full"
-            style={{
-              background: 'linear-gradient(90deg, #86efac 0%, #4ade80 15%, #a3e635 30%, #fbbf24 50%, #fb923c 70%, #f87171 85%, #dc2626 100%)',
-              clipPath: `inset(0 ${100 - fillPct}% 0 0)`,
-            }}
-          />
-          {/* Pre-semester shimmer (only when phase === 'pre') */}
-          {phase === 'pre' && (
-            <div
-              className="absolute inset-0 rounded-full opacity-40"
+        {/* Summary row (clickable) */}
+        <button
+          onClick={() => setExpanded(!expanded)}
+          className="w-full flex items-center justify-between gap-4 bg-transparent border-0 cursor-pointer text-left p-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-text-secondary)] rounded-lg"
+          aria-expanded={expanded}
+          aria-label={`${primaryText}. ${metaText}. Open exact timeline breakdown.`}
+        >
+          {/* Left: orb + status + primary */}
+          <span className="flex items-center gap-2.5 min-w-0">
+            <span
+              className="w-[9px] h-[9px] rounded-full shrink-0 transition-colors duration-300"
               style={{
-                background: 'linear-gradient(90deg, transparent, var(--color-text-tertiary), transparent)',
-                backgroundSize: '50% 100%',
-                animation: 'shimmer 3s linear infinite',
+                backgroundColor: barColor,
+                boxShadow: `0 0 0 4px ${barColor}26`,
               }}
             />
-          )}
-          {/* Post-semester desaturation */}
-          {phase === 'post' && (
-            <div className="absolute inset-0 rounded-full bg-[var(--color-bg-raised)]/40" />
-          )}
-
-          {/* Milestone tick marks */}
-          {milestones.map((m) => (
-            <div
-              key={m.shortLabel}
-              className="absolute top-0 bottom-0 flex items-center justify-center"
-              style={{ left: `${m.progressPercent}%`, transform: 'translateX(-50%)' }}
-            >
-              <div className="w-[1.5px] h-[10px] -my-[2px] bg-[var(--color-text-primary)] opacity-60 rounded-full" />
-            </div>
-          ))}
-
-          {/* Today cursor */}
-          {phase !== 'pre' && phase !== 'post' && (
-            <div
-              className="absolute top-0 bottom-0 w-[2px] -my-[3px] bg-[var(--color-text-primary)] rounded-full shadow-sm"
-              style={{ left: `${fillPct}%`, transform: 'translateX(-50%)' }}
-            />
-          )}
-        </div>
-
-        {/* Label + milestone abbreviations row */}
-        <div className="relative w-[280px] flex items-center justify-between">
-          {/* Milestone short labels positioned under their tick marks */}
-          <div className="relative flex-1 h-[14px]">
-            {milestones.map((m) => (
+            <span className="min-w-0">
               <span
-                key={m.shortLabel}
-                className="absolute font-mono text-[8px] font-bold text-[var(--color-text-tertiary)] -translate-x-1/2"
-                style={{ left: `${m.progressPercent}%`, top: 0 }}
+                className="block font-mono font-bold tracking-widest"
+                style={{ fontSize: '8px', color: 'var(--color-text-tertiary)', letterSpacing: '0.12em', marginBottom: '2px' }}
               >
-                {m.shortLabel}
+                {statusText}
               </span>
-            ))}
-          </div>
-          {/* Auto label (centered) */}
-          <span className="absolute left-1/2 -translate-x-1/2 font-mono text-[10px] font-medium text-[var(--color-text-secondary)] whitespace-nowrap">
-            {label}
+              <span
+                className="block font-bold truncate"
+                style={{ fontSize: '15px', color: 'var(--color-text-primary)', letterSpacing: '-0.02em' }}
+              >
+                {primaryText}
+              </span>
+            </span>
           </span>
+
+          {/* Right: meta + chevron */}
+          <span className="flex items-center gap-1.5 shrink-0" style={{ color: 'var(--color-text-secondary)', fontSize: '10px', fontWeight: 700, whiteSpace: 'nowrap' }}>
+            <span>{metaText}</span>
+            <svg
+              className="transition-transform duration-200"
+              style={{ transform: expanded ? 'rotate(180deg)' : 'none' }}
+              width="14" height="14" viewBox="0 0 24 24" fill="none"
+            >
+              <path d="m7 10 5 5 5-5" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+            </svg>
+          </span>
+        </button>
+
+        {/* Progress bar */}
+        <div className="relative mt-2 py-0.5">
+          <div
+            className="relative h-[6px] rounded-full overflow-visible"
+            style={{ backgroundColor: phase === 'before' ? 'var(--color-bg-subtle)' : 'var(--color-bg-subtle)' }}
+            role="progressbar"
+            aria-label="Semester progress"
+            aria-valuemin={0}
+            aria-valuemax={100}
+            aria-valuenow={Math.round(clampedPct)}
+            aria-valuetext={`${Math.round(clampedPct)} percent complete`}
+          >
+            {/* Fill — single solid color */}
+            <div
+              className="h-full rounded-full transition-all duration-500"
+              style={{
+                width: `${clampedPct}%`,
+                backgroundColor: barColor,
+                position: 'relative',
+                overflow: 'hidden',
+              }}
+            >
+              {/* Sheen animation */}
+              <div
+                className="absolute inset-0"
+                style={{
+                  background: 'linear-gradient(90deg, transparent, rgba(255,255,255,0.35), transparent)',
+                  backgroundSize: '15% 100%',
+                  animation: 'timelineSheen 3.2s infinite linear',
+                }}
+              />
+            </div>
+
+            {/* Milestone tick marks */}
+            {milestones.map((m) => {
+              const reached = clampedPct >= m.progressPercent && clampedPct > 0;
+              return (
+                <button
+                  key={m.shortLabel}
+                  className="absolute top-[-5px] w-[18px] h-[18px] bg-transparent border-0 rounded-full cursor-help p-0 group"
+                  style={{ left: `${m.progressPercent}%`, transform: 'translateX(-50%)' }}
+                  aria-label={`${m.label}, ${new Date(m.date + 'T00:00:00').toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}`}
+                >
+                  {/* Tick line */}
+                  <span
+                    className="absolute top-[3px] left-1/2 -translate-x-1/2 rounded-full"
+                    style={{
+                      width: '2px',
+                      height: '12px',
+                      backgroundColor: reached ? barColor : 'var(--color-text-tertiary)',
+                      border: '2px solid var(--color-bg-raised)',
+                      boxShadow: '0 1px 3px rgba(20,28,40,0.22)',
+                      boxSizing: 'content-box',
+                    }}
+                  />
+                  {/* Tooltip on hover */}
+                  <span
+                    className="absolute top-[22px] left-1/2 -translate-x-1/2 z-10 max-w-[150px] px-2 py-1.5 rounded-lg text-white pointer-events-none opacity-0 group-hover:opacity-100 group-focus-visible:opacity-100 transition-opacity duration-150"
+                    style={{
+                      backgroundColor: 'var(--color-text-primary)',
+                      fontSize: '10px',
+                      fontWeight: 700,
+                      lineHeight: 1.35,
+                      whiteSpace: 'nowrap',
+                    }}
+                  >
+                    {m.label} · {new Date(m.date + 'T00:00:00').toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
+                  </span>
+                </button>
+              );
+            })}
+          </div>
         </div>
-      </button>
+      </div>
 
-      {/* Expanded dropdown */}
+      {/* Popover (expanded detail) */}
       {expanded && (
-        <div className="absolute top-full left-1/2 -translate-x-1/2 mt-2 w-[320px] rounded-xl border border-[var(--color-border-strong)] bg-[var(--color-bg-raised)] shadow-lg z-50 overflow-hidden">
-          {/* Header */}
-          <div className="px-4 py-3 border-b border-[var(--color-border)] bg-[var(--color-bg-subtle)]/50">
-            <p className="font-display text-sm font-bold text-[var(--color-text-primary)]">
-              {semesterName ?? 'Semester'} Timeline
-            </p>
-          </div>
+        <div
+          className="absolute top-full left-0 right-0 mt-2 z-50 rounded-2xl border shadow-xl"
+          style={{
+            backgroundColor: 'var(--color-bg-raised)',
+            borderColor: 'var(--color-border-strong)',
+            padding: '19px',
+            animation: 'timelinePopoverIn 180ms ease',
+            transformOrigin: 'top center',
+          }}
+        >
+          {/* Pointing arrow */}
+          <div
+            className="absolute top-[-6px] left-1/2 -translate-x-1/2 w-[11px] h-[11px] rotate-45"
+            style={{
+              backgroundColor: 'var(--color-bg-raised)',
+              borderTop: '1px solid var(--color-border-strong)',
+              borderLeft: '1px solid var(--color-border-strong)',
+            }}
+          />
 
-          {/* Duration breakdown */}
-          <div className="px-4 py-3 border-b border-[var(--color-border)]">
-            {phase === 'pre' ? (
-              <p className="font-mono text-xs text-[var(--color-text-secondary)]">
-                {duration.months > 0 && `${duration.months} month${duration.months !== 1 ? 's' : ''}, `}
-                {duration.weeks > 0 && `${duration.weeks} week${duration.weeks !== 1 ? 's' : ''}, `}
-                {duration.days} day{duration.days !== 1 ? 's' : ''} until semester begins
-              </p>
-            ) : phase === 'post' ? (
-              <p className="font-mono text-xs text-[var(--color-text-secondary)]">
-                Semester ended on {new Date(endISO + 'T00:00:00').toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
-              </p>
-            ) : (
-              <div className="flex flex-col gap-1">
-                <p className="font-mono text-xs text-[var(--color-text-secondary)]">
-                  {duration.months > 0 && `${duration.months} month${duration.months !== 1 ? 's' : ''}, `}
-                  {duration.weeks > 0 && `${duration.weeks} week${duration.weeks !== 1 ? 's' : ''}, `}
-                  {duration.days} day{duration.days !== 1 ? 's' : ''} elapsed
-                </p>
-                <p className="font-mono text-xs text-[var(--color-text-tertiary)]">
-                  {(() => {
-                    const totalRemaining = Math.max(0, daysToEnd);
-                    const remMonths = Math.floor(totalRemaining / 30.44);
-                    const remDaysAfterMonths = totalRemaining - Math.floor(remMonths * 30.44);
-                    const remWeeks = Math.floor(remDaysAfterMonths / 7);
-                    const remDays = remDaysAfterMonths - remWeeks * 7;
-                    return `${remMonths > 0 ? `${remMonths} month${remMonths !== 1 ? 's' : ''}, ` : ''}${remWeeks > 0 ? `${remWeeks} week${remWeeks !== 1 ? 's' : ''}, ` : ''}${remDays} day${remDays !== 1 ? 's' : ''} remaining`;
-                  })()}
-                </p>
+          {/* Header row */}
+          <div className="flex items-start justify-between">
+            <div>
+              <div
+                className="font-mono font-bold uppercase tracking-widest"
+                style={{ fontSize: '9px', color: 'var(--color-text-tertiary)', letterSpacing: '0.12em' }}
+              >
+                Exact breakdown
               </div>
-            )}
-          </div>
-
-          {/* Upcoming milestones */}
-          <div className="px-4 py-3">
-            <p className="font-mono text-[10px] uppercase tracking-widest text-[var(--color-text-tertiary)] font-bold mb-2">
-              Upcoming
-            </p>
-            {upcoming.length === 0 ? (
-              <p className="font-mono text-xs text-[var(--color-text-tertiary)] italic">No upcoming dates</p>
-            ) : (
-              <div className="flex flex-col gap-1.5">
-                {upcoming.map((m, idx) => {
-                  const dUntil = daysUntil(m.date, now);
-                  const isNext = idx === 0;
-                  const dateObj = new Date(m.date + 'T00:00:00');
-                  return (
-                    <div
-                      key={m.label}
-                      className={`flex items-center justify-between gap-2 px-2 py-1 rounded ${isNext ? 'bg-[var(--color-bg-subtle)]' : ''}`}
-                    >
-                      <div className="flex items-center gap-2 min-w-0">
-                        <span className={`w-1.5 h-1.5 rounded-full shrink-0 ${isNext ? 'bg-[var(--color-text-primary)]' : 'bg-[var(--color-text-tertiary)]'}`} />
-                        <span className={`font-body text-xs truncate ${isNext ? 'font-bold text-[var(--color-text-primary)]' : 'text-[var(--color-text-secondary)]'}`}>
-                          {m.label}
-                        </span>
-                      </div>
-                      <div className="flex items-center gap-2 shrink-0">
-                        <span className="font-mono text-[10px] text-[var(--color-text-tertiary)]">
-                          {dateObj.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
-                        </span>
-                        <span className={`font-mono text-[10px] ${isNext ? 'text-[var(--color-text-primary)] font-bold' : 'text-[var(--color-text-tertiary)]'}`}>
-                          {dUntil === 0 ? 'today' : dUntil > 0 ? `${dUntil}d` : 'done'}
-                        </span>
-                      </div>
-                    </div>
-                  );
-                })}
+              <div
+                className="mt-1.5 font-bold"
+                style={{ fontSize: '21px', color: 'var(--color-text-primary)', letterSpacing: '-0.035em' }}
+              >
+                {detailValue}
               </div>
-            )}
+              <div className="mt-1" style={{ fontSize: '11px', color: 'var(--color-text-secondary)' }}>
+                {detailCaption}
+              </div>
+            </div>
+            <button
+              onClick={() => setExpanded(false)}
+              className="w-[27px] h-[27px] grid place-items-center rounded-lg cursor-pointer border-0"
+              style={{ backgroundColor: 'var(--color-bg-subtle)', color: 'var(--color-text-secondary)' }}
+              aria-label="Close timeline details"
+            >
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
+                <path d="m7 7 10 10M17 7 7 17" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
+              </svg>
+            </button>
           </div>
 
-          {/* Phase legend */}
-          <div className="px-4 py-3 border-t border-[var(--color-border)] bg-[var(--color-bg-subtle)]/30">
-            <div className="flex items-center gap-3 flex-wrap">
-              <span className="flex items-center gap-1.5 font-mono text-[9px] text-[var(--color-text-tertiary)]">
-                <span className="w-2 h-2 rounded-sm" style={{ backgroundColor: '#86efac' }} /> Start
-              </span>
-              <span className="flex items-center gap-1.5 font-mono text-[9px] text-[var(--color-text-tertiary)]">
-                <span className="w-2 h-2 rounded-sm" style={{ backgroundColor: '#fbbf24' }} /> Mid
-              </span>
-              <span className="flex items-center gap-1.5 font-mono text-[9px] text-[var(--color-text-tertiary)]">
-                <span className="w-2 h-2 rounded-sm" style={{ backgroundColor: '#dc2626' }} /> End
-              </span>
+          {/* Date row: 3 columns */}
+          <div className="grid grid-cols-3 mt-4 pt-3.5 border-t" style={{ borderColor: 'var(--color-border)' }}>
+            <div className="px-3 first:pl-0" style={{ borderRight: '1px solid var(--color-border)' }}>
+              <small className="block mb-1 font-mono font-bold uppercase tracking-widest" style={{ fontSize: '8px', color: 'var(--color-text-tertiary)', letterSpacing: '0.1em' }}>
+                Start
+              </small>
+              <strong style={{ fontSize: '11px', color: 'var(--color-text-primary)' }}>
+                {startDateObj.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
+              </strong>
+            </div>
+            <div className="px-3" style={{ borderRight: '1px solid var(--color-border)' }}>
+              <small className="block mb-1 font-mono font-bold uppercase tracking-widest" style={{ fontSize: '8px', color: 'var(--color-text-tertiary)', letterSpacing: '0.1em' }}>
+                Today
+              </small>
+              <strong style={{ fontSize: '11px', color: 'var(--color-text-primary)' }}>
+                {todayStr}
+              </strong>
+            </div>
+            <div className="px-3 last:pr-0">
+              <small className="block mb-1 font-mono font-bold uppercase tracking-widest" style={{ fontSize: '8px', color: 'var(--color-text-tertiary)', letterSpacing: '0.1em' }}>
+                End
+              </small>
+              <strong style={{ fontSize: '11px', color: 'var(--color-text-primary)' }}>
+                {endDateObj.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
+              </strong>
             </div>
           </div>
         </div>
       )}
     </div>
   );
+}
+
+// ── Helper: format duration as "X months · Y weeks · Z days" ──
+function formatDurationText(d: { months: number; weeks: number; days: number; direction: string }): string {
+  const parts: string[] = [];
+  if (d.months > 0) parts.push(`${d.months} month${d.months !== 1 ? 's' : ''}`);
+  if (d.weeks > 0) parts.push(`${d.weeks} week${d.weeks !== 1 ? 's' : ''}`);
+  parts.push(`${d.days} day${d.days !== 1 ? 's' : ''}`);
+  return parts.join(' · ');
 }
