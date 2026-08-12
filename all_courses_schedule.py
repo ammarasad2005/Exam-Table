@@ -1082,32 +1082,45 @@ def fetch_all_cell_colors(sheet_id, day_sheet_names):
     if not api_key:
         return {}
 
-    # Build URL with multiple ranges= query params (one per sheet)
+    # Fetch colors per sheet with individual API calls (one sheet per request).
+    #
+    # Previously this used a single batched request with multiple `ranges=`
+    # params (one per sheet, hardcoded as `SheetName!A1:AH80`). That failed
+    # with HTTP 400 "Unable to parse range" whenever ANY sheet was smaller
+    # than the hardcoded range — e.g. the Saturday placeholder tab (3x3)
+    # caused the entire batched request to fail, returning zero colors for
+    # ALL sheets. This was the actual root cause of the empty CI output in
+    # PRs #25/#28/#30 (NOT "includeGridData poisons gviz" — the forensics
+    # workflow on 2026-08-12 disproved that theory).
+    #
+    # Per-sheet calls also let us use a safe range per sheet by first asking
+    # the API for that sheet's grid dimensions, then requesting exactly that
+    # range. As a simpler fix, we omit the range entirely and let the API
+    # return whatever cells exist for that sheet.
     base_url = f"https://sheets.googleapis.com/v4/spreadsheets/{sheet_id}"
-    params = [
-        f"key={api_key}",
-        "includeGridData=true",
-        "fields=sheets(data(rowData(values(userEnteredValue,userEnteredFormat(backgroundColor)))))",
-    ]
+    common_fields = "fields=sheets(data(rowData(values(userEnteredValue,userEnteredFormat(backgroundColor)))))"
+
+    result = {}
     for name in day_sheet_names:
-        params.append(f"ranges={urllib.parse.quote(name + '!A1:AH80', safe='!')}")
-    url = base_url + "?" + "&".join(params)
-
-    try:
-        resp = urllib.request.urlopen(url, timeout=60)
-        data = json.loads(resp.read().decode("utf-8"))
-        sheets = data.get("sheets", [])
-        if not sheets:
-            return {}
-
-        result = {}
-        for i, sheet in enumerate(sheets):
-            if i >= len(day_sheet_names):
-                break
-            sheet_name = day_sheet_names[i]
-            grid_data = sheet.get("data", [])
+        # Per-sheet call. No range= param means "all cells in the sheet".
+        # This avoids the "Unable to parse range" 400 error for small sheets.
+        url = (
+            f"{base_url}"
+            f"?key={api_key}"
+            f"&includeGridData=true"
+            f"&{common_fields}"
+            f"&ranges={urllib.parse.quote(name, safe='')}"
+        )
+        try:
+            resp = urllib.request.urlopen(url, timeout=30)
+            data = json.loads(resp.read().decode("utf-8"))
+            sheets = data.get("sheets", [])
+            if not sheets:
+                result[name] = {}
+                continue
+            grid_data = sheets[0].get("data", [])
             if not grid_data:
-                result[sheet_name] = {}
+                result[name] = {}
                 continue
             row_data = grid_data[0].get("rowData", [])
             colors = {}
@@ -1123,11 +1136,14 @@ def fetch_all_cell_colors(sheet_id, day_sheet_names):
                         if rv > 0.98 and gv > 0.98 and bv > 0.98:
                             continue
                         colors[(r, c)] = (rv, gv, bv)
-            result[sheet_name] = colors
-        return result
-    except Exception as e:
-        print(f"  Could not fetch cell colors via batch API: {e}")
-        return {}
+            result[name] = colors
+        except Exception as e:
+            # Per-sheet failure is non-fatal — other sheets still get colors.
+            # The text-based fallback handles any sheets we couldn't fetch.
+            print(f"  Could not fetch cell colors for {name}: {e}")
+            result[name] = {}
+
+    return result
 
 # ==============================================================================
 # ROBUST CELL PARSER — validates against known vocabularies instead of
@@ -1445,6 +1461,19 @@ for day_info in day_sheets:
                                 dept = color_dept
 
             if not category:
+                continue
+
+            # Color override can set `category` from the cell's background
+            # color even when the cell's text didn't parse via
+            # parse_cell_parens() — in that case `course_name` is still None.
+            # Skip such cells: they're not course entries (typically headers,
+            # section labels, or other colored non-course text). Without this
+            # guard, the next line crashes with
+            #   AttributeError: 'NoneType' object has no attribute 'lower'
+            # This was the actual root cause of the empty CI output in PRs
+            # #25/#28/#30 (the per-day try/except masked it then; f8662c3
+            # removed the try/except, exposing the crash).
+            if course_name is None:
                 continue
 
             # Normalize: force "Lab" suffix when inside the lab block
