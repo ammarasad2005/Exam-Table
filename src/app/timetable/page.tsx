@@ -1632,19 +1632,15 @@ function GridView({
                             ? (isRepeat
                               ? 'repeating-linear-gradient(45deg, color-mix(in srgb, var(--color-bg-raised) 85%, #dc2626 15%), color-mix(in srgb, var(--color-bg-raised) 85%, #dc2626 15%) 8px, color-mix(in srgb, var(--color-bg-raised) 75%, #f87171 25%) 8px, color-mix(in srgb, var(--color-bg-raised) 75%, #f87171 25%) 16px)'
                               : 'color-mix(in srgb, var(--color-bg-raised) 82%, #dc2626 18%)')
-                            : (isRepeat
-                              ? 'linear-gradient(135deg, var(--color-bg-raised) 50%, color-mix(in srgb, var(--color-bg-raised) 75%, #f59e0b 25%))'
-                              : (isLab
-                                ? 'color-mix(in srgb, var(--color-bg-raised) 60%, var(--accent-ds-bg) 40%)'
-                                : accentBg)),
+                            : (isLab
+                              ? 'color-mix(in srgb, var(--color-bg-raised) 60%, var(--accent-ds-bg) 40%)'
+                              : accentBg),
                           color: isConflict ? '#ef4444' : accentFg,
                           borderLeft: isConflict
                             ? '3px solid #ef4444'
-                            : (isRepeat
-                              ? '3px solid #f59e0b'
-                              : (isLab
-                                ? `3px dashed ${accentColor}`
-                                : `3px solid ${accentColor}`)),
+                            : (isLab
+                              ? `3px dashed ${accentColor}`
+                              : `3px solid ${accentColor}`),
                           boxShadow: 'var(--shadow-card)',
                           zIndex: isConflict ? 10 : 1,
                         }}
