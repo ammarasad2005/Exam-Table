@@ -4,8 +4,6 @@ import { useState, useEffect, useMemo, useRef } from 'react';
 import {
   getSemesterStartDate,
   getSemesterEndDate,
-  getFinalExamsStartDate,
-  getFinalExamsEndDate,
   getSemesterWeekNumber,
   getSemesterProgress,
   getSemesterMilestones,
@@ -20,13 +18,11 @@ interface SemesterTimelineProps {
 type Phase = 'before' | 'live' | 'final' | 'complete';
 
 // ── Color interpolation: green → amber → red ──
-// Concept palette: #18A36B (start) → #DCA12D (middle) → #D94A59 (end)
-// Pre-semester void: #7D8797
+// Concept palette: #7D8797 (void) → #18A36B (start) → #DCA12D (middle) → #D94A59 (end)
 function interpolateColor(pct: number): string {
   if (pct <= 0) return '#7d8797'; // void
   if (pct >= 100) return '#d94a59'; // end red
 
-  // Three-stop interpolation: 0% = green, 50% = amber, 100% = red
   const stops = [
     { p: 0,   r: 0x18, g: 0xa3, b: 0x6b }, // #18A36B green
     { p: 50,  r: 0xdc, g: 0xa1, b: 0x2d }, // #DCA12D amber
@@ -44,6 +40,14 @@ function interpolateColor(pct: number): string {
     }
   }
   return '#18a36b';
+}
+
+function formatDurationText(d: { months: number; weeks: number; days: number }): string {
+  const parts: string[] = [];
+  if (d.months > 0) parts.push(`${d.months} month${d.months !== 1 ? 's' : ''}`);
+  if (d.weeks > 0) parts.push(`${d.weeks} week${d.weeks !== 1 ? 's' : ''}`);
+  parts.push(`${d.days} day${d.days !== 1 ? 's' : ''}`);
+  return parts.join(' · ');
 }
 
 export function SemesterTimeline({ semesterName }: SemesterTimelineProps) {
@@ -92,6 +96,7 @@ export function SemesterTimeline({ semesterName }: SemesterTimelineProps) {
     today.setHours(0, 0, 0, 0);
     const start = new Date(startISO + 'T00:00:00');
     const end = new Date(endISO + 'T00:00:00');
+    const totalWeeks = Math.max(1, Math.round((end.getTime() - start.getTime()) / (7 * 24 * 60 * 60 * 1000)));
 
     let phase: Phase;
     if (today < start) phase = 'before';
@@ -102,7 +107,6 @@ export function SemesterTimeline({ semesterName }: SemesterTimelineProps) {
     const clampedPct = Math.max(0, Math.min(100, progress));
     const barColor = interpolateColor(clampedPct);
 
-    // ── Build summary texts based on phase ──
     let statusText: string;
     let primaryText: string;
     let metaText: string;
@@ -123,19 +127,16 @@ export function SemesterTimeline({ semesterName }: SemesterTimelineProps) {
       detailCaption = 'total semester duration';
     } else if (phase === 'final') {
       statusText = 'FINAL STRETCH';
-      const totalWeeks = Math.round((end.getTime() - start.getTime()) / (7 * 24 * 60 * 60 * 1000));
       primaryText = `${daysToEnd}d left`;
       metaText = `Week ${weekNum} of ${totalWeeks} · ${Math.round(clampedPct)}%`;
-      // For remaining: compute months-weeks-days from today to end
       const remMonths = Math.floor(daysToEnd / 30.44);
       const remDaysAfter = daysToEnd - Math.floor(remMonths * 30.44);
       const remWeeks = Math.floor(remDaysAfter / 7);
       const remDays = remDaysAfter - remWeeks * 7;
-      detailValue = `${remMonths > 0 ? `${remMonths} month${remMonths !== 1 ? 's' : ''} · ` : ''}${remWeeks > 0 ? `${remWeeks} week${remWeeks !== 1 ? 's' : ''} · ` : ''}${remDays} day${remDays !== 1 ? 's' : ''}`;
+      detailValue = formatDurationText({ months: remMonths, weeks: remWeeks, days: remDays });
       detailCaption = 'remaining until the semester ends';
     } else {
       statusText = 'IN SESSION';
-      const totalWeeks = Math.round((end.getTime() - start.getTime()) / (7 * 24 * 60 * 60 * 1000));
       primaryText = `Week ${weekNum}`;
       metaText = `${weekNum} of ${totalWeeks} · ${Math.round(clampedPct)}%`;
       detailValue = formatDurationText(duration);
@@ -145,9 +146,9 @@ export function SemesterTimeline({ semesterName }: SemesterTimelineProps) {
     return {
       startISO, endISO, phase, clampedPct, barColor,
       milestones, weekNum, statusText, primaryText, metaText,
-      detailValue, detailCaption, semesterLabel: semesterName,
+      detailValue, detailCaption,
     };
-  }, [now, semesterName]);
+  }, [now]);
 
   if (!data) return null;
 
@@ -158,43 +159,46 @@ export function SemesterTimeline({ semesterName }: SemesterTimelineProps) {
   const todayStr = new Date(now).toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
 
   return (
-    <div className="relative hidden md:block" ref={widgetRef} style={{ width: 'min(500px, calc(100% - 40px))' }}>
-      {/* Floating capsule */}
+    <div className="relative hidden md:block" ref={widgetRef}>
+      {/* ── Floating capsule — fits within 60px header ── */}
       <div
-        className="relative rounded-2xl border shadow-lg"
+        className="relative rounded-[14px] border"
         style={{
-          padding: '10px 14px 11px',
+          padding: '6px 12px 7px',
           backgroundColor: 'var(--color-bg-raised)',
           borderColor: 'var(--color-border-strong)',
-          boxShadow: '0 10px 26px rgba(35, 47, 67, 0.13)',
+          boxShadow: '0 4px 12px rgba(35, 47, 67, 0.10)',
+          // CSS var for milestone tick color
+          ['--bar-color' as string]: barColor,
         }}
       >
-        {/* Summary row (clickable) */}
+        {/* Summary row (clickable button) */}
         <button
           onClick={() => setExpanded(!expanded)}
-          className="w-full flex items-center justify-between gap-4 bg-transparent border-0 cursor-pointer text-left p-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-text-secondary)] rounded-lg"
+          className="w-full flex items-center justify-between gap-3 bg-transparent border-0 cursor-pointer text-left p-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-text-secondary)] rounded-md"
           aria-expanded={expanded}
           aria-label={`${primaryText}. ${metaText}. Open exact timeline breakdown.`}
         >
           {/* Left: orb + status + primary */}
-          <span className="flex items-center gap-2.5 min-w-0">
+          <span className="flex items-center gap-2 min-w-0">
+            {/* Live orb */}
             <span
-              className="w-[9px] h-[9px] rounded-full shrink-0 transition-colors duration-300"
+              className="w-[8px] h-[8px] rounded-full shrink-0 transition-colors duration-300"
               style={{
                 backgroundColor: barColor,
-                boxShadow: `0 0 0 4px ${barColor}26`,
+                boxShadow: `0 0 0 3px ${barColor}26`,
               }}
             />
             <span className="min-w-0">
               <span
-                className="block font-mono font-bold tracking-widest"
-                style={{ fontSize: '8px', color: 'var(--color-text-tertiary)', letterSpacing: '0.12em', marginBottom: '2px' }}
+                className="block font-mono font-bold tracking-widest leading-none"
+                style={{ fontSize: '7px', color: 'var(--color-text-tertiary)', letterSpacing: '0.12em', marginBottom: '1px' }}
               >
                 {statusText}
               </span>
               <span
-                className="block font-bold truncate"
-                style={{ fontSize: '15px', color: 'var(--color-text-primary)', letterSpacing: '-0.02em' }}
+                className="block font-bold truncate leading-tight"
+                style={{ fontSize: '13px', color: 'var(--color-text-primary)', letterSpacing: '-0.02em' }}
               >
                 {primaryText}
               </span>
@@ -202,23 +206,26 @@ export function SemesterTimeline({ semesterName }: SemesterTimelineProps) {
           </span>
 
           {/* Right: meta + chevron */}
-          <span className="flex items-center gap-1.5 shrink-0" style={{ color: 'var(--color-text-secondary)', fontSize: '10px', fontWeight: 700, whiteSpace: 'nowrap' }}>
+          <span
+            className="flex items-center gap-1.5 shrink-0 font-mono"
+            style={{ color: 'var(--color-text-secondary)', fontSize: '9px', fontWeight: 700, whiteSpace: 'nowrap' }}
+          >
             <span>{metaText}</span>
             <svg
               className="transition-transform duration-200"
               style={{ transform: expanded ? 'rotate(180deg)' : 'none' }}
-              width="14" height="14" viewBox="0 0 24 24" fill="none"
+              width="12" height="12" viewBox="0 0 24 24" fill="none"
             >
               <path d="m7 10 5 5 5-5" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
             </svg>
           </span>
         </button>
 
-        {/* Progress bar */}
-        <div className="relative mt-2 py-0.5">
+        {/* Progress track with milestones */}
+        <div className="relative mt-[5px]">
           <div
-            className="relative h-[6px] rounded-full overflow-visible"
-            style={{ backgroundColor: phase === 'before' ? 'var(--color-bg-subtle)' : 'var(--color-bg-subtle)' }}
+            className="relative h-[5px] rounded-full"
+            style={{ backgroundColor: 'var(--color-bg-subtle)' }}
             role="progressbar"
             aria-label="Semester progress"
             aria-valuemin={0}
@@ -226,21 +233,15 @@ export function SemesterTimeline({ semesterName }: SemesterTimelineProps) {
             aria-valuenow={Math.round(clampedPct)}
             aria-valuetext={`${Math.round(clampedPct)} percent complete`}
           >
-            {/* Fill — single solid color */}
+            {/* Fill — single solid color + sheen */}
             <div
-              className="h-full rounded-full transition-all duration-500"
-              style={{
-                width: `${clampedPct}%`,
-                backgroundColor: barColor,
-                position: 'relative',
-                overflow: 'hidden',
-              }}
+              className="h-full rounded-full relative overflow-hidden transition-all duration-500"
+              style={{ width: `${clampedPct}%`, backgroundColor: barColor }}
             >
-              {/* Sheen animation */}
               <div
                 className="absolute inset-0"
                 style={{
-                  background: 'linear-gradient(90deg, transparent, rgba(255,255,255,0.35), transparent)',
+                  background: 'linear-gradient(90deg, transparent, rgba(255,255,255,0.4), transparent)',
                   backgroundSize: '15% 100%',
                   animation: 'timelineSheen 3.2s infinite linear',
                 }}
@@ -253,28 +254,27 @@ export function SemesterTimeline({ semesterName }: SemesterTimelineProps) {
               return (
                 <button
                   key={m.shortLabel}
-                  className="absolute top-[-5px] w-[18px] h-[18px] bg-transparent border-0 rounded-full cursor-help p-0 group"
+                  className="absolute top-[-4px] w-[14px] h-[14px] bg-transparent border-0 rounded-full cursor-help p-0 group/milestone"
                   style={{ left: `${m.progressPercent}%`, transform: 'translateX(-50%)' }}
                   aria-label={`${m.label}, ${new Date(m.date + 'T00:00:00').toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}`}
                 >
-                  {/* Tick line */}
                   <span
-                    className="absolute top-[3px] left-1/2 -translate-x-1/2 rounded-full"
+                    className="absolute top-[2px] left-1/2 -translate-x-1/2 rounded-full"
                     style={{
                       width: '2px',
-                      height: '12px',
+                      height: '9px',
                       backgroundColor: reached ? barColor : 'var(--color-text-tertiary)',
                       border: '2px solid var(--color-bg-raised)',
-                      boxShadow: '0 1px 3px rgba(20,28,40,0.22)',
+                      boxShadow: '0 1px 2px rgba(20,28,40,0.22)',
                       boxSizing: 'content-box',
                     }}
                   />
-                  {/* Tooltip on hover */}
                   <span
-                    className="absolute top-[22px] left-1/2 -translate-x-1/2 z-10 max-w-[150px] px-2 py-1.5 rounded-lg text-white pointer-events-none opacity-0 group-hover:opacity-100 group-focus-visible:opacity-100 transition-opacity duration-150"
+                    className="absolute top-[18px] left-1/2 -translate-x-1/2 z-10 px-2 py-1 rounded-md pointer-events-none opacity-0 group-hover/milestone:opacity-100 group-focus-visible/milestone:opacity-100 transition-opacity duration-150"
                     style={{
                       backgroundColor: 'var(--color-text-primary)',
-                      fontSize: '10px',
+                      color: 'var(--color-bg)',
+                      fontSize: '9px',
                       fontWeight: 700,
                       lineHeight: 1.35,
                       whiteSpace: 'nowrap',
@@ -289,14 +289,15 @@ export function SemesterTimeline({ semesterName }: SemesterTimelineProps) {
         </div>
       </div>
 
-      {/* Popover (expanded detail) */}
+      {/* ── Popover (expanded detail) — overlays below, doesn't shift layout ── */}
       {expanded && (
         <div
-          className="absolute top-full left-0 right-0 mt-2 z-50 rounded-2xl border shadow-xl"
+          className="absolute top-full left-1/2 -translate-x-1/2 mt-2 z-50 rounded-2xl border shadow-xl"
           style={{
+            width: '320px',
             backgroundColor: 'var(--color-bg-raised)',
             borderColor: 'var(--color-border-strong)',
-            padding: '19px',
+            padding: '16px',
             animation: 'timelinePopoverIn 180ms ease',
             transformOrigin: 'top center',
           }}
@@ -313,7 +314,7 @@ export function SemesterTimeline({ semesterName }: SemesterTimelineProps) {
 
           {/* Header row */}
           <div className="flex items-start justify-between">
-            <div>
+            <div className="min-w-0">
               <div
                 className="font-mono font-bold uppercase tracking-widest"
                 style={{ fontSize: '9px', color: 'var(--color-text-tertiary)', letterSpacing: '0.12em' }}
@@ -321,8 +322,8 @@ export function SemesterTimeline({ semesterName }: SemesterTimelineProps) {
                 Exact breakdown
               </div>
               <div
-                className="mt-1.5 font-bold"
-                style={{ fontSize: '21px', color: 'var(--color-text-primary)', letterSpacing: '-0.035em' }}
+                className="mt-1 font-bold leading-tight"
+                style={{ fontSize: '18px', color: 'var(--color-text-primary)', letterSpacing: '-0.03em' }}
               >
                 {detailValue}
               </div>
@@ -332,19 +333,19 @@ export function SemesterTimeline({ semesterName }: SemesterTimelineProps) {
             </div>
             <button
               onClick={() => setExpanded(false)}
-              className="w-[27px] h-[27px] grid place-items-center rounded-lg cursor-pointer border-0"
+              className="w-[24px] h-[24px] grid place-items-center rounded-lg cursor-pointer border-0 shrink-0 ml-2"
               style={{ backgroundColor: 'var(--color-bg-subtle)', color: 'var(--color-text-secondary)' }}
               aria-label="Close timeline details"
             >
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none">
                 <path d="m7 7 10 10M17 7 7 17" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
               </svg>
             </button>
           </div>
 
           {/* Date row: 3 columns */}
-          <div className="grid grid-cols-3 mt-4 pt-3.5 border-t" style={{ borderColor: 'var(--color-border)' }}>
-            <div className="px-3 first:pl-0" style={{ borderRight: '1px solid var(--color-border)' }}>
+          <div className="grid grid-cols-3 mt-3 pt-3 border-t" style={{ borderColor: 'var(--color-border)' }}>
+            <div className="px-2" style={{ borderRight: '1px solid var(--color-border)' }}>
               <small className="block mb-1 font-mono font-bold uppercase tracking-widest" style={{ fontSize: '8px', color: 'var(--color-text-tertiary)', letterSpacing: '0.1em' }}>
                 Start
               </small>
@@ -352,7 +353,7 @@ export function SemesterTimeline({ semesterName }: SemesterTimelineProps) {
                 {startDateObj.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
               </strong>
             </div>
-            <div className="px-3" style={{ borderRight: '1px solid var(--color-border)' }}>
+            <div className="px-2" style={{ borderRight: '1px solid var(--color-border)' }}>
               <small className="block mb-1 font-mono font-bold uppercase tracking-widest" style={{ fontSize: '8px', color: 'var(--color-text-tertiary)', letterSpacing: '0.1em' }}>
                 Today
               </small>
@@ -360,7 +361,7 @@ export function SemesterTimeline({ semesterName }: SemesterTimelineProps) {
                 {todayStr}
               </strong>
             </div>
-            <div className="px-3 last:pr-0">
+            <div className="px-2">
               <small className="block mb-1 font-mono font-bold uppercase tracking-widest" style={{ fontSize: '8px', color: 'var(--color-text-tertiary)', letterSpacing: '0.1em' }}>
                 End
               </small>
@@ -373,13 +374,4 @@ export function SemesterTimeline({ semesterName }: SemesterTimelineProps) {
       )}
     </div>
   );
-}
-
-// ── Helper: format duration as "X months · Y weeks · Z days" ──
-function formatDurationText(d: { months: number; weeks: number; days: number; direction: string }): string {
-  const parts: string[] = [];
-  if (d.months > 0) parts.push(`${d.months} month${d.months !== 1 ? 's' : ''}`);
-  if (d.weeks > 0) parts.push(`${d.weeks} week${d.weeks !== 1 ? 's' : ''}`);
-  parts.push(`${d.days} day${d.days !== 1 ? 's' : ''}`);
-  return parts.join(' · ');
 }
