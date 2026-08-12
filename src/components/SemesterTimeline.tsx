@@ -4,6 +4,7 @@ import { useState, useEffect, useMemo, useRef } from 'react';
 import {
   getSemesterStartDate,
   getSemesterEndDate,
+  getFinalExamsEndDate,
   getSemesterWeekNumber,
   getSemesterProgress,
   getSemesterMilestones,
@@ -83,6 +84,7 @@ export function SemesterTimeline({ semesterName }: SemesterTimelineProps) {
   const data = useMemo(() => {
     const startISO = getSemesterStartDate();
     const endISO = getSemesterEndDate();
+    const finalsEndISO = getFinalExamsEndDate();
     if (!startISO || !endISO) return null;
 
     const progress = getSemesterProgress(now) ?? 0;
@@ -96,11 +98,12 @@ export function SemesterTimeline({ semesterName }: SemesterTimelineProps) {
     today.setHours(0, 0, 0, 0);
     const start = new Date(startISO + 'T00:00:00');
     const end = new Date(endISO + 'T00:00:00');
+    const finalsEnd = finalsEndISO ? new Date(finalsEndISO + 'T00:00:00') : end;
     const totalWeeks = Math.max(1, Math.round((end.getTime() - start.getTime()) / (7 * 24 * 60 * 60 * 1000)));
 
     let phase: Phase;
     if (today < start) phase = 'before';
-    else if (today > end) phase = 'complete';
+    else if (today > finalsEnd) phase = 'complete';
     else if (progress >= 80) phase = 'final';
     else phase = 'live';
 

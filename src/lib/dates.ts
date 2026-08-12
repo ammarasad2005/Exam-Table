@@ -262,18 +262,22 @@ export function getSemesterWeekNumber(now: Date = new Date()): number | null {
 
 /**
  * Returns semester progress as a float 0-100.
- * 0 = semester just started, 100 = semester ended.
- * Returns null if dates unavailable. Can return <0 (pre-semester) or >100
- * (post-semester, finals period).
+ * 0 = semester just started, 100 = semester ended (including finals).
+ * The timeline extends from First Day of Classes to the end of Final
+ * Examinations, so the FE marker sits at its true proportional position.
+ * Returns null if dates unavailable. Can return <0 (pre-semester).
  */
 export function getSemesterProgress(now: Date = new Date()): number | null {
   const startISO = getSemesterStartDate();
   const endISO = getSemesterEndDate();
+  const finalsEndISO = getFinalExamsEndDate();
   if (!startISO || !endISO) return null;
+  // Extend timeline to include finals period if available
+  const timelineEndISO = finalsEndISO || endISO;
   const today = new Date(now);
   today.setHours(0, 0, 0, 0);
   const start = new Date(startISO + 'T00:00:00');
-  const end = new Date(endISO + 'T00:00:00');
+  const end = new Date(timelineEndISO + 'T00:00:00');
   const total = end.getTime() - start.getTime();
   if (total <= 0) return null;
   const elapsed = today.getTime() - start.getTime();
@@ -295,10 +299,13 @@ export function getSemesterMilestones(): SemesterMilestone[] {
   const cal = getCalendar();
   const startISO = getSemesterStartDate();
   const endISO = getSemesterEndDate();
+  const finalsEndISO = getFinalExamsEndDate();
   if (!cal?.keyDates || !startISO || !endISO) return [];
 
+  // Use the same extended timeline as getSemesterProgress (includes finals)
+  const timelineEndISO = finalsEndISO || endISO;
   const start = new Date(startISO + 'T00:00:00').getTime();
-  const end = new Date(endISO + 'T00:00:00').getTime();
+  const end = new Date(timelineEndISO + 'T00:00:00').getTime();
   const total = end - start;
   if (total <= 0) return [];
 
