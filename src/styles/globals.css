@@ -500,14 +500,20 @@ body {
   border-radius: 14px 14px 0 0;
   padding: 2px; /* controls the gradient line thickness */
   background: var(--laser-rail-gradient);
+  /* Outline mask (exclude inner from outer) + vertical fade (intersect).
+     The fade makes the gradient strongest at the top arc and fades to
+     transparent at ~65% down the sides, so the sides blend into the
+     header baseline instead of showing full-strength color. */
   -webkit-mask:
     linear-gradient(#fff 0 0) content-box,
-    linear-gradient(#fff 0 0);
-  -webkit-mask-composite: xor;
+    linear-gradient(#fff 0 0),
+    linear-gradient(to bottom, #000 0%, #000 30%, transparent 65%);
+  -webkit-mask-composite: xor, intersect;
   mask:
     linear-gradient(#fff 0 0) content-box,
-    linear-gradient(#fff 0 0);
-  mask-composite: exclude;
+    linear-gradient(#fff 0 0),
+    linear-gradient(to bottom, #000 0%, #000 30%, transparent 65%);
+  mask-composite: exclude, intersect;
   pointer-events: none;
   z-index: 1;
 }
