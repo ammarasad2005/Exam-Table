@@ -1352,6 +1352,7 @@ for day_info in day_sheets:
                     header_seen += 1
                     if header_seen == 2:
                         ms_boundary = i
+                        print(f"  MS boundary detected on {day} {sheet_name}: col {ms_boundary} (all cells >= {ms_boundary} excluded)")
                         break
 
             for i in range(1, len(cells)):
