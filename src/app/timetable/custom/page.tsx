@@ -903,13 +903,14 @@ function CustomTimetableInner() {
                 <div className="flex-1">
                   <SearchBar value={query} onChange={setQuery} />
                 </div>
-                <div className="md:hidden flex gap-1">
+                {/* View toggle — visible on all breakpoints */}
+                <div className="flex gap-1">
                   {(['list', 'grid'] as ViewMode[]).map(v => (
                     <button
                       key={v}
                       onClick={() => setViewMode(v)}
                       aria-pressed={viewMode === v}
-                      className="h-9 w-9 rounded border font-mono text-xs font-medium transition-all"
+                      className="h-9 w-9 md:w-auto md:px-3 rounded border font-mono text-xs font-medium transition-all"
                       style={viewMode === v ? {
                         backgroundColor: 'var(--color-text-primary)',
                         color: 'var(--color-bg)',
@@ -920,7 +921,8 @@ function CustomTimetableInner() {
                       }}
                       title={v === 'list' ? 'List view' : 'Grid view'}
                     >
-                      {v === 'list' ? '☰' : '⊞'}
+                      <span className="md:hidden">{v === 'list' ? '☰' : '⊞'}</span>
+                      <span className="hidden md:inline">{v === 'list' ? 'List' : 'Grid'}</span>
                     </button>
                   ))}
                 </div>
