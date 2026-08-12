@@ -1927,7 +1927,11 @@ found_shared = False
 for name, depts in shared_courses.items():
     if len(depts) > 1:
         found_shared = True
-        dept_str = ", ".join([f"{b} {d}" for b, d in sorted(list(depts))])
+        # Sort with a key that handles None (color override can leave dept=None
+        # for yellow/repeat cells where parse_cell_parens didn't set it).
+        # Replace None with empty string for sorting, then restore for display.
+        sorted_depts = sorted(list(depts), key=lambda bd: (bd[0] or "", bd[1] or ""))
+        dept_str = ", ".join([f"{b} {d or '(none)'}" for b, d in sorted_depts])
         print(f"  • {name} is shared between: {dept_str}")
 
 # 4. Final Hierarchy Build
