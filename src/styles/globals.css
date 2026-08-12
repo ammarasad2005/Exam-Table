@@ -487,6 +487,31 @@ body {
   display: none;
 }
 
+/* ── Semester Timeline capsule: laser-rail gradient on the upper arc ── */
+/* The capsule shares the header's bottom baseline (no bottom border).
+   The ::before pseudo-element creates a 2px gradient outline that traces
+   the top arc + both sides, using the same --laser-rail-gradient as the
+   header's baseline. This makes the capsule appear as though the header's
+   laser rail flows up and around the capsule's arc. */
+.semester-timeline-capsule::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: 14px 14px 0 0;
+  padding: 2px; /* controls the gradient line thickness */
+  background: var(--laser-rail-gradient);
+  -webkit-mask:
+    linear-gradient(#fff 0 0) content-box,
+    linear-gradient(#fff 0 0);
+  -webkit-mask-composite: xor;
+  mask:
+    linear-gradient(#fff 0 0) content-box,
+    linear-gradient(#fff 0 0);
+  mask-composite: exclude;
+  pointer-events: none;
+  z-index: 1;
+}
+
 @media (max-width: 767px) {
   .glass-header-laser::before {
     height: 1.5px;

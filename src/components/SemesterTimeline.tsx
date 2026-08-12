@@ -160,16 +160,13 @@ export function SemesterTimeline({ semesterName }: SemesterTimelineProps) {
 
   return (
     <div className="relative hidden md:block flex-1 max-w-[560px]" ref={widgetRef}>
-      {/* ── Capsule — shares header baseline, only top arc is rounded ── */}
+      {/* ── Capsule — shares header baseline, laser-rail gradient on arc ── */}
       <div
-        className="relative h-[60px] flex flex-col justify-center"
+        className="relative h-[60px] flex flex-col justify-center semester-timeline-capsule"
         style={{
           padding: '8px 20px 8px',
           backgroundColor: 'var(--color-bg-raised)',
-          borderTop: '1px solid var(--color-border-strong)',
-          borderLeft: '1px solid var(--color-border-strong)',
-          borderRight: '1px solid var(--color-border-strong)',
-          borderBottom: 'none',
+          border: 'none',
           borderRadius: '14px 14px 0 0',
           boxShadow: '0 -2px 8px rgba(35, 47, 67, 0.06)',
           // CSS var for milestone tick color
