@@ -512,35 +512,16 @@ body {
   z-index: 1;
 }
 
-/* Light mode: the default --laser-rail-gradient has a white core
-   (rgba(255,255,255,0.96)) which is invisible against the white
-   capsule background. Use a subtle gradient so the arc is visible
-   without covering the component. */
+/* Light mode: use the majority visible color from the header baseline
+   (amber/orange) as a simple solid outline. Not a copy of the full
+   multi-color gradient — just enough to feel present in the header. */
 :root:not([data-theme="dark"]) .semester-timeline-capsule::before {
-  background: linear-gradient(
-    90deg,
-    transparent,
-    rgba(126, 34, 206, 0.3),
-    rgba(249, 115, 22, 0.4),
-    rgba(180, 83, 9, 0.5),
-    rgba(249, 115, 22, 0.4),
-    rgba(126, 34, 206, 0.3),
-    transparent
-  );
+  background: rgba(180, 83, 9, 0.4);
 }
 
 @media (prefers-color-scheme: light) {
   :root:not([data-theme="dark"]) .semester-timeline-capsule::before {
-    background: linear-gradient(
-      90deg,
-      transparent,
-      rgba(126, 34, 206, 0.3),
-      rgba(249, 115, 22, 0.4),
-      rgba(180, 83, 9, 0.5),
-      rgba(249, 115, 22, 0.4),
-      rgba(126, 34, 206, 0.3),
-      transparent
-    );
+    background: rgba(180, 83, 9, 0.4);
   }
 }
 
