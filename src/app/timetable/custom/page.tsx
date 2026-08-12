@@ -575,7 +575,7 @@ function CustomTimetableInner() {
     <div className="min-h-dvh flex flex-col">
 
       {/* ── Sticky header ── */}
-      <Header rightActions={saved && <TimetableExportButton entries={filtered} />}>
+      <Header rightActions={saved && <TimetableExportButton entries={filtered} config={{ isCustom: true }} />}>
         <div className="flex flex-1 items-center gap-2 md:gap-3 w-full max-w-full min-w-0">
           <button
             onClick={() => router.push('/')}
@@ -749,7 +749,7 @@ function CustomTimetableInner() {
             </div>
             
             {saved && (
-              <TimetableExportButton entries={filtered} variant="sidebar" />
+              <TimetableExportButton entries={filtered} variant="sidebar" config={{ isCustom: true }} />
             )}
           </div>
         </aside>
