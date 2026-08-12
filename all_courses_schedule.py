@@ -1563,7 +1563,7 @@ for day_info in day_sheets:
                 "isCancelled":  is_cancelled
             }
 
-            if category == "repeat":
+            if category == "repeat" and batch:
                 # Batch encoded in cell — anchor immediately
                 cal_key = f"{batch}-{dept}-{section}-{day}"
                 busy_calendar.setdefault(cal_key, []).append(blocking_time)
@@ -1584,6 +1584,11 @@ for day_info in day_sheets:
                 unambiguous_classes.append(record)
 
             else:  # regular — no color anchor, use heuristic pipeline
+                # Note: this branch also handles yellow/repeat cells with
+                # batch=None (color said "repeat" but text had no ",YY"
+                # suffix). They go through find_possible_batches like regular
+                # cells, but keep category="repeat" so downstream logic
+                # treats them as repeat once a batch is resolved.
                 possible = find_possible_batches(course_name, dept)
                 if not possible:
                     continue
