@@ -1180,23 +1180,15 @@ for day_info in day_sheets:
         "isMakeup": day_info.get("isMakeup", False)
     })
 
-    # Fetch cell colors for this day sheet via Sheets API.
-    # Rate-limit protection: 2-second delay before each API call to avoid
-    # triggering Google's throttling on CI IPs (which caused empty output
-    # in PR #25). If the API fails, the scraper falls back to text-based
-    # detection — the existing heuristic pipeline handles it correctly.
+    # Cell colors are NOT fetched at runtime. The fetch_cell_colors() API
+    # calls trigger Google rate-limiting on CI IPs, which also throttles
+    # the gviz endpoint and produces empty timetable.json.
+    # The hardcoded COLOR_MAP + identify_from_color() remain in the code
+    # for future use (e.g., if colors can be fetched via a different method
+    # or the rate-limit issue is resolved). For now, cell_colors = None
+    # means the color override block is skipped and the existing heuristic
+    # pipeline (text parsing + constraint satisfaction) runs.
     cell_colors = None
-    try:
-        import time as _time
-        _time.sleep(2)  # Rate-limit protection
-        cell_colors = fetch_cell_colors(sheet_id, sheet_name)
-        if cell_colors:
-            print(f"  Color data loaded for {sheet_name}: {len(cell_colors)} colored cells")
-        else:
-            print(f"  Color data unavailable for {sheet_name} — using text-based detection")
-    except Exception as e:
-        print(f"  Color fetch failed for {sheet_name}: {e} — using text-based detection")
-        cell_colors = None
 
     req_url = (
         f"https://docs.google.com/spreadsheets/d/{sheet_id}"
