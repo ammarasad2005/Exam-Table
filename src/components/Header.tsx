@@ -42,8 +42,9 @@ export function Header({ children, rightActions, hideTimeline }: HeaderProps) {
         </div>
 
         {/* Center: Semester Timeline (desktop only, hidden on mobile) */}
-        {/* overflow-visible (not hidden) so the dropdown can extend below */}
-        <div className="flex-1 flex justify-center mx-2 md:mx-4 overflow-visible min-w-0">
+        {/* overflow-visible so the dropdown can extend below */}
+        {/* self-stretch fills header height; items-end aligns capsule to bottom */}
+        <div className="flex-1 flex justify-center items-end mx-2 md:mx-4 overflow-visible min-w-0 self-stretch">
           {!hideTimeline && <SemesterTimeline />}
           {/* On mobile, children go here (timeline is hidden) */}
           {!hideTimeline ? null : hasChildren ? children : null}

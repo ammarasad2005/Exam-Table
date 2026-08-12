@@ -159,15 +159,19 @@ export function SemesterTimeline({ semesterName }: SemesterTimelineProps) {
   const todayStr = new Date(now).toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
 
   return (
-    <div className="relative hidden md:block" ref={widgetRef}>
-      {/* ── Floating capsule — fits within 60px header ── */}
+    <div className="relative hidden md:block flex-1 max-w-[560px]" ref={widgetRef}>
+      {/* ── Capsule — shares header baseline, only top arc is rounded ── */}
       <div
-        className="relative rounded-[14px] border"
+        className="relative h-[60px] flex flex-col justify-center"
         style={{
-          padding: '6px 12px 7px',
+          padding: '8px 20px 8px',
           backgroundColor: 'var(--color-bg-raised)',
-          borderColor: 'var(--color-border-strong)',
-          boxShadow: '0 4px 12px rgba(35, 47, 67, 0.10)',
+          borderTop: '1px solid var(--color-border-strong)',
+          borderLeft: '1px solid var(--color-border-strong)',
+          borderRight: '1px solid var(--color-border-strong)',
+          borderBottom: 'none',
+          borderRadius: '14px 14px 0 0',
+          boxShadow: '0 -2px 8px rgba(35, 47, 67, 0.06)',
           // CSS var for milestone tick color
           ['--bar-color' as string]: barColor,
         }}
