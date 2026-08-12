@@ -147,7 +147,7 @@ export function SemesterTimeline({ semesterName }: SemesterTimelineProps) {
     }
 
     return {
-      startISO, endISO, phase, clampedPct, barColor,
+      startISO, endISO, finalsEndISO, phase, clampedPct, barColor,
       milestones, weekNum, statusText, primaryText, metaText,
       detailValue, detailCaption,
     };
@@ -155,10 +155,10 @@ export function SemesterTimeline({ semesterName }: SemesterTimelineProps) {
 
   if (!data) return null;
 
-  const { phase, clampedPct, barColor, milestones, statusText, primaryText, metaText, detailValue, detailCaption, startISO, endISO } = data;
+  const { phase, clampedPct, barColor, milestones, statusText, primaryText, metaText, detailValue, detailCaption, startISO, endISO, finalsEndISO } = data;
 
   const startDateObj = new Date(startISO + 'T00:00:00');
-  const endDateObj = new Date(endISO + 'T00:00:00');
+  const endDateObj = new Date((finalsEndISO || endISO) + 'T00:00:00');
   const todayStr = new Date(now).toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
 
   return (
