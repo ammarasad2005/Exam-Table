@@ -227,7 +227,11 @@ def main():
         class_end = lab_start_row - 1 if lab_start_row else end_row
         is_lab_section = False
 
-        for row_idx in range(start_row + 1, end_row + 1):
+        # Start from start_row (not +1) because in the FSM sheet, the day name
+        # (col0) and the first row of course data (col2+) are on the SAME row.
+        # The scraper reads col2 for room and col3+ for courses, so col0="Monday"
+        # doesn't interfere with course parsing.
+        for row_idx in range(start_row, end_row + 1):
             if row_idx >= len(rows):
                 break
             if row_idx == lab_start_row:

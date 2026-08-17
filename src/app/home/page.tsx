@@ -615,7 +615,7 @@ export default function SetupPage() {
                   color: 'var(--color-text-secondary)',
                 }}
               >
-                {s === 'FSC' ? 'School of Computing' : 'School of Management'}
+                {s === 'FSC' ? 'Computing' : 'Management'}
               </button>
             ))}
           </div>
