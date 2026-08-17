@@ -31,6 +31,45 @@ API_KEY = os.environ.get("GOOGLE_SHEETS_API_KEY", "")
 # ── Departments ──
 FSM_DEPTS = {"BBA", "BA", "FT", "AF"}  # BSBA normalized to BA
 
+# ── FSM Elective course codes (from the Electives sheet) ──
+# Any course whose name starts with one of these codes is an elective.
+# These are BS-level electives offered to 2023 batch (7th semester).
+FSM_ELECTIVE_CODES = {
+    "MG4067",  # Strategic Diversity, Equity and Inclusion
+    "MG4062",  # Brand Management
+    "MG4521",  # Digital Marketing
+    "MG4522",  # Islamic Banking and Finance
+    "MG4045",  # Strategic Business Reporting
+    "MG4066",  # Managing Virtual Global Teams
+    "MG5103",  # Negotiation and Conflict Management
+    "MG4523",  # Conflict Resolution and Negotiation Skills
+    "MG5056",  # Diversity, Equity, and Inclusion
+    "CY4053",  # Cybersecurity for FinTech
+    "FT4005",  # Digital Banking and Payment Industry
+    "AF4017",  # Digital Assets and Cryptocurrencies
+    "AF3006",  # Financing New Ventures
+    "BA4007",  # Empowering Organizations with Analytics
+    "BA4009",  # Design Thinking in Business Analytics
+    "BA4006",  # Contextual Marketing & Product Analytics
+}
+
+def is_fsm_elective(course_name):
+    """Check if a course is an FSM elective by matching its course code prefix.
+    Handles spaces in course codes (e.g., 'CY 4053' vs 'CY4053')."""
+    name = course_name.strip().lstrip("\t")
+    # Normalize: remove all spaces from the start of the name for code matching
+    name_no_space = name.replace(" ", "")
+    for code in FSM_ELECTIVE_CODES:
+        if name_no_space.startswith(code):
+            return True
+    # Also check courses without a code prefix (e.g., "Islamic Banking and Finance")
+    electives_without_code = {
+        "islamic banking and finance",
+    }
+    if name.lower() in electives_without_code:
+        return True
+    return False
+
 # ── Semester → Batch year mapping ──
 # 01 = 1st sem (2026), 03 = 3rd sem (2025), 05 = 5th sem (2024), 07 = 7th sem (2023)
 def sem_to_batch(sem_num):
@@ -316,11 +355,14 @@ def main():
                 category = "regular"
 
                 # Build slot record
+                # Determine if this is an elective
+                is_elec = is_fsm_elective(course_name)
+
                 slot_data = {
                     "room": current_room,
                     "time": time_str,
                     "rescheduled": False,
-                    "is_elective": False,
+                    "is_elective": is_elec,
                     "elective_group": None,
                     "exam": False
                 }

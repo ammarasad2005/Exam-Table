@@ -2281,7 +2281,7 @@
                                 "room": "A-01",
                                 "time": "02:25-03:45",
                                 "rescheduled": false,
-                                "is_elective": false,
+                                "is_elective": true,
                                 "elective_group": null,
                                 "exam": false
                             },
@@ -2289,7 +2289,7 @@
                                 "room": "A-01",
                                 "time": "03:50-05:10",
                                 "rescheduled": false,
-                                "is_elective": false,
+                                "is_elective": true,
                                 "elective_group": null,
                                 "exam": false
                             }
@@ -2349,7 +2349,7 @@
                                 "room": "A-102",
                                 "time": "02:25-03:45",
                                 "rescheduled": false,
-                                "is_elective": false,
+                                "is_elective": true,
                                 "elective_group": null,
                                 "exam": false
                             },
@@ -2357,7 +2357,7 @@
                                 "room": "A-102",
                                 "time": "03:50-05:10",
                                 "rescheduled": false,
-                                "is_elective": false,
+                                "is_elective": true,
                                 "elective_group": null,
                                 "exam": false
                             }
@@ -2371,7 +2371,7 @@
                                 "room": "A-301",
                                 "time": "10:00-11:20",
                                 "rescheduled": false,
-                                "is_elective": false,
+                                "is_elective": true,
                                 "elective_group": null,
                                 "exam": false
                             },
@@ -2379,7 +2379,7 @@
                                 "room": "A-301",
                                 "time": "11:30-12:50",
                                 "rescheduled": false,
-                                "is_elective": false,
+                                "is_elective": true,
                                 "elective_group": null,
                                 "exam": false
                             }
@@ -2393,7 +2393,7 @@
                                 "room": "A-301",
                                 "time": "02:25-03:45",
                                 "rescheduled": false,
-                                "is_elective": false,
+                                "is_elective": true,
                                 "elective_group": null,
                                 "exam": false
                             },
@@ -2401,7 +2401,7 @@
                                 "room": "A-301",
                                 "time": "03:50-05:10",
                                 "rescheduled": false,
-                                "is_elective": false,
+                                "is_elective": true,
                                 "elective_group": null,
                                 "exam": false
                             }
@@ -2558,7 +2558,7 @@
                                 "room": "A-104",
                                 "time": "02:25-03:45",
                                 "rescheduled": false,
-                                "is_elective": false,
+                                "is_elective": true,
                                 "elective_group": null,
                                 "exam": false
                             },
@@ -2566,7 +2566,7 @@
                                 "room": "A-104",
                                 "time": "03:50-05:10",
                                 "rescheduled": false,
-                                "is_elective": false,
+                                "is_elective": true,
                                 "elective_group": null,
                                 "exam": false
                             }
@@ -2580,7 +2580,7 @@
                                 "room": "A-301",
                                 "time": "08:30-09:50",
                                 "rescheduled": false,
-                                "is_elective": false,
+                                "is_elective": true,
                                 "elective_group": null,
                                 "exam": false
                             },
@@ -2588,7 +2588,7 @@
                                 "room": "A-301",
                                 "time": "10:00-11:20",
                                 "rescheduled": false,
-                                "is_elective": false,
+                                "is_elective": true,
                                 "elective_group": null,
                                 "exam": false
                             }
@@ -2699,7 +2699,7 @@
                                 "room": "A-04",
                                 "time": "11:30-12:50",
                                 "rescheduled": false,
-                                "is_elective": false,
+                                "is_elective": true,
                                 "elective_group": null,
                                 "exam": false
                             },
@@ -2707,7 +2707,7 @@
                                 "room": "A-04",
                                 "time": "01:00-02:20",
                                 "rescheduled": false,
-                                "is_elective": false,
+                                "is_elective": true,
                                 "elective_group": null,
                                 "exam": false
                             }
@@ -2721,7 +2721,7 @@
                                 "room": "A-303",
                                 "time": "08:30-09:50",
                                 "rescheduled": false,
-                                "is_elective": false,
+                                "is_elective": true,
                                 "elective_group": null,
                                 "exam": false
                             },
@@ -2729,7 +2729,7 @@
                                 "room": "A-303",
                                 "time": "10:00-11:20",
                                 "rescheduled": false,
-                                "is_elective": false,
+                                "is_elective": true,
                                 "elective_group": null,
                                 "exam": false
                             }
@@ -2884,7 +2884,7 @@
                                 "room": "A-01",
                                 "time": "02:25-03:45",
                                 "rescheduled": false,
-                                "is_elective": false,
+                                "is_elective": true,
                                 "elective_group": null,
                                 "exam": false
                             },
@@ -2892,7 +2892,7 @@
                                 "room": "A-01",
                                 "time": "03:50-05:10",
                                 "rescheduled": false,
-                                "is_elective": false,
+                                "is_elective": true,
                                 "elective_group": null,
                                 "exam": false
                             }
