@@ -51,6 +51,7 @@ FSM_ELECTIVE_CODES = {
     "BA4007",  # Empowering Organizations with Analytics
     "BA4009",  # Design Thinking in Business Analytics
     "BA4006",  # Contextual Marketing & Product Analytics
+    "MG4051",  # Digital Marketing (timetable code for MG4521 elective)
 }
 
 def is_fsm_elective(course_name):
