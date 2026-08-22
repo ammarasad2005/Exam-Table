@@ -34,7 +34,26 @@ const ACTIVE_DAYS = DAYS_OF_WEEK.filter(d => {
   return true;
 });
 
-type ViewMode = 'specific' | 'calendar' | null;
+type ViewMode = 'specific' | 'calendar' | 'custom' | null;
+
+// ─── Time option for the dropdown (30-min increments from 8:00 to 18:00) ────
+const TIME_OPTIONS: { label: string; value: string }[] = (() => {
+  const opts: { label: string; value: string }[] = [];
+  for (let h = 8; h <= 18; h++) {
+    for (const m of [0, 30]) {
+      if (h === 18 && m === 30) break;
+      const hh = String(h).padStart(2, '0');
+      const mm = String(m).padStart(2, '0');
+      const period = h < 12 || (h === 12 && m === 0) ? 'AM' : 'PM';
+      const displayH = h <= 12 ? h : h - 12;
+      opts.push({
+        value: `${hh}:${mm}`,
+        label: `${displayH}:${mm} ${period}`,
+      });
+    }
+  }
+  return opts;
+})();
 
 // ─── Tiny chip sub-component ──────────────────────────────────────────────────
 function RoomPill({
@@ -415,6 +434,8 @@ export default function RoomsPage() {
 
   const [selectedDay, setSelectedDay] = useState<string>('');
   const [selectedSlot, setSelectedSlot] = useState<string>('');
+  const [customStartTime, setCustomStartTime] = useState<string>('');
+  const [customEndTime, setCustomEndTime] = useState<string>('');
   const [viewMode, setViewMode] = useState<ViewMode>(null);
   const [selectedCell, setSelectedCell] = useState<CalendarCell | null>(null);
 
@@ -424,6 +445,12 @@ export default function RoomsPage() {
     if (selectedDay && selectedSlot) setViewMode('specific');
   }
 
+  function handleCustomSearch() {
+    if (selectedDay && customStartTime && customEndTime && customEndTime > customStartTime) {
+      setViewMode('custom');
+    }
+  }
+
   function handleDropdownChange(type: 'day' | 'slot', value: string) {
     if (type === 'day') setSelectedDay(value);
     else setSelectedSlot(value);
@@ -431,6 +458,13 @@ export default function RoomsPage() {
   }
 
   const canSearch = selectedDay && selectedSlot;
+  const canCustomSearch = selectedDay && customStartTime && customEndTime && customEndTime > customStartTime;
+
+  // For custom range view
+  const customRawSlot = customStartTime && customEndTime ? `${customStartTime}-${customEndTime}` : '';
+  const customSlotObj = customStartTime && customEndTime
+    ? { label: `${TIME_OPTIONS.find(t => t.value === customStartTime)?.label ?? customStartTime} – ${TIME_OPTIONS.find(t => t.value === customEndTime)?.label ?? customEndTime}`, raw: customRawSlot, start: 0, end: 0 }
+    : null;
 
   return (
     <div className="min-h-dvh flex flex-col bg-[var(--color-bg)]">
@@ -593,10 +627,98 @@ export default function RoomsPage() {
               <div className="h-px flex-1 bg-[var(--color-border)]" />
             </div>
 
-            {/* Option B — Full calendar */}
+            {/* Option B — Custom time range */}
             <div className="flex flex-col gap-3">
               <p className="font-mono text-[10px] uppercase tracking-widest text-[var(--color-text-tertiary)]">
-                Option B — Full Week Calendar
+                Option B — Custom Time Range
+              </p>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                {/* Start time */}
+                <div className="flex flex-col gap-1.5">
+                  <label htmlFor="custom-start"
+                    className="font-mono text-[11px] uppercase tracking-widest text-[var(--color-text-tertiary)]">
+                    From
+                  </label>
+                  <div className="relative">
+                    <select
+                      id="custom-start"
+                      value={customStartTime}
+                      onChange={e => { setCustomStartTime(e.target.value); setViewMode(null); }}
+                      className="w-full h-12 pl-4 pr-10 bg-[var(--color-bg)] border border-[var(--color-border-strong)] rounded-md font-mono text-sm appearance-none focus:outline-none focus:ring-2 focus:ring-[var(--accent-cs)] cursor-pointer"
+                    >
+                      <option value="" disabled>Start time</option>
+                      {TIME_OPTIONS.map(t => (
+                        <option key={t.value} value={t.value}>{t.label}</option>
+                      ))}
+                    </select>
+                    <div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none text-[var(--color-text-tertiary)]">
+                      <svg width="12" height="7" viewBox="0 0 12 7" fill="none" aria-hidden="true">
+                        <path d="M1 1l5 5 5-5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+                      </svg>
+                    </div>
+                  </div>
+                </div>
+
+                {/* End time */}
+                <div className="flex flex-col gap-1.5">
+                  <label htmlFor="custom-end"
+                    className="font-mono text-[11px] uppercase tracking-widest text-[var(--color-text-tertiary)]">
+                    To
+                  </label>
+                  <div className="relative">
+                    <select
+                      id="custom-end"
+                      value={customEndTime}
+                      onChange={e => { setCustomEndTime(e.target.value); setViewMode(null); }}
+                      className="w-full h-12 pl-4 pr-10 bg-[var(--color-bg)] border border-[var(--color-border-strong)] rounded-md font-mono text-sm appearance-none focus:outline-none focus:ring-2 focus:ring-[var(--accent-cs)] cursor-pointer"
+                    >
+                      <option value="" disabled>End time</option>
+                      {TIME_OPTIONS.map(t => (
+                        <option key={t.value} value={t.value}>{t.label}</option>
+                      ))}
+                    </select>
+                    <div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none text-[var(--color-text-tertiary)]">
+                      <svg width="12" height="7" viewBox="0 0 12 7" fill="none" aria-hidden="true">
+                        <path d="M1 1l5 5 5-5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+                      </svg>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {customStartTime && customEndTime && customEndTime <= customStartTime && (
+                <p className="font-mono text-[10px] text-red-500 italic">End time must be after start time</p>
+              )}
+
+              <button
+                onClick={handleCustomSearch}
+                disabled={!canCustomSearch}
+                className="w-full h-12 rounded-md font-body font-medium text-sm transition-all focus-visible:outline-none focus-visible:ring-2 active:scale-[0.98]"
+                style={canCustomSearch ? {
+                  backgroundColor: 'var(--color-text-primary)',
+                  color: 'var(--color-bg)',
+                } : {
+                  backgroundColor: 'var(--color-bg-subtle)',
+                  color: 'var(--color-text-tertiary)',
+                  cursor: 'not-allowed',
+                }}
+              >
+                Find Free Rooms →
+              </button>
+            </div>
+
+            {/* Divider */}
+            <div className="flex items-center gap-3">
+              <div className="h-px flex-1 bg-[var(--color-border)]" />
+              <span className="font-mono text-[10px] uppercase tracking-widest text-[var(--color-text-tertiary)]">or</span>
+              <div className="h-px flex-1 bg-[var(--color-border)]" />
+            </div>
+
+            {/* Option C — Full calendar */}
+            <div className="flex flex-col gap-3">
+              <p className="font-mono text-[10px] uppercase tracking-widest text-[var(--color-text-tertiary)]">
+                Option C — Full Week Calendar
               </p>
               <button
                 onClick={() => setViewMode('calendar')}
@@ -617,6 +739,14 @@ export default function RoomsPage() {
               day={selectedDay}
               slotRaw={selectedSlot}
               slotLabel={selectedSlotObj.label}
+            />
+          )}
+
+          {viewMode === 'custom' && customSlotObj && (
+            <SpecificResults
+              day={selectedDay}
+              slotRaw={customRawSlot}
+              slotLabel={customSlotObj.label}
             />
           )}
 
