@@ -16,6 +16,7 @@ import {
 } from '@/lib/room-logic';
 import type { RawTimetableJSON } from '@/lib/types';
 import { useMobileSwipe } from '@/hooks/useMobileSwipe';
+import { TimeClockInput } from '@/components/TimeClockInput';
 
 // eslint-disable-next-line
 const timetableRaw: RawTimetableJSON = require('../../../public/data/timetable.json');
@@ -36,24 +37,7 @@ const ACTIVE_DAYS = DAYS_OF_WEEK.filter(d => {
 
 type ViewMode = 'specific' | 'calendar' | 'custom' | null;
 
-// ─── Time option for the dropdown (30-min increments from 8:00 to 18:00) ────
-const TIME_OPTIONS: { label: string; value: string }[] = (() => {
-  const opts: { label: string; value: string }[] = [];
-  for (let h = 8; h <= 18; h++) {
-    for (const m of [0, 30]) {
-      if (h === 18 && m === 30) break;
-      const hh = String(h).padStart(2, '0');
-      const mm = String(m).padStart(2, '0');
-      const period = h < 12 || (h === 12 && m === 0) ? 'AM' : 'PM';
-      const displayH = h <= 12 ? h : h - 12;
-      opts.push({
-        value: `${hh}:${mm}`,
-        label: `${displayH}:${mm} ${period}`,
-      });
-    }
-  }
-  return opts;
-})();
+type CustomStep = 'idle' | 'start' | 'end' | 'done';
 
 // ─── Tiny chip sub-component ──────────────────────────────────────────────────
 function RoomPill({
@@ -434,8 +418,9 @@ export default function RoomsPage() {
 
   const [selectedDay, setSelectedDay] = useState<string>('');
   const [selectedSlot, setSelectedSlot] = useState<string>('');
-  const [customStartTime, setCustomStartTime] = useState<string>('');
-  const [customEndTime, setCustomEndTime] = useState<string>('');
+  const [customStartTime, setCustomStartTime] = useState<string>('09:00');
+  const [customEndTime, setCustomEndTime] = useState<string>('11:00');
+  const [customStep, setCustomStep] = useState<CustomStep>('idle');
   const [viewMode, setViewMode] = useState<ViewMode>(null);
   const [selectedCell, setSelectedCell] = useState<CalendarCell | null>(null);
 
@@ -445,26 +430,43 @@ export default function RoomsPage() {
     if (selectedDay && selectedSlot) setViewMode('specific');
   }
 
-  function handleCustomSearch() {
-    if (selectedDay && customStartTime && customEndTime && customEndTime > customStartTime) {
-      setViewMode('custom');
-    }
-  }
-
   function handleDropdownChange(type: 'day' | 'slot', value: string) {
     if (type === 'day') setSelectedDay(value);
     else setSelectedSlot(value);
     setViewMode(null); // Reset results on any change
   }
 
-  const canSearch = selectedDay && selectedSlot;
-  const canCustomSearch = selectedDay && customStartTime && customEndTime && customEndTime > customStartTime;
+  function startCustomRange() {
+    setCustomStep('start');
+    setViewMode(null);
+  }
 
-  // For custom range view
-  const customRawSlot = customStartTime && customEndTime ? `${customStartTime}-${customEndTime}` : '';
-  const customSlotObj = customStartTime && customEndTime
-    ? { label: `${TIME_OPTIONS.find(t => t.value === customStartTime)?.label ?? customStartTime} – ${TIME_OPTIONS.find(t => t.value === customEndTime)?.label ?? customEndTime}`, raw: customRawSlot, start: 0, end: 0 }
-    : null;
+  function confirmStartTime() {
+    setCustomStep('end');
+  }
+
+  function confirmEndTime() {
+    setCustomStep('done');
+    setViewMode('custom');
+  }
+
+  function resetCustomRange() {
+    setCustomStep('idle');
+    setViewMode(null);
+  }
+
+  const canSearch = selectedDay && selectedSlot;
+
+  // For custom range display
+  const customRawSlot = `${customStartTime}-${customEndTime}`;
+  const fmtTime = (t: string) => {
+    const [h, m] = t.split(':').map(Number);
+    const period = h < 12 ? 'AM' : 'PM';
+    const dh = h === 0 ? 12 : h <= 12 ? h : h - 12;
+    return `${dh}:${String(m).padStart(2, '0')} ${period}`;
+  };
+  const customSlotLabel = `${fmtTime(customStartTime)} – ${fmtTime(customEndTime)}`;
+  const customValid = customEndTime > customStartTime;
 
   return (
     <div className="min-h-dvh flex flex-col bg-[var(--color-bg)]">
@@ -627,85 +629,133 @@ export default function RoomsPage() {
               <div className="h-px flex-1 bg-[var(--color-border)]" />
             </div>
 
-            {/* Option B — Custom time range */}
+            {/* Option B — Custom time range with guided flow */}
             <div className="flex flex-col gap-3">
               <p className="font-mono text-[10px] uppercase tracking-widest text-[var(--color-text-tertiary)]">
                 Option B — Custom Time Range
               </p>
 
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                {/* Start time */}
-                <div className="flex flex-col gap-1.5">
-                  <label htmlFor="custom-start"
-                    className="font-mono text-[11px] uppercase tracking-widest text-[var(--color-text-tertiary)]">
-                    From
-                  </label>
-                  <div className="relative">
-                    <select
-                      id="custom-start"
-                      value={customStartTime}
-                      onChange={e => { setCustomStartTime(e.target.value); setViewMode(null); }}
-                      className="w-full h-12 pl-4 pr-10 bg-[var(--color-bg)] border border-[var(--color-border-strong)] rounded-md font-mono text-sm appearance-none focus:outline-none focus:ring-2 focus:ring-[var(--accent-cs)] cursor-pointer"
-                    >
-                      <option value="" disabled>Start time</option>
-                      {TIME_OPTIONS.map(t => (
-                        <option key={t.value} value={t.value}>{t.label}</option>
-                      ))}
-                    </select>
-                    <div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none text-[var(--color-text-tertiary)]">
-                      <svg width="12" height="7" viewBox="0 0 12 7" fill="none" aria-hidden="true">
-                        <path d="M1 1l5 5 5-5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-                      </svg>
+              {customStep === 'idle' && (
+                <>
+                  {/* Day selector (shared with Option A but independent) */}
+                  <div className="flex flex-col gap-1.5">
+                    <label className="font-mono text-[11px] uppercase tracking-widest text-[var(--color-text-tertiary)]">
+                      Day
+                    </label>
+                    <div className="relative">
+                      <select
+                        value={selectedDay}
+                        onChange={e => { setSelectedDay(e.target.value); setViewMode(null); }}
+                        className="w-full h-12 pl-4 pr-10 bg-[var(--color-bg)] border border-[var(--color-border-strong)] rounded-md font-mono text-sm appearance-none focus:outline-none focus:ring-2 focus:ring-[var(--accent-cs)] cursor-pointer"
+                      >
+                        <option value="" disabled>Select day</option>
+                        {ACTIVE_DAYS.map(d => (
+                          <option key={d} value={d}>{d}</option>
+                        ))}
+                      </select>
+                      <div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none text-[var(--color-text-tertiary)]">
+                        <svg width="12" height="7" viewBox="0 0 12 7" fill="none" aria-hidden="true">
+                          <path d="M1 1l5 5 5-5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+                        </svg>
+                      </div>
                     </div>
                   </div>
-                </div>
 
-                {/* End time */}
-                <div className="flex flex-col gap-1.5">
-                  <label htmlFor="custom-end"
-                    className="font-mono text-[11px] uppercase tracking-widest text-[var(--color-text-tertiary)]">
-                    To
-                  </label>
-                  <div className="relative">
-                    <select
-                      id="custom-end"
-                      value={customEndTime}
-                      onChange={e => { setCustomEndTime(e.target.value); setViewMode(null); }}
-                      className="w-full h-12 pl-4 pr-10 bg-[var(--color-bg)] border border-[var(--color-border-strong)] rounded-md font-mono text-sm appearance-none focus:outline-none focus:ring-2 focus:ring-[var(--accent-cs)] cursor-pointer"
-                    >
-                      <option value="" disabled>End time</option>
-                      {TIME_OPTIONS.map(t => (
-                        <option key={t.value} value={t.value}>{t.label}</option>
-                      ))}
-                    </select>
-                    <div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none text-[var(--color-text-tertiary)]">
-                      <svg width="12" height="7" viewBox="0 0 12 7" fill="none" aria-hidden="true">
-                        <path d="M1 1l5 5 5-5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-                      </svg>
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              {customStartTime && customEndTime && customEndTime <= customStartTime && (
-                <p className="font-mono text-[10px] text-red-500 italic">End time must be after start time</p>
+                  <button
+                    onClick={startCustomRange}
+                    disabled={!selectedDay}
+                    className="w-full h-12 rounded-md font-body font-medium text-sm transition-all focus-visible:outline-none focus-visible:ring-2 active:scale-[0.98]"
+                    style={selectedDay ? {
+                      backgroundColor: 'var(--color-text-primary)',
+                      color: 'var(--color-bg)',
+                    } : {
+                      backgroundColor: 'var(--color-bg-subtle)',
+                      color: 'var(--color-text-tertiary)',
+                      cursor: 'not-allowed',
+                    }}
+                  >
+                    Choose Range →
+                  </button>
+                </>
               )}
 
-              <button
-                onClick={handleCustomSearch}
-                disabled={!canCustomSearch}
-                className="w-full h-12 rounded-md font-body font-medium text-sm transition-all focus-visible:outline-none focus-visible:ring-2 active:scale-[0.98]"
-                style={canCustomSearch ? {
-                  backgroundColor: 'var(--color-text-primary)',
-                  color: 'var(--color-bg)',
-                } : {
-                  backgroundColor: 'var(--color-bg-subtle)',
-                  color: 'var(--color-text-tertiary)',
-                  cursor: 'not-allowed',
-                }}
-              >
-                Find Free Rooms →
-              </button>
+              {customStep === 'start' && (
+                <div className="flex flex-col items-center gap-4 py-2">
+                  <TimeClockInput
+                    value={customStartTime}
+                    onChange={setCustomStartTime}
+                    label="Starts From"
+                  />
+                  <button
+                    onClick={confirmStartTime}
+                    className="w-full h-12 rounded-md font-body font-medium text-sm transition-all focus-visible:outline-none focus-visible:ring-2 active:scale-[0.98]"
+                    style={{
+                      backgroundColor: 'var(--color-text-primary)',
+                      color: 'var(--color-bg)',
+                    }}
+                  >
+                    Next: End Time →
+                  </button>
+                  <button
+                    onClick={resetCustomRange}
+                    className="font-mono text-[11px] text-[var(--color-text-tertiary)] hover:text-[var(--color-text-primary)] transition-colors"
+                  >
+                    ← Back
+                  </button>
+                </div>
+              )}
+
+              {customStep === 'end' && (
+                <div className="flex flex-col items-center gap-4 py-2">
+                  <TimeClockInput
+                    value={customEndTime}
+                    onChange={setCustomEndTime}
+                    label="Ends At"
+                  />
+                  {!customValid && (
+                    <p className="font-mono text-[10px] text-red-500 italic">End time must be after {fmtTime(customStartTime)}</p>
+                  )}
+                  <button
+                    onClick={confirmEndTime}
+                    disabled={!customValid}
+                    className="w-full h-12 rounded-md font-body font-medium text-sm transition-all focus-visible:outline-none focus-visible:ring-2 active:scale-[0.98]"
+                    style={customValid ? {
+                      backgroundColor: 'var(--color-text-primary)',
+                      color: 'var(--color-bg)',
+                    } : {
+                      backgroundColor: 'var(--color-bg-subtle)',
+                      color: 'var(--color-text-tertiary)',
+                      cursor: 'not-allowed',
+                    }}
+                  >
+                    Find Free Rooms →
+                  </button>
+                  <button
+                    onClick={() => setCustomStep('start')}
+                    className="font-mono text-[11px] text-[var(--color-text-tertiary)] hover:text-[var(--color-text-primary)] transition-colors"
+                  >
+                    ← Back
+                  </button>
+                </div>
+              )}
+
+              {customStep === 'done' && viewMode === 'custom' && (
+                <div className="flex flex-col gap-3">
+                  <div className="flex items-center justify-between px-4 py-3 rounded-xl border" style={{ borderColor: 'var(--color-border)', backgroundColor: 'var(--color-bg-subtle)' }}>
+                    <div className="flex flex-col gap-0.5">
+                      <span className="font-mono text-[10px] uppercase tracking-widest text-[var(--color-text-tertiary)]">{selectedDay}</span>
+                      <span className="font-mono text-sm font-bold" style={{ color: 'var(--color-text-primary)' }}>{customSlotLabel}</span>
+                    </div>
+                    <button
+                      onClick={resetCustomRange}
+                      className="font-mono text-[10px] text-[var(--color-text-tertiary)] hover:text-[var(--color-text-primary)] transition-colors px-2 py-1 rounded border"
+                      style={{ borderColor: 'var(--color-border)' }}
+                    >
+                      ✕ Reset
+                    </button>
+                  </div>
+                </div>
+              )}
             </div>
 
             {/* Divider */}
@@ -742,11 +792,11 @@ export default function RoomsPage() {
             />
           )}
 
-          {viewMode === 'custom' && customSlotObj && (
+          {viewMode === 'custom' && (
             <SpecificResults
               day={selectedDay}
               slotRaw={customRawSlot}
-              slotLabel={customSlotObj.label}
+              slotLabel={customSlotLabel}
             />
           )}
 
