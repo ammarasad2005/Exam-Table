@@ -10,10 +10,17 @@ interface TimeClockInputProps {
 
 /**
  * A digital clock-style time input.
- * Shows HH:MM in a monospace digital format with up/down scroll arrows
- * for hours and minutes independently.
  *
- * Not a dropdown — a real interactive time picker.
+ * Two modes of interaction:
+ * 1. Scroll arrows (up/down) for hours and minutes
+ * 2. Click on the hour or minute digit area to type directly
+ *
+ * When editing, the field becomes a text input. On blur or Enter, the
+ * value is normalized:
+ * - Hours: clamped to 1–12 (12-hour entry), then combined with AM/PM
+ * - Minutes: clamped to 0–59, snapped to 5-minute increments
+ * - Single digit → padded to 2 digits
+ * - Empty or invalid → reverts to previous value
  */
 export function TimeClockInput({ value, onChange, label }: TimeClockInputProps) {
   const parts = value.split(':');
@@ -22,6 +29,18 @@ export function TimeClockInput({ value, onChange, label }: TimeClockInputProps) 
 
   const displayHours = hours === 0 ? 12 : hours <= 12 ? hours : hours - 12;
   const period = hours < 12 ? 'AM' : 'PM';
+
+  // Edit state: which field is being typed into ('h' | 'm' | null)
+  const [editingField, setEditingField] = useState<'h' | 'm' | null>(null);
+  const [editValue, setEditValue] = useState('');
+  const inputRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    if (editingField && inputRef.current) {
+      inputRef.current.focus();
+      inputRef.current.select();
+    }
+  }, [editingField]);
 
   function adjust(field: 'h' | 'm', delta: number) {
     let h = hours;
@@ -33,9 +52,7 @@ export function TimeClockInput({ value, onChange, label }: TimeClockInputProps) 
       // Snap to 5-minute increments
       m = Math.round(m / 5) * 5 % 60;
     }
-    const newH = String(h).padStart(2, '0');
-    const newM = String(m).padStart(2, '0');
-    onChange(`${newH}:${newM}`);
+    onChange(`${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}`);
   }
 
   function setPeriod(p: 'AM' | 'PM') {
@@ -43,6 +60,62 @@ export function TimeClockInput({ value, onChange, label }: TimeClockInputProps) 
     if (p === 'AM' && h >= 12) h -= 12;
     if (p === 'PM' && h < 12) h += 12;
     onChange(`${String(h).padStart(2, '0')}:${String(minutes).padStart(2, '0')}`);
+  }
+
+  function startEditing(field: 'h' | 'm') {
+    setEditingField(field);
+    // Pre-fill with current display value
+    if (field === 'h') {
+      setEditValue(String(displayHours));
+    } else {
+      setEditValue(String(minutes).padStart(2, '0'));
+    }
+  }
+
+  function commitEdit() {
+    if (editingField === 'h') {
+      // Parse entered hours (1-12 range, 12-hour format)
+      let h = parseInt(editValue, 10);
+      if (isNaN(h)) {
+        // Invalid → revert
+        setEditingField(null);
+        return;
+      }
+      // Clamp to 1-12
+      h = Math.max(1, Math.min(12, h));
+      // Convert to 24-hour based on current AM/PM
+      if (period === 'PM' && h < 12) h += 12;
+      if (period === 'AM' && h === 12) h = 0;
+      onChange(`${String(h).padStart(2, '0')}:${String(minutes).padStart(2, '0')}`);
+    } else if (editingField === 'm') {
+      // Parse entered minutes (0-59, snap to 5)
+      let m = parseInt(editValue, 10);
+      if (isNaN(m)) {
+        setEditingField(null);
+        return;
+      }
+      m = Math.max(0, Math.min(59, m));
+      m = Math.round(m / 5) * 5;
+      if (m === 60) m = 55; // edge case from rounding 59→60
+      onChange(`${String(hours).padStart(2, '0')}:${String(m).padStart(2, '0')}`);
+    }
+    setEditingField(null);
+  }
+
+  function handleEditKey(e: React.KeyboardEvent<HTMLInputElement>) {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      commitEdit();
+    } else if (e.key === 'Escape') {
+      e.preventDefault();
+      setEditingField(null);
+    }
+  }
+
+  function handleEditChange(e: React.ChangeEvent<HTMLInputElement>) {
+    // Only allow digits, max 2 chars
+    const v = e.target.value.replace(/\D/g, '').slice(0, 2);
+    setEditValue(v);
   }
 
   const btnStyle: React.CSSProperties = {
@@ -58,6 +131,16 @@ export function TimeClockInput({ value, onChange, label }: TimeClockInputProps) 
     cursor: 'pointer',
     fontSize: '10px',
     transition: 'all 0.15s',
+  };
+
+  const digitStyle: React.CSSProperties = {
+    color: 'var(--color-text-primary)',
+    minWidth: '2ch',
+    textAlign: 'center',
+    cursor: 'text',
+    borderRadius: '4px',
+    padding: '2px 4px',
+    transition: 'background-color 0.15s',
   };
 
   return (
@@ -76,9 +159,29 @@ export function TimeClockInput({ value, onChange, label }: TimeClockInputProps) 
           <button type="button" style={btnStyle} onClick={() => adjust('h', 1)} aria-label="Hour up">
             <svg width="10" height="6" viewBox="0 0 12 7" fill="none"><path d="M1 6l5-5 5 5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>
           </button>
-          <span className="font-mono text-2xl font-bold tabular-nums" style={{ color: 'var(--color-text-primary)', minWidth: '2ch', textAlign: 'center' }}>
-            {String(displayHours).padStart(2, '0')}
-          </span>
+          {editingField === 'h' ? (
+            <input
+              ref={inputRef}
+              type="text"
+              value={editValue}
+              onChange={handleEditChange}
+              onKeyDown={handleEditKey}
+              onBlur={commitEdit}
+              className="font-mono text-2xl font-bold tabular-nums text-center bg-transparent outline-none"
+              style={{ ...digitStyle, width: '3ch', borderBottom: '2px solid var(--accent-cs)' }}
+              inputMode="numeric"
+              maxLength={2}
+            />
+          ) : (
+            <span
+              className="font-mono text-2xl font-bold tabular-nums hover:bg-[var(--color-bg-subtle)]"
+              style={digitStyle}
+              onClick={() => startEditing('h')}
+              title="Click to type"
+            >
+              {String(displayHours).padStart(2, '0')}
+            </span>
+          )}
           <button type="button" style={btnStyle} onClick={() => adjust('h', -1)} aria-label="Hour down">
             <svg width="10" height="6" viewBox="0 0 12 7" fill="none"><path d="M1 1l5 5 5-5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>
           </button>
@@ -91,9 +194,29 @@ export function TimeClockInput({ value, onChange, label }: TimeClockInputProps) 
           <button type="button" style={btnStyle} onClick={() => adjust('m', 5)} aria-label="Minute up">
             <svg width="10" height="6" viewBox="0 0 12 7" fill="none"><path d="M1 6l5-5 5 5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>
           </button>
-          <span className="font-mono text-2xl font-bold tabular-nums" style={{ color: 'var(--color-text-primary)', minWidth: '2ch', textAlign: 'center' }}>
-            {String(minutes).padStart(2, '0')}
-          </span>
+          {editingField === 'm' ? (
+            <input
+              ref={inputRef}
+              type="text"
+              value={editValue}
+              onChange={handleEditChange}
+              onKeyDown={handleEditKey}
+              onBlur={commitEdit}
+              className="font-mono text-2xl font-bold tabular-nums text-center bg-transparent outline-none"
+              style={{ ...digitStyle, width: '3ch', borderBottom: '2px solid var(--accent-cs)' }}
+              inputMode="numeric"
+              maxLength={2}
+            />
+          ) : (
+            <span
+              className="font-mono text-2xl font-bold tabular-nums hover:bg-[var(--color-bg-subtle)]"
+              style={digitStyle}
+              onClick={() => startEditing('m')}
+              title="Click to type"
+            >
+              {String(minutes).padStart(2, '0')}
+            </span>
+          )}
           <button type="button" style={btnStyle} onClick={() => adjust('m', -5)} aria-label="Minute down">
             <svg width="10" height="6" viewBox="0 0 12 7" fill="none"><path d="M1 1l5 5 5-5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>
           </button>
