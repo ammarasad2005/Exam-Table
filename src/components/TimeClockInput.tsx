@@ -18,7 +18,7 @@ interface TimeClockInputProps {
  * When editing, the field becomes a text input. On blur or Enter, the
  * value is normalized:
  * - Hours: clamped to 1–12 (12-hour entry), then combined with AM/PM
- * - Minutes: clamped to 0–59, snapped to 5-minute increments
+ * - Minutes: clamped to 0–59, 1-minute granularity
  * - Single digit → padded to 2 digits
  * - Empty or invalid → reverts to previous value
  */
@@ -48,9 +48,8 @@ export function TimeClockInput({ value, onChange, label }: TimeClockInputProps) 
     if (field === 'h') {
       h = (h + delta + 24) % 24;
     } else {
+      // 1-minute granularity
       m = (m + delta + 60) % 60;
-      // Snap to 5-minute increments
-      m = Math.round(m / 5) * 5 % 60;
     }
     onChange(`${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}`);
   }
@@ -88,15 +87,13 @@ export function TimeClockInput({ value, onChange, label }: TimeClockInputProps) 
       if (period === 'AM' && h === 12) h = 0;
       onChange(`${String(h).padStart(2, '0')}:${String(minutes).padStart(2, '0')}`);
     } else if (editingField === 'm') {
-      // Parse entered minutes (0-59, snap to 5)
+      // Parse entered minutes (0-59, 1-minute granularity)
       let m = parseInt(editValue, 10);
       if (isNaN(m)) {
         setEditingField(null);
         return;
       }
       m = Math.max(0, Math.min(59, m));
-      m = Math.round(m / 5) * 5;
-      if (m === 60) m = 55; // edge case from rounding 59→60
       onChange(`${String(hours).padStart(2, '0')}:${String(m).padStart(2, '0')}`);
     }
     setEditingField(null);
@@ -191,7 +188,7 @@ export function TimeClockInput({ value, onChange, label }: TimeClockInputProps) 
 
         {/* Minutes column */}
         <div className="flex flex-col items-center gap-1">
-          <button type="button" style={btnStyle} onClick={() => adjust('m', 5)} aria-label="Minute up">
+          <button type="button" style={btnStyle} onClick={() => adjust('m', 1)} aria-label="Minute up">
             <svg width="10" height="6" viewBox="0 0 12 7" fill="none"><path d="M1 6l5-5 5 5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>
           </button>
           {editingField === 'm' ? (
@@ -217,7 +214,7 @@ export function TimeClockInput({ value, onChange, label }: TimeClockInputProps) 
               {String(minutes).padStart(2, '0')}
             </span>
           )}
-          <button type="button" style={btnStyle} onClick={() => adjust('m', -5)} aria-label="Minute down">
+          <button type="button" style={btnStyle} onClick={() => adjust('m', -1)} aria-label="Minute down">
             <svg width="10" height="6" viewBox="0 0 12 7" fill="none"><path d="M1 1l5 5 5-5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>
           </button>
         </div>
